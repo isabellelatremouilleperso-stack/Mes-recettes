@@ -1,51 +1,56 @@
 import streamlit as st
-import streamlit as st
-
-# Récupérer l'URL envoyée par le bouton magique
-url_provenance = st.query_params.get("url", "")
-
-if url_provenance:
-    st.info(f"📍 Recette détectée : {url_provenance}")
-    # On pré-remplit la case Source avec ce lien
 import requests
-import json
-from datetime import datetime
+import pandas as pd
 
-st.set_page_config(page_title="Mes recettes", page_icon="📖")
-st.title("📖Mes Recettes")
+# Configuration de la page
+st.set_page_config(page_title="Mon Grimoire", page_icon="👩‍🍳", layout="wide")
 
-# --- TON URL ICI ---
-URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzwzbD-kHAVjvwceW6XZbfSj82jXzM-qk1EE2J3hPfq0-FoyDVD_-h7fgxynQK85F7F/exec"
+# --- CONFIGURATION ---
+# REMPLACE PAR TON NOUVEAU LIEN /EXEC CI-DESSOUS
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzw0fB92vp_hDPvtkn4cMc_IvzkfH0OchzzOBezaM6Yg9O5o256VqWPBM_v79IJnXZW/exec"
 
-# Saisie des informations
-titre = st.text_input("Nom de la recette :")
-# Si url_provenance existe, on l'utilise comme valeur par défaut
-lien_source = st.text_input("🔗 Lien de la source (optionnel) :", value=url_provenance)
+st.title("🧙‍♀️ Mon Grimoire Numérique")
 
-col_gauche, col_droite = st.columns(2)
-with col_gauche:
-    ingredients_bruts = st.text_area("🛒 Ingrédients :", height=200)
-with col_droite:
-    etapes_brutes = st.text_area("📝 Étapes :", height=200)
+# --- NAVIGATION ---
+menu = ["Ajouter une recette", "Voir mes recettes"]
+choix = st.sidebar.selectbox("Menu", menu)
 
-if st.button("✨ Sauvegarder la recette"):
-    if titre:
-        date_aujourdhui = datetime.now().strftime("%d/%m/%Y %H:%M")
+if choix == "Ajouter une recette":
+    st.subheader("📝 Nouvelle Recette")
+    
+    with st.form("form_recette", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            titre = st.text_input("Nom du plat *")
+            source = st.text_input("Source (Lien ou livre)")
+        with col2:
+            date_plan = st.date_input("Planifier pour le (Calendrier)", value=None)
+            
+        ingredients = st.text_area("Ingrédients (un par ligne)")
+        preparation = st.text_area("Étapes de préparation")
         
-        # --- ENVOI GOOGLE SHEETS ---
-        try:
-            donnees = {
-                "date": date_aujourdhui,
-                "titre": titre,
-                "source": lien_source,
-                "ingredients": ingredients_bruts,
-                "preparation": etapes_brutes
-            }
-            requests.post(URL_GOOGLE, data=json.dumps(donnees))
-            st.success(f"✅ Ajouté le {date_aujourdhui} !")
-            st.balloons()
-        except Exception as e:
-            st.error(f"Erreur : {e}")
-    else:
-        st.warning("Donnez un titre !")
+        submit = st.form_submit_button("✨ Sauvegarder dans mon Grimoire")
+        
+        if submit:
+            if titre:
+                payload = {
+                    "titre": titre,
+                    "source": source,
+                    "ingredients": ingredients,
+                    "preparation": preparation,
+                    "date_prevue": str(date_plan) if date_plan else ""
+                }
+                res = requests.post(URL_GOOGLE, json=payload)
+                if res.status_code == 200:
+                    st.success(f"Bravo ! '{titre}' est enregistré.")
+                    st.balloons()
+                else:
+                    st.error("Erreur de connexion.")
+            else:
+                st.warning("Donne au moins un nom à ton plat !")
 
+elif choix == "Voir mes recettes":
+    st.subheader("🔍 Bibliothèque de saveurs")
+    # Note : Pour afficher les données ici, il faudrait lire le CSV ou le lien JSON du Sheets.
+    # Pour l'instant, on se concentre sur l'envoi réussi.
+    st.info("Consulte ton Google Sheets pour voir ta liste complète !")
