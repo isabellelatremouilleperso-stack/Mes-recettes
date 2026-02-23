@@ -15,7 +15,7 @@ st.set_page_config(page_title="Mes recettes", page_icon="📖")
 st.title("📖Mes Recettes")
 
 # --- TON URL ICI ---
-URL_GOOGLE = "https://script.google.com/macros/s/AKfycbx5ojYAv1ntRWPOtAmIgWaShG9MhsAEWqqN_9dCUARsKetUhfxbku4c8HS72CnWswMA/exec"
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzwzbD-kHAVjvwceW6XZbfSj82jXzM-qk1EE2J3hPfq0-FoyDVD_-h7fgxynQK85F7F/exec"
 
 # Saisie des informations
 titre = st.text_input("Nom de la recette :")
@@ -48,3 +48,4 @@ if st.button("✨ Sauvegarder la recette"):
             st.error(f"Erreur : {e}")
     else:
         st.warning("Donnez un titre !")
+
