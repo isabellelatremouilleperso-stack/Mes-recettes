@@ -7,8 +7,7 @@ st.set_page_config(page_title="Mon Grimoire Cuisine", page_icon="📖")
 st.title("📖 Mon Grimoire de Recettes Perso")
 
 # --- TON URL ICI ---
-URL_GOOGLE = "https://script.google.com/macros/s/AKfycbyNPr1duyUQVBfpLrC9qIcqv8M6pW6ptjdZaYYoFCzfpaKllLGBY3SGSqs7ccUS75L_/exec"
-
+URL_GOOGLE = st.secrets["Lien_Google"]
 # Saisie des informations
 titre = st.text_input("Nom de la recette :")
 lien_source = st.text_input("🔗 Lien de la source (optionnel) :", placeholder="https://...")
@@ -38,4 +37,5 @@ if st.button("✨ Sauvegarder la recette"):
         except Exception as e:
             st.error(f"Erreur : {e}")
     else:
+
         st.warning("Donnez un titre !")
