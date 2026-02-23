@@ -1,16 +1,26 @@
 import streamlit as st
+import streamlit as st
+
+# Récupérer l'URL envoyée par le bouton magique
+url_provenance = st.query_params.get("url", "")
+
+if url_provenance:
+    st.info(f"📍 Recette détectée : {url_provenance}")
+    # On pré-remplit la case Source avec ce lien
 import requests
 import json
 from datetime import datetime
 
-st.set_page_config(page_title="Mon Grimoire Cuisine", page_icon="📖")
-st.title("📖 Mon Grimoire de Recettes Perso")
+st.set_page_config(page_title="Mes recettes", page_icon="📖")
+st.title("📖Mes Recettes")
 
 # --- TON URL ICI ---
-URL_GOOGLE = st.secrets["Lien_Google"]
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbx5ojYAv1ntRWPOtAmIgWaShG9MhsAEWqqN_9dCUARsKetUhfxbku4c8HS72CnWswMA/exec"
+
 # Saisie des informations
 titre = st.text_input("Nom de la recette :")
-lien_source = st.text_input("🔗 Lien de la source (optionnel) :", placeholder="https://...")
+# Si url_provenance existe, on l'utilise comme valeur par défaut
+lien_source = st.text_input("🔗 Lien de la source (optionnel) :", value=url_provenance)
 
 col_gauche, col_droite = st.columns(2)
 with col_gauche:
@@ -37,6 +47,4 @@ if st.button("✨ Sauvegarder la recette"):
         except Exception as e:
             st.error(f"Erreur : {e}")
     else:
-
         st.warning("Donnez un titre !")
-
