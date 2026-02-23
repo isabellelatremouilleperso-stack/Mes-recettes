@@ -6,7 +6,7 @@ st.set_page_config(page_title="Mon Grimoire", page_icon="👩‍🍳", layout="c
 
 # --- CONFIGURATION ---
 # Assure-toi que c'est bien ton DERNIER lien /exec
-URL_GOOGLE = "https://script.google.com/macros/library/d/110nw3W6vTzT2TPaTcbEHrQ-qA1YlixkP14eMaYzSBfNMCtJ_mh1lPk6E/19"
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
 st.title("🧙‍♀️ Mon Grimoire Numérique")
 
@@ -49,4 +49,5 @@ if menu == "Ajouter une recette":
 
 else:
     st.info("Utilisez le formulaire pour remplir votre Google Sheets automatiquement.")
+
 
