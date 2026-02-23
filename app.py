@@ -7,7 +7,7 @@ st.set_page_config(page_title="Mon Grimoire", page_icon="👩‍🍳", layout="w
 
 # --- CONFIGURATION ---
 # REMPLACE PAR TON NOUVEAU LIEN /EXEC CI-DESSOUS
-URL_GOOGLE = "https://script.google.com/macros/s/AKfycbzw0fB92vp_hDPvtkn4cMc_IvzkfH0OchzzOBezaM6Yg9O5o256VqWPBM_v79IJnXZW/exec"
+URL_GOOGLE = "https://script.google.com/macros/s/AKfycbziguIMB1e-Gdh2-NJ-zGQWXMf8-_9g_GpM1kMwu-SYY5_kF0p0aQDPPuFkNJCtJT2W/exec"
 
 st.title("🧙‍♀️ Mon Grimoire Numérique")
 
@@ -54,3 +54,4 @@ elif choix == "Voir mes recettes":
     # Note : Pour afficher les données ici, il faudrait lire le CSV ou le lien JSON du Sheets.
     # Pour l'instant, on se concentre sur l'envoi réussi.
     st.info("Consulte ton Google Sheets pour voir ta liste complète !")
+
