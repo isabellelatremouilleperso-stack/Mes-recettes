@@ -22,7 +22,7 @@ CATEGORIES = ["Poulet", "Bœuf", "Porc", "Poisson", "Pâtes", "Riz", "Soupe", "S
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
-if "checked_items" not in st.session_state: st.session_state.checked_items = []
+if "checked_items" not in st.session_state: st.session_state.checked_items = set()
 
 # 2. BARRE LATÉRALE
 with st.sidebar:
@@ -48,13 +48,11 @@ if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV).fillna('')
-        if len(df) > 0:
+        if not df.empty:
             df.columns = ['Date', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date_Prevue', 'Image', 'Catégorie']
             df = df[df['Titre'] != '']
-            
             search = st.text_input("🔍 Rechercher...")
-            if search:
-                df = df[df['Titre'].str.contains(search, case=False)]
+            if search: df = df[df['Titre'].str.contains(search, case=False)]
 
             grid = st.columns(3)
             for idx, row in df.reset_index(drop=True).iterrows():
@@ -62,17 +60,14 @@ if st.session_state.page == "home":
                     with st.container(border=True):
                         pic = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/200"
                         st.image(pic, use_container_width=True)
-                        if row['Catégorie']:
-                            st.markdown(f"<span class='cat-badge'>{row['Catégorie']}</span>", unsafe_allow_html=True)
+                        if row['Catégorie']: st.markdown(f"<span class='cat-badge'>{row['Catégorie']}</span>", unsafe_allow_html=True)
                         st.markdown(f"<div class='recipe-title'>{row['Titre']}</div>", unsafe_allow_html=True)
                         if st.button("Ouvrir", key=f"v_{idx}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"
                             st.rerun()
-        else:
-            st.info("Aucune recette trouvée dans le fichier.")
-    except Exception as e:
-        st.error("Impossible de lire les recettes. Vérifiez la publication du Google Sheets.")
+        else: st.info("Aucune recette. Ajoutez-en une !")
+    except: st.error("Erreur de lecture du Google Sheets.")
 
 # --- PAGE AJOUTER ---
 elif st.session_state.page == "ajouter":
@@ -88,11 +83,7 @@ elif st.session_state.page == "ajouter":
             source = st.text_input("Lien Instagram / Facebook")
         ingr = st.text_area("Ingrédients (un par ligne) *")
         prep = st.text_area("Préparation")
-        
-        if img_url:
-            st.write("🔍 Aperçu :")
-            st.image(img_url, width=200)
-
+        if img_url: st.image(img_url, width=200, caption="Aperçu")
         if st.form_submit_button("💾 Enregistrer"):
             if titre and ingr:
                 data = {"date": datetime.now().strftime("%d/%m/%Y"), "titre": titre, "source": source, "ingredients": ingr, "preparation": prep, "date_prevue": date_p.strftime("%d/%m/%Y"), "image": img_url, "categorie": cat}
@@ -108,11 +99,9 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
         st.session_state.page = "home"
         st.rerun()
     st.header(f"🍳 {res['Titre']}")
-    
     src = str(res.get('Source', ''))
     if "instagram.com" in src: st.link_button("📸 Instagram", src)
     elif "facebook.com" in src: st.link_button("💙 Facebook", src)
-
     col_a, col_b = st.columns([1, 1.2])
     with col_a:
         st.subheader("🛒 Ingrédients")
@@ -132,36 +121,4 @@ elif st.session_state.page == "shopping":
     if not st.session_state.shopping_list:
         st.info("Liste vide.")
     else:
-        c_btn1, c_btn2 = st.columns(2)
-        if c_btn1.button("🗑️ Vider les cochés", use_container_width=True):
-            st.session_state.shopping_list = [item for item in st.session_state.shopping_list if item not in st.session_state.checked_items]
-            st.session_state.checked_items = []
-            st.rerun()
-        if c_btn2.button("🚫 Tout vider", use_container_width=True):
-            st.session_state.shopping_list = []
-            st.session_state.checked_items = []
-            st.rerun()
-
-        for idx, item in enumerate(st.session_state.shopping_list):
-            cols = st.columns([0.5, 4, 1])
-            if cols[0].checkbox("", key=f"shop_chk_{idx}"):
-                if item not in st.session_state.checked_items: st.session_state.checked_items.append(item)
-            else:
-                if item in st.session_state.checked_items: st.session_state.checked_items.remove(item)
-            cols[1].write(item)
-            if cols[2].button("❌", key=f"shop_del_{idx}"):
-                st.session_state.shopping_list.pop(idx)
-                st.rerun()
-
-# --- PAGE AIDE ---
-elif st.session_state.page == "aide":
-    st.header("📖 Aide & Tuto")
-    st.write("### 🛒 Épicerie")
-    st.write("- Cochez les articles pour les marquer. Cliquez sur **'Vider les cochés'** pour les supprimer d'un coup.")
-    st.write("- Cliquez sur le **'X'** pour supprimer un article seul.")
-    st.write("### 📸 Vidéos Instagram & Facebook")
-    st.write("- Collez le lien du Reel dans 'Lien source' pour avoir un bouton direct sur la fiche.")
-    st.write("### 🖼️ Images")
-    st.write("- Collez un lien finissant par .jpg ou .png pour l'image. L'aperçu s'affiche lors de l'ajout.")
-    st.write("### 📲 Installation Tablette")
-    st.write("- Dans Chrome, menu (3 points) > 'Ajouter à l'écran d'accueil'. Nommez-le **'Mes Recettes'**.")
+        c1, c2 = st.
