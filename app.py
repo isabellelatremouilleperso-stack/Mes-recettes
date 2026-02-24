@@ -96,12 +96,19 @@ if st.session_state.page == "home":
     df = load_data()
     c1, c2 = st.columns([2, 1])
     search = c1.text_input("🔍 Rechercher...", placeholder="Ex: Lasagnes")
-    cat_f = c2.selectbox("Filtrer", CATEGORIES)
+    cat_f = c2.selectbox("Filtrer par catégorie", CATEGORIES)
 
     if not df.empty:
         filtered = df.copy()
-        if search: filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
-        if cat_f != "Toutes": filtered = filtered[filtered['Catégorie'] == cat_f]
+        
+        # Recherche par titre
+        if search: 
+            filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
+        
+        # FILTRE MULTI-CATÉGORIES CORRIGÉ
+        if cat_f != "Toutes": 
+            # On vérifie si la catégorie choisie est contenue dans la liste des catégories de la recette
+            filtered = filtered[filtered['Catégorie'].str.contains(cat_f, case=False, na=False)]
         
         rows = filtered.reset_index(drop=True)
         for i in range(0, len(rows), 3):
@@ -111,11 +118,17 @@ if st.session_state.page == "home":
                     row = rows.iloc[i + j]
                     with cols[j]:
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
+                        
+                        # Affichage des catégories en petits badges sous le titre
+                        cats = str(row['Catégorie']).split(", ")
+                        badges = "".join([f'<span style="background-color: #3d4455; color: #e67e22; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 4px;">{c}</span>' for c in cats if c])
+
                         st.markdown(f"""
-                        <div class="recipe-card" style="height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div class="recipe-card" style="height: 400px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 <img src="{img}" class="recipe-img">
-                                <h4 style="margin: 10px 0 5px 0; font-size: 0.95rem; height: 60px; overflow-y: auto; color: white;">{row['Titre']}</h4>
+                                <h4 style="margin: 10px 0 5px 0; font-size: 0.95rem; height: 50px; overflow-y: auto; color: white;">{row['Titre']}</h4>
+                                <div style="margin-bottom: 8px;">{badges}</div>
                                 <p style="color: #e67e22; font-size: 0.8rem; margin:0;">👥 {row['Portions']} | ⏱ {row['Temps_Prepa']}</p>
                             </div>
                         </div>
@@ -123,7 +136,8 @@ if st.session_state.page == "home":
                         if st.button("Ouvrir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"; st.rerun()
-    else: st.info("Votre bibliothèque est vide.")
+    else: 
+        st.info("Votre bibliothèque est vide.")
 
 # --- DÉTAILS ---
 elif st.session_state.page == "details":
@@ -278,3 +292,4 @@ elif st.session_state.page == "planning":
                     st.write("") # Espace entre les jours
     else:
         st.error("Impossible de charger les données.")
+
