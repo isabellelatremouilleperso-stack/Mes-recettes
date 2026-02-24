@@ -46,23 +46,31 @@ if "liste_epicerie" not in st.session_state:
     st.session_state.liste_epicerie = []
 
 # ==============================
-# MENU SIDEBAR (STABLE)
+# MENU SIDEBAR (CORRIGÉ)
 # ==============================
 with st.sidebar:
     st.title("👩‍🍳 Menu")
 
+    if st.session_state.page == "ajouter":
+        default_index = 1
+    elif st.session_state.page == "liste":
+        default_index = 2
+    else:
+        default_index = 0  # home OU details
+
     choix = st.radio(
         "Navigation",
         ["📚 Bibliothèque", "➕ Ajouter", "🛒 Épicerie"],
-        index=0 if st.session_state.page == "home"
-        else 1 if st.session_state.page == "ajouter"
-        else 2
+        index=default_index
     )
 
     if choix == "📚 Bibliothèque":
-        st.session_state.page = "home"
+        if st.session_state.page != "details":
+            st.session_state.page = "home"
+
     elif choix == "➕ Ajouter":
         st.session_state.page = "ajouter"
+
     elif choix == "🛒 Épicerie":
         st.session_state.page = "liste"
 
@@ -168,7 +176,6 @@ else:
 
     try:
         df = pd.read_csv(URL_CSV)
-
         cols = st.columns(3)
 
         for index, row in df.iterrows():
