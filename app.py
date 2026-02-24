@@ -217,7 +217,10 @@ elif st.session_state.page == "add":
         c1, c2 = st.columns(2)
         with c1:
             t = st.text_input("Titre *")
-            cat = st.selectbox("Catégorie", CATEGORIES[1:])
+           # Choix multiple au lieu d'un seul
+cat_list = st.multiselect("Catégories (choisissez-en plusieurs)", CATEGORIES[1:])
+# On transforme la liste en texte "Poulet, Plat Principal" pour l'enregistrer
+cat = ", ".join(cat_list)
         with c2:
             src = st.text_input("Lien de la source (Instagram, TikTok, FB...)")
             img = st.text_input("URL Image")
@@ -292,4 +295,5 @@ elif st.session_state.page == "planning":
                     st.write("") # Espace entre les jours
     else:
         st.error("Impossible de charger les données.")
+
 
