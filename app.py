@@ -122,3 +122,6 @@ else:
         
         # Barre de recherche
         recherche = st.text_input
+st.markdown('</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error("Synchronisation avec Google Sheets en cours... Patience !")
