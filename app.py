@@ -3,12 +3,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET STYLE (AVEC UNIFORMISATION DES IMAGES)
+# 1. CONFIGURATION ET STYLE
 st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
 st.markdown("""
     <style>
-    /* Style des cartes de la bibliothèque */
     .recipe-card {
         border: 1px solid #444;
         border-radius: 10px;
@@ -16,18 +15,14 @@ st.markdown("""
         text-align: center;
         background-color: #1e1e1e;
         margin-bottom: 20px;
-        height: 380px; /* Force une hauteur de carte identique */
+        height: 400px; /* Hauteur fixe pour l'uniformité */
     }
-    
-    /* UNIFORMISATION DES IMAGES */
-    /* On force la hauteur à 200px et on recadre proprement */
     .stImage img {
         object-fit: cover;
         height: 200px !important;
         width: 100% !important;
         border-radius: 5px;
     }
-
     .stApp { color: white; }
     </style>
     """, unsafe_allow_html=True)
@@ -95,32 +90,23 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
         st.subheader("👨‍🍳 Préparation")
         st.info(res['Préparation'])
 
-# 5. PAGE : LISTE D'ÉPICERIE (MAGASIN)
+# 5. PAGE : LISTE D'ÉPICERIE
 elif st.session_state.page == "shopping":
     st.title("🛒 Ma Liste d'Épicerie")
-    
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
         col_del_all, col_del_checked = st.columns(2)
-        
         with col_del_checked:
             if st.button("🧹 Supprimer les articles cochés", use_container_width=True):
-                st.session_state.shopping_list = [
-                    item for item in st.session_state.shopping_list 
-                    if not st.session_state.bought_items.get(item, False)
-                ]
-                st.session_state.bought_items = {
-                    item: False for item in st.session_state.shopping_list
-                }
+                st.session_state.shopping_list = [i for i in st.session_state.shopping_list if not st.session_state.bought_items.get(i, False)]
+                st.session_state.bought_items = {i: False for i in st.session_state.shopping_list}
                 st.rerun()
-
         with col_del_all:
             if st.button("🗑️ Tout vider", use_container_width=True):
                 st.session_state.shopping_list = []
                 st.session_state.bought_items = {}
                 st.rerun()
-        
         st.write("---")
         for item in st.session_state.shopping_list:
             is_checked = st.session_state.bought_items.get(item, False)
@@ -144,32 +130,30 @@ elif st.session_state.page == "ajouter":
                 requests.post(URL_SCRIPT, json=data)
                 st.success("C'est enregistré ! 🎉")
 
-# 7. PAGE : ACCUEIL (BIBLIOTHÈQUE UNIFORMISÉE)
+# 7. PAGE : ACCUEIL (CORRECTION DU DÉCALAGE ICI)
 else:
     st.title("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV)
+        # SUPPRIME LES LIGNES VIDES (évite les carrés gris)
+        df = df.dropna(subset=['Titre']) 
+        
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
         cols = st.columns(3)
-        for idx, row in df.iterrows():
+        # On utilise enumerate pour bien gérer l'index après avoir supprimé les lignes vides
+        for idx, (_, row) in enumerate(df.iterrows()):
             with cols[idx % 3]:
-                # On utilise une DIV avec la classe recipe-card pour le style
                 st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
-                
                 img = row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
                 st.image(img, use_container_width=True)
-                
                 st.subheader(row['Titre'])
                 if pd.notna(row['Date']): 
                     st.caption(f"📅 {row['Date']}")
-                
                 if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
                     st.session_state.recipe_data = row.to_dict()
                     st.session_state.page = "details"
                     st.rerun()
-                
                 st.markdown('</div>', unsafe_allow_html=True)
-                
     except Exception as e:
         st.error(f"Erreur : {e}")
