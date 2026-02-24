@@ -3,9 +3,10 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION (C'est ici qu'on change le nom de l'onglet)
+# 1. CONFIGURATION (Nom de l'onglet et icône)
 st.set_page_config(page_title="Mes Recettes", layout="wide", page_icon="🎨")
 
+# DESIGN PERSONNALISÉ (CSS)
 st.markdown("""
     <style>
     [data-testid="stImage"] img { object-fit: cover; height: 200px !important; width: 100% !important; border-radius: 10px; }
@@ -15,11 +16,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
+# Tes liens Google (NE PAS MODIFIER)
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
 CATEGORIES = ["Poulet", "Bœuf", "Porc", "Soupe", "Pâtes", "Entrée", "Plat Principal", "Dessert", "Petit-déjeuner", "Autre"]
 
+# INITIALISATION DE LA MÉMOIRE
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
@@ -43,28 +46,24 @@ with st.sidebar:
 
 # 3. LOGIQUE DES PAGES
 
-# --- PAGE AIDE (REMISE À NEUF AVEC TOUTES LES INFOS) ---
+# --- PAGE AIDE ---
 if st.session_state.page == "aide":
     st.header("📖 Mode d'Emploi & Astuces")
     
     with st.expander("📸 Instagram, Facebook & Liens Web", expanded=True):
-        st.write("Copiez le lien d'un Reel ou d'une vidéo et collez-le dans **'Lien source'**. Un bouton apparaîtra sur la fiche pour voir la vidéo d'origine !")
+        st.write("Copiez le lien d'un Reel ou d'une vidéo et collez-le dans **'Lien source'**. Un bouton apparaîtra sur la fiche pour voir la vidéo !")
 
     with st.expander("🖼️ Comment mettre une image ? (URL & Aperçu)"):
         st.markdown("""
-        1. **Sur Internet :** Faites un appui long sur une image et choisissez *'Copier l'adresse de l'image'*.
-        2. **Photos Personnelles :** Envoyez votre photo sur un site gratuit comme **ImgBB**, puis copiez le 'Lien direct'.
-        3. **Aperçu :** Dans la page 'Ajouter', l'image s'affichera dès que vous collerez le lien pour vérifier si elle fonctionne !
+        - **Sur Internet :** Faites un appui long sur une image > *'Copier l'adresse de l'image'*.
+        - **Photos Perso :** Envoyez votre photo sur **ImgBB.com**, puis copiez le **'Lien direct'**.
+        - **Aperçu :** Dans la page 'Ajouter', l'image s'affiche dès que vous collez le lien pour vérifier !
         """)
-        
 
-    with st.expander("📲 Installer l'appli sur la tablette"):
-        st.write("Dans Chrome, appuie sur les **3 points (⋮)** puis sur **'Ajouter à l'écran d'accueil'**. Efface le nom actuel et écris **'Dessin'** avant de valider.")
+    with st.expander("📲 Installer l'appli sur Android"):
+        st.write("Dans Chrome, appuyez sur les **3 points (⋮)** puis sur **'Ajouter à l'écran d'accueil'**. Renommez-le en **'Dessin'**.")
 
-    with st.expander("🛒 Liste d'épicerie"):
-        st.write("Coche les ingrédients manquants dans une fiche recette et clique sur 'Ajouter à la liste'. Retrouve tout dans l'onglet 'Épicerie' !")
-
-# --- PAGE AJOUTER (AVEC APERÇU FIXÉ) ---
+# --- PAGE AJOUTER ---
 elif st.session_state.page == "ajouter":
     st.header("➕ Nouvelle Recette")
     with st.form("add_form"):
@@ -80,6 +79,7 @@ elif st.session_state.page == "ajouter":
         prep = st.text_area("Préparation / Étapes")
         
         if img_url:
+            st.markdown("---")
             st.write("🔍 **Aperçu de l'image :**")
             st.image(img_url, width=200)
 
@@ -87,18 +87,16 @@ elif st.session_state.page == "ajouter":
             if titre and ingr:
                 data = {
                     "date": datetime.now().strftime("%d/%m/%Y"), 
-                    "titre": titre, 
-                    "source": source, 
-                    "ingredients": ingr, 
-                    "preparation": prep, 
-                    "date_prevue": date_p.strftime("%d/%m/%Y"), 
-                    "image": img_url, 
-                    "categorie": cat
+                    "titre": titre, "source": source, "ingredients": ingr, 
+                    "preparation": prep, "date_prevue": date_p.strftime("%d/%m/%Y"), 
+                    "image": img_url, "categorie": cat
                 }
                 requests.post(URL_SCRIPT, json=data)
-                st.success("✅ C'est enregistré !")
+                st.success("✅ Enregistré !")
                 st.session_state.page = "home"
                 st.rerun()
+            else:
+                st.error("Le titre et les ingrédients sont obligatoires !")
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details" and st.session_state.recipe_data:
@@ -106,6 +104,7 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
     if st.button("⬅️ Retour"):
         st.session_state.page = "home"
         st.rerun()
+    
     st.header(f"🍳 {res['Titre']}")
     
     src_link = str(res.get('Source', ''))
@@ -132,29 +131,6 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
         st.subheader("👨‍🍳 Préparation")
         st.info(res.get('Préparation', 'Pas de détails disponibles'))
 
-# --- PAGE ACCUEIL ---
-elif st.session_state.page == "home":
-    st.header("📚 Ma Bibliothèque")
-    try:
-        df = pd.read_csv(URL_CSV).fillna('')
-        df.columns = ['Date', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date_Prevue', 'Image', 'Catégorie']
-        search = st.text_input("🔍 Rechercher...")
-        if search: df = df[df['Titre'].str.contains(search, case=False)]
-        
-        grid = st.columns(3)
-        for idx, row in df.iterrows():
-            with grid[idx % 3]:
-                with st.container(border=True):
-                    img_card = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/200"
-                    st.image(img_card, use_container_width=True)
-                    st.markdown(f"<span class='cat-badge'>{row['Catégorie']}</span>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='recipe-title'>{row['Titre']}</div>", unsafe_allow_html=True)
-                    if st.button("Ouvrir", key=f"v_{idx}", use_container_width=True):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
-    except: st.info("Aucune recette. Cliquez sur 'Ajouter' !")
-
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shopping":
     st.header("🛒 Liste d'épicerie")
@@ -163,3 +139,33 @@ elif st.session_state.page == "shopping":
         st.rerun()
     for it in st.session_state.shopping_list:
         st.write(f"• {it}")
+
+# --- PAGE ACCUEIL (BIBLIOTHÈQUE) ---
+elif st.session_state.page == "home":
+    st.header("📚 Ma Bibliothèque")
+    try:
+        df = pd.read_csv(URL_CSV).fillna('')
+        if not df.empty:
+            df.columns = ['Date', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date_Prevue', 'Image', 'Catégorie']
+            df = df[df['Titre'] != ''] # Filtre pour ne pas afficher de lignes vides
+
+            search = st.text_input("🔍 Rechercher...")
+            if search:
+                df = df[df['Titre'].str.contains(search, case=False)]
+
+            grid = st.columns(3)
+            for idx, row in df.reset_index(drop=True).iterrows():
+                with grid[idx % 3]:
+                    with st.container(border=True):
+                        img_card = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/200"
+                        st.image(img_card, use_container_width=True)
+                        st.markdown(f"<span class='cat-badge'>{row['Catégorie']}</span>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='recipe-title'>{row['Titre']}</div>", unsafe_allow_html=True)
+                        if st.button("Ouvrir", key=f"v_{idx}", use_container_width=True):
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
+        else:
+            st.info("Votre bibliothèque est vide. Ajoutez une recette !")
+    except:
+        st.error("Erreur de connexion au Google Sheets. Vérifiez qu'il est bien publié.")
