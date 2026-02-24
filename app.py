@@ -68,15 +68,31 @@ if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
 # ======================================================
 # 3. BARRE LATÉRALE
 # ======================================================
-with st.sidebar:
-    st.title("👨‍🍳 Ma Cuisine")
-    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
-    if st.button("📅 Planning", use_container_width=True): st.session_state.page = "planning"; st.rerun()
-    if st.button(f"🛒 Épicerie ({len(st.session_state.shopping_list)})", use_container_width=True): st.session_state.page = "shop"; st.rerun()
-    st.write("---")
-    if st.button("➕ Ajouter", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
-    if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
+st.divider()
+    # Initialisation de l'état de l'aide si non existant
+    if "show_help" not in st.session_state:
+        st.session_state.show_help = False
 
+    # Bouton d'aide simple comme au début
+    if st.button("❓ Aide & Astuces", use_container_width=True):
+        st.session_state.show_help = not st.session_state.show_help
+
+    if st.session_state.show_help:
+        with st.expander("📖 Guide d'utilisation", expanded=True):
+            tab1, tab2, tab3 = st.tabs(["➕ Ajout", "🛒 Courses", "📅 Planning"])
+            
+            with tab1:
+                st.write("**Ajouter :** Remplissez le titre et les ingrédients (obligatoires).")
+                st.write("**Sources :** Collez un lien Instagram/TikTok pour avoir le bouton vidéo.")
+                st.write("**Tags :** Vous pouvez choisir plusieurs catégories.")
+                
+            with tab2:
+                st.write("**Épicerie :** Cochez les ingrédients dans une fiche recette, puis cliquez sur 'Ajouter à l'épicerie'.")
+                st.write("**Gestion :** Supprimez les articles achetés directement dans l'onglet Épicerie.")
+                
+            with tab3:
+                st.write("**Calendrier :** Cliquer sur 'Envoyer au Calendrier' crée un événement Gmail.")
+                st.write("**Terminé :** Le bouton 'Repas terminé' nettoie l'app mais garde la trace dans votre calendrier Google.")
 # ======================================================
 # 4. LOGIQUE DES PAGES
 # ======================================================
@@ -240,4 +256,5 @@ elif st.session_state.page == "planning":
                 st.write("---")
     else:
         st.error("Impossible de charger les données.")
+
 
