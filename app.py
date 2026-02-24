@@ -19,10 +19,11 @@ URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCb
 
 CATEGORIES = ["Poulet", "Bœuf", "Porc", "Poisson", "Pâtes", "Riz", "Soupe", "Salade", "Entrée", "Plat Principal", "Accompagnement", "Dessert", "Petit-déjeuner", "Autre"]
 
+# INITIALISATION MÉMOIRE
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
-if "checked_items" not in st.session_state: st.session_state.checked_items = set()
+if "checked_items" not in st.session_state: st.session_state.checked_items = []
 
 # 2. BARRE LATÉRALE
 with st.sidebar:
@@ -41,7 +42,7 @@ with st.sidebar:
         st.session_state.page = "aide"
         st.rerun()
 
-# 3. PAGES
+# 3. LOGIQUE DES PAGES
 
 # --- PAGE ACCUEIL ---
 if st.session_state.page == "home":
@@ -66,8 +67,8 @@ if st.session_state.page == "home":
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"
                             st.rerun()
-        else: st.info("Aucune recette. Ajoutez-en une !")
-    except: st.error("Erreur de lecture du Google Sheets.")
+        else: st.info("Votre bibliothèque est vide.")
+    except: st.error("Erreur de connexion aux données.")
 
 # --- PAGE AJOUTER ---
 elif st.session_state.page == "ajouter":
@@ -106,10 +107,11 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
     with col_a:
         st.subheader("🛒 Ingrédients")
         for i in str(res['Ingrédients']).split('\n'):
-            if i.strip():
-                if st.checkbox(i.strip(), key=f"det_{i}"):
-                    if i.strip() not in st.session_state.shopping_list:
-                        st.session_state.shopping_list.append(i.strip())
+            item = i.strip()
+            if item:
+                if st.checkbox(item, key=f"det_{item}"):
+                    if item not in st.session_state.shopping_list:
+                        st.session_state.shopping_list.append(item)
         if st.button("➕ Ajouter à l'épicerie"): st.toast("Ajouté !")
     with col_b:
         st.image(res['Image'] if "http" in str(res['Image']) else "https://via.placeholder.com/400", use_container_width=True)
@@ -121,4 +123,39 @@ elif st.session_state.page == "shopping":
     if not st.session_state.shopping_list:
         st.info("Liste vide.")
     else:
-        c1, c2 = st.
+        c1, c2 = st.columns(2)
+        if c1.button("🗑️ Vider les cochés", use_container_width=True):
+            st.session_state.shopping_list = [it for it in st.session_state.shopping_list if it not in st.session_state.checked_items]
+            st.session_state.checked_items = []
+            st.rerun()
+        if c2.button("🚫 Tout vider", use_container_width=True):
+            st.session_state.shopping_list = []
+            st.session_state.checked_items = []
+            st.rerun()
+
+        for idx, item in enumerate(st.session_state.shopping_list):
+            cols = st.columns([0.5, 4, 1])
+            is_checked = cols[0].checkbox("", key=f"chk_{idx}", value=(item in st.session_state.checked_items))
+            if is_checked and item not in st.session_state.checked_items:
+                st.session_state.checked_items.append(item)
+            elif not is_checked and item in st.session_state.checked_items:
+                st.session_state.checked_items.remove(item)
+            
+            cols[1].write(item)
+            if cols[2].button("❌", key=f"del_{idx}"):
+                st.session_state.shopping_list.pop(idx)
+                if item in st.session_state.checked_items: st.session_state.checked_items.remove(item)
+                st.rerun()
+
+# --- PAGE AIDE ---
+elif st.session_state.page == "aide":
+    st.header("📖 Aide & Tuto")
+    st.write("### 🛒 Épicerie")
+    st.write("- Cochez les articles pour les marquer. Cliquez sur **'Vider les cochés'** pour les supprimer d'un coup.")
+    st.write("- Cliquez sur le **'❌'** pour supprimer un article seul.")
+    st.write("### 📸 Vidéos Instagram & Facebook")
+    st.write("- Collez le lien du Reel dans 'Lien source' pour avoir un bouton direct sur la fiche.")
+    st.write("### 🖼️ Images")
+    st.write("- Collez un lien direct (.jpg, .png). L'aperçu s'affiche lors de l'ajout.")
+    st.write("### 📲 Installation")
+    st.write("- Menu Chrome > 'Ajouter à l'écran d'accueil'. Nom : **Mes Recettes**.")
