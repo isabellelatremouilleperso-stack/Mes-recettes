@@ -2,223 +2,195 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib import colors
+from io import BytesIO
 
 # ======================================================
-# CONFIGURATION & STYLE
+# CONFIG & CSS (Ton style tablette optimisé)
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 st.markdown("""
-    <style>
-    [data-testid="stImage"] img { 
-        object-fit: cover; 
-        height: 250px !important; 
-        width: 100% !important; 
-        border-radius: 15px; 
-    }
-    .recipe-title { 
-        height: 50px; 
-        overflow: hidden; 
-        font-weight: bold; 
-        font-size: 1.2em; 
-        margin-top: 5px;
-    }
-    .cat-badge { 
-        background-color: #ffca28; 
-        color: #000; 
-        padding: 2px 12px; 
-        border-radius: 12px; 
-        font-size: 0.85em; 
-        font-weight: bold; 
-    }
-    </style>
-    """, unsafe_allow_html=True)
+<style>
+[data-testid="stImage"] img {
+    object-fit: cover;
+    height: 250px !important;
+    width: 100% !important;
+    border-radius: 20px;
+}
+.recipe-title { font-weight: 700; font-size: 1.1rem; margin-top: 10px; min-height: 48px; }
+.cat-badge { 
+    background: linear-gradient(90deg,#ff9800,#ff5722); 
+    color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; 
+}
+</style>
+""", unsafe_allow_html=True)
 
-# Tes liens de connexion
-URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
-URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+# --- N'oublie pas de remettre tes vraies URLs ici ---
+URL_CSV = "TON_URL_CSV"
+URL_SCRIPT = "TON_URL_SCRIPT"
 
-CATEGORIES = ["Toutes", "Poulet", "Bœuf", "Porc", "Poisson", "Pâtes", "Riz", "Soupe", "Salade", "Entrée", "Plat Principal", "Accompagnement", "Dessert", "Petit-déjeuner", "Autre"]
+CATEGORIES = ["Toutes","Poulet","Bœuf","Porc","Poisson","Pâtes","Riz","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Autre"]
 
 # ======================================================
-# GESTION DES DONNÉES
+# PDF GENERATOR (Inclus la note maintenant)
+# ======================================================
+def generate_recipe_pdf(recipe, rating):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle('T', parent=styles['Heading1'], fontSize=22, textColor=colors.HexColor("#E65100"))
+    normal_style = styles['Normal']
+    
+    elements = [
+        Paragraph(recipe['Titre'], title_style),
+        Paragraph(f"Note : {'⭐' * rating}", normal_style),
+        Spacer(1, 12),
+        Paragraph("Ingrédients", styles['Heading2'])
+    ]
+    
+    for item in str(recipe['Ingrédients']).split("\n"):
+        if item.strip(): elements.append(Paragraph(f"• {item.strip()}", normal_style))
+        
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("Préparation", styles['Heading2']))
+    elements.append(Paragraph(recipe['Préparation'].replace("\n", "<br/>"), normal_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+# ======================================================
+# DATA & SESSION
 # ======================================================
 @st.cache_data(ttl=600)
 def load_data():
     try:
-        df = pd.read_csv(URL_CSV).fillna('')
-        return df
+        return pd.read_csv(URL_CSV).fillna('')
     except:
         return pd.DataFrame()
 
 if "page" not in st.session_state: st.session_state.page = "home"
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
-if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 
 # ======================================================
-# BARRE LATÉRALE
+# SIDEBAR
 # ======================================================
 with st.sidebar:
-    st.title("👨‍🍳 Mes Recettes PRO")
-    if st.button("📚 Bibliothèque", use_container_width=True):
-        st.session_state.page = "home"; st.rerun()
-    if st.button("➕ Ajouter une recette", type="primary", use_container_width=True):
-        st.session_state.page = "add"; st.rerun()
-    if st.button("🛒 Ma Liste d'Épicerie", use_container_width=True):
-        st.session_state.page = "shopping"; st.rerun()
-    if st.button("🔄 Actualiser", use_container_width=True):
-        st.cache_data.clear(); st.rerun()
-    st.write("---")
-    if st.button("❓ Aide & Tuto", use_container_width=True):
-        st.session_state.page = "aide"; st.rerun()
+    st.title("👨‍🍳 Menu")
+    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
+    if st.button("➕ Ajouter", use_container_width=True): st.session_state.page = "add"; st.rerun()
+    if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page = "shopping"; st.rerun()
+    if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
 
 # ======================================================
-# PAGE : BIBLIOTHÈQUE
+# HOME (Ma Bibliothèque)
 # ======================================================
 if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     df = load_data()
     if not df.empty:
-        # On s'assure que les colonnes sont bien nommées
+        # Renommage colonnes pour sécurité
         expected = ['Date','Titre','Source','Ingrédients','Préparation','Date_Prevue','Image','Catégorie','Commentaires']
-        if len(df.columns) >= 8: df.columns = expected[:len(df.columns)]
+        if len(df.columns) >= 9: df.columns = expected[:len(df.columns)]
 
         c1, c2 = st.columns(2)
-        search = c1.text_input("🔍 Rechercher une recette")
-        cat_filter = c2.selectbox("Filtrer par catégorie", CATEGORIES)
-        
+        search = c1.text_input("🔍 Rechercher")
+        cat_f = c2.selectbox("Catégorie", CATEGORIES)
+
         if search: df = df[df['Titre'].str.contains(search, case=False)]
-        if cat_filter != "Toutes": df = df[df['Catégorie'] == cat_filter]
+        if cat_f != "Toutes": df = df[df['Catégorie'] == cat_f]
 
         grid = st.columns(3)
         for idx, row in df.reset_index(drop=True).iterrows():
             with grid[idx % 3]:
                 with st.container(border=True):
-                    img_url = str(row['Image']) if "http" in str(row['Image']) else "https://via.placeholder.com/200"
-                    st.image(img_url, use_container_width=True)
-                    if row['Catégorie']: st.markdown(f"<span class='cat-badge'>{row['Catégorie']}</span>", unsafe_allow_html=True)
+                    img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/400"
+                    st.image(img, use_container_width=True)
                     st.markdown(f"<div class='recipe-title'>{row['Titre']}</div>", unsafe_allow_html=True)
                     if st.button("Ouvrir", key=f"btn_{idx}", use_container_width=True):
                         st.session_state.recipe_data = row.to_dict()
                         st.session_state.page = "details"; st.rerun()
 
 # ======================================================
-# PAGE : DÉTAILS (VERSION FINALE OPTIMISÉE)
+# DETAILS
 # ======================================================
-elif st.session_state.page == "details" and st.session_state.recipe_data:
+elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
+    st.header(f"🍳 {r['Titre']}")
     
-    st.header(f"🍳 {r.get('Titre', 'Recette')}")
     colA, colB = st.columns([1, 1.2])
 
     with colA:
+        # Étoiles & Lien Social
+        note = st.select_slider("Ma note", options=[1,2,3,4,5], value=5)
+        source_url = str(r.get('Source', ''))
+        if "instagram" in source_url.lower(): st.info("📸 Recette via Instagram")
+        elif "tiktok" in source_url.lower(): st.info("🎵 Recette via TikTok")
+        elif "http" in source_url.lower(): st.link_button("🔗 Voir la source originale", source_url)
+
         st.subheader("🛒 Ingrédients")
         temp_items = []
-        liste_ing = str(r.get('Ingrédients','')).split("\n")
-        for i, item in enumerate(liste_ing):
-            clean_item = item.strip()
-            if clean_item and st.checkbox(clean_item, key=f"chk_{r.get('Titre')}_{i}"):
-                temp_items.append(clean_item)
+        for i, item in enumerate(str(r['Ingrédients']).split("\n")):
+            if item.strip() and st.checkbox(item.strip(), key=f"chk_{i}"):
+                temp_items.append(item.strip())
         
         if st.button("➕ Ajouter à l'épicerie", use_container_width=True):
-            if temp_items:
-                for it in temp_items:
-                    if it not in st.session_state.shopping_list: st.session_state.shopping_list.append(it)
-                st.toast(f"✅ {len(temp_items)} articles ajoutés !")
-            else: st.warning("Cochez des ingrédients d'abord.")
-        
+            for it in temp_items:
+                if it not in st.session_state.shopping_list: st.session_state.shopping_list.append(it)
+            st.toast("C'est dans la liste !")
+
         st.write("---")
-        st.subheader("📅 Planifier ce repas")
-        try:
-            current_date = datetime.strptime(str(r.get('Date_Prevue','')), "%d/%m/%Y")
-        except:
-            current_date = datetime.now()
-            
-        chosen_date = st.date_input("Choisir une date", value=current_date)
-        
-        if st.button("📅 Envoyer vers Google Agenda", use_container_width=True, type="primary"):
-            try:
-                formatted_date = chosen_date.strftime("%d/%m/%Y")
-                requests.post(URL_SCRIPT, json={
-                    "action": "calendar", "titre": r['Titre'], 
-                    "date_prevue": formatted_date, "ingredients": r['Ingrédients']
-                })
-                st.success(f"Programmé pour le {formatted_date} !")
-            except: st.error("Erreur de synchronisation.")
+        # PDF GENERATOR
+        pdf_file = generate_recipe_pdf(r, note)
+        st.download_button("🖨 Télécharger en PDF", pdf_file, f"{r['Titre']}.pdf", "application/pdf", use_container_width=True)
 
     with colB:
-        img_detail = str(r.get('Image','')) if "http" in str(r.get('Image','')) else "https://via.placeholder.com/400"
-        st.image(img_detail, use_container_width=True)
-        st.info(f"**Notes :** {r.get('Commentaires', 'Aucune note.')}")
-        st.write(f"**Préparation :**\n\n{r.get('Préparation','')}")
-        
-        # --- NOUVEAU : BOUTON PARTAGE / IMPRESSION ---
-        st.write("---")
-        with st.expander("📋 Partager ou Imprimer la recette"):
-            texte_partage = f"RECETTE : {r['Titre']}\n\nINGRÉDIENTS :\n{r['Ingrédients']}\n\nPRÉPARATION :\n{r['Préparation']}"
-            st.text_area("Texte prêt à copier :", texte_partage, height=150)
-            st.caption("Astuce : Copiez ce texte pour l'envoyer par email ou l'imprimer.")
-
-    st.write("---")
-    b1, b2 = st.columns(2)
-    if b1.button("✏ Modifier", use_container_width=True): st.session_state.page = "edit"; st.rerun()
-    if b2.button("🗑 Supprimer", use_container_width=True):
-        requests.post(URL_SCRIPT, json={"action": "delete", "titre": r['Titre']})
-        st.cache_data.clear(); st.session_state.page = "home"; st.rerun()
+        img = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/600"
+        st.image(img, use_container_width=True)
+        st.write("### 📝 Préparation")
+        st.write(r['Préparation'])
+        if r.get('Commentaires'):
+            st.warning(f"**Notes :** {r['Commentaires']}")
 
 # ======================================================
-# PAGE : AJOUTER / MODIFIER
+# ADD (Avec le champ SOURCE pour les liens)
 # ======================================================
-elif st.session_state.page in ["add", "edit"]:
-    is_edit = st.session_state.page == "edit"
-    r = st.session_state.recipe_data if is_edit else {}
-    st.header("✏ Modifier la recette" if is_edit else "➕ Ajouter une recette")
-    
-    with st.form("recipe_form"):
-        t = st.text_input("Titre", r.get('Titre', ''))
-        c = st.selectbox("Catégorie", CATEGORIES[1:])
-        img = st.text_input("URL de l'image", r.get('Image', ''))
-        d_prev = st.date_input("Date prévue")
-        ingr = st.text_area("Ingrédients (un par ligne)", r.get('Ingrédients', ''))
-        prep = st.text_area("Préparation", r.get('Préparation', ''))
-        comm = st.text_area("Notes personnelles", r.get('Commentaires', ''))
-        
-        if st.form_submit_button("💾 Enregistrer"):
+elif st.session_state.page == "add":
+    st.header("➕ Ajouter une recette")
+    with st.form("form_add"):
+        titre = st.text_input("Titre")
+        categorie = st.selectbox("Catégorie", CATEGORIES[1:])
+        source = st.text_input("Lien (Instagram, TikTok, Blog...)")
+        image = st.text_input("URL Image")
+        ingredients = st.text_area("Ingrédients (un par ligne)")
+        preparation = st.text_area("Préparation")
+        commentaires = st.text_area("Notes / Commentaires")
+
+        if st.form_submit_button("Enregistrer"):
             payload = {
-                "action": "update" if is_edit else "add",
-                "titre_original": r.get('Titre', '') if is_edit else "",
-                "titre": t, "ingredients": ingr, "preparation": prep,
-                "categorie": c, "commentaires": comm, "image": img,
-                "date": datetime.now().strftime("%d/%m/%Y"),
-                "date_prevue": d_prev.strftime("%d/%m/%Y")
+                "action": "add", "titre": titre, "source": source,
+                "ingredients": ingredients, "preparation": preparation,
+                "categorie": categorie, "image": image, "commentaires": commentaires,
+                "date": datetime.now().strftime("%d/%m/%Y")
             }
             requests.post(URL_SCRIPT, json=payload)
             st.cache_data.clear(); st.session_state.page = "home"; st.rerun()
 
 # ======================================================
-# PAGE : ÉPICERIE
+# SHOPPING
 # ======================================================
 elif st.session_state.page == "shopping":
-    st.header("🛒 Ma Liste d'Épicerie")
-    if st.button("🚫 Tout vider"): st.session_state.shopping_list = []; st.rerun()
-    
-    if not st.session_state.shopping_list:
-        st.info("Votre liste est vide. Allez dans une recette pour ajouter des ingrédients !")
-    else:
-        for idx, it in enumerate(st.session_state.shopping_list):
-            c1, c2 = st.columns([4,1])
-            c1.write(f"- {it}")
-            if c2.button("❌", key=f"del_sh_{idx}"):
-                st.session_state.shopping_list.pop(idx); st.rerun()
-
-# ======================================================
-# PAGE : AIDE
-# ======================================================
-elif st.session_state.page == "aide":
-    st.header("📖 Guide d'utilisation")
-    st.markdown("""
-    1.  **Calendrier** : Choisissez une date directement dans la fiche recette pour l'ajouter à votre Agenda Google.
-    2.  **Partage** : Utilisez le bloc 'Partager' en bas d'une recette pour copier le texte proprement.
-    3.  **Images** : Pour de meilleurs résultats, utilisez des liens d'images trouvées sur Google Images.
-    """)
+    st.header("🛒 Liste d'épicerie")
+    if st.button("🚫 Vider"): st.session_state.shopping_list = []; st.rerun()
+    if not st.session_state.shopping_list: st.info("Liste vide !")
+    for idx, item in enumerate(st.session_state.shopping_list):
+        c1, c2 = st.columns([4,1])
+        c1.write(f"• {item}")
+        if c2.button("❌", key=f"del_{idx}"):
+            st.session_state.shopping_list.pop(idx); st.rerun()
