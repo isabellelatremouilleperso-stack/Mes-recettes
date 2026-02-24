@@ -7,322 +7,274 @@ from datetime import datetime
 # CONFIGURATION
 # ======================================================
 
-st.set_page_config(page_title="Mes Recettes", layout="wide", page_icon="🍳")
+st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-st.markdown("""
-    <style>
-    [data-testid="stImage"] img { 
-        object-fit: cover; 
-        height: 200px !important; 
-        width: 100% !important; 
-        border-radius: 10px; 
-    }
-    .recipe-title { 
-        height: 60px; 
-        overflow: hidden; 
-        font-weight: bold; 
-        font-size: 1.2em; 
-        color: #ffffff; 
-        margin-top: 10px; 
-    }
-    .cat-badge { 
-        background-color: #ffca28; 
-        color: #000; 
-        padding: 2px 12px; 
-        border-radius: 15px; 
-        font-size: 0.8em; 
-        font-weight: bold; 
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
-URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+URL_CSV = "TON_URL_CSV"
+URL_SCRIPT = "TON_URL_SCRIPT"
 
 CATEGORIES = [
+    "Toutes",
     "Poulet", "Bœuf", "Porc", "Poisson", "Pâtes", "Riz",
     "Soupe", "Salade", "Entrée", "Plat Principal",
     "Accompagnement", "Dessert", "Petit-déjeuner", "Autre"
 ]
 
 # ======================================================
-# CACHE DONNÉES
+# CACHE
 # ======================================================
 
-@st.cache_data
+@st.cache_data(ttl=600)
 def load_data():
     return pd.read_csv(URL_CSV).fillna('')
 
 # ======================================================
-# INITIALISATION SESSION
+# SESSION INIT
 # ======================================================
 
-if "page" not in st.session_state:
-    st.session_state.page = "home"
-
-if "recipe_data" not in st.session_state:
-    st.session_state.recipe_data = None
-
-if "shopping_list" not in st.session_state:
-    st.session_state.shopping_list = []
-
-if "checked_items" not in st.session_state:
-    st.session_state.checked_items = []
+for key, value in {
+    "page": "home",
+    "recipe_data": None,
+    "shopping_list": [],
+    "checked_items": []
+}.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 # ======================================================
-# BARRE LATÉRALE
+# SIDEBAR
 # ======================================================
 
 with st.sidebar:
-    st.title("👨‍🍳 Mes Recettes")
+    st.title("👨‍🍳 Mes Recettes PRO")
 
     if st.button("📚 Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
 
-    if st.button("➕ Ajouter une recette", type="primary", use_container_width=True):
-        st.session_state.page = "ajouter"
+    if st.button("➕ Ajouter", type="primary", use_container_width=True):
+        st.session_state.page = "add"
         st.rerun()
 
     if st.button("🛒 Épicerie", use_container_width=True):
         st.session_state.page = "shopping"
         st.rerun()
 
-    st.write("---")
-
-    if st.button("❓ Aide & Tuto", use_container_width=True):
-        st.session_state.page = "aide"
+    if st.button("🔄 Actualiser", use_container_width=True):
+        st.cache_data.clear()
         st.rerun()
 
 # ======================================================
-# PAGE ACCUEIL
+# HOME
 # ======================================================
 
 if st.session_state.page == "home":
+
     st.header("📚 Ma Bibliothèque")
 
-    try:
-        df = load_data()
+    df = load_data()
 
-        expected_cols = [
-            'Date', 'Titre', 'Source', 'Ingrédients',
-            'Préparation', 'Date_Prevue', 'Image', 'Catégorie'
-        ]
+    expected = [
+        'Date','Titre','Source','Ingrédients',
+        'Préparation','Date_Prevue','Image',
+        'Catégorie','Commentaires'
+    ]
 
-        if len(df.columns) == len(expected_cols):
-            df.columns = expected_cols
-        else:
-            st.error("Structure du fichier CSV incorrecte.")
-            st.stop()
+    if len(df.columns) == 9:
+        df.columns = expected
+    elif len(df.columns) == 8:
+        df.columns = expected[:-1]
+        df['Commentaires'] = ""
+    else:
+        st.error("Structure CSV incorrecte.")
+        st.stop()
 
-        df = df[df['Titre'] != '']
+    df = df[df['Titre'] != ""]
 
-        search = st.text_input("🔍 Rechercher...")
-        if search:
-            df = df[df['Titre'].str.contains(search, case=False)]
+    col1, col2, col3 = st.columns(3)
 
-        if df.empty:
-            st.info("Votre bibliothèque est vide.")
-        else:
-            grid = st.columns(3)
-            for idx, row in df.reset_index(drop=True).iterrows():
-                with grid[idx % 3]:
-                    with st.container(border=True):
+    with col1:
+        search = st.text_input("🔍 Rechercher")
+    with col2:
+        cat_filter = st.selectbox("Filtrer par catégorie", CATEGORIES)
+    with col3:
+        sort_option = st.selectbox("Trier par", ["Date ajout", "Date prévue"])
 
-                        pic = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/200"
-                        st.image(pic, use_container_width=True)
+    if search:
+        df = df[df['Titre'].str.contains(search, case=False, na=False)]
 
-                        if row['Catégorie']:
-                            st.markdown(
-                                f"<span class='cat-badge'>{row['Catégorie']}</span>",
-                                unsafe_allow_html=True
-                            )
+    if cat_filter != "Toutes":
+        df = df[df['Catégorie'] == cat_filter]
 
-                        st.markdown(
-                            f"<div class='recipe-title'>{row['Titre']}</div>",
-                            unsafe_allow_html=True
-                        )
+    if sort_option == "Date prévue":
+        df = df.sort_values("Date_Prevue", ascending=True)
+    else:
+        df = df.sort_values("Date", ascending=False)
 
-                        if st.button("Ouvrir", key=f"v_{idx}", use_container_width=True):
-                            st.session_state.recipe_data = row.to_dict()
-                            st.session_state.page = "details"
-                            st.rerun()
+    if df.empty:
+        st.info("Aucune recette trouvée.")
+    else:
+        grid = st.columns(3)
+        for idx, row in df.reset_index(drop=True).iterrows():
+            with grid[idx % 3]:
+                with st.container(border=True):
 
-    except Exception as e:
-        st.error(f"Erreur de connexion aux données : {e}")
+                    img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/200"
+                    st.image(img, use_container_width=True)
 
-# ======================================================
-# PAGE AJOUTER
-# ======================================================
+                    st.markdown(f"**{row['Titre']}**")
+                    st.caption(row['Catégorie'])
 
-elif st.session_state.page == "ajouter":
-
-    st.header("➕ Nouvelle Recette")
-
-    with st.form("add_form"):
-        titre = st.text_input("Nom du plat *")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            cat = st.selectbox("Catégorie", CATEGORIES)
-            img_url = st.text_input("Lien de l'image (URL)")
-
-        with col2:
-            date_p = st.date_input("Date prévue", datetime.now())
-            source = st.text_input("Lien Instagram / Facebook")
-
-        ingr = st.text_area("Ingrédients (un par ligne) *")
-        prep = st.text_area("Préparation")
-
-        if img_url:
-            st.image(img_url, width=200)
-
-        if st.form_submit_button("💾 Enregistrer"):
-
-            if titre and ingr:
-
-                data = {
-                    "date": datetime.now().strftime("%d/%m/%Y"),
-                    "titre": titre,
-                    "source": source,
-                    "ingredients": ingr,
-                    "preparation": prep,
-                    "date_prevue": date_p.strftime("%d/%m/%Y"),
-                    "image": img_url,
-                    "categorie": cat
-                }
-
-                try:
-                    response = requests.post(URL_SCRIPT, json=data)
-
-                    if response.status_code == 200:
-                        st.success("Enregistré !")
-                        st.session_state.page = "home"
+                    if st.button("Voir", key=f"view_{idx}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
                         st.rerun()
-                    else:
-                        st.error("Erreur lors de l'enregistrement.")
-
-                except Exception as e:
-                    st.error(f"Erreur : {e}")
 
 # ======================================================
-# PAGE DÉTAILS
+# DETAILS
 # ======================================================
 
 elif st.session_state.page == "details" and st.session_state.recipe_data:
 
-    res = st.session_state.recipe_data
+    r = st.session_state.recipe_data
 
-    if st.button("⬅️ Retour"):
+    if st.button("⬅ Retour"):
         st.session_state.page = "home"
         st.rerun()
 
-    st.header(f"🍳 {res['Titre']}")
+    st.header(r['Titre'])
+    st.caption(r['Catégorie'])
 
-    src = str(res.get('Source', ''))
+    colA, colB = st.columns([1,1.2])
 
-    if "instagram.com" in src:
-        st.link_button("📸 Instagram", src)
-    elif "facebook.com" in src:
-        st.link_button("💙 Facebook", src)
-
-    col_a, col_b = st.columns([1, 1.2])
-
-    with col_a:
+    with colA:
         st.subheader("🛒 Ingrédients")
-
-        for i in str(res['Ingrédients']).split('\n'):
-            item = i.strip()
-
+        for item in str(r['Ingrédients']).split("\n"):
+            item = item.strip()
             if item:
-                if st.checkbox(item, key=f"det_{res['Titre']}_{item}"):
-
+                if st.checkbox(item, key=f"{r['Titre']}_{item}"):
                     if item not in st.session_state.shopping_list:
                         st.session_state.shopping_list.append(item)
 
-        if st.button("➕ Ajouter à l'épicerie"):
-            st.toast("Ajouté !")
+        st.write("---")
+        st.subheader("📝 Notes")
+        st.info(r.get("Commentaires","Aucune note."))
 
-    with col_b:
-        st.image(
-            res['Image'] if "http" in str(res['Image']) else "https://via.placeholder.com/400",
-            use_container_width=True
-        )
+    with colB:
+        st.image(r['Image'], use_container_width=True)
+        st.subheader("👨‍🍳 Préparation")
+        st.write(r['Préparation'])
 
-        st.info(res.get('Préparation', 'Pas de détails'))
+    col1, col2 = st.columns(2)
+
+    if col1.button("✏ Modifier"):
+        st.session_state.page = "edit"
+        st.rerun()
+
+    if col2.button("🗑 Supprimer"):
+        try:
+            requests.post(URL_SCRIPT, json={
+                "action": "delete",
+                "titre": r['Titre']
+            })
+            st.cache_data.clear()
+            st.success("Recette supprimée")
+            st.session_state.page = "home"
+            st.rerun()
+        except:
+            st.error("Erreur suppression")
 
 # ======================================================
-# PAGE ÉPICERIE
+# ADD
+# ======================================================
+
+elif st.session_state.page == "add":
+
+    st.header("➕ Nouvelle recette")
+
+    with st.form("add_form"):
+        titre = st.text_input("Nom *")
+        cat = st.selectbox("Catégorie", CATEGORIES[1:])
+        img = st.text_input("Image URL")
+        date_p = st.date_input("Date prévue")
+        source = st.text_input("Lien source")
+        ingr = st.text_area("Ingrédients *")
+        prep = st.text_area("Préparation")
+        comm = st.text_area("Notes")
+
+        if st.form_submit_button("Enregistrer"):
+
+            data = {
+                "action":"add",
+                "date":datetime.now().strftime("%d/%m/%Y"),
+                "titre":titre,
+                "source":source,
+                "ingredients":ingr,
+                "preparation":prep,
+                "date_prevue":date_p.strftime("%d/%m/%Y"),
+                "image":img,
+                "categorie":cat,
+                "commentaires":comm
+            }
+
+            try:
+                requests.post(URL_SCRIPT,json=data)
+                st.cache_data.clear()
+                st.success("Ajoutée !")
+                st.session_state.page="home"
+                st.rerun()
+            except:
+                st.error("Erreur ajout")
+
+# ======================================================
+# EDIT
+# ======================================================
+
+elif st.session_state.page == "edit":
+
+    r = st.session_state.recipe_data
+    st.header("✏ Modifier recette")
+
+    with st.form("edit_form"):
+        titre = st.text_input("Nom", r['Titre'])
+        cat = st.selectbox("Catégorie", CATEGORIES[1:], index=CATEGORIES[1:].index(r['Catégorie']))
+        ingr = st.text_area("Ingrédients", r['Ingrédients'])
+        prep = st.text_area("Préparation", r['Préparation'])
+        comm = st.text_area("Notes", r.get("Commentaires",""))
+
+        if st.form_submit_button("Sauvegarder"):
+
+            try:
+                requests.post(URL_SCRIPT,json={
+                    "action":"update",
+                    "titre_original":r['Titre'],
+                    "titre":titre,
+                    "ingredients":ingr,
+                    "preparation":prep,
+                    "categorie":cat,
+                    "commentaires":comm
+                })
+                st.cache_data.clear()
+                st.success("Modifiée !")
+                st.session_state.page="home"
+                st.rerun()
+            except:
+                st.error("Erreur modification")
+
+# ======================================================
+# SHOPPING
 # ======================================================
 
 elif st.session_state.page == "shopping":
 
-    st.header("🛒 Liste d'épicerie")
+    st.header("🛒 Épicerie")
 
     if not st.session_state.shopping_list:
         st.info("Liste vide.")
     else:
-
-        btn_col1, btn_col2 = st.columns(2)
-
-        if btn_col1.button("🗑️ Vider les cochés", use_container_width=True):
-            st.session_state.shopping_list = [
-                it for it in st.session_state.shopping_list
-                if it not in st.session_state.checked_items
-            ]
-            st.session_state.checked_items = []
-            st.rerun()
-
-        if btn_col2.button("🚫 Tout vider", use_container_width=True):
-            st.session_state.shopping_list = []
-            st.session_state.checked_items = []
-            st.rerun()
-
-        for idx, item in enumerate(st.session_state.shopping_list):
-
-            cols = st.columns([0.5, 4, 1])
-
-            is_checked = cols[0].checkbox(
-                "",
-                key=f"chk_{idx}",
-                value=(item in st.session_state.checked_items)
-            )
-
-            if is_checked and item not in st.session_state.checked_items:
-                st.session_state.checked_items.append(item)
-
-            elif not is_checked and item in st.session_state.checked_items:
-                st.session_state.checked_items.remove(item)
-
+        for idx,item in enumerate(st.session_state.shopping_list):
+            cols=st.columns([0.5,4,1])
+            checked=cols[0].checkbox("",key=f"chk_{idx}")
             cols[1].write(item)
-
-            if cols[2].button("❌", key=f"del_{idx}"):
+            if cols[2].button("❌",key=f"del_{idx}"):
                 st.session_state.shopping_list.pop(idx)
-
-                if item in st.session_state.checked_items:
-                    st.session_state.checked_items.remove(item)
-
                 st.rerun()
-
-# ======================================================
-# PAGE AIDE
-# ======================================================
-
-elif st.session_state.page == "aide":
-
-    st.header("📖 Aide & Tuto")
-
-    st.write("### 🛒 Épicerie")
-    st.write("- Cochez les articles pour les marquer.")
-    st.write("- Cliquez sur **'Vider les cochés'** pour les supprimer d'un coup.")
-    st.write("- Cliquez sur le **'❌'** pour supprimer un article seul.")
-
-    st.write("### 📸 Vidéos Instagram & Facebook")
-    st.write("- Collez le lien du Reel dans 'Lien source'.")
-
-    st.write("### 🖼️ Images")
-    st.write("- Collez un lien direct (.jpg, .png).")
-
-    st.write("### 📲 Installation")
-    st.write("- Menu Chrome > 'Ajouter à l'écran d'accueil'. Nom : **Mes Recettes**.")
