@@ -7,7 +7,7 @@ import time
 # ======================================================
 # 1. CONFIGURATION & DESIGN
 # ======================================================
-st.set_page_config(page_title="Chef Master Pro", layout="wide", page_icon="🍳")
+st.set_page_config(page_title="Mes Recettes", layout="wide", page_icon="🍳")
 
 st.markdown("""
 <style>
@@ -240,3 +240,4 @@ elif st.session_state.page == "planning":
                 st.write("---")
     else:
         st.error("Impossible de charger les données.")
+
