@@ -133,28 +133,24 @@ if st.session_state.page == "home":
     else:
         st.info("Votre bibliothèque est vide.")
 
-# --- PAGE: DÉTAILS (AVEC AIDE ET BOUTON ÉPICERIE) ---
+# --- PAGE: DÉTAILS (CORRIGÉ : BOUTON ÉPICERIE RÉTABLI) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
     
     st.title(f"🍳 {r['Titre']}")
-    
-    # Zone d'aide visuelle pour les infos rapides
-    st.info(f"💡 **Aide Mémoire :** Cette recette est pour **{r['Portions']}**. Prévoir **{r['Temps_Prepa']}** de préparation et **{r['Temps_Cuisson']}** de cuisson.")
+    st.info(f"👥 Portions : {r['Portions']} | ⏱ Préparation : {r['Temps_Prepa']} | 🔥 Cuisson : {r['Temps_Cuisson']}")
     
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        
         st.subheader("⭐ Avis & Notes")
-        comm = st.text_area("Mes astuces personnelles", value=r.get('Commentaires',''), help="Notez ici vos variantes ou secrets de réussite !")
+        comm = st.text_area("Mes astuces personnelles", value=r.get('Commentaires',''))
         if st.button("💾 Sauvegarder l'avis"):
             send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": comm})
         
         st.write("---")
         st.subheader("📅 Planification")
-        st.caption("Planifiez ce repas pour le retrouver dans votre calendrier Google.")
         d_p = st.date_input("Planifier pour le :", value=datetime.now())
         if st.button("📅 Envoyer au Calendrier"):
             f_date = d_p.strftime("%d/%m/%Y")
@@ -163,15 +159,19 @@ elif st.session_state.page == "details":
 
     with col_r:
         st.subheader("🛒 Ingrédients")
-        st.caption("Cochez les éléments manquants pour les ajouter à votre liste de courses.")
         ing_list = str(r['Ingrédients']).split("\n")
         
+        # Liste temporaire pour stocker ce qu'on coche
         temp_to_add = []
+        
         for i, item in enumerate(ing_list):
             if item.strip():
+                # On crée la case à cocher
                 if st.checkbox(item.strip(), key=f"ing_check_{i}"):
                     temp_to_add.append(item.strip())
         
+        st.write("") # Espace
+        # LE BOUTON QUI AVAIT DISPARU :
         if st.button("➕ Ajouter la sélection à l'épicerie", use_container_width=True, type="primary"):
             if temp_to_add:
                 for selection in temp_to_add:
@@ -180,14 +180,12 @@ elif st.session_state.page == "details":
                 st.toast(f"✅ {len(temp_to_add)} ingrédients ajoutés !")
                 time.sleep(1)
                 st.rerun()
+            else:
+                st.warning("Veuillez cocher au moins un ingrédient.")
 
         st.write("---")
-        st.subheader("📝 Mode opératoire")
-        # Rétablissement du bloc d'aide pour la préparation
-        if r['Préparation'].strip():
-            st.info(r['Préparation'])
-        else:
-            st.warning("Aucune instruction de préparation saisie pour cette recette.")
+        st.subheader("📝 Préparation")
+        st.write(r['Préparation'])
 # --- PAGE: AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une recette")
@@ -248,6 +246,7 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
 
 
 
