@@ -229,3 +229,4 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
