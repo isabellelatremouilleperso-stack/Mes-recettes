@@ -4,24 +4,51 @@ import pandas as pd
 from datetime import datetime
 
 # ======================================================
-# CONFIGURATION & STYLE
+# CONFIGURATION & STYLE (RETOUR AU BEAU DESIGN)
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 st.markdown("""
 <style>
-    [data-testid="stImage"] img { object-fit: cover; height: 250px !important; border-radius: 15px; }
+    /* Cartes de la bibliothèque */
+    [data-testid="stImage"] img { 
+        object-fit: cover; 
+        height: 220px !important; 
+        width: 100% !important;
+        border-radius: 15px 15px 0 0; 
+    }
+    .recipe-card {
+        background-color: #ffffff;
+        border-radius: 15px;
+        border: 1px solid #e0e0e0;
+        padding: 0px;
+        margin-bottom: 20px;
+        transition: transform 0.2s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .recipe-title { 
+        font-weight: 700; 
+        font-size: 1.1rem; 
+        color: #2c3e50; 
+        padding: 15px;
+        text-align: center;
+        min-height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Boîtes d'aide */
     .help-box { 
         background-color: #ffffff; color: #1a1a1a !important; 
         padding: 20px; border-radius: 10px; border-left: 8px solid #e67e22; 
         margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .help-box h3 { color: #e67e22 !important; margin-top: 0; }
-    .help-box p { color: #1a1a1a !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- LIENS ---
+# --- CONFIG URLs ---
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
@@ -41,101 +68,111 @@ def load_data():
 # Initialisation
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
 if "page" not in st.session_state: st.session_state.page = "home"
-if "show_print" not in st.session_state: st.session_state.show_print = False
 
 # ======================================================
 # SIDEBAR
 # ======================================================
 with st.sidebar:
-    st.title("👨‍🍳 Ma Cuisine")
+    st.title("🍳 Ma Cuisine")
     if st.button("📚 Bibliothèque", use_container_width=True): 
-        st.session_state.page = "home"; st.session_state.show_print = False; st.rerun()
+        st.session_state.page = "home"; st.rerun()
     if st.button("📅 Planning", use_container_width=True): 
-        st.session_state.page = "planning"; st.session_state.show_print = False; st.rerun()
+        st.session_state.page = "planning"; st.rerun()
     if st.button(f"🛒 Épicerie ({len(st.session_state.shopping_list)})", use_container_width=True): 
-        st.session_state.page = "shopping"; st.session_state.show_print = False; st.rerun()
+        st.session_state.page = "shopping"; st.rerun()
     st.write("---")
     if st.button("➕ Ajouter une recette", use_container_width=True, type="primary"): 
         st.session_state.page = "add"; st.rerun()
     if st.button("❓ Aide & Tutoriel", use_container_width=True): 
         st.session_state.page = "aide"; st.rerun()
-    if st.button("🔄 Actualiser", use_container_width=True):
-        st.cache_data.clear(); st.rerun()
 
 # ======================================================
-# PAGE : BIBLIOTHÈQUE (HOME)
+# PAGE : BIBLIOTHÈQUE (RETOUR AU DESIGN ÉLÉGANT)
 # ======================================================
 if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     df = load_data()
+    
     if df.empty:
-        st.warning("Aucune recette trouvée. Vérifiez votre fichier Google Sheets.")
+        st.info("Chargement de vos recettes...")
+        st.rerun()
     else:
-        search = st.text_input("🔍 Rechercher une recette")
+        search = st.text_input("🔍 Rechercher une recette...", label_visibility="collapsed")
         filtered = df[df['Titre'].str.contains(search, case=False)]
         
+        st.write("##")
         grid = st.columns(3)
         for idx, row in filtered.reset_index(drop=True).iterrows():
             with grid[idx % 3]:
-                with st.container(border=True):
+                # On crée une "carte" visuelle
+                with st.container():
                     img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/400"
                     st.image(img, use_container_width=True)
-                    st.markdown(f"**{row['Titre']}**")
-                    if st.button("Ouvrir", key=f"h_{idx}", use_container_width=True):
+                    st.markdown(f"<div class='recipe-title'>{row['Titre']}</div>", unsafe_allow_html=True)
+                    if st.button("Voir la recette", key=f"h_{idx}", use_container_width=True):
                         st.session_state.recipe_data = row.to_dict()
                         st.session_state.page = "details"; st.rerun()
+                st.write("---")
 
 # ======================================================
 # PAGE : DÉTAILS (Étoiles, Notes, Planning)
 # ======================================================
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
-    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+    if st.button("⬅ Retour à la liste"): st.session_state.page = "home"; st.rerun()
     
-    colA, colB = st.columns([1, 1.2])
+    st.header(f"🍳 {r['Titre']}")
+    colA, colB = st.columns([1, 1.3])
+    
     with colA:
         st.subheader("⭐ Évaluation")
         st.select_slider("Ma note", options=["⭐","⭐⭐","⭐⭐⭐","⭐⭐⭐⭐","⭐⭐⭐⭐⭐"])
-        st.checkbox("✅ Recette testée")
-        notes = st.text_area("📝 Mes notes", value=r.get('Commentaires', ''))
-        if st.button("💾 Sauvegarder les notes"):
+        st.checkbox("✅ Déjà cuisiné")
+        notes = st.text_area("📝 Mes astuces / commentaires", value=r.get('Commentaires', ''), height=150)
+        if st.button("💾 Enregistrer mes notes"):
             requests.post(URL_SCRIPT, json={"action": "update_notes", "titre": r['Titre'], "commentaires": notes})
-            st.success("Enregistré !")
+            st.success("Notes sauvegardées !")
 
         st.write("---")
         st.subheader("📅 Planifier")
-        d_plan = st.date_input("Date", value=datetime.now())
+        d_plan = st.date_input("Choisir une date", value=datetime.now())
         if st.button("Ajouter au planning"):
             requests.post(URL_SCRIPT, json={"action": "plan", "titre": r['Titre'], "date_prevue": d_plan.strftime("%d/%m/%Y")})
-            st.success("Planifié !")
+            st.success(f"Prévu pour le {d_plan.strftime('%d/%m/%Y')} !")
 
     with colB:
-        st.header(r['Titre'])
-        st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/600")
+        st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/600", use_container_width=True)
         
         st.subheader("🛒 Ingrédients")
-        to_add = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip() and st.checkbox(l.strip())]
-        if st.button("➕ Ajouter à l'épicerie"):
+        st.info("Cochez pour ajouter à votre liste d'épicerie :")
+        ing_lines = str(r['Ingrédients']).split("\n")
+        to_add = []
+        for i, line in enumerate(ing_lines):
+            if line.strip() and st.checkbox(line.strip(), key=f"ing_{i}"):
+                to_add.append(line.strip())
+        
+        if st.button("➕ Ajouter la sélection à l'épicerie", use_container_width=True):
             st.session_state.shopping_list.extend([x for x in to_add if x not in st.session_state.shopping_list])
-            st.toast("Ajouté !")
+            st.toast("Liste mise à jour !")
 
+        st.write("---")
         st.subheader("📝 Préparation")
         st.write(r['Préparation'])
 
 # ======================================================
-# PAGE : AJOUTER (CORRIGÉE AVEC BOUTON)
+# PAGE : AJOUTER (AVEC BOUTON SUBMIT)
 # ======================================================
 elif st.session_state.page == "add":
-    st.header("➕ Nouvelle recette")
+    st.header("➕ Ajouter une nouvelle pépite")
     with st.form("form_ajout"):
-        t = st.text_input("Titre")
+        t = st.text_input("Titre de la recette")
         c = st.selectbox("Catégorie", CATEGORIES[1:])
-        s = st.text_input("Source (Instagram...)")
-        i = st.text_input("URL Image")
-        ing = st.text_area("Ingrédients")
-        pre = st.text_area("Préparation")
-        # LE BOUTON MANQUANT ÉTAIT ICI :
-        submitted = st.form_submit_button("💾 Sauvegarder la recette")
+        s = st.text_input("Source (Instagram, TikTok, Blog...)")
+        i = st.text_input("URL de l'image (Lien)")
+        ing = st.text_area("Ingrédients (un par ligne)")
+        pre = st.text_area("Étapes de préparation")
+        
+        submitted = st.form_submit_button("💾 Enregistrer dans ma bibliothèque")
         if submitted:
             requests.post(URL_SCRIPT, json={"action":"add","titre":t,"source":s,"ingredients":ing,"preparation":pre,"categorie":c,"image":i,"date":datetime.now().strftime("%d/%m/%Y")})
             st.cache_data.clear()
@@ -143,42 +180,42 @@ elif st.session_state.page == "add":
             st.rerun()
 
 # ======================================================
-# PAGE : AIDE (BOITES BLANCHES)
+# PAGE : AIDE (BOITES)
 # ======================================================
 elif st.session_state.page == "aide":
     st.header("❓ Aide & Tutoriel")
     st.markdown("""
     <div class="help-box">
         <h3>🚀 Ajouter une recette</h3>
-        <p>Utilisez le bouton <b>Ajouter</b>. Pour l'image, copiez l'adresse d'une image sur Google Images.</p>
+        <p>Utilisez le formulaire <b>Ajouter</b>. N'oubliez pas de mettre le lien <b>Source</b> (Instagram/TikTok) pour retrouver la vidéo plus tard !</p>
     </div>
     <div class="help-box">
         <h3>⭐ Évaluation & Notes</h3>
-        <p>Sur chaque fiche, vous pouvez donner des étoiles et écrire vos astuces (ex: "Cuire 5 min de moins"). Cliquez sur <b>Sauvegarder</b> pour ne pas les perdre.</p>
+        <p>Notez vos recettes et écrivez vos changements dans la zone <b>Notes</b>. Cliquez bien sur le bouton de sauvegarde pour mettre à jour votre fichier Google.</p>
     </div>
     <div class="help-box">
-        <h3>🛒 Épicerie</h3>
-        <p>Cochez les ingrédients manquants dans une recette et envoyez-les vers votre liste de courses.</p>
+        <h3>📅 Planning</h3>
+        <p>Le planning vous permet de prévoir vos repas. Les recettes planifiées s'affichent dans l'onglet <b>Mon Planning</b>.</p>
     </div>
     """, unsafe_allow_html=True)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
 # ======================================================
-# PAGE : PLANNING & ÉPICERIE
+# PLANNING & SHOPPING
 # ======================================================
 elif st.session_state.page == "planning":
-    st.header("📅 Planning")
+    st.header("📅 Mon Planning")
     df = load_data()
     if not df.empty:
-        plan = df[df['Date_Prevue'] != '']
+        plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
-            st.info(f"🗓️ {row['Date_Prevue']} : **{row['Titre']}**")
-    else: st.write("Planning vide.")
+            st.success(f"🗓️ **{row['Date_Prevue']}** : {row['Titre']}")
+    else: st.info("Rien de prévu pour le moment.")
 
 elif st.session_state.page == "shopping":
-    st.header("🛒 Épicerie")
-    if st.button("Vider"): st.session_state.shopping_list = []; st.rerun()
+    st.header("🛒 Liste d'Épicerie")
+    if st.button("🗑 Vider la liste"): st.session_state.shopping_list = []; st.rerun()
     for idx, item in enumerate(st.session_state.shopping_list):
         c1, c2 = st.columns([5, 1])
-        c1.write(f"• {item}")
+        c1.write(f"✅ **{item}**")
         if c2.button("❌", key=f"s_{idx}"): st.session_state.shopping_list.pop(idx); st.rerun()
