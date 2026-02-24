@@ -3,26 +3,21 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET STYLE
+# 1. CONFIGURATION ET STYLE UNIFORME
 st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
 st.markdown("""
     <style>
-    .recipe-card {
-        border: 1px solid #444;
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-        background-color: #1e1e1e;
-        margin-bottom: 20px;
-        height: 400px; /* Hauteur fixe pour l'uniformité */
-    }
-    .stImage img {
+    /* Force la taille des images pour qu'elles soient toutes pareilles */
+    /* Sans casser la mise en page */
+    [data-testid="stImage"] img {
         object-fit: cover;
         height: 200px !important;
         width: 100% !important;
-        border-radius: 5px;
+        border-radius: 10px;
     }
+    
+    /* Couleur du texte pour ton thème sombre */
     .stApp { color: white; }
     </style>
     """, unsafe_allow_html=True)
@@ -130,30 +125,32 @@ elif st.session_state.page == "ajouter":
                 requests.post(URL_SCRIPT, json=data)
                 st.success("C'est enregistré ! 🎉")
 
-# 7. PAGE : ACCUEIL (CORRECTION DU DÉCALAGE ICI)
+# 7. PAGE : ACCUEIL (VERSION STABLE SANS DÉCALAGE)
 else:
     st.title("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV)
-        # SUPPRIME LES LIGNES VIDES (évite les carrés gris)
-        df = df.dropna(subset=['Titre']) 
+        # Supprime les lignes où le titre est vide pour éviter les boîtes fantômes
+        df = df[df['Titre'].notna() & (df['Titre'].str.strip() != "")]
         
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
         cols = st.columns(3)
-        # On utilise enumerate pour bien gérer l'index après avoir supprimé les lignes vides
         for idx, (_, row) in enumerate(df.iterrows()):
             with cols[idx % 3]:
-                st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
-                img = row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
-                st.image(img, use_container_width=True)
-                st.subheader(row['Titre'])
-                if pd.notna(row['Date']): 
-                    st.caption(f"📅 {row['Date']}")
-                if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
-                    st.session_state.recipe_data = row.to_dict()
-                    st.session_state.page = "details"
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                # ON UTILISE LE COMPOSANT NATIF QUI NE DÉCALE RIEN
+                with st.container(border=True):
+                    img = row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
+                    st.image(img, use_container_width=True)
+                    
+                    # On affiche le titre et la date de façon simple
+                    st.markdown(f"**{row['Titre']}**")
+                    if pd.notna(row['Date']): 
+                        st.caption(f"📅 {row['Date']}")
+                    
+                    if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
     except Exception as e:
         st.error(f"Erreur : {e}")
