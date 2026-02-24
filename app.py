@@ -28,6 +28,8 @@ URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCb
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
+# On crée un dictionnaire pour se souvenir de ce qui est déjà acheté
+if "bought_items" not in st.session_state: st.session_state.bought_items = {}
 
 # 3. BARRE LATÉRALE
 with st.sidebar:
@@ -62,9 +64,10 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
         ingredients_bruts = str(res['Ingrédients']).split('\n')
         
         for ing in ingredients_bruts:
-            if ing.strip():
-                if st.checkbox(ing.strip(), key=f"sel_{ing.strip()}"):
-                    choix_utilisateur.append(ing.strip())
+            item = ing.strip()
+            if item:
+                if st.checkbox(item, key=f"sel_{item}"):
+                    choix_utilisateur.append(item)
         
         if st.button("✅ Ajouter la sélection", type="primary"):
             if choix_utilisateur:
@@ -81,18 +84,32 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
         st.subheader("👨‍🍳 Préparation")
         st.info(res['Préparation'])
 
-# 5. PAGE : LISTE D'ÉPICERIE
+# 5. PAGE : LISTE D'ÉPICERIE (MAGASIN - VERSION CORRIGÉE)
 elif st.session_state.page == "shopping":
     st.title("🛒 Ma Liste d'Épicerie")
+    
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
-        if st.button("🗑️ Vider toute la liste"):
-            st.session_state.shopping_list = []
-            st.rerun()
+        col_clear, col_space = st.columns([1, 2])
+        with col_clear:
+            if st.button("🗑️ Vider la liste"):
+                st.session_state.shopping_list = []
+                st.session_state.bought_items = {}
+                st.rerun()
+        
         st.write("---")
-        for i, article in enumerate(st.session_state.shopping_list):
-            st.checkbox(f"{article}", key=f"shop_{i}_{article}")
+        
+        # Affichage interactif
+        for item in st.session_state.shopping_list:
+            # On vérifie si l'item était déjà coché
+            is_checked = st.session_state.bought_items.get(item, False)
+            
+            # La case à cocher met à jour le dictionnaire de mémoire
+            if st.checkbox(f"{item}", value=is_checked, key=f"shop_{item}"):
+                st.session_state.bought_items[item] = True
+            else:
+                st.session_state.bought_items[item] = False
 
 # 6. PAGE : AJOUTER
 elif st.session_state.page == "ajouter":
@@ -129,4 +146,4 @@ else:
                         st.session_state.page = "details"
                         st.rerun()
     except Exception as e:
-        st.error(f"Erreur de lecture du livre : {e}")
+        st.error(f"Erreur : {e}")
