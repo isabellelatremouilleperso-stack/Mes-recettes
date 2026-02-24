@@ -133,7 +133,7 @@ if st.session_state.page == "home":
     else:
         st.info("Votre bibliothèque est vide.")
 
-# --- PAGE: DÉTAILS ---
+# --- PAGE: DÉTAILS (CORRIGÉ : BOUTON ÉPICERIE RÉTABLI) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
@@ -141,9 +141,9 @@ elif st.session_state.page == "details":
     st.title(f"🍳 {r['Titre']}")
     st.info(f"👥 Portions : {r['Portions']} | ⏱ Préparation : {r['Temps_Prepa']} | 🔥 Cuisson : {r['Temps_Cuisson']}")
     
-    c1, c2 = st.columns([1, 1.2])
-    with c1:
-        st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400", use_container_width=True)
+    col_l, col_r = st.columns([1, 1.2])
+    with col_l:
+        st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         st.subheader("⭐ Avis & Notes")
         comm = st.text_area("Mes astuces personnelles", value=r.get('Commentaires',''))
         if st.button("💾 Sauvegarder l'avis"):
@@ -157,17 +157,35 @@ elif st.session_state.page == "details":
             if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
                 send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r['Ingrédients']})
 
-    with c2:
+    with col_r:
         st.subheader("🛒 Ingrédients")
         ing_list = str(r['Ingrédients']).split("\n")
+        
+        # Liste temporaire pour stocker ce qu'on coche
+        temp_to_add = []
+        
         for i, item in enumerate(ing_list):
             if item.strip():
-                if st.checkbox(item.strip(), key=f"ing_{i}"):
-                    if item.strip() not in st.session_state.shopping_list:
-                        st.session_state.shopping_list.append(item.strip())
+                # On crée la case à cocher
+                if st.checkbox(item.strip(), key=f"ing_check_{i}"):
+                    temp_to_add.append(item.strip())
+        
+        st.write("") # Espace
+        # LE BOUTON QUI AVAIT DISPARU :
+        if st.button("➕ Ajouter la sélection à l'épicerie", use_container_width=True, type="primary"):
+            if temp_to_add:
+                for selection in temp_to_add:
+                    if selection not in st.session_state.shopping_list:
+                        st.session_state.shopping_list.append(selection)
+                st.toast(f"✅ {len(temp_to_add)} ingrédients ajoutés !")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.warning("Veuillez cocher au moins un ingrédient.")
+
         st.write("---")
         st.subheader("📝 Préparation")
-        st.info(r['Preparation'] if 'Preparation' in r else r['Préparation'])
+        st.write(r['Préparation'])
 
 # --- PAGE: AJOUTER ---
 elif st.session_state.page == "add":
@@ -229,4 +247,5 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
 
