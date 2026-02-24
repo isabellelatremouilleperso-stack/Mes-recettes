@@ -7,7 +7,7 @@ import time
 # ======================================================
 # 1. CONFIGURATION & DESIGN
 # ======================================================
-st.set_page_config(page_title="Mes Recettes", layout="wide", page_icon="🍳")
+st.set_page_config(page_title="Chef Master Pro", layout="wide", page_icon="🍳")
 
 st.markdown("""
 <style>
@@ -29,8 +29,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# --- REMPLACE CES LIENS PAR LES TIENS ---
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
+URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+
 CATEGORIES = ["Toutes","Poulet","Bœuf","Porc","Poisson","Pâtes","Riz","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Autre"]
 
 # ======================================================
@@ -48,13 +51,13 @@ def load_data():
         return pd.DataFrame()
 
 def send_action(payload):
-    with st.spinner("📦 Synchronisation..."):
+    with st.spinner("📦 Synchronisation Cloud..."):
         try:
-            r = requests.post(URL_SCRIPT, json=payload, timeout=15)
+            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
             if "Success" in r.text:
                 st.success("Réussi !")
                 st.cache_data.clear()
-                time.sleep(1)
+                time.sleep(0.5)
                 return True
             st.error(f"Erreur : {r.text}")
         except Exception as e:
@@ -63,38 +66,31 @@ def send_action(payload):
 
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = {}
-if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
 
 # ======================================================
-# 3. BARRE LATÉRALE (CORRIGÉE)
+# 3. BARRE LATÉRALE (AVEC AIDE CORRIGÉE)
 # ======================================================
 with st.sidebar:
-    st.title("👨‍🍳 Ma Cuisine")
+    st.title("👨‍🍳 Chef Master Pro")
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
     if st.button("📅 Planning", use_container_width=True): st.session_state.page = "planning"; st.rerun()
-    if st.button(f"🛒 Épicerie ({len(st.session_state.shopping_list)})", use_container_width=True): st.session_state.page = "shop"; st.rerun()
+    if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
     st.write("---")
-    if st.button("➕ Ajouter", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
+    if st.button("➕ Ajouter une recette", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
     if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
 
     st.divider()
-    # Initialisation de l'état de l'aide
-    if "show_help" not in st.session_state:
-        st.session_state.show_help = False
-
+    if "show_help" not in st.session_state: st.session_state.show_help = False
+    
     if st.button("❓ Aide & Astuces", use_container_width=True):
         st.session_state.show_help = not st.session_state.show_help
 
     if st.session_state.show_help:
-        with st.expander("📖 Guide d'utilisation", expanded=True):
-            tab1, tab2, tab3 = st.tabs(["➕ Ajout", "🛒 Courses", "📅 Planning"])
-            with tab1:
-                st.write("**Ajouter :** Titre et Ingrédients obligatoires.")
-                st.write("**Sources :** Collez un lien Instagram/TikTok pour le bouton vidéo.")
-            with tab2:
-                st.write("**Épicerie :** Cochez dans la fiche recette pour ajouter à la liste.")
-            with tab3:
-                st.write("**Terminé :** 'Repas terminé' nettoie l'app mais garde la trace sur Google Calendar.")
+        with st.expander("📖 Guide Rapide", expanded=True):
+            t1, t2, t3 = st.tabs(["➕", "🛒", "📅"])
+            with t1: st.write("**Ajout :** Remplissez Titre & Ingrédients.")
+            with t2: st.write("**Courses :** Cochez dans la recette pour sauver au Cloud.")
+            with t3: st.write("**Planning :** 'Terminé' nettoie l'app mais reste sur Google.")
 
 # ======================================================
 # 4. LOGIQUE DES PAGES
@@ -111,8 +107,7 @@ if st.session_state.page == "home":
     if not df.empty:
         filtered = df.copy()
         if search: filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
-        if cat_f != "Toutes": 
-            filtered = filtered[filtered['Catégorie'].str.contains(cat_f, case=False, na=False)]
+        if cat_f != "Toutes": filtered = filtered[filtered['Catégorie'].str.contains(cat_f, case=False, na=False)]
         
         rows = filtered.reset_index(drop=True)
         for i in range(0, len(rows), 3):
@@ -124,60 +119,40 @@ if st.session_state.page == "home":
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
                         cats = str(row['Catégorie']).split(", ")
                         badges = "".join([f'<span style="background-color: #3d4455; color: #e67e22; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 4px;">{c}</span>' for c in cats if c])
-
-                        st.markdown(f"""
-                        <div class="recipe-card" style="height: 400px; display: flex; flex-direction: column; justify-content: space-between;">
-                            <div>
-                                <img src="{img}" class="recipe-img">
-                                <h4 style="margin: 10px 0 5px 0; font-size: 0.95rem; height: 50px; overflow-y: auto; color: white;">{row['Titre']}</h4>
-                                <div style="margin-bottom: 8px;">{badges}</div>
-                                <p style="color: #e67e22; font-size: 0.8rem; margin:0;">👥 {row['Portions']} | ⏱ {row['Temps_Prepa']}</p>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><h4 style="color:white;">{row["Titre"]}</h4>{badges}</div>', unsafe_allow_html=True)
                         if st.button("Ouvrir", key=f"btn_{i+j}", use_container_width=True):
-                            st.session_state.recipe_data = row.to_dict()
-                            st.session_state.page = "details"; st.rerun()
+                            st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+    else: st.info("Bibliothèque vide.")
 
 # --- DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     col_back, col_del = st.columns([5, 1])
-    with col_back:
-        if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
-    with col_del:
-        if st.button("🗑️"): st.session_state.confirm_delete = True
+    if col_back.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+    if col_del.button("🗑️"): st.session_state.confirm_delete = True
 
     if st.session_state.get('confirm_delete', False):
-        st.error("Supprimer ?")
-        cb1, cb2 = st.columns(2)
-        if cb1.button("✅ Oui"):
+        st.error("Supprimer cette recette ?")
+        if st.button("✅ Confirmer Suppression"):
             if send_action({"action": "delete", "titre": r['Titre']}):
                 st.session_state.confirm_delete = False; st.session_state.page = "home"; st.rerun()
-        if cb2.button("❌ Non"): st.session_state.confirm_delete = False; st.rerun()
+        if st.button("❌ Annuler"): st.session_state.confirm_delete = False; st.rerun()
 
     st.title(f"🍳 {r['Titre']}")
-    c_list = str(r['Catégorie']).split(", ")
-    badge_html = "".join([f'<span style="background-color: #e67e22; color: white; padding: 3px 10px; border-radius: 12px; margin-right: 5px; font-size: 0.8rem;">{c}</span>' for c in c_list if c])
-    st.markdown(badge_html, unsafe_allow_html=True)
     st.info(f"Portions : {r['Portions']} | Prépa : {r['Temps_Prepa']} | Cuisson : {r['Temps_Cuisson']}")
     
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         if str(r['Source']).startswith("http"):
-            st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Voir la vidéo originale</a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Voir la vidéo</a>', unsafe_allow_html=True)
         
-        st.subheader("⭐ Mon Avis")
         note = st.feedback("stars", key=f"note_{r['Titre']}")
-        fait = st.checkbox("✅ Faite !")
-        if st.button("💾 Sauver l'avis", use_container_width=True):
-            nouveau_comm = f"[{'DONE' if fait else 'A TESTER'}] Note: {note}/5"
-            send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": nouveau_comm})
+        if st.button("💾 Sauver l'avis"):
+            send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": f"Note: {note}/5"})
         
         st.divider()
-        st.subheader("📅 Planifier")
-        d_p = st.date_input("Date :", value=datetime.now())
+        d_p = st.date_input("Planifier le :", value=datetime.now())
         if st.button("📅 Envoyer au Calendrier"):
             f_date = d_p.strftime("%d/%m/%Y")
             if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
@@ -190,48 +165,51 @@ elif st.session_state.page == "details":
         for i, item in enumerate(ing_list):
             if item.strip() and st.checkbox(item.strip(), key=f"ing_{i}"):
                 temp_to_add.append(item.strip())
-        if st.button("➕ Ajouter à l'épicerie"):
-            st.session_state.shopping_list.extend(temp_to_add); st.toast("Ajouté !")
         
+        if st.button("➕ Ajouter à l'épicerie Cloud"):
+            for s in temp_to_add:
+                send_action({"action": "add_shop", "article": s})
+            st.toast("C'est dans la liste !")
+
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r['Préparation'])
 
 # --- AJOUTER ---
 elif st.session_state.page == "add":
-    st.header("➕ Ajouter une recette")
+    st.header("➕ Nouvelle Recette")
     with st.form("form_add", clear_on_submit=True):
+        t = st.text_input("Titre *")
+        cat = ", ".join(st.multiselect("Catégories", CATEGORIES[1:]))
         c1, c2 = st.columns(2)
-        with c1:
-            t = st.text_input("Titre *")
-            cat_list = st.multiselect("Catégories", CATEGORIES[1:])
-            cat = ", ".join(cat_list)
-        with c2:
-            src = st.text_input("Lien Source")
-            img = st.text_input("URL Image")
-        
+        src = c1.text_input("Lien Vidéo")
+        img = c2.text_input("URL Image")
         cp, cpr, ccu = st.columns(3)
-        port = cp.text_input("Portions")
-        prep = cpr.text_input("Prépa")
-        cuis = ccu.text_input("Cuisson")
+        port, prep, cuis = cp.text_input("Portions"), cpr.text_input("Prépa"), ccu.text_input("Cuisson")
         ing = st.text_area("Ingrédients *")
         pre = st.text_area("Préparation")
-        
-        if st.form_submit_button("💾 Enregistrer", use_container_width=True):
+        if st.form_submit_button("💾 Enregistrer"):
             if t and ing:
                 payload = {"action": "add", "titre": t, "categorie": cat, "source": src, "image": img, "ingredients": ing, "preparation": pre, "portions": port, "t_prepa": prep, "t_cuisson": cuis, "date": datetime.now().strftime("%d/%m/%Y")}
-                if send_action(payload):
-                    st.session_state.page = "home"; st.rerun()
+                if send_action(payload): st.session_state.page = "home"; st.rerun()
 
-# --- ÉPICERIE ---
+# --- ÉPICERIE (PERMANENTE) ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste de Courses")
-    if st.button("🗑 Tout vider"): st.session_state.shopping_list = []; st.rerun()
-    for idx, item in enumerate(st.session_state.shopping_list):
-        ct, cd = st.columns([0.8, 0.2])
-        ct.write(f"✅ **{item}**")
-        if cd.button("❌", key=f"del_shop_{idx}"):
-            st.session_state.shopping_list.pop(idx); st.rerun()
+    st.header("🛒 Liste d'Épicerie Cloud")
+    if st.button("🗑 Tout vider"):
+        if send_action({"action": "clear_shop"}): st.rerun()
+    try:
+        df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
+        if not df_shop.empty:
+            for idx, row in df_shop.iterrows():
+                item = row['Article']
+                if pd.isna(item): continue
+                c_a, c_b = st.columns([0.8, 0.2])
+                c_a.write(f"✅ **{item}**")
+                if c_b.button("❌", key=f"del_{idx}"):
+                    if send_action({"action": "remove_item_shop", "article": item}): st.rerun()
+        else: st.info("Liste vide.")
+    except: st.error("Erreur de chargement. Vérifiez l'URL_CSV_SHOP.")
 
 # --- PLANNING ---
 elif st.session_state.page == "planning":
@@ -239,7 +217,7 @@ elif st.session_state.page == "planning":
     df = load_data()
     if not df.empty:
         plan = df[df['Date_Prevue'] != ''].copy()
-        if plan.empty: st.info("Agenda vide.")
+        if plan.empty: st.info("Rien de prévu.")
         else:
             plan['dt_object'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
             plan = plan.sort_values('dt_object')
@@ -249,6 +227,4 @@ elif st.session_state.page == "planning":
                 if c1.button("📖 Voir", key=f"p_v_{row['Titre']}", use_container_width=True):
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
-                    if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
-                        st.rerun()
-
+                    if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
