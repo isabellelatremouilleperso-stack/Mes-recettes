@@ -32,7 +32,6 @@ st.markdown("""
 # ==============================
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
-
 # ==============================
 # MÉMOIRE
 # ==============================
@@ -185,3 +184,4 @@ else:
     except Exception as e:
         st.error("⚠️ Problème de connexion au Google Sheets.")
         st.write(f"Erreur technique : {e}")
+
