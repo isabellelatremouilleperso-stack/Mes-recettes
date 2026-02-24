@@ -77,3 +77,4 @@ elif menu == "Ma Bibliothèque":
                         st.caption(f"Source : {row.iloc[2]}")
     except Exception as e:
         st.error("Le livre est vide ou le lien est en cours de mise à jour par Google. Réessaie dans 1 minute.")
+
