@@ -8,23 +8,18 @@ st.set_page_config(page_title="Mes Recettes", layout="wide")
 
 st.markdown("""
     <style>
-    /* Images : 200px de haut, recadrage net */
     [data-testid="stImage"] img {
         object-fit: cover;
         height: 200px !important;
         width: 100% !important;
         border-radius: 10px 10px 0 0;
     }
-    
-    /* Cartes : Hauteur fixe pour alignement parfait */
     [data-testid="stVerticalBlockBorderWrapper"] > div {
-        height: 520px !important;
+        height: 540px !important;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
-
-    /* Titres : Espace réservé pour 3 lignes max */
     .recipe-title {
         height: 80px; 
         overflow: hidden;
@@ -32,8 +27,6 @@ st.markdown("""
         font-size: 1.1em;
         line-height: 1.2;
     }
-
-    /* Badge catégorie */
     .cat-badge {
         background-color: #333;
         color: #ffca28;
@@ -49,14 +42,12 @@ st.markdown("""
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
-# LISTE DES CATÉGORIES MISE À JOUR
 CATEGORIES = ["Poulet", "Bœuf", "Porc", "Soupe", "Pâtes", "Entrée", "Plat Principal", "Dessert", "Petit-déjeuner", "Autre"]
 
 # 2. MÉMOIRE
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
-if "bought_items" not in st.session_state: st.session_state.bought_items = {}
 
 # 3. MENU LATÉRAL
 with st.sidebar:
@@ -85,12 +76,10 @@ if st.session_state.page == "ajouter":
             cat = st.selectbox("Catégorie", CATEGORIES)
             d = st.date_input("Date prévue", datetime.now())
         with col2:
-            img = st.text_input("URL de l'image (Lien)")
-            src = st.text_input("Lien source (URL site)")
-        
-        ing = st.text_area("Ingrédients (Copier-Coller) *")
+            img = st.text_input("URL de l'image")
+            src = st.text_input("Lien source")
+        ing = st.text_area("Ingrédients (un par ligne) *")
         pre = st.text_area("Préparation")
-        
         if st.form_submit_button("💾 Enregistrer"):
             if t and ing:
                 data = {"titre":t, "categorie":cat, "date":d.strftime("%d/%m/%Y"), "image":img, "ingredients":ing, "preparation":pre, "source":src}
@@ -98,10 +87,8 @@ if st.session_state.page == "ajouter":
                 st.success("Recette ajoutée !")
                 st.session_state.page = "home"
                 st.rerun()
-            else:
-                st.error("Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE DÉTAILS ---
+# --- PAGE DÉTAILS (Cases + Bouton de validation) ---
 elif st.session_state.page == "details" and st.session_state.recipe_data:
     res = st.session_state.recipe_data
     if st.button("⬅️ Retour"):
@@ -109,79 +96,19 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
         st.rerun()
     
     st.header(f"🍳 {res['Titre']}")
-    st.markdown(f"<span class='cat-badge'>{res.get('Catégorie', 'Plat')}</span>", unsafe_allow_html=True)
     
     col1, col2 = st.columns([1, 1.2])
     with col1:
         st.subheader("🛒 Ingrédients")
-        for i in str(res['Ingrédients']).split('\n'):
-            item = i.strip()
-            if item:
-                if st.checkbox(item, key=f"d_{item}"):
-                    if item not in st.session_state.shopping_list:
-                        st.session_state.shopping_list.append(item)
-    with col2:
-        if "http" in str(res['Image']):
-            st.image(res['Image'], use_container_width=True)
-        st.subheader("👨‍🍳 Préparation")
-        st.info(res['Préparation'])
-
-# --- PAGE ÉPICERIE (Boutons de nettoyage remis ici) ---
-elif st.session_state.page == "shopping":
-    st.title("🛒 Liste d'épicerie")
-    if not st.session_state.shopping_list:
-        st.info("Votre liste est vide.")
-    else:
-        col_btn1, col_btn2 = st.columns(2)
+        st.write("Cochez ce qu'il vous manque :")
         
-        # BOUTON 1 : Supprimer uniquement les articles cochés
-        if col_btn1.button("🧹 Supprimer les articles achetés", use_container_width=True):
-            st.session_state.shopping_list = [i for i in st.session_state.shopping_list if not st.session_state.bought_items.get(i, False)]
-            st.session_state.bought_items = {}
-            st.rerun()
-            
-        # BOUTON 2 : Tout vider d'un coup
-        if col_btn2.button("🗑️ Tout vider la liste", use_container_width=True):
-            st.session_state.shopping_list = []
-            st.session_state.bought_items = {}
-            st.rerun()
-            
-        st.write("---")
-        # Affichage de la liste avec des cases à cocher
-        for item in st.session_state.shopping_list:
-            # On stocke l'état (coché ou non) dans bought_items
-            st.session_state.bought_items[item] = st.checkbox(item, key=f"s_{item}", value=st.session_state.bought_items.get(item, False))
-
-# --- PAGE BIBLIOTHÈQUE ---
-else:
-    st.header("📚 Ma Bibliothèque")
-    try:
-        df = pd.read_csv(URL_CSV)
-        df = df[df.iloc[:, 1].notna()]
-        df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image', 'Catégorie']
+        # On sépare les ingrédients
+        liste_ing = str(res['Ingrédients']).split('\n')
+        selection_utilisateur = []
         
-        c1, c2 = st.columns([2, 1])
-        search = c1.text_input("🔍 Rechercher...")
-        f_cat = c2.selectbox("📂 Filtrer par catégorie", ["Toutes"] + CATEGORIES)
-        
-        if search:
-            df = df[df['Titre'].str.contains(search, case=False)]
-        if f_cat != "Toutes":
-            df = df[df['Catégorie'] == f_cat]
-
-        st.write("---")
-        cols = st.columns(3)
-        for idx, row in df.iterrows():
-            with cols[idx % 3]:
-                with st.container(border=True):
-                    img_url = str(row['Image']) if "http" in str(row['Image']) else "https://via.placeholder.com/200"
-                    st.image(img_url, use_container_width=True)
-                    st.markdown(f"<span class='cat-badge'>{row.get('Catégorie', 'Autre')}</span>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='recipe-title'>{row['Titre']}</div>", unsafe_allow_html=True)
-                    st.caption(f"📅 {row['Date']}")
-                    if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
-    except:
-        st.info("Ajoutez votre première recette via le menu latéral !")
+        # On crée une case pour chaque ingrédient
+        for i in liste_ing:
+            nom_ing = i.strip()
+            if nom_ing:
+                # Si l'utilisateur coche, on ajoute à notre sélection temporaire
+                if st.checkbox(nom_ing, key=f"sel_{nom_ing
