@@ -3,12 +3,12 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET DESIGN "GRILLE PARFAITE"
+# 1. CONFIGURATION ET DESIGN
 st.set_page_config(page_title="Mon Livre de Recettes", layout="wide")
 
 st.markdown("""
     <style>
-    /* Images uniformes : 200px de haut, recadrage intelligent */
+    /* Images uniformes : 200px de haut, recadrage propre */
     [data-testid="stImage"] img {
         object-fit: cover;
         height: 200px !important;
@@ -41,72 +41,62 @@ st.markdown("""
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
-# 2. GESTION DE LA MÉMOIRE (Session State)
+# 2. GESTION DE LA MÉMOIRE
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
 if "bought_items" not in st.session_state: st.session_state.bought_items = {}
 
-# 3. BARRE LATÉRALE (NAVIGATION SECONDAIRE)
+# 3. BARRE LATÉRALE (Bouton AJOUTER remis ici)
 with st.sidebar:
     st.title("👩‍🍳 Ma Cuisine")
     if st.button("📚 Bibliothèque", key="nav_home", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+    
+    # TON BOUTON PRÉFÉRÉ EST DE RETOUR ICI :
+    if st.button("➕ Ajouter une recette", key="nav_add", type="primary", use_container_width=True):
+        st.session_state.page = "ajouter"
+        st.rerun()
+        
     if st.button("🛒 Liste d'épicerie", key="nav_shop", use_container_width=True):
         st.session_state.page = "shopping"
         st.rerun()
+        
     st.write("---")
     st.metric("Articles à acheter", len(st.session_state.shopping_list))
 
-# 4. BARRE SUPÉRIEURE (ACCÈS RAPIDE)
-col_header, col_btn = st.columns([4, 1.2])
-with col_header:
-    st.title("📖 Mes Recettes")
-with col_btn:
-    st.write("") # Alignement vertical
-    if st.button("➕ Nouvelle Recette", type="primary", use_container_width=True):
-        st.session_state.page = "ajouter"
-        st.rerun()
-
+# 4. TITRE DE LA PAGE
+st.title("📖 Mes Recettes")
 st.write("---")
 
 # 5. LOGIQUE DES PAGES
 
-# --- PAGE AJOUTER (Optimisée pour la collecte) ---
+# --- PAGE AJOUTER ---
 if st.session_state.page == "ajouter":
-    st.subheader("🚀 Ajouter une nouvelle découverte")
-    
-    # Champ URL déconnecté du formulaire pour faciliter le copier-coller
-    url_web = st.text_input("🔗 Lien du site (Optionnel)", placeholder="Collez l'URL de Marmiton, Ricardo, etc.")
+    st.subheader("🚀 Ajouter une nouvelle recette")
+    url_web = st.text_input("🔗 Lien du site (ex: Marmiton, Ricardo...)")
     
     with st.form("form_add"):
         c1, c2 = st.columns(2)
         with c1:
             t = st.text_input("Nom du plat *")
             d = st.date_input("Date prévue", datetime.now())
-            img = st.text_input("URL de l'image (Lien direct)")
+            img = st.text_input("URL de l'image")
         with c2:
-            ing = st.text_area("Ingrédients (Collez tout le bloc ici) *", height=150)
+            ing = st.text_area("Ingrédients (Colle ta liste ici) *", height=150)
             
-        pre = st.text_area("Étapes de préparation")
+        pre = st.text_area("Préparation")
         
-        if st.form_submit_button("💾 Enregistrer la recette"):
+        if st.form_submit_button("💾 Enregistrer dans la bibliothèque"):
             if t and ing:
-                data = {
-                    "titre": t, 
-                    "date": d.strftime("%d/%m/%Y"), 
-                    "image": img, 
-                    "ingredients": ing, 
-                    "preparation": pre,
-                    "source": url_web # On garde l'URL en mémoire
-                }
+                data = {"titre":t, "date":d.strftime("%d/%m/%Y"), "image":img, "ingredients":ing, "preparation":pre, "source":url_web}
                 requests.post(URL_SCRIPT, json=data)
-                st.success(f"🎉 '{t}' ajouté avec succès !")
+                st.success("Recette enregistrée !")
                 st.session_state.page = "home"
                 st.rerun()
             else:
-                st.warning("Veuillez remplir au moins le titre et les ingrédients.")
+                st.error("Le titre et les ingrédients sont requis.")
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details" and st.session_state.recipe_data:
@@ -114,7 +104,6 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
     if st.button("⬅️ Retour"):
         st.session_state.page = "home"
         st.rerun()
-    
     st.header(f"🍳 {res['Titre']}")
     col1, col2 = st.columns([1, 1.2])
     with col1:
@@ -126,41 +115,30 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
                 if st.checkbox(item, key=f"d_{item}"):
                     if item not in st.session_state.shopping_list:
                         st.session_state.shopping_list.append(item)
-                        st.toast(f"Ajouté : {item}")
     with col2:
         if str(res['Image']).startswith("http"):
             st.image(res['Image'], use_container_width=True)
-        st.subheader("👨‍🍳 Préparation")
         st.info(res['Préparation'])
 
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shopping":
-    st.title("🛒 Liste d'Épicerie")
+    st.title("🛒 Ma Liste")
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
-        c1, c2 = st.columns(2)
-        if c1.button("🧹 Supprimer les cochés", use_container_width=True):
-            st.session_state.shopping_list = [i for i in st.session_state.shopping_list if not st.session_state.bought_items.get(i, False)]
-            st.session_state.bought_items = {}
-            st.rerun()
-        if c2.button("🗑️ Tout vider", use_container_width=True):
+        if st.button("🗑️ Tout vider"):
             st.session_state.shopping_list = []
-            st.session_state.bought_items = {}
             st.rerun()
-        
-        st.write("---")
         for item in st.session_state.shopping_list:
-            st.session_state.bought_items[item] = st.checkbox(item, key=f"s_{item}", value=st.session_state.bought_items.get(item, False))
+            st.checkbox(item, key=f"shop_{item}")
 
-# --- PAGE ACCUEIL (Bibliothèque) ---
+# --- PAGE ACCUEIL ---
 else:
     try:
         df = pd.read_csv(URL_CSV).dropna(subset=['Titre'])
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
-        # Barre de recherche intégrée
-        recherche = st.text_input("🔍 Rechercher une recette...", placeholder="Ex: Poulet, Lasagnes...")
+        recherche = st.text_input("🔍 Rechercher...")
         if recherche:
             df = df[df['Titre'].str.contains(recherche, case=False)]
 
@@ -168,17 +146,13 @@ else:
         for idx, row in df.iterrows():
             with cols[idx % 3]:
                 with st.container(border=True):
-                    # Image avec fallback
-                    img_url = str(row['Image']) if str(row['Image']).startswith("http") else "https://via.placeholder.com/250x200?text=Pas+d'image"
+                    img_url = str(row['Image']) if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
                     st.image(img_url, use_container_width=True)
-                    
-                    # Titre et date alignés
                     st.markdown(f'<div class="recipe-title">{row["Titre"]}</div>', unsafe_allow_html=True)
-                    st.caption(f"📅 {row['Date']}" if pd.notna(row['Date']) else "📅 Non planifié")
-                    
-                    if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
+                    st.caption(f"📅 {row['Date']}")
+                    if st.button("Voir", key=f"btn_{idx}", use_container_width=True):
                         st.session_state.recipe_data = row.to_dict()
                         st.session_state.page = "details"
                         st.rerun()
-    except Exception as e:
-        st.info("Aucune recette trouvée ou erreur de chargement. Commencez par en ajouter une !")
+    except:
+        st.info("Bienvenue ! Utilisez le menu à gauche pour ajouter votre première recette.")
