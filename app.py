@@ -152,46 +152,50 @@ if st.session_state.page == "home":
     else:
         st.info("Votre bibliothèque est vide.")
 
-# --- PAGE: DÉTAILS (CORRIGÉ : BOUTON ÉPICERIE RÉTABLI) ---
+# --- PAGE: DÉTAILS (VERSION FINALE : ÉTOILES + JE L'AI FAITE) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
     
     st.title(f"🍳 {r['Titre']}")
-    st.info(f"👥 Portions : {r['Portions']} | ⏱ Préparation : {r['Temps_Prepa']} | 🔥 Cuisson : {r['Temps_Cuisson']}")
+    
+    # Informations rapides
+    st.info(f"💡 **Aide Mémoire :** Portions : **{r['Portions']}** | Prépa : **{r['Temps_Prepa']}** | Cuisson : **{r['Temps_Cuisson']}**")
     
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        st.subheader("⭐ Avis & Notes")
-        comm = st.text_area("Mes astuces personnelles", value=r.get('Commentaires',''))
-        if st.button("💾 Sauvegarder l'avis"):
-            send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": comm})
         
         st.write("---")
-        st.subheader("📅 Planification")
-        d_p = st.date_input("Planifier pour le :", value=datetime.now())
-        if st.button("📅 Envoyer au Calendrier"):
-            f_date = d_p.strftime("%d/%m/%Y")
-            if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
-                send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r['Ingrédients']})
+        st.subheader("⭐ Mon Avis")
+        
+        # Le système d'étoiles (1 à 5)
+        # On essaie de récupérer la note si elle existe, sinon 3 par défaut
+        note = st.feedback("stars", key="recipe_rating")
+        
+        # La case "Je l'ai faite !"
+        fait = st.checkbox("✅ Je l'ai faite !", value=False, help="Cochez cette case si vous avez déjà testé cette recette.")
+        
+        comm = st.text_area("Mes astuces personnelles", value=r.get('Commentaires',''), placeholder="Ex: Ajouter un peu plus de sel...")
+        
+        if st.button("💾 Sauvegarder mon avis", use_container_width=True):
+            # On combine la note, le statut "fait" et le commentaire pour la colonne L
+            statut_fait = "DONE" if fait else "A TESTER"
+            nouveau_comm = f"[{statut_fait}] Note: {note if note else '?'}/5 - {comm}"
+            
+            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": nouveau_comm}):
+                st.toast("Avis enregistré !")
 
     with col_r:
         st.subheader("🛒 Ingrédients")
         ing_list = str(r['Ingrédients']).split("\n")
-        
-        # Liste temporaire pour stocker ce qu'on coche
         temp_to_add = []
-        
         for i, item in enumerate(ing_list):
             if item.strip():
-                # On crée la case à cocher
                 if st.checkbox(item.strip(), key=f"ing_check_{i}"):
                     temp_to_add.append(item.strip())
         
-        st.write("") # Espace
-        # LE BOUTON QUI AVAIT DISPARU :
-        if st.button("➕ Ajouter la sélection à l'épicerie", use_container_width=True, type="primary"):
+        if st.button("➕ Ajouter à l'épicerie", use_container_width=True, type="primary"):
             if temp_to_add:
                 for selection in temp_to_add:
                     if selection not in st.session_state.shopping_list:
@@ -199,12 +203,10 @@ elif st.session_state.page == "details":
                 st.toast(f"✅ {len(temp_to_add)} ingrédients ajoutés !")
                 time.sleep(1)
                 st.rerun()
-            else:
-                st.warning("Veuillez cocher au moins un ingrédient.")
 
         st.write("---")
-        st.subheader("📝 Préparation")
-        st.write(r['Préparation'])
+        st.subheader("📝 Mode opératoire")
+        st.info(r['Préparation'] if r['Préparation'].strip() else "Aucune instruction.")
 # --- PAGE: AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une recette")
@@ -265,6 +267,7 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
 
 
 
