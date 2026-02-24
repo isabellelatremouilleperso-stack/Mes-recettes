@@ -30,8 +30,8 @@ st.markdown("""
 # ==============================
 # LIENS
 # ==============================
-URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
-URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+URL_CSV = "TON_LIEN_CSV_ICI"
+URL_SCRIPT = "TON_LIEN_SCRIPT_ICI"
 
 # ==============================
 # MÉMOIRE
@@ -46,7 +46,7 @@ if "liste_epicerie" not in st.session_state:
     st.session_state.liste_epicerie = []
 
 # ==============================
-# MENU SIDEBAR (CORRIGÉ)
+# MENU
 # ==============================
 with st.sidebar:
     st.title("👩‍🍳 Menu")
@@ -56,7 +56,7 @@ with st.sidebar:
     elif st.session_state.page == "liste":
         default_index = 2
     else:
-        default_index = 0  # home OU details
+        default_index = 0
 
     choix = st.radio(
         "Navigation",
@@ -120,30 +120,32 @@ elif st.session_state.page == "details":
             st.session_state.page = "home"
             st.rerun()
 
-        st.markdown(f"<div class='fiche-titre'>{row[1]}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='fiche-titre'>{row['titre']}</div>", unsafe_allow_html=True)
 
         col1, col2 = st.columns([1, 1])
 
         with col1:
             st.markdown("### 🛒 Ingrédients")
 
-            for ligne in str(row[3]).split("\n"):
+            ingredients_text = str(row["ingredients"])
+
+            for ligne in ingredients_text.split("\n"):
                 if ligne.strip():
                     st.write(f"✅ {ligne.strip()}")
 
             if st.button("➕ Ajouter à l'épicerie"):
                 st.session_state.liste_epicerie.append({
-                    "titre": row[1],
-                    "ingredients": row[3]
+                    "titre": row["titre"],
+                    "ingredients": ingredients_text
                 })
                 st.toast("Ajouté à la liste !")
 
         with col2:
-            if len(row) > 6 and str(row[6]).startswith("http"):
-                st.image(row[6], use_container_width=True)
+            if str(row["image"]).startswith("http"):
+                st.image(row["image"], use_container_width=True)
 
         st.markdown("### 👨‍🍳 Préparation")
-        st.info(row[4])
+        st.info(row["preparation"])
 
     else:
         st.session_state.page = "home"
@@ -168,7 +170,7 @@ elif st.session_state.page == "liste":
             st.rerun()
 
 # ==============================
-# PAGE ACCUEIL (BIBLIOTHÈQUE)
+# PAGE ACCUEIL
 # ==============================
 else:
 
@@ -176,30 +178,34 @@ else:
 
     try:
         df = pd.read_csv(URL_CSV)
-        cols = st.columns(3)
 
-        for index, row in df.iterrows():
+        # Vérification sécurité
+        required_columns = {"titre", "ingredients", "preparation", "image"}
+        if not required_columns.issubset(set(df.columns)):
+            st.error("Les colonnes du Google Sheets ne correspondent pas.")
+            st.write("Colonnes détectées :", df.columns)
+        else:
 
-            with cols[index % 3]:
+            cols = st.columns(3)
 
-                st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
+            for index, row in df.iterrows():
 
-                image_url = (
-                    row.iloc[6]
-                    if len(row) > 6 and str(row.iloc[6]).startswith("http")
-                    else "https://via.placeholder.com/200"
-                )
+                with cols[index % 3]:
 
-                st.image(image_url, use_container_width=True)
-                st.write(f"**{row.iloc[1]}**")
+                    st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
 
-                if st.button("Voir la fiche", key=f"btn_{index}"):
-                    st.session_state.recipe_data = list(row)
-                    st.session_state.page = "details"
-                    st.rerun()
+                    image_url = row["image"] if str(row["image"]).startswith("http") else "https://via.placeholder.com/200"
 
-                st.markdown('</div>', unsafe_allow_html=True)
+                    st.image(image_url, use_container_width=True)
+                    st.write(f"**{row['titre']}**")
+
+                    if st.button("Voir la fiche", key=f"btn_{index}"):
+                        st.session_state.recipe_data = row
+                        st.session_state.page = "details"
+                        st.rerun()
+
+                    st.markdown('</div>', unsafe_allow_html=True)
 
     except Exception:
         st.error("⚠️ Problème de connexion au Google Sheets.")
-        st.info("Vérifiez que le fichier est bien publié sur le Web en format CSV.")
+        st.info("Vérifiez que le fichier est publié sur le Web en format CSV.")
