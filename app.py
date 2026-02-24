@@ -3,26 +3,27 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET STYLE DE LA GRILLE
+# 1. CONFIGURATION ET DESIGN DE LA GRILLE
 st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
 st.markdown("""
     <style>
-    /* 1. Uniformisation des images dans la grille */
+    /* Uniformisation des images : 200px de haut, recadrage propre */
     [data-testid="stImage"] img {
-        object-fit: cover; /* Recadre l'image pour remplir le cadre sans déformer */
+        object-fit: cover;
         height: 200px !important;
         width: 100% !important;
-        border-radius: 8px 8px 0 0; /* Arrondi seulement en haut */
-    }
-
-    /* 2. Uniformisation de la hauteur des boîtes (containers) */
-    [data-testid="stVerticalBlock"] > div:has(div.stCheckboxes) {
-        /* Cela cible les conteneurs de cartes si besoin, 
-           mais le container(border=True) est déjà très stable. */
+        border-radius: 10px;
     }
     
+    /* On harmonise la couleur du texte */
     .stApp { color: white; }
+    
+    /* Optionnel : fixe la hauteur minimale des titres pour l'alignement */
+    .recipe-title {
+        height: 60px;
+        overflow: hidden;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -30,7 +31,7 @@ st.markdown("""
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
-# 2. MÉMOIRE
+# 2. MÉMOIRE DE L'APPLI
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
@@ -122,20 +123,24 @@ elif st.session_state.page == "ajouter":
             if t:
                 data = {"titre":t, "date":d.strftime("%d/%m/%Y"), "image":i, "ingredients":ing, "preparation":pre}
                 requests.post(URL_SCRIPT, json=data)
-                st.success("C'est enregistré !")
+                st.success("Enregistré !")
 
 # 7. PAGE : ACCUEIL (LA GRILLE PARFAITE)
 else:
     st.title("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV)
+        # Nettoyage des données pour éviter les blocs vides
         df = df[df['Titre'].notna() & (df['Titre'].str.strip() != "")]
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
-        # On affiche 3 colonnes
         cols = st.columns(3)
         for idx, (_, row) in enumerate(df.iterrows()):
             with cols[idx % 3]:
-                # Le container avec bordure crée la boîte uniforme
                 with st.container(border=True):
-                    img = row['Image'] if
+                    # Correction de la syntaxe de la ligne 141
+                    img_url = str(row['Image']) if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
+                    st.image(img_url, use_container_width=True)
+                    
+                    st.markdown(f"### {row['Titre']}")
+                    if pd.not
