@@ -251,3 +251,4 @@ elif st.session_state.page == "planning":
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
                         st.rerun()
+
