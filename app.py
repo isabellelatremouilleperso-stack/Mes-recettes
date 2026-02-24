@@ -12,8 +12,15 @@ st.markdown("""
     /* Fond de page blanc pur */
     .stApp { background-color: #FFFFFF; }
     
-    /* FORCE LE TEXTE EN NOIR POUR UNE LECTURE FACILE */
-    .stApp p, .stApp div, .stApp span, .stApp label, .stApp h1, .stApp h2, .stApp h3 {
+    /* CIBLE UNIQUEMENT LE CONTENU CENTRAL POUR LE TEXTE NOIR */
+    /* On évite de toucher à la barre latérale (stSidebar) */
+    .main .block-container p, 
+    .main .block-container div, 
+    .main .block-container span, 
+    .main .block-container label, 
+    .main .block-container h1, 
+    .main .block-container h2, 
+    .main .block-container h3 {
         color: #1f2937 !important;
     }
 
@@ -62,7 +69,6 @@ if "liste_epicerie" not in st.session_state:
 with st.sidebar:
     st.title("👩‍🍳 Menu")
     
-    # Navigation simplifiée
     if st.button("📚 Ma Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
@@ -108,7 +114,6 @@ elif st.session_state.page == "details":
         col_txt, col_img = st.columns([1, 1])
         with col_txt:
             st.markdown("### 🛒 Ingrédients")
-            # Affichage propre ligne par ligne avec coche
             items = str(row["Ingrédients"]).split("\n")
             for item in items:
                 if item.strip(): st.write(f"✅ {item.strip()}")
@@ -152,7 +157,6 @@ else:
     st.title("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV)
-        # Noms des colonnes pour correspondre à ton Sheets
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
         cols = st.columns(3)
