@@ -91,7 +91,7 @@ with st.sidebar:
 # 4. LOGIQUE DES PAGES
 # ======================================================
 
-# --- PAGE: BIBLIOTHÈQUE ---
+# --- PAGE: BIBLIOTHÈQUE (FIXÉ : GRILLE ALIGNÉE) ---
 if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     df = load_data()
@@ -102,22 +102,36 @@ if st.session_state.page == "home":
 
     if not df.empty:
         filtered = df.copy()
-        if search: filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
-        if cat_f != "Toutes": filtered = filtered[filtered['Catégorie'] == cat_f]
+        if search: 
+            filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
+        if cat_f != "Toutes": 
+            filtered = filtered[filtered['Catégorie'] == cat_f]
         
-        cols = st.columns(3)
-        for idx, row in filtered.reset_index(drop=True).iterrows():
-            with cols[idx % 3]:
-                img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
-                st.markdown(f"""
-                <div class="recipe-card">
-                    <img src="{img}" class="recipe-img">
-                    <h4>{row['Titre']}</h4>
-                </div>
-                """, unsafe_allow_html=True)
-                if st.button("Ouvrir", key=f"btn_{idx}", use_container_width=True):
-                    st.session_state.recipe_data = row.to_dict()
-                    st.session_state.page = "details"; st.rerun()
+        # Affichage par lignes de 3 colonnes
+        rows = filtered.reset_index(drop=True)
+        for i in range(0, len(rows), 3):
+            cols = st.columns(3)
+            for j in range(3):
+                if i + j < len(rows):
+                    row = rows.iloc[i + j]
+                    with cols[j]:
+                        img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
+                        
+                        # Style forcé pour l'alignement
+                        st.markdown(f"""
+                        <div class="recipe-card" style="height: 350px; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <img src="{img}" class="recipe-img" style="height: 180px; object-fit: cover;">
+                                <h4 style="margin: 10px 0; height: 50px; overflow: hidden; text-overflow: ellipsis;">{row['Titre']}</h4>
+                                <p style="color: #e67e22; font-size: 0.85rem;">{row['Catégorie']}</p>
+                            </div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        if st.button("Ouvrir", key=f"btn_{i+j}", use_container_width=True):
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
     else:
         st.info("Votre bibliothèque est vide.")
 
@@ -226,3 +240,4 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
