@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 
 # 1. CONFIGURATION
-st.set_page_config(page_title="Dessin", layout="wide", page_icon="🎨")
+st.set_page_config(page_title="Mes Recettes", layout="wide", page_icon="🎨")
 
 st.markdown("""
     <style>
@@ -43,27 +43,20 @@ with st.sidebar:
 
 # 3. LOGIQUE DES PAGES
 
-# --- PAGE AIDE (URL & ASTUCES) ---
+# --- PAGE AIDE ---
 if st.session_state.page == "aide":
     st.header("📖 Guide & Astuces")
-    
-    with st.container():
-        st.markdown("""<div class='help-card'>
-        <h3>🖼️ Comment mettre une image ?</h3>
-        <p>Pour afficher une photo, vous avez besoin d'une <b>URL (adresse web)</b> :</p>
-        <ul>
-            <li><b>Sur Internet :</b> Faites un appui long sur une image et choisissez <i>'Copier l'adresse de l'image'</i>.</li>
-            <li><b>Astuce Photo Perso :</b> Si vous avez pris la photo vous-même, vous devez d'abord l'envoyer sur un site comme <b>ImgBB</b> ou <b>PostImages</b>, puis copier le 'Lien direct'.</li>
-        </ul>
-        </div>""", unsafe_allow_html=True)
-        
+    st.markdown("""<div class='help-card'>
+    <h3>🖼️ Comment mettre une image ?</h3>
+    <p><b>Sur Internet :</b> Faites un appui long sur une image et choisissez <i>'Copier l'adresse de l'image'</i>.<br>
+    <b>Photo Perso :</b> Utilisez un site comme <b>ImgBB</b> pour envoyer votre photo, puis copiez le 'Lien direct'.</p>
+    </div>""", unsafe_allow_html=True)
+    st.markdown("""<div class='help-card'>
+    <h3>📸 Liens Instagram / Facebook</h3>
+    <p>Collez le lien dans la case <b>'Lien source'</b>. L'appli créera un bouton pour ouvrir la vidéo.</p>
+    </div>""", unsafe_allow_html=True)
 
-        st.markdown("""<div class='help-card'>
-        <h3>📸 Liens Instagram / Facebook</h3>
-        <p>Copiez simplement le lien du Reel ou de la vidéo et collez-le dans la case <b>'Lien source'</b>. L'application créera automatiquement un bouton spécial pour ouvrir la vidéo d'origine.</p>
-        </div>""", unsafe_allow_html=True)
-
-# --- PAGE AJOUTER (AVEC APERÇU) ---
+# --- PAGE AJOUTER ---
 elif st.session_state.page == "ajouter":
     st.header("➕ Nouvelle Recette")
     with st.form("add_form"):
@@ -71,34 +64,22 @@ elif st.session_state.page == "ajouter":
         col1, col2 = st.columns(2)
         with col1:
             cat = st.selectbox("Catégorie", CATEGORIES)
-            img_url = st.text_input("URL de l'image (Lien direct .jpg, .png)")
+            img_url = st.text_input("URL de l'image (Lien direct)")
         with col2:
             date_p = st.date_input("Date prévue", datetime.now())
             source = st.text_input("Lien Instagram / Facebook")
-        
         ingr = st.text_area("Ingrédients (un par ligne) *")
         prep = st.text_area("Étapes de préparation")
-
+        
         if img_url:
-            st.markdown("---")
-            st.write("🔍 **Aperçu de votre image :**")
+            st.write("🔍 **Aperçu image :**")
             st.image(img_url, width=200)
-            st.markdown("---")
 
-        if st.form_submit_button("💾 Enregistrer la recette"):
+        if st.form_submit_button("💾 Enregistrer"):
             if titre and ingr:
-                data = {
-                    "date": datetime.now().strftime("%d/%m/%Y"), # Colonne A
-                    "titre": titre,                               # Colonne B
-                    "source": source,                              # Colonne C
-                    "ingredients": ingr,                          # Colonne D
-                    "preparation": prep,                          # Colonne E
-                    "date_prevue": date_p.strftime("%d/%m/%Y"),   # Colonne F
-                    "image": img_url,                             # Colonne G
-                    "categorie": cat                              # Colonne H
-                }
+                data = {"date": datetime.now().strftime("%d/%m/%Y"), "titre": titre, "source": source, "ingredients": ingr, "preparation": prep, "date_prevue": date_p.strftime("%d/%m/%Y"), "image": img_url, "categorie": cat}
                 requests.post(URL_SCRIPT, json=data)
-                st.success("C'est enregistré !")
+                st.success("Enregistré !")
                 st.session_state.page = "home"
                 st.rerun()
 
@@ -108,12 +89,11 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
     if st.button("⬅️ Retour"):
         st.session_state.page = "home"
         st.rerun()
-    
     st.header(f"🍳 {res['Titre']}")
     
     src_link = str(res.get('Source', ''))
     if "instagram.com" in src_link:
-        st.link_button("📸 Voir la vidéo Instagram", src_link, type="primary")
+        st.link_button("📸 Voir sur Instagram", src_link, type="primary")
     elif "facebook.com" in src_link:
         st.link_button("💙 Voir sur Facebook", src_link, type="primary")
 
@@ -125,14 +105,21 @@ elif st.session_state.page == "details" and st.session_state.recipe_data:
                 if st.checkbox(i.strip(), key=f"c_{i}"):
                     if i.strip() not in st.session_state.shopping_list:
                         st.session_state.shopping_list.append(i.strip())
-        if st.button("Ajouter à la liste"):
-            st.toast("C'est noté !")
-
+        if st.button("Ajouter à la liste"): st.toast("C'est noté !")
     with col_b:
-        pic = res['Image'] if "http" in str(res['Image']) else "https://via.placeholder.com/400x300?text=Pas+d'image"
+        pic = res['Image'] if "http" in str(res['Image']) else "https://via.placeholder.com/400"
         st.image(pic, use_container_width=True)
         st.subheader("👨‍🍳 Préparation")
         st.info(res.get('Préparation', 'Pas de détails'))
+
+# --- PAGE ÉPICERIE ---
+elif st.session_state.page == "shopping":
+    st.header("🛒 Liste d'épicerie")
+    if st.button("🗑️ Tout effacer"):
+        st.session_state.shopping_list = []
+        st.rerun()
+    for it in st.session_state.shopping_list:
+        st.write(f"• {it}")
 
 # --- PAGE ACCUEIL ---
 elif st.session_state.page == "home":
@@ -140,11 +127,8 @@ elif st.session_state.page == "home":
     try:
         df = pd.read_csv(URL_CSV).fillna('')
         df.columns = ['Date', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date_Prevue', 'Image', 'Catégorie']
-        
         search = st.text_input("🔍 Rechercher...")
-        if search:
-            df = df[df['Titre'].str.contains(search, case=False)]
-
+        if search: df = df[df['Titre'].str.contains(search, case=False)]
         grid = st.columns(3)
         for idx, row in df.iterrows():
             with grid[idx % 3]:
@@ -157,10 +141,4 @@ elif st.session_state.page == "home":
                         st.session_state.recipe_data = row.to_dict()
                         st.session_state.page = "details"
                         st.rerun()
-    except:
-        st.info("Ajoutez votre première recette !")
-
-# --- PAGE ÉPICERIE ---
-elif st.session_state.page == "shopping":
-    st.header("🛒 Liste d'épicerie")
-    if st.button
+    except: st.info("Ajoutez votre première recette !")
