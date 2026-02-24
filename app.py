@@ -89,11 +89,26 @@ with st.sidebar:
     if st.button("➕ Ajouter", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
     if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
 
+    # --- LE BLOC D'AIDE RÉTABLI ICI ---
+    st.divider()
+    with st.expander("💡 Besoin d'aide ?"):
+        aide_theme = st.selectbox("Choisir un thème :", 
+            ["Guide d'utilisation", "Ajouter une recette", "Gérer l'épicerie", "Planning & Calendrier"])
+        
+        if aide_theme == "Guide d'utilisation":
+            st.info("Bienvenue ! Utilisez le menu pour naviguer entre votre bibliothèque et vos outils.")
+        elif aide_theme == "Ajouter une recette":
+            st.write("Cliquez sur **Ajouter**. Remplissez le titre, les ingrédients et les temps. Vous pouvez aussi l'envoyer directement au planning.")
+        elif aide_theme == "Gérer l'épicerie":
+            st.write("Dans une recette, cochez les ingrédients et cliquez sur le bouton bleu pour les envoyer dans votre liste d'achats.")
+        elif aide_theme == "Planning & Calendrier":
+            st.write("Planifiez une date pour envoyer la recette dans l'onglet Planning et créer un événement sur votre Google Calendar.")
+
 # ======================================================
 # 4. LOGIQUE DES PAGES
 # ======================================================
 
-# --- PAGE: BIBLIOTHÈQUE ---
+# --- TROUVE LA PAGE HOME ET REMPLACE-LA ---
 if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     df = load_data()
@@ -104,10 +119,12 @@ if st.session_state.page == "home":
 
     if not df.empty:
         filtered = df.copy()
-        if search: filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
-        if cat_f != "Toutes": filtered = filtered[filtered['Catégorie'] == cat_f]
+        if search: 
+            filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
+        if cat_f != "Toutes": 
+            filtered = filtered[filtered['Catégorie'] == cat_f]
         
-        # Grille alignée (3 colonnes)
+        # Grille alignée (3 colonnes) avec police adaptée
         rows = filtered.reset_index(drop=True)
         for i in range(0, len(rows), 3):
             cols = st.columns(3)
@@ -120,10 +137,12 @@ if st.session_state.page == "home":
                         <div class="recipe-card" style="height: 380px; display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 <img src="{img}" class="recipe-img">
-                                <h4 style="margin: 10px 0 5px 0; font-size: 0.95rem; height: 60px; overflow-y: auto; color: white;">
+                                <h4 style="margin: 10px 0 5px 0; font-size: 0.95rem; height: 65px; overflow-y: auto; color: white; line-height: 1.2;">
                                     {row['Titre']}
                                 </h4>
-                                <p style="color: #e67e22; font-size: 0.8rem; margin:0;">👥 {row['Portions']} | ⏱ {row['Temps_Prepa']}</p>
+                                <p style="color: #e67e22; font-size: 0.8rem; margin:0; font-weight: bold;">
+                                    👥 {row.get('Portions', 'N/A')} | ⏱ {row.get('Temps_Prepa', 'N/A')}
+                                </p>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
@@ -246,6 +265,7 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
 
 
 
