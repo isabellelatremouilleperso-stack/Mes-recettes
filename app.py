@@ -153,4 +153,98 @@ elif st.session_state.page == "details":
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         
-        # --- BOUT
+        # --- BOUTON SOURCE CLIQUABLE ---
+        source_val = str(r['Source'])
+        if source_val.startswith("http"):
+            st.markdown(f'<a href="{source_val}" target="_blank" class="source-btn">🔗 Voir la vidéo originale</a>', unsafe_allow_html=True)
+        elif source_val:
+            st.caption(f"Source : {source_val}")
+        
+        st.subheader("⭐ Mon Avis")
+        note = st.feedback("stars", key=f"note_{r['Titre']}")
+        fait = st.checkbox("✅ Je l'ai faite !", value=False)
+        comm = st.text_area("Mes astuces personnelles", value=r.get('Commentaires',''))
+        if st.button("💾 Sauvegarder l'avis", use_container_width=True):
+            statut = "DONE" if fait else "A TESTER"
+            nouveau_comm = f"[{statut}] Note: {note if note else '?'}/5 - {comm}"
+            send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": nouveau_comm})
+        
+        st.write("---")
+        st.subheader("📅 Planifier")
+        d_p = st.date_input("Choisir une date :", value=datetime.now())
+        if st.button("📅 Envoyer au Calendrier"):
+            f_date = d_p.strftime("%d/%m/%Y")
+            if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
+                send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r['Ingrédients']})
+
+    with col_r:
+        st.subheader("🛒 Ingrédients")
+        ing_list = str(r['Ingrédients']).split("\n")
+        temp_to_add = []
+        for i, item in enumerate(ing_list):
+            if item.strip():
+                if st.checkbox(item.strip(), key=f"ing_ch_{i}"):
+                    temp_to_add.append(item.strip())
+        
+        if st.button("➕ Ajouter à l'épicerie", use_container_width=True, type="primary"):
+            for s in temp_to_add:
+                if s not in st.session_state.shopping_list:
+                    st.session_state.shopping_list.append(s)
+            st.toast("✅ Ingrédients ajoutés !")
+
+        st.divider()
+        st.subheader("📝 Préparation")
+        st.info(r['Préparation'] if r['Préparation'].strip() else "Aucune instruction saisie.")
+
+# --- AJOUTER ---
+elif st.session_state.page == "add":
+    st.header("➕ Ajouter une recette")
+    with st.form("form_add", clear_on_submit=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            t = st.text_input("Titre *")
+            cat = st.selectbox("Catégorie", CATEGORIES[1:])
+        with c2:
+            src = st.text_input("Lien de la source (Instagram, TikTok, FB...)")
+            img = st.text_input("URL Image")
+        
+        st.write("⏱ Détails")
+        cp, cpr, ccu = st.columns(3)
+        port = cp.text_input("Portions (ex: 4p)")
+        prep = cpr.text_input("Prépa (ex: 15min)")
+        cuis = ccu.text_input("Cuisson (ex: 20min)")
+        
+        ing = st.text_area("Ingrédients * (un par ligne)")
+        pre = st.text_area("Préparation")
+        
+        if st.form_submit_button("💾 Enregistrer la recette", use_container_width=True):
+            if t and ing:
+                payload = {
+                    "action": "add", "titre": t, "categorie": cat, "source": src, "image": img,
+                    "ingredients": ing, "preparation": pre, "portions": port,
+                    "t_prepa": prep, "t_cuisson": cuis,
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                }
+                if send_action(payload):
+                    st.session_state.page = "home"; st.rerun()
+
+# --- ÉPICERIE ---
+elif st.session_state.page == "shop":
+    st.header("🛒 Ma Liste de Courses")
+    if st.button("🗑 Tout vider"): st.session_state.shopping_list = []; st.rerun()
+    for idx, item in enumerate(st.session_state.shopping_list):
+        ct, cd = st.columns([0.8, 0.2])
+        ct.write(f"✅ **{item}**")
+        if cd.button("❌", key=f"del_shop_{idx}"):
+            st.session_state.shopping_list.pop(idx); st.rerun()
+
+# --- PLANNING ---
+elif st.session_state.page == "planning":
+    st.header("📅 Planning des repas")
+    df = load_data()
+    if not df.empty:
+        plan = df[df['Date_Prevue'] != ''].sort_values('Date_Prevue')
+        if plan.empty: st.info("Aucun repas planifié pour le moment.")
+        else:
+            for _, row in plan.iterrows():
+                st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
