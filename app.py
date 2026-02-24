@@ -228,3 +228,4 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+
