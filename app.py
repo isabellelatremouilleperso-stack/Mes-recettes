@@ -3,13 +3,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET STYLE (TES COULEURS D'ORIGINE)
+# 1. CONFIGURATION ET STYLE
 st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
-# On garde le thème par défaut de Streamlit (Sombre/Menu sombre) mais avec tes ajustements
 st.markdown("""
     <style>
-    /* Cartes de la bibliothèque */
     .recipe-card {
         border: 1px solid #444;
         border-radius: 10px;
@@ -18,8 +16,6 @@ st.markdown("""
         background-color: #1e1e1e;
         margin-bottom: 20px;
     }
-    
-    /* On s'assure que le texte reste lisible sur les fonds sombres */
     .stApp { color: white; }
     </style>
     """, unsafe_allow_html=True)
@@ -49,7 +45,7 @@ with st.sidebar:
     st.write("---")
     st.metric("Articles à acheter", len(st.session_state.shopping_list))
 
-# 4. PAGE : DÉTAILS (SÉLECTION INDIVIDUELLE)
+# 4. PAGE : DÉTAILS
 if st.session_state.page == "details" and st.session_state.recipe_data:
     res = st.session_state.recipe_data
     if st.button("⬅️ Retour"):
@@ -62,24 +58,20 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
     col1, col2 = st.columns([1, 1])
     with col1:
         st.subheader("🛒 Ingrédients manquants ?")
-        
-        # On stocke les ingrédients cochés
         choix_utilisateur = []
         ingredients_bruts = str(res['Ingrédients']).split('\n')
         
-        # On affiche les cases à cocher
         for ing in ingredients_bruts:
             if ing.strip():
                 if st.checkbox(ing.strip(), key=f"sel_{ing.strip()}"):
                     choix_utilisateur.append(ing.strip())
         
-        # Bouton d'ajout
-        if st.button("✅ Ajouter la sélection à l'épicerie", type="primary"):
+        if st.button("✅ Ajouter la sélection", type="primary"):
             if choix_utilisateur:
                 for item in choix_utilisateur:
                     if item not in st.session_state.shopping_list:
                         st.session_state.shopping_list.append(item)
-                st.toast("Ajouté à la liste !")
+                st.toast("Ajouté !")
             else:
                 st.warning("Cochez au moins un article !")
     
@@ -89,31 +81,27 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
         st.subheader("👨‍🍳 Préparation")
         st.info(res['Préparation'])
 
-# 5. PAGE : LISTE D'ÉPICERIE (MAGASIN)
+# 5. PAGE : LISTE D'ÉPICERIE
 elif st.session_state.page == "shopping":
     st.title("🛒 Ma Liste d'Épicerie")
-    st.write("Cochez les articles au magasin pour ne rien oublier.")
-    
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
         if st.button("🗑️ Vider toute la liste"):
             st.session_state.shopping_list = []
             st.rerun()
-        
         st.write("---")
-        # Ici on coche pour de vrai au magasin
         for i, article in enumerate(st.session_state.shopping_list):
             st.checkbox(f"{article}", key=f"shop_{i}_{article}")
 
-# 6. PAGE : AJOUTER (AVEC DATE)
+# 6. PAGE : AJOUTER
 elif st.session_state.page == "ajouter":
     st.title("➕ Ajouter une recette")
     with st.form("form_add"):
         t = st.text_input("Nom du plat")
         d = st.date_input("Date prévue", datetime.now())
         i = st.text_input("Lien Image (URL)")
-        ing = st.text_area("Ingrédients (un par ligne)")
+        ing = st.text_area("Ingrédients")
         pre = st.text_area("Préparation")
         if st.form_submit_button("🚀 Enregistrer"):
             if t:
@@ -130,9 +118,15 @@ else:
         cols = st.columns(3)
         for idx, row in df.iterrows():
             with cols[idx % 3]:
-                # On utilise le container Streamlit pour la bordure
                 with st.container(border=True):
                     img = row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
                     st.image(img, use_container_width=True)
                     st.subheader(row['Titre'])
-                    if pd.notna(row['Date']): st.caption(f"📅 {row['Date']}")
+                    if pd.notna(row['Date']): 
+                        st.caption(f"📅 {row['Date']}")
+                    if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+    except Exception as e:
+        st.error(f"Erreur de lecture du livre : {e}")
