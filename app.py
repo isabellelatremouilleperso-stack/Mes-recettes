@@ -28,7 +28,6 @@ URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCb
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
-# On crée un dictionnaire pour se souvenir de ce qui est déjà acheté
 if "bought_items" not in st.session_state: st.session_state.bought_items = {}
 
 # 3. BARRE LATÉRALE
@@ -84,28 +83,39 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
         st.subheader("👨‍🍳 Préparation")
         st.info(res['Préparation'])
 
-# 5. PAGE : LISTE D'ÉPICERIE (MAGASIN - VERSION CORRIGÉE)
+# 5. PAGE : LISTE D'ÉPICERIE (INTERACTIVE AVEC NETTOYAGE PARTIEL)
 elif st.session_state.page == "shopping":
     st.title("🛒 Ma Liste d'Épicerie")
     
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
-        col_clear, col_space = st.columns([1, 2])
-        with col_clear:
-            if st.button("🗑️ Vider la liste"):
+        col_del_all, col_del_checked = st.columns(2)
+        
+        with col_del_checked:
+            if st.button("🧹 Supprimer les articles cochés", use_container_width=True):
+                # On ne garde que les items qui ne sont PAS dans bought_items (ou qui sont False)
+                st.session_state.shopping_list = [
+                    item for item in st.session_state.shopping_list 
+                    if not st.session_state.bought_items.get(item, False)
+                ]
+                # On réinitialise les états de coche pour les items restants
+                st.session_state.bought_items = {
+                    item: False for item in st.session_state.shopping_list
+                }
+                st.rerun()
+
+        with col_del_all:
+            if st.button("🗑️ Tout vider", use_container_width=True):
                 st.session_state.shopping_list = []
                 st.session_state.bought_items = {}
                 st.rerun()
         
         st.write("---")
         
-        # Affichage interactif
         for item in st.session_state.shopping_list:
-            # On vérifie si l'item était déjà coché
             is_checked = st.session_state.bought_items.get(item, False)
-            
-            # La case à cocher met à jour le dictionnaire de mémoire
+            # Utilisation d'un callback pour mettre à jour immédiatement la mémoire
             if st.checkbox(f"{item}", value=is_checked, key=f"shop_{item}"):
                 st.session_state.bought_items[item] = True
             else:
