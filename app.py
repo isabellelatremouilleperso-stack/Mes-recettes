@@ -70,3 +70,4 @@ elif menu == "Ma Bibliothèque":
                     st.write(row.iloc[4])
     except:
         st.error("Erreur de lecture. Vérifie que ton Sheets est bien 'Publié sur le web' en format CSV.")
+
