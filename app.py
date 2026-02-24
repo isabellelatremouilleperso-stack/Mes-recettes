@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET DESIGN DE LA GRILLE
+# 1. CONFIGURATION ET DESIGN
 st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
 st.markdown("""
@@ -15,15 +15,7 @@ st.markdown("""
         width: 100% !important;
         border-radius: 10px;
     }
-    
-    /* On harmonise la couleur du texte */
     .stApp { color: white; }
-    
-    /* Optionnel : fixe la hauteur minimale des titres pour l'alignement */
-    .recipe-title {
-        height: 60px;
-        overflow: hidden;
-    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -40,13 +32,13 @@ if "bought_items" not in st.session_state: st.session_state.bought_items = {}
 # 3. BARRE LATÉRALE
 with st.sidebar:
     st.title("👩‍🍳 Ma Cuisine")
-    if st.button("📚 Bibliothèque", use_container_width=True):
+    if st.button("📚 Bibliothèque", key="nav_home", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True):
+    if st.button("🛒 Ma Liste d'épicerie", key="nav_shop", use_container_width=True):
         st.session_state.page = "shopping"
         st.rerun()
-    if st.button("➕ Ajouter une recette", use_container_width=True):
+    if st.button("➕ Ajouter une recette", key="nav_add", use_container_width=True):
         st.session_state.page = "ajouter"
         st.rerun()
     
@@ -80,8 +72,8 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
                 st.toast("Ajouté !")
 
     with col2:
-        if str(res['Image']).startswith("http"):
-            st.image(res['Image'], use_container_width=True)
+        img_url = str(res['Image']) if str(res['Image']).startswith("http") else "https://via.placeholder.com/400x300"
+        st.image(img_url, use_container_width=True)
         st.subheader("👨‍🍳 Préparation")
         st.info(res['Préparation'])
 
@@ -91,17 +83,18 @@ elif st.session_state.page == "shopping":
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🧹 Supprimer articles cochés", use_container_width=True):
+        c1, c2 = st.columns(2)
+        with c1:
+            if st.button("🧹 Supprimer cochés", use_container_width=True):
                 st.session_state.shopping_list = [i for i in st.session_state.shopping_list if not st.session_state.bought_items.get(i, False)]
                 st.session_state.bought_items = {i: False for i in st.session_state.shopping_list}
                 st.rerun()
-        with col2:
+        with c2:
             if st.button("🗑️ Tout vider", use_container_width=True):
                 st.session_state.shopping_list = []
                 st.session_state.bought_items = {}
                 st.rerun()
+        
         st.write("---")
         for item in st.session_state.shopping_list:
             is_checked = st.session_state.bought_items.get(item, False)
@@ -125,12 +118,11 @@ elif st.session_state.page == "ajouter":
                 requests.post(URL_SCRIPT, json=data)
                 st.success("Enregistré !")
 
-# 7. PAGE : ACCUEIL (LA GRILLE PARFAITE)
+# 7. PAGE : ACCUEIL
 else:
     st.title("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV)
-        # Nettoyage des données pour éviter les blocs vides
         df = df[df['Titre'].notna() & (df['Titre'].str.strip() != "")]
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
@@ -138,9 +130,13 @@ else:
         for idx, (_, row) in enumerate(df.iterrows()):
             with cols[idx % 3]:
                 with st.container(border=True):
-                    # Correction de la syntaxe de la ligne 141
-                    img_url = str(row['Image']) if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
-                    st.image(img_url, use_container_width=True)
-                    
+                    img = str(row['Image']) if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
+                    st.image(img, use_container_width=True)
                     st.markdown(f"### {row['Titre']}")
-                    if pd.not
+                    if pd.notna(row['Date']): st.caption(f"📅 {row['Date']}")
+                    if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+    except Exception as e:
+        st.error(f"Erreur : {e}")
