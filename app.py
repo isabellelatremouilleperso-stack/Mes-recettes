@@ -42,7 +42,7 @@ with st.sidebar:
         st.session_state.page = "aide"
         st.rerun()
 
-# 3. LOGIQUE DES PAGES
+# 3. PAGES
 
 # --- PAGE ACCUEIL ---
 if st.session_state.page == "home":
@@ -84,7 +84,7 @@ elif st.session_state.page == "ajouter":
             source = st.text_input("Lien Instagram / Facebook")
         ingr = st.text_area("Ingrédients (un par ligne) *")
         prep = st.text_area("Préparation")
-        if img_url: st.image(img_url, width=200, caption="Aperçu")
+        if img_url: st.image(img_url, width=200)
         if st.form_submit_button("💾 Enregistrer"):
             if titre and ingr:
                 data = {"date": datetime.now().strftime("%d/%m/%Y"), "titre": titre, "source": source, "ingredients": ingr, "preparation": prep, "date_prevue": date_p.strftime("%d/%m/%Y"), "image": img_url, "categorie": cat}
@@ -123,12 +123,12 @@ elif st.session_state.page == "shopping":
     if not st.session_state.shopping_list:
         st.info("Liste vide.")
     else:
-        c1, c2 = st.columns(2)
-        if c1.button("🗑️ Vider les cochés", use_container_width=True):
+        btn_col1, btn_col2 = st.columns(2)
+        if btn_col1.button("🗑️ Vider les cochés", use_container_width=True):
             st.session_state.shopping_list = [it for it in st.session_state.shopping_list if it not in st.session_state.checked_items]
             st.session_state.checked_items = []
             st.rerun()
-        if c2.button("🚫 Tout vider", use_container_width=True):
+        if btn_col2.button("🚫 Tout vider", use_container_width=True):
             st.session_state.shopping_list = []
             st.session_state.checked_items = []
             st.rerun()
