@@ -2,13 +2,9 @@ import streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib import colors
-from io import BytesIO
 
 # ======================================================
-# CONFIG & CSS (Ton style tablette optimisé)
+# CONFIGURATION & STYLE (Look Tablette)
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
@@ -20,51 +16,23 @@ st.markdown("""
     width: 100% !important;
     border-radius: 20px;
 }
-.recipe-title { font-weight: 700; font-size: 1.1rem; margin-top: 10px; min-height: 48px; }
+.recipe-title { font-weight: 700; font-size: 1.2rem; margin-top: 10px; }
 .cat-badge { 
     background: linear-gradient(90deg,#ff9800,#ff5722); 
     color: white; padding: 4px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; 
 }
+.stCheckbox { font-size: 1.1rem; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- N'oublie pas de remettre tes vraies URLs ici ---
+# --- Remplace par tes vrais liens ---
 URL_CSV = "TON_URL_CSV"
 URL_SCRIPT = "TON_URL_SCRIPT"
 
 CATEGORIES = ["Toutes","Poulet","Bœuf","Porc","Poisson","Pâtes","Riz","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Autre"]
 
 # ======================================================
-# PDF GENERATOR (Inclus la note maintenant)
-# ======================================================
-def generate_recipe_pdf(recipe, rating):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer)
-    styles = getSampleStyleSheet()
-    
-    title_style = ParagraphStyle('T', parent=styles['Heading1'], fontSize=22, textColor=colors.HexColor("#E65100"))
-    normal_style = styles['Normal']
-    
-    elements = [
-        Paragraph(recipe['Titre'], title_style),
-        Paragraph(f"Note : {'⭐' * rating}", normal_style),
-        Spacer(1, 12),
-        Paragraph("Ingrédients", styles['Heading2'])
-    ]
-    
-    for item in str(recipe['Ingrédients']).split("\n"):
-        if item.strip(): elements.append(Paragraph(f"• {item.strip()}", normal_style))
-        
-    elements.append(Spacer(1, 12))
-    elements.append(Paragraph("Préparation", styles['Heading2']))
-    elements.append(Paragraph(recipe['Préparation'].replace("\n", "<br/>"), normal_style))
-    
-    doc.build(elements)
-    buffer.seek(0)
-    return buffer
-
-# ======================================================
-# DATA & SESSION
+# CHARGEMENT DES DONNÉES
 # ======================================================
 @st.cache_data(ttl=600)
 def load_data():
@@ -77,26 +45,23 @@ if "page" not in st.session_state: st.session_state.page = "home"
 if "shopping_list" not in st.session_state: st.session_state.shopping_list = []
 
 # ======================================================
-# SIDEBAR
+# BARRE LATÉRALE
 # ======================================================
 with st.sidebar:
     st.title("👨‍🍳 Menu")
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
     if st.button("➕ Ajouter", use_container_width=True): st.session_state.page = "add"; st.rerun()
     if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page = "shopping"; st.rerun()
-    if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
+    st.write("---")
+    st.write(f"🛒 Liste : {len(st.session_state.shopping_list)} articles")
 
 # ======================================================
-# HOME (Ma Bibliothèque)
+# PAGE : BIBLIOTHÈQUE
 # ======================================================
 if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     df = load_data()
     if not df.empty:
-        # Renommage colonnes pour sécurité
-        expected = ['Date','Titre','Source','Ingrédients','Préparation','Date_Prevue','Image','Catégorie','Commentaires']
-        if len(df.columns) >= 9: df.columns = expected[:len(df.columns)]
-
         c1, c2 = st.columns(2)
         search = c1.text_input("🔍 Rechercher")
         cat_f = c2.selectbox("Catégorie", CATEGORIES)
@@ -116,7 +81,7 @@ if st.session_state.page == "home":
                         st.session_state.page = "details"; st.rerun()
 
 # ======================================================
-# DETAILS
+# PAGE : DÉTAILS
 # ======================================================
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
@@ -127,68 +92,91 @@ elif st.session_state.page == "details":
     colA, colB = st.columns([1, 1.2])
 
     with colA:
-        # Étoiles & Lien Social
-        note = st.select_slider("Ma note", options=[1,2,3,4,5], value=5)
+        # --- Étoiles et Statut ---
+        note = st.select_slider("Ma note", options=["⭐","⭐⭐","⭐⭐⭐","⭐⭐⭐⭐","⭐⭐⭐⭐⭐"], value="⭐⭐⭐⭐⭐")
+        fait = st.checkbox("✅ J'ai testé cette recette", value=False)
+        
+        # --- Liens Sociaux ---
         source_url = str(r.get('Source', ''))
-        if "instagram" in source_url.lower(): st.info("📸 Recette via Instagram")
-        elif "tiktok" in source_url.lower(): st.info("🎵 Recette via TikTok")
-        elif "http" in source_url.lower(): st.link_button("🔗 Voir la source originale", source_url)
+        if "instagram.com" in source_url: st.info("📸 Trouvé sur Instagram")
+        elif "tiktok.com" in source_url: st.info("🎵 Trouvé sur TikTok")
+        elif "facebook.com" in source_url: st.info("💙 Trouvé sur Facebook")
+        elif "http" in source_url: st.link_button("🔗 Voir le lien original", source_url)
 
+        st.write("---")
         st.subheader("🛒 Ingrédients")
         temp_items = []
         for i, item in enumerate(str(r['Ingrédients']).split("\n")):
-            if item.strip() and st.checkbox(item.strip(), key=f"chk_{i}"):
+            if item.strip() and st.checkbox(item.strip(), key=f"ing_{i}"):
                 temp_items.append(item.strip())
         
         if st.button("➕ Ajouter à l'épicerie", use_container_width=True):
             for it in temp_items:
                 if it not in st.session_state.shopping_list: st.session_state.shopping_list.append(it)
-            st.toast("C'est dans la liste !")
-
-        st.write("---")
-        # PDF GENERATOR
-        pdf_file = generate_recipe_pdf(r, note)
-        st.download_button("🖨 Télécharger en PDF", pdf_file, f"{r['Titre']}.pdf", "application/pdf", use_container_width=True)
+            st.toast("Articles ajoutés !")
 
     with colB:
         img = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/600"
         st.image(img, use_container_width=True)
+        
+        # --- Section Impression ---
+        with st.expander("🖨️ Préparer pour l'impression"):
+            layout_print = f"""RECETTE : {r['Titre']}
+Note : {note} {'(TESTÉ ✅)' if fait else ''}
+-------------------------------------
+INGRÉDIENTS :
+{r['Ingrédients']}
+
+PRÉPARATION :
+{r['Préparation']}
+
+MES NOTES :
+{r.get('Commentaires', 'Aucune')}"""
+            st.text_area("Copiez ce texte :", layout_print, height=200)
+
         st.write("### 📝 Préparation")
         st.write(r['Préparation'])
         if r.get('Commentaires'):
-            st.warning(f"**Notes :** {r['Commentaires']}")
+            st.warning(f"**Mes Notes :** {r['Commentaires']}")
+
+    st.write("---")
+    if st.button("✏ Modifier la recette", use_container_width=True):
+        st.session_state.page = "edit"; st.rerun()
 
 # ======================================================
-# ADD (Avec le champ SOURCE pour les liens)
+# PAGE : AJOUTER / MODIFIER
 # ======================================================
-elif st.session_state.page == "add":
-    st.header("➕ Ajouter une recette")
+elif st.session_state.page in ["add", "edit"]:
+    is_edit = st.session_state.page == "edit"
+    r = st.session_state.recipe_data if is_edit else {}
+    st.header("✏ Modifier" if is_edit else "➕ Ajouter")
+    
     with st.form("form_add"):
-        titre = st.text_input("Titre")
-        categorie = st.selectbox("Catégorie", CATEGORIES[1:])
-        source = st.text_input("Lien (Instagram, TikTok, Blog...)")
-        image = st.text_input("URL Image")
-        ingredients = st.text_area("Ingrédients (un par ligne)")
-        preparation = st.text_area("Préparation")
-        commentaires = st.text_area("Notes / Commentaires")
+        t = st.text_input("Titre", r.get('Titre',''))
+        cat = st.selectbox("Catégorie", CATEGORIES[1:], index=CATEGORIES[1:].index(r.get('Catégorie','Poulet')) if is_edit else 0)
+        src = st.text_input("Lien Source (Instagram, TikTok...)", r.get('Source',''))
+        img = st.text_input("URL Image", r.get('Image',''))
+        ing = st.text_area("Ingrédients (un par ligne)", r.get('Ingrédients',''))
+        pre = st.text_area("Préparation", r.get('Préparation',''))
+        not_ = st.text_area("Notes & Commentaires", r.get('Commentaires',''))
 
-        if st.form_submit_button("Enregistrer"):
+        if st.form_submit_button("💾 Enregistrer"):
             payload = {
-                "action": "add", "titre": titre, "source": source,
-                "ingredients": ingredients, "preparation": preparation,
-                "categorie": categorie, "image": image, "commentaires": commentaires,
+                "action": "update" if is_edit else "add",
+                "titre_original": r.get('Titre','') if is_edit else "",
+                "titre": t, "source": src, "ingredients": ing, "preparation": pre,
+                "categorie": cat, "commentaires": not_, "image": img,
                 "date": datetime.now().strftime("%d/%m/%Y")
             }
             requests.post(URL_SCRIPT, json=payload)
             st.cache_data.clear(); st.session_state.page = "home"; st.rerun()
 
 # ======================================================
-# SHOPPING
+# PAGE : ÉPICERIE
 # ======================================================
 elif st.session_state.page == "shopping":
     st.header("🛒 Liste d'épicerie")
     if st.button("🚫 Vider"): st.session_state.shopping_list = []; st.rerun()
-    if not st.session_state.shopping_list: st.info("Liste vide !")
     for idx, item in enumerate(st.session_state.shopping_list):
         c1, c2 = st.columns([4,1])
         c1.write(f"• {item}")
