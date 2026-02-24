@@ -7,7 +7,7 @@ import time
 # ======================================================
 # 1. CONFIGURATION & DESIGN
 # ======================================================
-st.set_page_config(page_title="Chef Master Pro", layout="wide", page_icon="🍳")
+st.set_page_config(page_title="Mes Recettes", layout="wide", page_icon="🍳")
 
 st.markdown("""
 <style>
@@ -71,7 +71,7 @@ if "recipe_data" not in st.session_state: st.session_state.recipe_data = {}
 # 3. BARRE LATÉRALE (AVEC AIDE CORRIGÉE)
 # ======================================================
 with st.sidebar:
-    st.title("👨‍🍳 Chef Master Pro")
+    st.title("👨‍🍳 Mes Recettes")
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
     if st.button("📅 Planning", use_container_width=True): st.session_state.page = "planning"; st.rerun()
     if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
@@ -166,7 +166,7 @@ elif st.session_state.page == "details":
             if item.strip() and st.checkbox(item.strip(), key=f"ing_{i}"):
                 temp_to_add.append(item.strip())
         
-        if st.button("➕ Ajouter à l'épicerie Cloud"):
+        if st.button("➕ Ajouter à l'épicerie"):
             for s in temp_to_add:
                 send_action({"action": "add_shop", "article": s})
             st.toast("C'est dans la liste !")
@@ -195,7 +195,7 @@ elif st.session_state.page == "add":
 
 # --- ÉPICERIE (PERMANENTE) ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Liste d'Épicerie Cloud")
+    st.header("🛒 Liste d'Épicerie")
     if st.button("🗑 Tout vider"):
         if send_action({"action": "clear_shop"}): st.rerun()
     try:
@@ -213,7 +213,7 @@ elif st.session_state.page == "shop":
 
 # --- PLANNING ---
 elif st.session_state.page == "planning":
-    st.header("📅 Agenda Gourmand")
+    st.header("📅 Agenda")
     df = load_data()
     if not df.empty:
         plan = df[df['Date_Prevue'] != ''].copy()
@@ -228,4 +228,5 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+
 
