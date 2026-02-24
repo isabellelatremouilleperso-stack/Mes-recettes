@@ -238,13 +238,43 @@ elif st.session_state.page == "shop":
         if cd.button("❌", key=f"del_shop_{idx}"):
             st.session_state.shopping_list.pop(idx); st.rerun()
 
-# --- PLANNING ---
+# --- PAGE: PLANNING (VERSION AMÉLIORÉE) ---
 elif st.session_state.page == "planning":
-    st.header("📅 Planning des repas")
+    st.header("📅 Mon Agenda Gourmand")
     df = load_data()
+    
     if not df.empty:
-        plan = df[df['Date_Prevue'] != ''].sort_values('Date_Prevue')
-        if plan.empty: st.info("Aucun repas planifié pour le moment.")
+        # On filtre les recettes qui ont une date prévue
+        plan = df[df['Date_Prevue'] != ''].copy()
+        
+        if plan.empty:
+            st.info("Votre agenda est vide. Planifiez des recettes depuis leur fiche détail !")
         else:
+            # Conversion des dates pour un tri correct
+            plan['dt_object'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
+            plan = plan.sort_values('dt_object')
+
+            # Affichage sous forme de timeline
             for _, row in plan.iterrows():
-                st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+                with st.container():
+                    # Style de la carte planning
+                    st.markdown(f"""
+                    <div style="background-color: #1e2129; border-left: 5px solid #e67e22; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                        <span style="color: #e67e22; font-weight: bold; font-size: 1.1rem;">🗓 {row['Date_Prevue']}</span>
+                        <h3 style="margin: 5px 0; color: white !important;">{row['Titre']}</h3>
+                        <p style="font-size: 0.85rem; color: #a0a0a0; margin: 0;">🍴 {row['Catégorie']} | ⏱ {row['Temps_Prepa']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Boutons d'action pour le planning
+                    c1, c2, c3 = st.columns([1, 1, 2])
+                    if c1.button("📖 Voir Recette", key=f"plan_view_{row['Titre']}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"; st.rerun()
+                    
+                    if c2.button("🚫 Retirer", key=f"plan_rm_{row['Titre']}", help="Enlever du planning"):
+                        if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
+                            st.rerun()
+                    st.write("") # Espace entre les jours
+    else:
+        st.error("Impossible de charger les données.")
