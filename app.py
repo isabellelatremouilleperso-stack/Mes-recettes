@@ -155,6 +155,35 @@ if st.session_state.page == "home":
 # --- PAGE: DÉTAILS (VERSION FINALE : ÉTOILES + JE L'AI FAITE) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
+    # --- PAGE: DÉTAILS ---
+elif st.session_state.page == "details":
+    r = st.session_state.recipe_data
+
+    # C'EST ICI QUE TU COLLES LE BLOC DE LA POUBELLE
+    col_back, col_del = st.columns([5, 1])
+    with col_back:
+        if st.button("⬅ Retour"): 
+            st.session_state.page = "home"; st.rerun()
+    with col_del:
+        if st.button("🗑️", help="Supprimer cette recette"):
+            st.session_state.confirm_delete = True
+
+    if st.session_state.get('confirm_delete', False):
+        st.warning(f"Voulez-vous vraiment supprimer '{r['Titre']}' ?")
+        c1, c2 = st.columns(2)
+        if c1.button("✅ Oui, supprimer", type="primary"):
+            if send_action({"action": "delete", "titre": r['Titre']}):
+                st.session_state.confirm_delete = False
+                st.session_state.page = "home"
+                st.rerun()
+        if c2.button("❌ Annuler"):
+            st.session_state.confirm_delete = False
+            st.rerun()
+    # FIN DU BLOC POUBELLE
+
+    # Ensuite le reste de ton code (Titre, Image, etc.) continue ici...
+    st.title(f"🍳 {r['Titre']}")
+    # ...
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
     
     st.title(f"🍳 {r['Titre']}")
@@ -267,6 +296,7 @@ elif st.session_state.page == "planning":
         else:
             for _, row in plan.iterrows():
                 st.write(f"🗓 **{row['Date_Prevue']}** — {row['Titre']}")
+
 
 
 
