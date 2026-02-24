@@ -198,15 +198,45 @@ elif st.session_state.page == "add":
                 if send_action(payload):
                     st.session_state.page = "home"; st.rerun()
 
-# --- PLANNING ---
+# --- PAGE: PLANNING (VERSION AVEC NETTOYAGE) ---
 elif st.session_state.page == "planning":
-    st.header("📅 Mon Agenda")
+    st.header("📅 Mon Agenda Gourmand")
     df = load_data()
+    
     if not df.empty:
+        # On filtre les recettes qui ont une date prévue
         plan = df[df['Date_Prevue'] != ''].copy()
-        if plan.empty: st.info("Agenda vide.")
+        
+        if plan.empty:
+            st.info("Votre agenda est vide. Planifiez des recettes depuis leur fiche détail !")
         else:
+            # Tri par date
+            plan['dt_object'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
+            plan = plan.sort_values('dt_object')
+
             for _, row in plan.iterrows():
-                st.markdown(f'<div style="background-color: #1e2129; border-left: 5px solid #e67e22; padding: 15px; border-radius: 10px; margin-bottom: 10px;"><b>{row["Date_Prevue"]}</b> - {row["Titre"]}</div>', unsafe_allow_html=True)
-                if st.button("📖 Voir", key=f"p_{row['Titre']}"):
-                    st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+                with st.container():
+                    st.markdown(f"""
+                    <div style="background-color: #1e2129; border-left: 5px solid #e67e22; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
+                        <span style="color: #e67e22; font-weight: bold;">🗓 {row['Date_Prevue']}</span>
+                        <h3 style="margin: 5px 0; color: white !important;">{row['Titre']}</h3>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    c1, c2 = st.columns([1, 1])
+                    
+                    # Bouton 1 : Voir la recette
+                    if c1.button("📖 Voir la recette", key=f"view_{row['Titre']}", use_container_width=True):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"; st.rerun()
+                    
+                    # Bouton 2 : Terminé (Nettoie l'app mais garde le calendrier Google)
+                    if c2.button("✅ Repas terminé", key=f"done_{row['Titre']}", use_container_width=True, help="Retire du planning ici, mais reste dans Google Calendar"):
+                        # On envoie une mise à jour à Google Sheets pour effacer SEULEMENT la date prévue
+                        if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
+                            st.toast(f"Bravo ! {row['Titre']} retiré du planning.")
+                            time.sleep(1)
+                            st.rerun()
+                st.write("---")
+    else:
+        st.error("Impossible de charger les données.")
