@@ -34,7 +34,7 @@ st.markdown("""
 
 # --- TES LIENS ---
 URL_GOOGLE_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
-URL_CSV_SHEETS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pubhtml?gid=0&single=true"
+URL_CSV_SHEETS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 
 st.title("👩‍🍳 Mon Livre de Recettes Numérique")
 
@@ -94,4 +94,5 @@ else:
                 st.markdown('</div>', unsafe_allow_html=True)
     except:
         st.error("Connexion au livre en cours...")
+
 
