@@ -12,8 +12,8 @@ st.markdown("""
     /* Fond de page blanc pur */
     .stApp { background-color: #FFFFFF; }
     
-    /* Force le texte en noir pour une lecture facile */
-    .stApp p, .stApp div, .stApp span, .stApp label, .stApp h3 {
+    /* FORCE LE TEXTE EN NOIR POUR UNE LECTURE FACILE */
+    .stApp p, .stApp div, .stApp span, .stApp label, .stApp h1, .stApp h2, .stApp h3 {
         color: #1f2937 !important;
     }
 
@@ -34,7 +34,6 @@ st.markdown("""
         font-weight: 800;
         color: #1f2937 !important;
         margin-bottom: 10px;
-        line-height: 1.2;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -63,19 +62,16 @@ if "liste_epicerie" not in st.session_state:
 with st.sidebar:
     st.title("👩‍🍳 Menu")
     
-    # On définit l'index par défaut du menu selon la page actuelle
-    idx = 0
-    if st.session_state.page == "ajouter": idx = 1
-    elif st.session_state.page == "liste": idx = 2
-
-    choix = st.radio("Navigation", ["📚 Bibliothèque", "➕ Ajouter", "🛒 Épicerie"], index=idx)
-
-    if choix == "📚 Bibliothèque" and st.session_state.page != "details":
+    # Navigation simplifiée
+    if st.button("📚 Ma Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
-    elif choix == "➕ Ajouter":
+        st.rerun()
+    if st.button("➕ Ajouter une recette", use_container_width=True):
         st.session_state.page = "ajouter"
-    elif choix == "🛒 Épicerie":
+        st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True):
         st.session_state.page = "liste"
+        st.rerun()
 
 # ==============================
 # PAGE : AJOUTER UNE RECETTE
@@ -91,12 +87,86 @@ if st.session_state.page == "ajouter":
         if st.form_submit_button("🚀 Enregistrer dans mon livre"):
             if t:
                 try:
-                    res = requests.post(URL_SCRIPT, json={"titre": t, "image": img, "ingredients": ing, "preparation": pre})
-                    if res.status_code == 200:
-                        st.success("C'est enregistré ! 🎉")
-                        st.balloons()
-                    else: st.error("Erreur de sauvegarde.")
-                except: st.error("Connexion au serveur impossible.")
+                    requests.post(URL_SCRIPT, json={"titre": t, "image": img, "ingredients": ing, "preparation": pre})
+                    st.success("C'est enregistré ! 🎉")
+                    st.balloons()
+                except: st.error("Erreur de sauvegarde.")
             else: st.warning("Le nom du plat est obligatoire.")
 
-# =
+# ==============================
+# PAGE : DÉTAILS D'UNE RECETTE
+# ==============================
+elif st.session_state.page == "details":
+    if st.session_state.recipe_data is not None:
+        row = st.session_state.recipe_data
+        if st.button("⬅️ Retour à la bibliothèque"):
+            st.session_state.page = "home"
+            st.rerun()
+
+        st.markdown(f"<div class='fiche-titre'>{row['Titre']}</div>", unsafe_allow_html=True)
+        
+        col_txt, col_img = st.columns([1, 1])
+        with col_txt:
+            st.markdown("### 🛒 Ingrédients")
+            # Affichage propre ligne par ligne avec coche
+            items = str(row["Ingrédients"]).split("\n")
+            for item in items:
+                if item.strip(): st.write(f"✅ {item.strip()}")
+            
+            if st.button("🛒 Ajouter à ma liste", type="primary"):
+                st.session_state.liste_epicerie.append({"t": row['Titre'], "i": row['Ingrédients']})
+                st.toast("Ajouté !")
+
+        with col_img:
+            if str(row["Image"]).startswith("http"):
+                st.image(row["Image"], use_container_width=True)
+            else:
+                st.image("https://via.placeholder.com/500x400?text=Pas+d'image")
+
+        st.divider()
+        st.markdown("### 👨‍🍳 Préparation")
+        st.info(row["Préparation"] if pd.notna(row["Préparation"]) else "Aucune instruction.")
+    else:
+        st.session_state.page = "home"
+        st.rerun()
+
+# ==============================
+# PAGE : LISTE D'ÉPICERIE
+# ==============================
+elif st.session_state.page == "liste":
+    st.title("🛒 Ma Liste d'Épicerie")
+    if not st.session_state.liste_epicerie:
+        st.info("Ta liste est vide.")
+    else:
+        if st.button("🗑️ Vider la liste"):
+            st.session_state.liste_epicerie = []
+            st.rerun()
+        for item in st.session_state.liste_epicerie:
+            with st.expander(f"📍 {item['t']}"):
+                st.write(item["i"])
+
+# ==============================
+# PAGE : ACCUEIL (BIBLIOTHÈQUE)
+# ==============================
+else:
+    st.title("📚 Ma Bibliothèque")
+    try:
+        df = pd.read_csv(URL_CSV)
+        # Noms des colonnes pour correspondre à ton Sheets
+        df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
+        
+        cols = st.columns(3)
+        for index, row in df.iterrows():
+            with cols[index % 3]:
+                st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
+                img = row["Image"] if str(row["Image"]).startswith("http") else "https://via.placeholder.com/300"
+                st.image(img, use_container_width=True)
+                st.write(f"**{row['Titre']}**")
+                
+                if st.button("Voir la fiche", key=f"btn_{index}"):
+                    st.session_state.recipe_data = row.to_dict()
+                    st.session_state.page = "details"
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+    except Exception as e:
+        st.error(f"Erreur de connexion : {e}")
