@@ -2,132 +2,88 @@ import streamlit as st
 import requests
 import pandas as pd
 
-# ==============================
-# CONFIGURATION & DESIGN
-# ==============================
-st.set_page_config(page_title="Mon Livre de Recettes", page_icon="👩‍🍳", layout="wide")
+# 1. CONFIGURATION DE BASE (Sans fioritures pour éviter les bugs)
+st.set_page_config(page_title="Mon Livre de Recettes", layout="wide")
 
-# STYLE RADICAL POUR LA VISIBILITÉ
-st.markdown("""
-    <style>
-    /* 1. Fond de la page en blanc */
-    .stApp { background-color: white !important; }
-    
-    /* 2. Force le texte en NOIR uniquement dans la partie centrale */
-    section[data-testid="stMainView"] .stMarkdown, 
-    section[data-testid="stMainView"] p, 
-    section[data-testid="stMainView"] h1, 
-    section[data-testid="stMainView"] h2, 
-    section[data-testid="stMainView"] h3,
-    section[data-testid="stMainView"] label {
-        color: black !important;
-    }
-
-    /* 3. Style des cartes bibliothèque */
-    .recipe-card {
-        background-color: #ffffff;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-        margin-bottom: 20px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# ==============================
-# LIENS
-# ==============================
+# Liens (Vérifie qu'il n'y a pas d'espace caché au début ou à la fin)
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
-# ==============================
-# MÉMOIRE
-# ==============================
+# Initialisation de la mémoire
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
-if "liste_epicerie" not in st.session_state: st.session_state.liste_epicerie = []
 
-# ==============================
-# MENU LATÉRAL
-# ==============================
+# 2. BARRE LATÉRALE
 with st.sidebar:
-    st.title("👨‍🍳 Menu")
-    if st.button("📚 Bibliothèque", use_container_width=True):
+    st.title("👩‍🍳 Menu")
+    if st.button("📚 Bibliothèque"):
         st.session_state.page = "home"
         st.rerun()
-    if st.button("➕ Ajouter une recette", use_container_width=True):
+    if st.button("➕ Ajouter une recette"):
         st.session_state.page = "ajouter"
         st.rerun()
-    if st.button("🛒 Épicerie", use_container_width=True):
-        st.session_state.page = "liste"
-        st.rerun()
 
-# ==============================
-# PAGE : DÉTAILS (C'est ici que ça bloquait)
-# ==============================
-if st.session_state.page == "details" and st.session_state.recipe_data:
-    row = st.session_state.recipe_data
+# 3. PAGE : DÉTAILS
+if st.session_state.page == "details":
+    res = st.session_state.recipe_data
     if st.button("⬅️ Retour"):
         st.session_state.page = "home"
         st.rerun()
-
-    st.header(row['Titre'])
     
-    col1, col2 = st.columns([1, 1])
+    st.title(res['Titre'])
+    col1, col2 = st.columns(2)
     with col1:
         st.subheader("🛒 Ingrédients")
-        # On affiche chaque ingrédient avec un point noir bien visible
-        items = str(row['Ingrédients']).split('\n')
-        for item in items:
-            if item.strip():
-                st.markdown(f"**• {item.strip()}**") # Mis en gras pour être sûr de voir
-        
-        if st.button("🛒 Ajouter à ma liste"):
-            st.session_state.liste_epicerie.append({"t": row['Titre'], "i": row['Ingrédients']})
-            st.toast("Ajouté !")
-
+        st.write(res['Ingrédients'])
     with col2:
-        if str(row['Image']).startswith("http"):
-            st.image(row['Image'], use_container_width=True)
-
+        if str(res['Image']).startswith("http"):
+            st.image(res['Image'], use_container_width=True)
+    
     st.subheader("👨‍🍳 Préparation")
-    st.info(row['Préparation'])
+    st.info(res['Préparation'])
 
-# ==============================
-# PAGE : AJOUTER
-# ==============================
+# 4. PAGE : AJOUTER
 elif st.session_state.page == "ajouter":
     st.title("➕ Ajouter")
-    with st.form("add"):
-        t = st.text_input("Plat")
+    with st.form("add_form"):
+        t = st.text_input("Nom du plat")
         i = st.text_input("Lien image")
-        ing = st.text_area("Ingrédients (un par ligne)")
+        ing = st.text_area("Ingrédients")
         pre = st.text_area("Préparation")
         if st.form_submit_button("Enregistrer"):
-            requests.post(URL_SCRIPT, json={"titre":t, "image":i, "ingredients":ing, "preparation":pre})
-            st.success("Enregistré !")
+            try:
+                requests.post(URL_SCRIPT, json={"titre":t, "image":i, "ingredients":ing, "preparation":pre})
+                st.success("Réussi ! Attendez 1 min que Google mette à jour le fichier.")
+            except Exception as e:
+                st.error(f"Erreur d'envoi : {e}")
 
-# ==============================
-# PAGE : ACCUEIL
-# ==============================
+# 5. PAGE : ACCUEIL (BIBLIOTHÈQUE)
 else:
     st.title("📚 Ma Bibliothèque")
     try:
+        # TENTATIVE DE LECTURE DU CSV
         df = pd.read_csv(URL_CSV)
-        df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
-        cols = st.columns(3)
-        for idx, row in df.iterrows():
-            with cols[idx % 3]:
-                st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
-                img = row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
-                st.image(img, use_container_width=True)
-                st.write(f"**{row['Titre']}**")
-                if st.button("Voir la fiche", key=f"btn_{idx}"):
-                    st.session_state.recipe_data = row.to_dict()
-                    st.session_state.page = "details"
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-    except:
-        st.error("Connexion au livre impossible.")
+        # On vérifie si le tableau est vide
+        if df.empty:
+            st.warning("Le fichier Google Sheets est vide.")
+        else:
+            # On définit les colonnes (IMPORTANT : vérifie l'ordre dans ton Sheets)
+            # Si ton Sheets a moins de 7 colonnes, ça plantera ici.
+            df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
+            
+            cols = st.columns(3)
+            for index, row in df.iterrows():
+                with cols[index % 3]:
+                    st.container(border=True).write(f"**{row['Titre']}**")
+                    if str(row['Image']).startswith("http"):
+                        st.image(row['Image'], use_container_width=True)
+                    if st.button("Voir la fiche", key=f"btn_{index}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+    except Exception as e:
+        st.error("❌ ERREUR DE CONNEXION")
+        st.write("Voici le détail technique de l'erreur :")
+        st.code(e)
+        st.info("💡 Vérifie que ton Google Sheets est bien : Fichier > Partager > Publier sur le web > Format CSV")
