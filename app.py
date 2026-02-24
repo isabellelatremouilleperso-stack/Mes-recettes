@@ -2,88 +2,100 @@ import streamlit as st
 import requests
 import pandas as pd
 
-# 1. CONFIGURATION DE BASE (Sans fioritures pour éviter les bugs)
-st.set_page_config(page_title="Mon Livre de Recettes", layout="wide")
+# CONFIGURATION
+st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
-# Liens (Vérifie qu'il n'y a pas d'espace caché au début ou à la fin)
+# TON NOUVEAU STYLE (CORRIGÉ ET TESTÉ)
+st.markdown("""
+    <style>
+    /* Fond général */
+    .stApp { background-color: white !important; }
+
+    /* Sidebar en blanc */
+    section[data-testid="stSidebar"] {
+        background-color: white !important;
+        border-right: 1px solid #f0f0f0;
+    }
+
+    /* Texte sidebar en noir */
+    section[data-testid="stSidebar"] * { color: black !important; }
+
+    /* Texte zone principale en noir */
+    section[data-testid="stMainView"] * { color: black !important; }
+
+    /* Cartes recettes */
+    .recipe-card {
+        background-color: #ffffff;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.05);
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# LIENS
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
-# Initialisation de la mémoire
+# MÉMOIRE
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = None
 
-# 2. BARRE LATÉRALE
+# MENU
 with st.sidebar:
     st.title("👩‍🍳 Menu")
-    if st.button("📚 Bibliothèque"):
+    if st.button("📚 Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
-    if st.button("➕ Ajouter une recette"):
+    if st.button("➕ Ajouter", use_container_width=True):
         st.session_state.page = "ajouter"
         st.rerun()
 
-# 3. PAGE : DÉTAILS
-if st.session_state.page == "details":
+# LOGIQUE DES PAGES
+if st.session_state.page == "details" and st.session_state.recipe_data:
     res = st.session_state.recipe_data
     if st.button("⬅️ Retour"):
         st.session_state.page = "home"
         st.rerun()
-    
-    st.title(res['Titre'])
+    st.header(res['Titre'])
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("🛒 Ingrédients")
-        st.write(res['Ingrédients'])
+        for i in str(res['Ingrédients']).split('\n'):
+            if i.strip(): st.write(f"• {i.strip()}")
     with col2:
-        if str(res['Image']).startswith("http"):
-            st.image(res['Image'], use_container_width=True)
-    
+        if str(res['Image']).startswith("http"): st.image(res['Image'], use_container_width=True)
     st.subheader("👨‍🍳 Préparation")
-    st.info(res['Préparation'])
+    st.write(res['Préparation'])
 
-# 4. PAGE : AJOUTER
 elif st.session_state.page == "ajouter":
     st.title("➕ Ajouter")
-    with st.form("add_form"):
-        t = st.text_input("Nom du plat")
-        i = st.text_input("Lien image")
+    with st.form("add"):
+        t = st.text_input("Nom")
+        img = st.text_input("Image (URL)")
         ing = st.text_area("Ingrédients")
         pre = st.text_area("Préparation")
         if st.form_submit_button("Enregistrer"):
-            try:
-                requests.post(URL_SCRIPT, json={"titre":t, "image":i, "ingredients":ing, "preparation":pre})
-                st.success("Réussi ! Attendez 1 min que Google mette à jour le fichier.")
-            except Exception as e:
-                st.error(f"Erreur d'envoi : {e}")
+            requests.post(URL_SCRIPT, json={"titre":t, "image":img, "ingredients":ing, "preparation":pre})
+            st.success("Envoyé !")
 
-# 5. PAGE : ACCUEIL (BIBLIOTHÈQUE)
 else:
-    st.title("📚 Ma Bibliothèque")
+    st.title("📚 Bibliothèque")
     try:
-        # TENTATIVE DE LECTURE DU CSV
         df = pd.read_csv(URL_CSV)
-        
-        # On vérifie si le tableau est vide
-        if df.empty:
-            st.warning("Le fichier Google Sheets est vide.")
-        else:
-            # On définit les colonnes (IMPORTANT : vérifie l'ordre dans ton Sheets)
-            # Si ton Sheets a moins de 7 colonnes, ça plantera ici.
-            df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
-            
-            cols = st.columns(3)
-            for index, row in df.iterrows():
-                with cols[index % 3]:
-                    st.container(border=True).write(f"**{row['Titre']}**")
-                    if str(row['Image']).startswith("http"):
-                        st.image(row['Image'], use_container_width=True)
-                    if st.button("Voir la fiche", key=f"btn_{index}"):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
-    except Exception as e:
-        st.error("❌ ERREUR DE CONNEXION")
-        st.write("Voici le détail technique de l'erreur :")
-        st.code(e)
-        st.info("💡 Vérifie que ton Google Sheets est bien : Fichier > Partager > Publier sur le web > Format CSV")
+        df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
+        cols = st.columns(3)
+        for idx, row in df.iterrows():
+            with cols[idx % 3]:
+                st.markdown('<div class="recipe-card">', unsafe_allow_html=True)
+                st.image(row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200", use_container_width=True)
+                st.write(f"**{row['Titre']}**")
+                if st.button("Voir la fiche", key=f"btn_{idx}"):
+                    st.session_state.recipe_data = row.to_dict()
+                    st.session_state.page = "details"
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+    except:
+        st.error("Connexion impossible au Sheets.")
