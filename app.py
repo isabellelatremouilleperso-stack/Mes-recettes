@@ -3,21 +3,25 @@ import requests
 import pandas as pd
 from datetime import datetime
 
-# 1. CONFIGURATION ET STYLE UNIFORME
+# 1. CONFIGURATION ET STYLE DE LA GRILLE
 st.set_page_config(page_title="Livre de Recettes", layout="wide")
 
 st.markdown("""
     <style>
-    /* Force la taille des images pour qu'elles soient toutes pareilles */
-    /* Sans casser la mise en page */
+    /* 1. Uniformisation des images dans la grille */
     [data-testid="stImage"] img {
-        object-fit: cover;
+        object-fit: cover; /* Recadre l'image pour remplir le cadre sans déformer */
         height: 200px !important;
         width: 100% !important;
-        border-radius: 10px;
+        border-radius: 8px 8px 0 0; /* Arrondi seulement en haut */
+    }
+
+    /* 2. Uniformisation de la hauteur des boîtes (containers) */
+    [data-testid="stVerticalBlock"] > div:has(div.stCheckboxes) {
+        /* Cela cible les conteneurs de cartes si besoin, 
+           mais le container(border=True) est déjà très stable. */
     }
     
-    /* Couleur du texte pour ton thème sombre */
     .stApp { color: white; }
     </style>
     """, unsafe_allow_html=True)
@@ -56,14 +60,11 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
         st.rerun()
     
     st.header(f"🍳 {res['Titre']}")
-    if pd.notna(res['Date']): st.write(f"📅 *Prévu le : {res['Date']}*")
-    
     col1, col2 = st.columns([1, 1])
     with col1:
         st.subheader("🛒 Ingrédients manquants ?")
         choix_utilisateur = []
         ingredients_bruts = str(res['Ingrédients']).split('\n')
-        
         for ing in ingredients_bruts:
             item = ing.strip()
             if item:
@@ -76,9 +77,7 @@ if st.session_state.page == "details" and st.session_state.recipe_data:
                     if item not in st.session_state.shopping_list:
                         st.session_state.shopping_list.append(item)
                 st.toast("Ajouté !")
-            else:
-                st.warning("Cochez au moins un article !")
-    
+
     with col2:
         if str(res['Image']).startswith("http"):
             st.image(res['Image'], use_container_width=True)
@@ -91,13 +90,13 @@ elif st.session_state.page == "shopping":
     if not st.session_state.shopping_list:
         st.info("Votre liste est vide.")
     else:
-        col_del_all, col_del_checked = st.columns(2)
-        with col_del_checked:
-            if st.button("🧹 Supprimer les articles cochés", use_container_width=True):
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("🧹 Supprimer articles cochés", use_container_width=True):
                 st.session_state.shopping_list = [i for i in st.session_state.shopping_list if not st.session_state.bought_items.get(i, False)]
                 st.session_state.bought_items = {i: False for i in st.session_state.shopping_list}
                 st.rerun()
-        with col_del_all:
+        with col2:
             if st.button("🗑️ Tout vider", use_container_width=True):
                 st.session_state.shopping_list = []
                 st.session_state.bought_items = {}
@@ -123,34 +122,20 @@ elif st.session_state.page == "ajouter":
             if t:
                 data = {"titre":t, "date":d.strftime("%d/%m/%Y"), "image":i, "ingredients":ing, "preparation":pre}
                 requests.post(URL_SCRIPT, json=data)
-                st.success("C'est enregistré ! 🎉")
+                st.success("C'est enregistré !")
 
-# 7. PAGE : ACCUEIL (VERSION STABLE SANS DÉCALAGE)
+# 7. PAGE : ACCUEIL (LA GRILLE PARFAITE)
 else:
     st.title("📚 Ma Bibliothèque")
     try:
         df = pd.read_csv(URL_CSV)
-        # Supprime les lignes où le titre est vide pour éviter les boîtes fantômes
         df = df[df['Titre'].notna() & (df['Titre'].str.strip() != "")]
-        
         df.columns = ['Horodatage', 'Titre', 'Source', 'Ingrédients', 'Préparation', 'Date', 'Image']
         
+        # On affiche 3 colonnes
         cols = st.columns(3)
         for idx, (_, row) in enumerate(df.iterrows()):
             with cols[idx % 3]:
-                # ON UTILISE LE COMPOSANT NATIF QUI NE DÉCALE RIEN
+                # Le container avec bordure crée la boîte uniforme
                 with st.container(border=True):
-                    img = row['Image'] if str(row['Image']).startswith("http") else "https://via.placeholder.com/200"
-                    st.image(img, use_container_width=True)
-                    
-                    # On affiche le titre et la date de façon simple
-                    st.markdown(f"**{row['Titre']}**")
-                    if pd.notna(row['Date']): 
-                        st.caption(f"📅 {row['Date']}")
-                    
-                    if st.button("Voir la fiche", key=f"btn_{idx}", use_container_width=True):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
-    except Exception as e:
-        st.error(f"Erreur : {e}")
+                    img = row['Image'] if
