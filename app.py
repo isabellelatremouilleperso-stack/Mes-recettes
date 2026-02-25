@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 # ======================================================
-# 1. CONFIGURATION & DESIGN COMPLET
+# 1. CONFIGURATION & DESIGN (COMPLET + PLACES PHOTOS)
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
@@ -16,13 +16,9 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
     .recipe-card {
-        background-color: #1e2129; 
-        border: 1px solid #3d4455;
-        border-radius: 12px; 
-        padding: 10px; 
-        height: 230px; 
-        display: flex; 
-        flex-direction: column;
+        background-color: #1e2129; border: 1px solid #3d4455;
+        border-radius: 12px; padding: 10px; height: 230px; 
+        display: flex; flex-direction: column;
     }
     .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
     .recipe-title {
@@ -30,23 +26,12 @@ st.markdown("""
         display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         overflow: hidden; height: 2.6em; line-height: 1.3;
     }
-    /* Styles spécifiques Play Store */
-    .app-header { display: flex; align-items: center; gap: 20px; }
-    .app-icon { width: 100px; height: 100px; border-radius: 20px; }
-    .install-btn {
-        background-color: #00c853;
-        color: white;
-        padding: 10px 30px;
-        border-radius: 8px;
-        text-align: center;
-        font-weight: bold;
-    }
-    header {visibility: hidden;} 
-    .stDeployButton {display:none;}
+    .app-header { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .playstore-img { border-radius: 15px; border: 2px solid #3d4455; width: 100%; }
+    header {visibility: hidden;} .stDeployButton {display:none;}
 </style>
 """, unsafe_allow_html=True)
 
-# Liens de données
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
@@ -54,16 +39,14 @@ URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCb
 CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
 
 # ======================================================
-# 2. TOUS LES MODULES DE FONCTIONS
+# 2. FONCTIONS (IMPORT URL, ACTIONS, LOAD)
 # ======================================================
 def send_action(payload):
-    with st.spinner("🚀 Action en cours..."):
+    with st.spinner("🚀 Action..."):
         try:
             r = requests.post(URL_SCRIPT, json=payload, timeout=20)
             if "Success" in r.text:
-                st.cache_data.clear()
-                time.sleep(0.5)
-                return True
+                st.cache_data.clear(); time.sleep(0.5); return True
         except: pass
     return False
 
@@ -84,15 +67,14 @@ def load_data():
     try:
         df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}").fillna('')
         cols = ['Date','Titre','Source','Ingrédients','Préparation','Date_Prevue','Image','Catégorie','Portions','Temps_Prepa','Temps_Cuisson','Commentaires','Note']
-        if len(df.columns) >= len(cols):
-            df.columns = cols[:len(df.columns)]
+        df.columns = cols[:len(df.columns)]
         return df
     except: return pd.DataFrame()
 
 if "page" not in st.session_state: st.session_state.page = "home"
 
 # ======================================================
-# 3. SIDEBAR COMPLETE
+# 3. SIDEBAR
 # ======================================================
 with st.sidebar:
     st.title("👨‍🍳 Mes Recettes")
@@ -105,44 +87,56 @@ with st.sidebar:
     if st.button("❓ Aide", use_container_width=True): st.session_state.page = "help"; st.rerun()
 
 # ======================================================
-# 4. TOUTES LES PAGES SANS EXCEPTION
+# 4. PAGES
 # ======================================================
 
-# --- PAGE PLAY STORE ---
+# --- PLAY STORE (AVEC PLACES PHOTOS) ---
 if st.session_state.page == "playstore":
     st.markdown('<div class="app-header">', unsafe_allow_html=True)
-    st.image("https://via.placeholder.com/100", width=100)
-    st.markdown("""
-    ### Mes Recettes Pro  
-    👩‍🍳 Isabelle Latrémouille  
-    ⭐ 4.9 ★ (128 avis)  
-    📥 1 000+ téléchargements  
-    """)
+    st.image("https://cdn-icons-png.flaticon.com/512/8100/8100851.png", width=100)
+    st.markdown("### Mes Recettes Pro\n**Isabelle Latrémouille**\n⭐ 4.9 ★ | 📥 1 000+")
     st.markdown('</div>', unsafe_allow_html=True)
-    col1, col2 = st.columns([1,3])
-    with col1:
-        if st.button("📥 Installer", use_container_width=True):
-            st.success("Application installée avec succès ! 🎉")
+    
+    if st.button("📥 Installer", use_container_width=True):
+        st.success("Application installée ! 🎉")
+
+    st.subheader("📸 Aperçus de l'écran")
+    col_img1, col_img2, col_img3 = st.columns(3)
+    with col_img1:
+        st.image("https://via.placeholder.com/300x600/1e2129/e67e22?text=Bibliothèque+Recettes", caption="Ma Bibliothèque", use_container_width=True)
+    with col_img2:
+        st.image("https://via.placeholder.com/300x600/1e2129/e67e22?text=Planning+Hebdo", caption="Mon Planning", use_container_width=True)
+    with col_img3:
+        st.image("https://via.placeholder.com/300x600/1e2129/e67e22?text=Liste+Courses", caption="Ma Liste d'épicerie", use_container_width=True)
+    
     st.divider()
-    st.subheader("📸 Aperçu")
-    c1, c2, c3 = st.columns(3)
-    c1.image("https://via.placeholder.com/250x500")
-    c2.image("https://via.placeholder.com/250x500")
-    c3.image("https://via.placeholder.com/250x500")
-    st.divider()
-    st.subheader("📝 À propos de cette application")
-    st.write("Mes Recettes Pro est une application complète de gestion culinaire.\n\n✔ Gestion des recettes | ✔ Système de notes ⭐ | ✔ Planning intégré 📅 | ✔ Liste d'épicerie intelligente 🛒 | ✔ Synchronisation Google")
-    st.divider()
-    st.subheader("ℹ️ Informations")
-    st.write("Version : 2.0 Premium | Mise à jour : Février 2026 | Développeur : Isabelle Latrémouille")
+    st.subheader("📝 À propos")
+    st.write("L'outil ultime pour organiser vos repas, noter vos créations et synchroniser vos courses.")
+
+# --- PLANNING (CORRIGÉ : DÉTECTION LARGE) ---
+elif st.session_state.page == "planning":
+    st.header("📅 Planning Repas")
+    df = load_data()
+    if not df.empty:
+        # On nettoie et on vérifie si la colonne Date_Prevue a du contenu
+        plan = df[df['Date_Prevue'].astype(str).str.strip() != ""]
+        if not plan.empty:
+            for _, row in plan.iterrows():
+                with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
+                    st.write(f"**Catégorie:** {row['Catégorie']}")
+                    if st.button("Voir Fiche", key=f"plan_{row['Titre']}"):
+                        st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+        else:
+            st.info("Le planning est vide. Ajoutez une date dans les détails d'une recette pour la voir ici.")
+    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
 # --- BIBLIOTHÈQUE ---
 elif st.session_state.page == "home":
     c1, c2 = st.columns([4, 1])
-    c1.header("📚 Ma Bibliothèque")
-    if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
+    c1.header("📚 Bibliothèque")
+    if c2.button("🔄 Sync"): st.cache_data.clear(); st.rerun()
     df = load_data()
-    search = st.text_input("🔍 Rechercher une recette...")
+    search = st.text_input("🔍 Rechercher...")
     if not df.empty:
         filtered = df[df['Titre'].str.contains(search, case=False)] if search else df
         rows = filtered.reset_index(drop=True)
@@ -157,44 +151,37 @@ elif st.session_state.page == "home":
                         if st.button("Voir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
-# --- AJOUTER RECETTE (URL + VRAC + MANUEL) ---
+# --- AJOUTER RECETTE (TOUS LES MODES) ---
 elif st.session_state.page == "add":
-    st.header("➕ Ajouter une Recette")
-    tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
-    with tab1:
-        url_link = st.text_input("Lien de la recette")
-        if st.button("🪄 Extraire et Importer"):
-            t, c = scrape_url(url_link)
-            if t:
-                send_action({"action": "add", "titre": t, "ingredients": c, "preparation": "Import automatique", "date": datetime.now().strftime("%d/%m/%Y")})
-                st.session_state.page = "home"; st.rerun()
-    with tab2:
-        with st.form("vrac_form"):
-            v_t = st.text_input("Titre *")
-            v_cats = st.multiselect("Catégories", CATEGORIES)
+    st.header("➕ Ajouter")
+    t1, t2, t3 = st.tabs(["🔗 URL", "📝 Vrac", "⌨️ Manuel"])
+    with t1:
+        u = st.text_input("Lien")
+        if st.button("🪄 Importer"):
+            tit, con = scrape_url(u)
+            if tit: send_action({"action": "add", "titre": tit, "ingredients": con, "preparation": "Import URL", "date": datetime.now().strftime("%d/%m/%Y")}); st.session_state.page = "home"; st.rerun()
+    with t2:
+        with st.form("v_f"):
+            vt = st.text_input("Titre *"); vc = st.multiselect("Cats", CATEGORIES)
             c1, c2, c3 = st.columns(3)
-            v_por, v_pre, v_cui = c1.text_input("Portions"), c2.text_input("Temps Prépa"), c3.text_input("Temps Cuisson")
-            v_txt = st.text_area("Texte complet (Ingrédients & Étapes)", height=250)
+            vp, vpre, vcui = c1.text_input("Portions"), c2.text_input("Prépa"), c3.text_input("Cuisson")
+            vtxt = st.text_area("Ingrédients & Étapes")
             if st.form_submit_button("🚀 Sauver"):
-                send_action({"action": "add", "titre": v_t, "categorie": ", ".join(v_cats), "ingredients": v_txt, "preparation": "Import Vrac", "portions": v_por, "temps_prepa": v_pre, "temps_cuisson": v_cui, "date": datetime.now().strftime("%d/%m/%Y")})
+                send_action({"action": "add", "titre": vt, "categorie": ", ".join(vc), "ingredients": vtxt, "portions": vp, "temps_prepa": vpre, "temps_cuisson": vcui, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
-    with tab3:
-        with st.form("manuel_form"):
-            m_t = st.text_input("Titre *")
-            m_cats = st.multiselect("Catégories", CATEGORIES)
+    with t3:
+        with st.form("m_f"):
+            mt = st.text_input("Titre *"); mc = st.multiselect("Cats", CATEGORIES)
             c1, c2, c3 = st.columns(3)
-            m_por, m_pre, m_cui = c1.text_input("Portions"), c2.text_input("Préparation (min)"), c3.text_input("Cuisson (min)")
-            m_ing = st.text_area("Ingrédients (un par ligne)")
-            m_prepa = st.text_area("Étapes")
-            m_img = st.text_input("URL Image")
-            if st.form_submit_button("💾 Enregistrer"):
-                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_prepa, "portions": m_por, "temps_prepa": m_pre, "temps_cuisson": m_cui, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
+            mp, mpre, mcui = c1.text_input("Portions"), c2.text_input("Prépa"), c3.text_input("Cuisson")
+            mi, mpr, mim = st.text_area("Ingrédients"), st.text_area("Étapes"), st.text_input("URL Image")
+            if st.form_submit_button("💾 Sauver"):
+                send_action({"action": "add", "titre": mt, "categorie": ", ".join(mc), "ingredients": mi, "preparation": mpr, "portions": mp, "temps_prepa": mpre, "temps_cuisson": mcui, "image": mim, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
 
-# --- DÉTAILS (ÉTOILES + COMMENTAIRES + ÉPICERIE) ---
+# --- DÉTAILS (NOTES, ÉTOILES, COMMENTAIRES) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
-    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
     st.title(f"🍳 {r['Titre']}")
     try: nv = int(float(r.get('Note', 0)))
     except: nv = 0
@@ -202,65 +189,40 @@ elif st.session_state.page == "details":
     c1, c2 = st.columns([1, 1.2])
     with c1:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        st.write(f"👥 **Portions :** {r.get('Portions','-')} | ⏳ **Prépa :** {r.get('Temps_Prepa','-')} | 🔥 **Cuisson :** {r.get('Temps_Cuisson','-')}")
-        st.divider()
-        new_note = st.selectbox("Note", [1,2,3,4,5], index=(nv-1 if 1<=nv<=5 else 4))
-        new_comm = st.text_area("Commentaires", value=r.get('Commentaires', ''))
-        new_plan = st.text_input("Planning (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
-        if st.button("💾 Enregistrer les modifications", use_container_width=True):
-            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": new_plan, "commentaires": new_comm, "note": new_note})
+        new_n = st.selectbox("Ma Note", [1,2,3,4,5], index=(nv-1 if 1<=nv<=5 else 4))
+        new_c = st.text_area("Commentaires", value=r.get('Commentaires', ''))
+        new_d = st.text_input("Date Planning (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
+        if st.button("💾 Enregistrer"):
+            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": new_d, "commentaires": new_c, "note": new_n})
             st.rerun()
     with c2:
-        st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
-        sel_ing = []
+        st.subheader("🛒 Ingrédients"); ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
+        sel = []
         for i, l in enumerate(ings):
-            if st.checkbox(l, key=f"det_{i}"): sel_ing.append(l)
-        if st.button("📥 Ajouter la sélection à l'épicerie"):
-            for x in sel_ing: send_action({"action": "add_shop", "article": x})
+            if st.checkbox(l, key=f"d_{i}"): sel.append(l)
+        if st.button("📥 Ajouter à l'épicerie"):
+            for x in sel: send_action({"action": "add_shop", "article": x})
             st.success("Ajouté !")
-        st.divider()
-        st.subheader("📝 Étapes de préparation")
-        st.write(r['Préparation'])
+        st.divider(); st.subheader("📝 Étapes"); st.write(r['Préparation'])
+    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
-# --- ÉPICERIE (SÉLECTIVE) ---
+# --- ÉPICERIE ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'épicerie")
+    st.header("🛒 Épicerie")
     try:
-        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
-        if not df_s.empty:
-            selection_delete = []
-            for idx, row in df_s.iterrows():
-                if st.checkbox(row.iloc[0], key=f"s_{idx}"): selection_delete.append(row.iloc[0])
-            st.divider()
-            c1, c2 = st.columns(2)
-            if c1.button("🗑 Retirer articles cochés", use_container_width=True):
-                for item in selection_delete: send_action({"action": "remove_shop", "article": item})
-                st.rerun()
-            if c2.button("🧨 Tout vider", use_container_width=True):
-                send_action({"action": "clear_shop"}); st.rerun()
-    except: st.info("Liste vide.")
+        ds = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
+        to_d = []
+        for ix, rw in ds.iterrows():
+            if st.checkbox(rw.iloc[0], key=f"s_{ix}"): to_d.append(rw.iloc[0])
+        if st.button("🗑 Retirer"):
+            for it in to_d: send_action({"action": "remove_shop", "article": it})
+            st.rerun()
+    except: st.info("Vide.")
 
-# --- PLANNING ---
-elif st.session_state.page == "planning":
-    st.header("📅 Planning")
-    df = load_data()
-    if not df.empty and 'Date_Prevue' in df.columns:
-        plan = df[df['Date_Prevue'] != ""].sort_values(by='Date_Prevue')
-        for _, row in plan.iterrows():
-            with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
-                if st.button("Voir la fiche", key=f"p_{row['Titre']}"):
-                    st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
-
-# --- AIDE COMPLETE ---
+# --- AIDE (RESTAURÉE) ---
 elif st.session_state.page == "help":
-    st.title("❓ Aide & Mode d'emploi")
-    st.markdown("""
-    1. **Ajouter** : Utilisez **URL** pour importer, **Vrac** pour coller un texte, ou **Manuel**.
-    2. **Épicerie** : Cochez dans la recette pour ajouter, cochez dans 'Ma Liste' pour retirer.
-    3. **Notation** : Système de 1 à 5 étoiles sauvegardé sur Google Sheets.
-    4. **Planning** : Saisissez une date (JJ/MM/AAAA) pour organiser vos repas.
-    5. **Actualiser** : Le bouton 🔄 synchronise les dernières modifs de votre Excel.
-    6. **Play Store** : Page vitrine simulant l'installation de l'app.
-    """)
+    st.title("❓ Aide")
+    st.write("1. **Sync** : Bouton 🔄 pour charger les nouveautés du Sheets.")
+    st.write("2. **Planning** : Mettez une date dans la fiche recette.")
+    st.write("3. **Épicerie** : Cochez pour ajouter ou retirer.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
