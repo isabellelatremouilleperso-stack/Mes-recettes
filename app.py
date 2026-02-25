@@ -44,21 +44,9 @@ def send_action(payload):
         try:
             r = requests.post(URL_SCRIPT, json=payload, timeout=20)
             if "Success" in r.text:
-                st.cache_data.clear(); time.sleep(1); return True
+                st.cache_data.clear(); time.sleep(0.5); return True
         except: pass
     return False
-
-def scrape_url(url):
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        res = requests.get(url, headers=headers, timeout=10)
-        res.encoding = res.apparent_encoding
-        soup = BeautifulSoup(res.text, 'html.parser')
-        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
-        elements = soup.find_all(['li', 'p'])
-        content = "\n".join(dict.fromkeys([el.text.strip() for el in elements if 10 < len(el.text.strip()) < 500]))
-        return title, content
-    except: return None, None
 
 @st.cache_data(ttl=5)
 def load_data():
@@ -77,11 +65,9 @@ if "page" not in st.session_state: st.session_state.page = "home"
 with st.sidebar:
     st.title("👨‍🍳 Mes Recettes")
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
-    if st.button("📅 Planning Repas", use_container_width=True): st.session_state.page = "planning"; st.rerun()
-    if st.button("🛒 Ma Liste", use_container_width=True): st.session_state.page = "shop"; st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
     st.divider()
     if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
-    if st.button("❓ Aide", use_container_width=True): st.session_state.page = "help"; st.rerun()
     
     st.divider()
     st.subheader("🔍 Trouver sur Google")
@@ -98,15 +84,10 @@ with st.sidebar:
 if st.session_state.page == "home":
     st.header("📚 Bibliothèque")
     df = load_data()
-    c1, c2 = st.columns([2, 1])
-    search = c1.text_input("🔍 Rechercher")
-    cat_f = c2.selectbox("Filtrer par catégorie", ["Toutes"] + CATEGORIES)
+    search = st.text_input("🔍 Rechercher une recette")
     
     if not df.empty:
-        filtered = df.copy()
-        if search: filtered = filtered[filtered['Titre'].str.contains(search, case=False)]
-        if cat_f != "Toutes": filtered = filtered[filtered['Catégorie'].astype(str).str.contains(cat_f, case=False)]
-        
+        filtered = df[df['Titre'].str.contains(search, case=False)] if search else df
         rows = filtered.reset_index(drop=True)
         for i in range(0, len(rows), 3):
             cols = st.columns(3)
@@ -119,7 +100,7 @@ if st.session_state.page == "home":
                         if st.button("Voir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
-# --- DÉTAILS (Bouton d'épicerie ligne par ligne restauré) ---
+# --- DÉTAILS (Cases à cocher + Bouton groupé) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
@@ -128,83 +109,63 @@ elif st.session_state.page == "details":
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        if r.get('Portions'): st.write(f"👥 **Portions :** {r['Portions']}")
-        if r.get('Temps_Prepa'): st.write(f"⏳ **Préparation :** {r['Temps_Prepa']}")
-        if r.get('Temps_Cuisson'): st.write(f"🔥 **Cuisson :** {r['Temps_Cuisson']}")
+        st.divider()
+        st.write(f"⏳ **Prépa :** {r.get('Temps_Prepa', '-')}")
+        st.write(f"🔥 **Cuisson :** {r.get('Temps_Cuisson', '-')}")
         
     with col_r:
-        st.subheader("📅 Planning")
-        date_p = st.text_input("Date JJ/MM/AAAA", value=r.get('Date_Prevue', ''))
-        c_p1, c_p2 = st.columns(2)
-        if c_p1.button("📅 Planning Interne", use_container_width=True):
-            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_p}); st.rerun()
+        st.subheader("🛒 Ingrédients")
+        st.write("Cochez les articles à ajouter à votre liste :")
         
-        if c_p2.button("🗓 Google Calendar", type="primary", use_container_width=True):
-            send_action({"action": "calendar", "titre": r['Titre'], "date_prevue": date_p, "ingredients": r['Ingrédients']})
-
-        st.divider()
-        st.subheader("🛒 Liste d'épicerie")
-        # Affichage ligne par ligne avec le bouton "+"
-        lignes_ing = str(r['Ingrédients']).split("\n")
+        # Liste des ingrédients avec cases à cocher
+        lignes_ing = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
+        selection = []
         for i, ligne in enumerate(lignes_ing):
-            if ligne.strip():
-                c_ing, c_btn = st.columns([0.85, 0.15])
-                c_ing.write(f"• {ligne.strip()}")
-                if c_btn.button("➕", key=f"add_shop_{i}"):
-                    send_action({"action": "add_shop", "article": ligne.strip()})
-                    st.toast(f"Ajouté : {ligne.strip()}")
+            if st.checkbox(ligne, key=f"check_{i}"):
+                selection.append(ligne)
         
+        st.divider()
+        # LE BOUTON POUR INSCRIRE LES ALIMENTS SÉLECTIONNÉS
+        if st.button("📥 AJOUTER À LA LISTE D'ÉPICERIE", type="primary", use_container_width=True):
+            if selection:
+                for item in selection:
+                    send_action({"action": "add_shop", "article": item})
+                st.success(f"{len(selection)} articles ajoutés !")
+                time.sleep(1)
+            else:
+                st.warning("Veuillez cocher au moins un ingrédient.")
+
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r['Préparation'])
 
-# --- AJOUTER (Import / Vrac / Manuel) ---
+# --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
     
-    with tab1:
-        url_in = st.text_input("Lien de la recette")
-        if st.button("🪄 Extraire et Sauver"):
-            t, c = scrape_url(url_in)
-            if t:
-                send_action({"action": "add", "titre": t, "ingredients": c, "preparation": "Import URL", "date": datetime.now().strftime("%d/%m/%Y")})
-                st.session_state.page = "home"; st.rerun()
-
-    with tab2:
-        with st.form("vrac_form"):
-            v_t = st.text_input("Titre *")
-            v_cats = st.multiselect("Catégories", CATEGORIES)
-            v_txt = st.text_area("Bloc texte (ingrédients et étapes)", height=250)
-            if st.form_submit_button("🚀 Sauver Vrac"):
-                if v_t:
-                    send_action({"action": "add", "titre": v_t, "categorie": ", ".join(v_cats), "ingredients": v_txt, "preparation": "Vrac", "date": datetime.now().strftime("%d/%m/%Y")})
-                    st.session_state.page = "home"; st.rerun()
-
-    with tab3:
+    with tab3: # Manuel avec les champs demandés
         with st.form("manuel_form"):
-            m_t = st.text_input("Titre de la recette *")
+            m_t = st.text_input("Titre *")
             m_cats = st.multiselect("Catégories", CATEGORIES)
             c1, c2, c3 = st.columns(3)
             m_por = c1.text_input("Portions")
             m_prepa = c2.text_input("Temps Prépa")
             m_cuis = c3.text_input("Temps Cuisson")
-            m_ing = st.text_area("Ingrédients (une ligne par article)")
+            m_ing = st.text_area("Ingrédients (un par ligne)")
             m_pre = st.text_area("Préparation")
             m_img = st.text_input("URL Image")
-            if st.form_submit_button("💾 Sauver Manuel"):
+            if st.form_submit_button("💾 Sauver"):
                 if m_t:
                     send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_prepa, "temps_cuisson": m_cuis, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
                     st.session_state.page = "home"; st.rerun()
 
-# --- AUTRES PAGES ---
+# --- ÉPICERIE ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste")
+    st.header("🛒 Ma Liste d'épicerie")
     if st.button("🗑 Tout vider"): send_action({"action": "clear_shop"}); st.rerun()
     try:
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
-        for idx, row in df_s.iterrows(): st.write(f"⬜ {row.iloc[0]}")
-    except: st.info("Vide.")
-elif st.session_state.page == "help":
-    st.title("❓ Aide")
-    st.write("Cliquez sur le '+' à côté d'un ingrédient dans la fiche recette pour l'ajouter à votre liste.")
+        for idx, row in df_s.iterrows():
+            st.write(f"⬜ {row.iloc[0]}")
+    except: st.info("Votre liste est vide.")
