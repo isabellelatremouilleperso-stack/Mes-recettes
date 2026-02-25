@@ -26,10 +26,15 @@ st.markdown("""
         margin-bottom: 15px; text-decoration: none; display: block;
     }
     .source-btn:hover { background-color: #e67e22; color: white; }
+    
+    /* MODE APPLI MOBILE : Cache les éléments superflus */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {display:none;}
 </style>
 """, unsafe_allow_html=True)
 
-# --- REMPLACE CES LIENS PAR LES TIENS ---
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
@@ -55,9 +60,8 @@ def send_action(payload):
         try:
             r = requests.post(URL_SCRIPT, json=payload, timeout=20)
             if "Success" in r.text:
-                st.success("Réussi !")
                 st.cache_data.clear()
-                time.sleep(0.5)
+                time.sleep(1.5) # Délai augmenté pour Google Sheets
                 return True
             st.error(f"Erreur : {r.text}")
         except Exception as e:
@@ -68,7 +72,7 @@ if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = {}
 
 # ======================================================
-# 3. BARRE LATÉRALE (AVEC AIDE CORRIGÉE)
+# 3. BARRE LATÉRALE
 # ======================================================
 with st.sidebar:
     st.title("👨‍🍳 Mes Recettes")
@@ -79,24 +83,11 @@ with st.sidebar:
     if st.button("➕ Ajouter une recette", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
     if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
 
-    st.divider()
-    if "show_help" not in st.session_state: st.session_state.show_help = False
-    
-    if st.button("❓ Aide & Astuces", use_container_width=True):
-        st.session_state.show_help = not st.session_state.show_help
-
-    if st.session_state.show_help:
-        with st.expander("📖 Guide Rapide", expanded=True):
-            t1, t2, t3 = st.tabs(["➕", "🛒", "📅"])
-            with t1: st.write("**Ajout :** Remplissez Titre & Ingrédients.")
-            with t2: st.write("**Courses :** Cochez dans la recette pour sauver au Cloud.")
-            with t3: st.write("**Planning :** 'Terminé' nettoie l'app mais reste sur Google.")
-
 # ======================================================
 # 4. LOGIQUE DES PAGES
 # ======================================================
 
-# --- ACCUEIL ---
+# --- PAGE : ACCUEIL ---
 if st.session_state.page == "home":
     st.header("📚 Ma Bibliothèque")
     df = load_data()
@@ -119,19 +110,16 @@ if st.session_state.page == "home":
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
                         cats = str(row['Catégorie']).split(", ")
                         badges = "".join([f'<span style="background-color: #3d4455; color: #e67e22; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-right: 4px;">{c}</span>' for c in cats if c])
-                        st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><h4 style="color:white;">{row["Titre"]}</h4>{badges}</div>', unsafe_allow_html=True)
+                        st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><h4 style="color:white; margin-top:10px;">{row["Titre"]}</h4>{badges}</div>', unsafe_allow_html=True)
                         if st.button("Ouvrir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
     else: st.info("Bibliothèque vide.")
 
-# --- DÉTAILS ---
+# --- PAGE : DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
-    
     if not r:
-        st.error("Erreur de chargement des données.")
-        if st.button("Retour à l'accueil"): st.session_state.page = "home"; st.rerun()
-        st.stop()
+        st.error("Données introuvables."); st.button("Retour"); st.rerun()
 
     col_back, col_del = st.columns([5, 1])
     if col_back.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
@@ -139,7 +127,7 @@ elif st.session_state.page == "details":
 
     if st.session_state.get('confirm_delete', False):
         st.error("Supprimer cette recette ?")
-        if st.button("✅ Confirmer Suppression"):
+        if st.button("✅ Confirmer"):
             if send_action({"action": "delete", "titre": r['Titre']}):
                 st.session_state.confirm_delete = False; st.session_state.page = "home"; st.rerun()
         if st.button("❌ Annuler"): st.session_state.confirm_delete = False; st.rerun()
@@ -149,7 +137,6 @@ elif st.session_state.page == "details":
     
     col_l, col_r = st.columns([1, 1.2])
     
-    # --- COLONNE GAUCHE : IMAGE ET NOTES ---
     with col_l:
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400")
@@ -159,45 +146,23 @@ elif st.session_state.page == "details":
         
         st.subheader("⭐ Avis & Notes")
         comm_actuel = str(r.get('Commentaires', ''))
-        
-        # Logique pour garder les étoiles allumées
-        default_stars = None
-        if "Note: " in comm_actuel:
-            try:
-                default_stars = int(comm_actuel.split("Note: ")[1].split("/5")[0]) - 1
-            except: pass
-
-        note = st.feedback("stars", key=f"note_{r['Titre']}", default=default_stars)
+        note = st.feedback("stars", key=f"note_{r['Titre']}")
         txt_comm = st.text_area("Mes notes :", value=comm_actuel.split(" | ")[1] if " | " in comm_actuel else comm_actuel)
         
         if st.button("💾 Sauver l'avis"):
-            val_note = note if note is not None else default_stars
-            note_str = f"{val_note + 1}/5" if val_note is not None else "?"
-            valeur_finale = f"Note: {note_str} | {txt_comm}"
+            val_note = note + 1 if note is not None else 0
+            valeur_finale = f"Note: {val_note}/5 | {txt_comm}"
             if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": valeur_finale}):
-                st.session_state.recipe_data['Commentaires'] = valeur_finale
-                st.rerun()
+                st.session_state.recipe_data['Commentaires'] = valeur_finale; st.rerun()
         
-      # --- SECTION CALENDRIER (CORRIGÉE) ---
         st.divider()
         d_p = st.date_input("Planifier le :", value=datetime.now())
-        
         if st.button("📅 Envoyer au Calendrier"):
             f_date = d_p.strftime("%d/%m/%Y")
-            
-            # 1. On met à jour la date dans Google Sheets
-            update_sheet = send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date})
-            
-            if update_sheet:
-                # 2. On envoie l'événement au Calendrier Google
+            if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
                 send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r.get('Ingrédients', '')})
-                
-                # 3. LE COUP DE POUCE POUR LE PLANNING
-                st.cache_data.clear() # On vide la mémoire pour que le planning voit la nouvelle date
-                st.success(f"Planifié pour le {f_date}")
-                time.sleep(1) # On laisse 1 sec au Cloud pour respirer
-                st.rerun()    # On relance pour valider l'affichage
-    # --- COLONNE DROITE : INGRÉDIENTS ET PRÉPARATION (CE QUI MANQUAIT) ---
+                st.cache_data.clear(); st.rerun()
+
     with col_r:
         st.subheader("🛒 Ingrédients")
         ing_brut = r.get('Ingrédients', '')
@@ -207,19 +172,15 @@ elif st.session_state.page == "details":
             for i, item in enumerate(ing_list):
                 if item.strip() and st.checkbox(item.strip(), key=f"ing_{i}"):
                     temp_to_add.append(item.strip())
-            
             if st.button("➕ Ajouter à l'épicerie"):
-                for s in temp_to_add:
-                    send_action({"action": "add_shop", "article": s})
+                for s in temp_to_add: send_action({"action": "add_shop", "article": s})
                 st.toast("Ajouté !")
-        else:
-            st.write("Aucun ingrédient répertorié.")
-
+        
         st.divider()
         st.subheader("📝 Préparation")
-        prep_txt = r.get('Préparation', 'Aucune instruction.')
-        st.write(prep_txt)
-# --- AJOUTER ---
+        st.write(r.get('Préparation', 'Aucune instruction.'))
+
+# --- PAGE : AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Nouvelle Recette")
     with st.form("form_add", clear_on_submit=True):
@@ -237,7 +198,7 @@ elif st.session_state.page == "add":
                 payload = {"action": "add", "titre": t, "categorie": cat, "source": src, "image": img, "ingredients": ing, "preparation": pre, "portions": port, "t_prepa": prep, "t_cuisson": cuis, "date": datetime.now().strftime("%d/%m/%Y")}
                 if send_action(payload): st.session_state.page = "home"; st.rerun()
 
-# --- ÉPICERIE (PERMANENTE) ---
+# --- PAGE : ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Liste d'Épicerie")
     if st.button("🗑 Tout vider"):
@@ -246,62 +207,32 @@ elif st.session_state.page == "shop":
         df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
         if not df_shop.empty:
             for idx, row in df_shop.iterrows():
-                item = row['Article']
-                if pd.isna(item): continue
+                item = row.iloc[0]
+                if pd.isna(item) or str(item).lower() == 'nan' or str(item).lower() == 'article': continue
                 c_a, c_b = st.columns([0.8, 0.2])
-                c_a.write(f"✅ **{item}**")
+                c_a.write(f"⬜ **{item}**")
                 if c_b.button("❌", key=f"del_{idx}"):
                     if send_action({"action": "remove_item_shop", "article": item}): st.rerun()
         else: st.info("Liste vide.")
-    except: st.error("Erreur de chargement. Vérifiez l'URL_CSV_SHOP.")
+    except: st.error("Erreur de chargement.")
 
-# --- PLANNING ---
+# --- PAGE : PLANNING ---
 elif st.session_state.page == "planning":
     st.header("📅 Agenda")
     df = load_data()
-    
     if not df.empty:
-        # 1. On nettoie la colonne Date_Prevue
         df['Date_Prevue'] = df['Date_Prevue'].astype(str).str.strip()
-        
-        # 2. On filtre tout ce qui n'est pas vide (on est moins strict que le '/')
-        plan = df[df['Date_Prevue'] != ''].copy()
-        plan = plan[plan['Date_Prevue'] != 'nan'] # Élimine les erreurs de lecture
-        
+        plan = df[(df['Date_Prevue'] != '') & (df['Date_Prevue'] != 'nan')].copy()
         if plan.empty:
-            st.info("Rien de prévu pour le moment. Allez dans une recette pour la planifier.")
+            st.info("Rien de prévu.")
         else:
-            # 3. Conversion pour le tri
-            plan['dt_object'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
-            plan = plan.sort_values('dt_object')
-            
+            plan['dt_obj'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
+            plan = plan.sort_values('dt_obj')
             for _, row in plan.iterrows():
-                # Affichage de la carte planning
-                st.markdown(f'''
-                <div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;">
-                    <span style="color:#e67e22; font-size:1.1rem;"><b>🗓 {row["Date_Prevue"]}</b></span><br>
-                    <span style="font-size:1.2rem; color:white;">{row["Titre"]}</span>
-                </div>
-                ''', unsafe_allow_html=True)
-                
+                st.markdown(f'<div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;"><span style="color:#e67e22;"><b>🗓 {row["Date_Prevue"]}</b></span><br><span style="font-size:1.2rem; color:white;">{row["Titre"]}</span></div>', unsafe_allow_html=True)
                 c1, c2 = st.columns(2)
-                if c1.button("📖 Voir", key=f"p_v_{row['Titre']}", use_container_width=True):
-                    st.session_state.recipe_data = row.to_dict()
-                    st.session_state.page = "details"
-                    st.rerun()
-                if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
+                if c1.button("📖 Voir", key=f"pv_{row['Titre']}", use_container_width=True):
+                    st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+                if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
-                        st.cache_data.clear()
-                        st.rerun()
-    else:
-        st.error("Impossible de lire les données du Google Sheet.")
-
-
-
-
-
-
-
-
-
-
+                        st.cache_data.clear(); st.rerun()
