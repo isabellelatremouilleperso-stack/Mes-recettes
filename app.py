@@ -368,21 +368,16 @@ elif st.session_state.page == "details":
         st.divider()
         st.subheader("📝 Préparation")
         st.info(r['Préparation'])
-# --- ÉPICERIE ---
+# --- ÉPICERIE (VERSION ÉPURÉE SANS BOUTON RETOUR) ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
-    
-    # Bouton retour en haut pour plus de confort
-    if st.button("⬅ Retour à la bibliothèque", key="ret_top_shop"):
-        st.session_state.page = "home"
-        st.rerun()
         
     try:
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         if not df_s.empty:
             selection_delete = []
             for idx, row in df_s.iterrows():
-                # Le texte sera bien blanc grâce au style CSS qu'on a mis au début
+                # On affiche chaque article avec sa case à cocher
                 if st.checkbox(row.iloc[0], key=f"s_{idx}"): 
                     selection_delete.append(row.iloc[0])
             
@@ -401,12 +396,6 @@ elif st.session_state.page == "shop":
     except: 
         st.info("Impossible de charger la liste.")
 
-    st.divider()
-    # Bouton retour en bas de page également
-    if st.button("⬅ Retour", key="ret_bot_shop"):
-        st.session_state.page = "home"
-        st.rerun()
-
 # --- AIDE (RESTAURÉE À L'IDENTIQUE) ---
 elif st.session_state.page == "help":
     st.title("❓ Aide & Mode d'emploi")
@@ -417,6 +406,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
