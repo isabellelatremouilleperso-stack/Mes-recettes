@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 import time
+from bs4 import BeautifulSoup
 
 # ======================================================
 # 1. CONFIGURATION & DESIGN (Optimisé Android)
@@ -14,16 +15,12 @@ st.markdown("""
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
     
-    /* Grille alignée pour mobile */
     .recipe-card {
         background-color: #1e2129; border: 1px solid #3d4455;
         border-radius: 12px; padding: 10px; transition: 0.3s;
-        height: 230px; /* Hauteur fixe pour aligner les boutons */
-        display: flex; flex-direction: column;
+        height: 230px; display: flex; flex-direction: column;
     }
-    .recipe-img { 
-        width: 100%; height: 130px; object-fit: cover; border-radius: 8px; 
-    }
+    .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
     .recipe-title {
         color: white; margin-top: 8px; font-size: 0.9rem; font-weight: bold;
         display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
@@ -37,7 +34,6 @@ st.markdown("""
         margin-bottom: 15px; text-decoration: none; display: block;
     }
     
-    /* MODE APPLI : Cache les éléments Web superflus */
     header {visibility: hidden;}
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -79,6 +75,18 @@ def send_action(payload):
             st.error(f"Erreur de connexion : {e}")
     return False
 
+def scrape_url(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette trouvée"
+        # Extraction basique des ingrédients
+        ings = "\n".join([li.text.strip() for li in soup.find_all('li') if len(li.text) < 120 and any(char.isdigit() for char in li.text)])
+        return title, ings
+    except:
+        return None, None
+
 if "page" not in st.session_state: st.session_state.page = "home"
 if "recipe_data" not in st.session_state: st.session_state.recipe_data = {}
 
@@ -91,7 +99,7 @@ with st.sidebar:
     if st.button("📅 Planning", use_container_width=True): st.session_state.page = "planning"; st.rerun()
     if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
     st.write("---")
-    if st.button("➕ Ajouter une recette", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
+    if st.button("➕ Ajouter / Import", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
     if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
 
 # ======================================================
@@ -119,25 +127,17 @@ if st.session_state.page == "home":
                     row = rows.iloc[i + j]
                     with cols[j]:
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
-                        st.markdown(f'''
-                            <div class="recipe-card">
-                                <img src="{img}" class="recipe-img">
-                                <div class="recipe-title">{row["Titre"]}</div>
-                            </div>
-                        ''', unsafe_allow_html=True)
+                        st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><div class="recipe-title">{row["Titre"]}</div></div>', unsafe_allow_html=True)
                         if st.button("Ouvrir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
-    else: st.info("Bibliothèque vide.")
 
 # --- DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
-    if not r:
-        st.error("Données introuvables."); st.button("Retour"); st.rerun()
-
-    col_back, col_del = st.columns([5, 1])
-    if col_back.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
-    if col_del.button("🗑️"): st.session_state.confirm_delete = True
+    c_back, c_edit, c_del = st.columns([4, 1, 1])
+    if c_back.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+    if c_edit.button("✏️"): st.session_state.page = "edit"; st.rerun()
+    if c_del.button("🗑️"): st.session_state.confirm_delete = True
 
     if st.session_state.get('confirm_delete', False):
         st.error("Supprimer ?")
@@ -155,16 +155,6 @@ elif st.session_state.page == "details":
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400")
         if str(r.get('Source', '')).startswith("http"):
             st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Ouvrir le lien </a>', unsafe_allow_html=True)
-        
-        st.subheader("⭐ Avis")
-        comm_actuel = str(r.get('Commentaires', ''))
-        note = st.feedback("stars", key=f"note_{r['Titre']}")
-        txt_comm = st.text_area("Notes :", value=comm_actuel.split(" | ")[1] if " | " in comm_actuel else comm_actuel)
-        if st.button("💾 Sauver l'avis"):
-            val_note = note + 1 if note is not None else 0
-            valeur_finale = f"Note: {val_note}/5 | {txt_comm}"
-            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": valeur_finale}):
-                st.session_state.recipe_data['Commentaires'] = valeur_finale; st.rerun()
         
         st.divider()
         d_p = st.date_input("Planifier le :", value=datetime.now())
@@ -190,82 +180,24 @@ elif st.session_state.page == "details":
         st.subheader("📝 Préparation")
         st.write(r.get('Préparation', 'Aucune instruction.'))
 
+# --- ÉDITION ---
+elif st.session_state.page == "edit":
+    r = st.session_state.recipe_data
+    st.header(f"✏️ Modifier : {r['Titre']}")
+    with st.form("edit_form"):
+        new_t = st.text_input("Titre", value=r['Titre'])
+        new_ing = st.text_area("Ingrédients", value=r['Ingrédients'], height=250)
+        new_pre = st.text_area("Préparation", value=r['Préparation'], height=250)
+        new_img = st.text_input("URL Image", value=r['Image'])
+        st.info("Note : Sauvegarder supprimera l'ancienne version pour créer la nouvelle.")
+        if st.form_submit_button("💾 Enregistrer les modifications"):
+            if send_action({"action": "delete", "titre": r['Titre']}):
+                new_payload = {"action": "add", "titre": new_t, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "date": r['Date']}
+                if send_action(new_payload):
+                    st.session_state.page = "home"; st.rerun()
+
+# --- AJOUTER / IMPORT ---
 elif st.session_state.page == "add":
-    st.header("➕ Nouvelle Recette")
+    st.header("➕ Ajouter une Recette")
     
-    # --- OPTION : RECHERCHE DIRECTE ---
-    st.markdown("""
-        <a href="https://www.google.com/search?q=recette" target="_blank" style="text-decoration:none;">
-            <div style="background-color:#3d4455; color:white; text-align:center; padding:12px; border-radius:10px; font-weight:bold; margin-bottom:20px;">
-                🔍 Ouvrir Google pour chercher une recette
-            </div>
-        </a>
-    """, unsafe_allow_html=True)
-
-    tab_manuel, tab_vrac = st.tabs(["📝 Formulaire Classique", "⚡ Saisie Vrac"])
-
-    with tab_manuel:
-        with st.form("form_add_manuel", clear_on_submit=True):
-            t = st.text_input("Titre *")
-            cat = ", ".join(st.multiselect("Catégories", CATEGORIES[1:]))
-            c1, c2 = st.columns(2)
-            src, img = c1.text_input("Lien Vidéo/Site"), c2.text_input("URL Image")
-            cp, cpr, ccu = st.columns(3)
-            port, prep, cuis = cp.text_input("Portions"), cpr.text_input("Prépa"), ccu.text_input("Cuisson")
-            ing, pre = st.text_area("Ingrédients *"), st.text_area("Préparation")
-            
-            if st.form_submit_button("💾 Enregistrer Formulaire"):
-                if t and ing:
-                    payload = {"action": "add", "titre": t, "categorie": cat, "source": src, "image": img, "ingredients": ing, "preparation": pre, "portions": port, "t_prepa": prep, "t_cuisson": cuis, "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
-
-    with tab_vrac:
-        st.info("💡 Ici, colle tout le texte du site (Ingrédients et Instructions mélangés). Tu feras le tri plus tard dans la page détails.")
-        with st.form("form_add_vrac", clear_on_submit=True):
-            t_v = st.text_input("Titre de la recette *")
-            vrac = st.text_area("Colle tout le contenu ici *", height=300)
-            cat_v = st.selectbox("Catégorie principale", CATEGORIES[1:])
-            
-            if st.form_submit_button("🚀 Enregistrement Rapide"):
-                if t_v and vrac:
-                    # On place tout dans la colonne Ingrédients pour l'instant
-                    payload = {"action": "add", "titre": t_v, "categorie": cat_v, "ingredients": vrac, "preparation": "Voir bloc ingrédients", "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
-# --- ÉPICERIE ---
-elif st.session_state.page == "shop":
-    st.header("🛒 Épicerie")
-    if st.button("🗑 Tout vider"):
-        if send_action({"action": "clear_shop"}): st.rerun()
-    try:
-        df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
-        if not df_shop.empty:
-            for idx, row in df_shop.iterrows():
-                item = row.iloc[0]
-                if pd.isna(item) or str(item).lower() in ['nan', 'article']: continue
-                ca, cb = st.columns([0.8, 0.2])
-                ca.write(f"⬜ **{item}**")
-                if cb.button("❌", key=f"del_{idx}"):
-                    if send_action({"action": "remove_item_shop", "article": item}): st.rerun()
-        else: st.info("Liste vide.")
-    except: st.error("Erreur de chargement.")
-
-# --- PLANNING ---
-elif st.session_state.page == "planning":
-    st.header("📅 Agenda")
-    df = load_data()
-    if not df.empty:
-        df['Date_Prevue'] = df['Date_Prevue'].astype(str).str.strip()
-        plan = df[(df['Date_Prevue'] != '') & (df['Date_Prevue'] != 'nan')].copy()
-        if plan.empty:
-            st.info("Rien de prévu.")
-        else:
-            plan['dt_obj'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
-            plan = plan.sort_values('dt_obj')
-            for _, row in plan.iterrows():
-                st.markdown(f'<div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;"><span style="color:#e67e22;"><b>🗓 {row["Date_Prevue"]}</b></span><br><span style="font-size:1.2rem; color:white;">{row["Titre"]}</span></div>', unsafe_allow_html=True)
-                c1, c2 = st.columns(2)
-                if c1.button("📖 Voir", key=f"pv_{row['Titre']}", use_container_width=True):
-                    st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
-                if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
-                    if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
-
+    st.markdown('<a href="https://www.google.com/search?q=recette" target="_blank" style="text-decoration:none;"><div style="background-color:#3d4455; color:white; text-align:
