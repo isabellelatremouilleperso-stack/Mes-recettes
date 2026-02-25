@@ -12,6 +12,17 @@ import urllib.parse
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 st.markdown("""
+/* Force le texte de la liste d'épicerie (checkbox) en blanc et plus grand */
+    .stCheckbox label p {
+        color: white !important;
+        font-size: 1.1rem !important;
+        font-weight: 500 !important;
+    }
+
+    /* Optionnel : Donne une petite lueur orange aux cases cochées */
+    .stCheckbox [data-testid="stWidgetLabel"] {
+        color: white !important;
+    }
 <style>
     /* Fond de l'application */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
@@ -383,6 +394,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
