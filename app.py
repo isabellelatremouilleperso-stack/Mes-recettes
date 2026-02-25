@@ -196,12 +196,59 @@ elif st.session_state.page == "edit":
                 if send_action(new_payload):
                     st.session_state.page = "home"; st.rerun()
 
-# --- AJOUTER / IMPORT ---
+# --- AJOUTER / IMPORT (CORRIGÉ) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     
-    # Correction de la ligne qui posait problème :
-    btn_google = 'https://www.google.com/search?q=recette'
-    st.markdown(f'<a href="{btn_google}" target="_blank" style="text-decoration:none;"><div style="background-color:#3d4455; color:white; text-align:center; padding:12px; border-radius:10px; margin-bottom:15px; font-weight:bold;">🔍 Chercher sur Google</div></a>', unsafe_allow_html=True)
+    # Bouton Google bien visible
+    st.markdown("""
+        <a href="https://www.google.com/search?q=recette" target="_blank" style="text-decoration:none;">
+            <div style="background-color:#e67e22; color:white; text-align:center; padding:15px; border-radius:10px; font-weight:bold; margin-bottom:20px; font-size:1.1rem;">
+                🔍 Cliquer ici pour chercher sur Google
+            </div>
+        </a>
+    """, unsafe_allow_html=True)
     
+    # Création des onglets
     t1, t2, t3 = st.tabs(["🪄 Import URL", "⚡ Saisie Vrac", "📝 Manuel"])
+    
+    with t1:
+        st.subheader("Importation automatique")
+        url_input = st.text_input("Colle le lien de la recette ici :", placeholder="https://www.marmiton.org/...")
+        if st.button("🪄 Extraire les informations"):
+            if url_input:
+                title, ings = scrape_url(url_input)
+                if title:
+                    st.success(f"✅ Trouvé : {title}")
+                    st.session_state.temp_title = title
+                    st.session_state.temp_ings = ings
+                    st.info("Passe à l'onglet 'Saisie Vrac' pour finaliser !")
+                else:
+                    st.error("Désolé, ce site bloque l'extraction. Utilise la 'Saisie Vrac'.")
+
+    with t2:
+        st.subheader("Saisie Rapide")
+        with st.form("vrac_form"):
+            v_t = st.text_input("Titre", value=st.session_state.get('temp_title', ''))
+            v_c = st.text_area("Contenu (Ingrédients et Préparation)", value=st.session_state.get('temp_ings', ''), height=300)
+            v_cat = st.selectbox("Catégorie", CATEGORIES[1:])
+            if st.form_submit_button("🚀 Enregistrer cette recette"):
+                if v_t and v_c:
+                    payload = {"action": "add", "titre": v_t, "categorie": v_cat, "ingredients": v_c, "preparation": "Tri à faire via l'édition", "date": datetime.now().strftime("%d/%m/%Y")}
+                    if send_action(payload): 
+                        st.session_state.page = "home"
+                        st.rerun()
+
+    with t3:
+        st.subheader("Nouveau formulaire")
+        with st.form("manuel_form"):
+            m_t = st.text_input("Titre *")
+            m_cat = st.selectbox("Catégorie *", CATEGORIES[1:])
+            m_ing = st.text_area("Ingrédients *")
+            m_pre = st.text_area("Préparation")
+            if st.form_submit_button("💾 Sauvegarder"):
+                if m_t and m_ing:
+                    payload = {"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")}
+                    if send_action(payload): 
+                        st.session_state.page = "home"
+                        st.rerun()
