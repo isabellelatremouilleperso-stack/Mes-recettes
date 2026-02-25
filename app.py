@@ -127,7 +127,7 @@ with st.sidebar:
 # --- PAGE PLAY STORE ---
 if st.session_state.page == "playstore":
     # Cette ligne va utiliser le style que tu viens de créer à la ligne 58
-st.markdown(f'<center><img src="TON_LIEN_DIRECT_ICI" class="logo-playstore"></center>', unsafe_allow_html=True)
+    st.markdown(f'<center><img src="TON_LIEN_DIRECT_ICI" class="logo-playstore"></center>', unsafe_allow_html=True)
     st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=100)
     st.markdown("""
     ### Mes Recettes Pro  
@@ -415,6 +415,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
