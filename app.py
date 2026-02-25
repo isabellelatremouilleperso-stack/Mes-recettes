@@ -137,7 +137,6 @@ elif st.session_state.page == "home":
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
 # --- DÉTAILS ---
-# --- DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     c_back, c_edit, c_del = st.columns([4, 1, 1])
@@ -286,5 +285,6 @@ elif st.session_state.page == "planning":
         plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
             st.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+
 
 
