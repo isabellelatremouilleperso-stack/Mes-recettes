@@ -190,22 +190,47 @@ elif st.session_state.page == "details":
         st.subheader("📝 Préparation")
         st.write(r.get('Préparation', 'Aucune instruction.'))
 
-# --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Nouvelle Recette")
-    with st.form("form_add", clear_on_submit=True):
-        t = st.text_input("Titre *")
-        cat = ", ".join(st.multiselect("Catégories", CATEGORIES[1:]))
-        c1, c2 = st.columns(2)
-        src, img = c1.text_input("Lien Vidéo"), c2.text_input("URL Image")
-        cp, cpr, ccu = st.columns(3)
-        port, prep, cuis = cp.text_input("Portions"), cpr.text_input("Prépa"), ccu.text_input("Cuisson")
-        ing, pre = st.text_area("Ingrédients *"), st.text_area("Préparation")
-        if st.form_submit_button("💾 Enregistrer"):
-            if t and ing:
-                payload = {"action": "add", "titre": t, "categorie": cat, "source": src, "image": img, "ingredients": ing, "preparation": pre, "portions": port, "t_prepa": prep, "t_cuisson": cuis, "date": datetime.now().strftime("%d/%m/%Y")}
-                if send_action(payload): st.session_state.page = "home"; st.rerun()
+    
+    # --- OPTION : RECHERCHE DIRECTE ---
+    st.markdown("""
+        <a href="https://www.google.com/search?q=recette" target="_blank" style="text-decoration:none;">
+            <div style="background-color:#3d4455; color:white; text-align:center; padding:12px; border-radius:10px; font-weight:bold; margin-bottom:20px;">
+                🔍 Ouvrir Google pour chercher une recette
+            </div>
+        </a>
+    """, unsafe_allow_html=True)
 
+    tab_manuel, tab_vrac = st.tabs(["📝 Formulaire Classique", "⚡ Saisie Vrac"])
+
+    with tab_manuel:
+        with st.form("form_add_manuel", clear_on_submit=True):
+            t = st.text_input("Titre *")
+            cat = ", ".join(st.multiselect("Catégories", CATEGORIES[1:]))
+            c1, c2 = st.columns(2)
+            src, img = c1.text_input("Lien Vidéo/Site"), c2.text_input("URL Image")
+            cp, cpr, ccu = st.columns(3)
+            port, prep, cuis = cp.text_input("Portions"), cpr.text_input("Prépa"), ccu.text_input("Cuisson")
+            ing, pre = st.text_area("Ingrédients *"), st.text_area("Préparation")
+            
+            if st.form_submit_button("💾 Enregistrer Formulaire"):
+                if t and ing:
+                    payload = {"action": "add", "titre": t, "categorie": cat, "source": src, "image": img, "ingredients": ing, "preparation": pre, "portions": port, "t_prepa": prep, "t_cuisson": cuis, "date": datetime.now().strftime("%d/%m/%Y")}
+                    if send_action(payload): st.session_state.page = "home"; st.rerun()
+
+    with tab_vrac:
+        st.info("💡 Ici, colle tout le texte du site (Ingrédients et Instructions mélangés). Tu feras le tri plus tard dans la page détails.")
+        with st.form("form_add_vrac", clear_on_submit=True):
+            t_v = st.text_input("Titre de la recette *")
+            vrac = st.text_area("Colle tout le contenu ici *", height=300)
+            cat_v = st.selectbox("Catégorie principale", CATEGORIES[1:])
+            
+            if st.form_submit_button("🚀 Enregistrement Rapide"):
+                if t_v and vrac:
+                    # On place tout dans la colonne Ingrédients pour l'instant
+                    payload = {"action": "add", "titre": t_v, "categorie": cat_v, "ingredients": vrac, "preparation": "Voir bloc ingrédients", "date": datetime.now().strftime("%d/%m/%Y")}
+                    if send_action(payload): st.session_state.page = "home"; st.rerun()
 # --- ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Épicerie")
@@ -243,3 +268,4 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+
