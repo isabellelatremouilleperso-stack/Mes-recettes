@@ -77,18 +77,44 @@ def send_action(payload):
 
 def scrape_url(url):
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = res.apparent_encoding # Pour éviter les problèmes d'accents
         soup = BeautifulSoup(res.text, 'html.parser')
-        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette trouvée"
-        # Extraction basique des ingrédients
-        ings = "\n".join([li.text.strip() for li in soup.find_all('li') if len(li.text) < 120 and any(char.isdigit() for char in li.text)])
-        return title, ings
-    except:
-        return None, None
+        
+        # 1. Extraction du Titre
+        title = ""
+        if soup.find('h1'):
+            title = soup.find('h1').text.strip()
+        
+        # 2. Extraction des Ingrédients (On cherche plus large)
+        found_ings = []
+        # On cible les classes qui contiennent souvent "ingredient"
+        for tag in soup.find_all(['li', 'div', 'span'], class_=lambda x: x and 'ingredient' in x.lower()):
+            text = tag.get_text(separator=" ").strip()
+            if text and len(text) < 150: # Évite de prendre des paragraphes entiers
+                found_ings.append(text)
+        
+        # Si rien n'est trouvé, on prend tous les <li> qui ont des chiffres (quantités)
+        if not found_ings:
+            for li in soup.find_all('li'):
+                t = li.text.strip()
+                if any(char.isdigit() for char in t) and len(t) < 100:
+                    found_ings.append(t)
 
-if "page" not in st.session_state: st.session_state.page = "home"
-if "recipe_data" not in st.session_state: st.session_state.recipe_data = {}
+        # 3. Extraction de la Préparation
+        found_steps = []
+        for tag in soup.find_all(['li', 'p', 'div'], class_=lambda x: x and ('step' in x.lower() or 'instruction' in x.lower() or 'preparation' in x.lower())):
+            text = tag.get_text().strip()
+            if len(text) > 20: # Évite les petits mots inutiles
+                found_steps.append(text)
+
+        all_content = "--- INGRÉDIENTS ---\n" + "\n".join(dict.fromkeys(found_ings)) # dict.fromkeys enlève les doublons
+        all_content += "\n\n--- PRÉPARATION ---\n" + "\n".join(dict.fromkeys(found_steps))
+        
+        return title, all_content
+    except Exception as e:
+        return None, f"Erreur : {e}"
 
 # ======================================================
 # 3. BARRE LATÉRALE
@@ -252,3 +278,4 @@ elif st.session_state.page == "add":
                     if send_action(payload): 
                         st.session_state.page = "home"
                         st.rerun()
+
