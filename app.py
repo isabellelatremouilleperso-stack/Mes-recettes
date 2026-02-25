@@ -90,8 +90,8 @@ with st.sidebar:
 # 4. PAGES
 # ======================================================
 
-# --- PAGE PLAY STORE (RESTAURÉE À L'IDENTIQUE) ---
-elif st.session_state.page == "playstore":
+# --- PAGE PLAY STORE (TA VERSION ORIGINALE) ---
+if st.session_state.page == "playstore":
     st.markdown('<div class="app-header">', unsafe_allow_html=True)
     st.image("https://via.placeholder.com/100", width=100)
     st.markdown("""
@@ -132,6 +132,19 @@ elif st.session_state.page == "playstore":
     Compatibilité : Android / Tablette  
     Développeur : Isabelle Latrémouille  
     """)
+
+# --- PAGE AIDE (TON TEXTE ORIGINAL RESTAURÉ) ---
+elif st.session_state.page == "help":
+    st.title("❓ Aide & Mode d'emploi")
+    st.markdown("""
+    1. **Ajouter** : Utilisez l'onglet **Vrac** pour coller un texte complet rapidement, ou **Manuel** pour remplir chaque champ.
+    2. **Épicerie** : Dans une recette, cochez les ingrédients manquants et cliquez sur le bouton bleu. Dans la page Épicerie, cochez ce que vous avez acheté pour le retirer de la liste.
+    3. **Planning** : Saisissez une date dans la fiche d'une recette pour qu'elle apparaisse dans votre calendrier.
+    4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
+    """)
+    if st.button("⬅ Retour"):
+        st.session_state.page = "home"
+        st.rerun()
 
 # --- PLANNING (CORRIGÉ POUR ÉVITER LE VIDE) ---
 elif st.session_state.page == "planning":
@@ -256,3 +269,4 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
