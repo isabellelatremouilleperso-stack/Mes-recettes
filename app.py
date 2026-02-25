@@ -200,4 +200,8 @@ elif st.session_state.page == "edit":
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     
-    st.markdown('<a href="https://www.google.com/search?q=recette" target="_blank" style="text-decoration:none;"><div style="background-color:#3d4455; color:white; text-align:
+    # Correction de la ligne qui posait problème :
+    btn_google = 'https://www.google.com/search?q=recette'
+    st.markdown(f'<a href="{btn_google}" target="_blank" style="text-decoration:none;"><div style="background-color:#3d4455; color:white; text-align:center; padding:12px; border-radius:10px; margin-bottom:15px; font-weight:bold;">🔍 Chercher sur Google</div></a>', unsafe_allow_html=True)
+    
+    t1, t2, t3 = st.tabs(["🪄 Import URL", "⚡ Saisie Vrac", "📝 Manuel"])
