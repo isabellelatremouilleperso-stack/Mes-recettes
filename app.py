@@ -13,38 +13,34 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 
 st.markdown("""
 <style>
+    /* Fond de l'application */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
+
+    /* Correction visuelle pour téléphone (Champs de saisie) */
+    input, select, textarea, div[data-baseweb="select"] {
+        color: white !important;
+        background-color: #1e2129 !important;
+    }
+    
+    /* Force les étiquettes au-dessus des champs (ex: "Catégorie") en blanc */
+    label, .stMarkdown p { color: white !important; }
+
+    /* Rendre le texte de suggestion (placeholder) moins transparent */
+    ::placeholder { color: #888888 !important; opacity: 1 !important; }
+
+    /* Style des cartes de recettes */
     .recipe-card {
         background-color: #1e2129; border: 1px solid #3d4455;
         border-radius: 12px; padding: 10px; height: 230px; 
         display: flex; flex-direction: column;
     }
     .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
-   .recipe-title {
-        color: white; 
-        margin-top: 8px; 
-        font-size: 0.95rem; 
-        font-weight: bold;
-        text-align: center; /* Centre le texte horizontalement */
-        
-        /* Force l'affichage sur 2 lignes */
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        
-        line-height: 1.2;
-        height: 2.5em; /* Hauteur fixe pour que toutes les cartes soient alignées */
-        
-        /* Aligne le texte au milieu de la zone si une seule ligne */
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .recipe-title {
+        color: white; margin-top: 8px; font-size: 0.95rem; font-weight: bold;
+        text-align: center; display: flex; align-items: center; justify-content: center;
+        height: 2.5em; line-height: 1.2;
     }
-    .app-header { display: flex; align-items: center; gap: 20px; }
-    .app-icon { width: 100px; height: 100px; border-radius: 20px; }
-    header {visibility: hidden;} .stDeployButton {display:none;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -378,6 +374,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
