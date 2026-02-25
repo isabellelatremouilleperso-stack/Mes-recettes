@@ -258,13 +258,49 @@ elif st.session_state.page == "edit":
                 if send_action(payload):
                     st.session_state.page = "home"; st.rerun()
         
-        if cancel_btn:
-            st.session_state.page = "details"; st.rerun()
-
-# --- ÉPICERIE ---
+       # --- ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Épicerie")
     if st.button("🗑 Tout vider"):
-        send_action({"action": "clear_shop"})
+        if send_action({"action": "clear_shop"}):
+            st.rerun()
     try:
-        df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache
+        # Correction de la ligne 270 ici :
+        df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
+        
+        if df_shop.empty:
+            st.info("Votre liste est vide.")
+        else:
+            for idx, row in df_shop.iterrows():
+                item = row.iloc[0]
+                if not pd.isna(item) and str(item).strip() != "":
+                    ca, cb = st.columns([0.8, 0.2])
+                    ca.write(f"⬜ {item}")
+                    if cb.button("❌", key=f"d_{idx}"):
+                        if send_action({"action": "remove_item_shop", "article": item}):
+                            st.rerun()
+    except Exception as e:
+        st.info("Aucun article dans la liste pour le moment.")
+
+# --- PLANNING ---
+elif st.session_state.page == "planning":
+    st.header("📅 Agenda")
+    df = load_data()
+    if not df.empty:
+        # On s'assure que la colonne existe et n'est pas vide
+        if 'Date_Prevue' in df.columns:
+            plan = df[df['Date_Prevue'].astype(str).str.strip() != ''].copy()
+            if plan.empty:
+                st.info("Aucune recette prévue.")
+            else:
+                for _, row in plan.iterrows():
+                    col_p1, col_p2 = st.columns([4, 1])
+                    col_p1.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+                    if col_p2.button("📖 Ouvrir", key=f"plan_{row['Titre']}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+        else:
+            st.warning("La colonne de planning est introuvable.")
+    else:
+        st.info("Chargez vos recettes pour voir le planning.")
