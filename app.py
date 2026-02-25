@@ -128,7 +128,6 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # Sécurité pour l'image : si r est vide ou perdu, on évite le crash
     if not r:
         st.error("Erreur de chargement des données.")
         if st.button("Retour à l'accueil"): st.session_state.page = "home"; st.rerun()
@@ -146,50 +145,68 @@ elif st.session_state.page == "details":
         if st.button("❌ Annuler"): st.session_state.confirm_delete = False; st.rerun()
 
     st.title(f"🍳 {r['Titre']}")
-    st.info(f"Portions : {r['Portions']} | Prépa : {r['Temps_Prepa']} | Cuisson : {r['Temps_Cuisson']}")
+    st.info(f"Portions : {r.get('Portions', '?')} | Prépa : {r.get('Temps_Prepa', '?')} | Cuisson : {r.get('Temps_Cuisson', '?')}")
     
     col_l, col_r = st.columns([1, 1.2])
+    
+    # --- COLONNE GAUCHE : IMAGE ET NOTES ---
     with col_l:
-        # Affichage robuste de l'image
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400")
         
         if str(r.get('Source', '')).startswith("http"):
             st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Ouvrir le lien </a>', unsafe_allow_html=True)
         
-        # --- SECTION AVIS ET ÉTOILES (CORRIGÉE) ---
         st.subheader("⭐ Avis & Notes")
-        
-        # Extraction de la note numérique (ex: "Note: 4/5" -> 4) pour pré-remplir les étoiles
         comm_actuel = str(r.get('Commentaires', ''))
+        
+        # Logique pour garder les étoiles allumées
         default_stars = None
         if "Note: " in comm_actuel:
             try:
-                # On récupère le chiffre avant le "/5" et on enlève 1 (car feedback commence à 0)
                 default_stars = int(comm_actuel.split("Note: ")[1].split("/5")[0]) - 1
-            except:
-                default_stars = None
+            except: pass
 
-        # On affiche les étoiles avec la valeur enregistrée par défaut
         note = st.feedback("stars", key=f"note_{r['Titre']}", default=default_stars)
-        
-        txt_comm = st.text_area("Mes notes (astuces, modifs...)", placeholder="Ex: Mettre moins de sucre la prochaine fois.")
+        txt_comm = st.text_area("Mes notes :", value=comm_actuel.split(" | ")[1] if " | " in comm_actuel else comm_actuel)
         
         if st.button("💾 Sauver l'avis"):
-            # Si l'utilisateur n'a pas touché aux étoiles, on garde l'ancienne note
-            n_stars = note if note is not None else default_stars
-            note_str = f"{n_stars + 1}/5" if n_stars is not None else "?"
+            val_note = note if note is not None else default_stars
+            note_str = f"{val_note + 1}/5" if val_note is not None else "?"
             valeur_finale = f"Note: {note_str} | {txt_comm}"
-            
             if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": valeur_finale}):
-                # Mise à jour locale pour éviter que l'image disparaisse au rerun
                 st.session_state.recipe_data['Commentaires'] = valeur_finale
-                st.toast("Avis enregistré !")
-                time.sleep(1)
                 st.rerun()
         
         st.divider()
-        # ... (reste du code Planning identique)
+        d_p = st.date_input("Planifier le :", value=datetime.now())
+        if st.button("📅 Envoyer au Calendrier"):
+            f_date = d_p.strftime("%d/%m/%Y")
+            if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
+                send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r['Ingrédients']})
+
+    # --- COLONNE DROITE : INGRÉDIENTS ET PRÉPARATION (CE QUI MANQUAIT) ---
+    with col_r:
+        st.subheader("🛒 Ingrédients")
+        ing_brut = r.get('Ingrédients', '')
+        if ing_brut:
+            ing_list = str(ing_brut).split("\n")
+            temp_to_add = []
+            for i, item in enumerate(ing_list):
+                if item.strip() and st.checkbox(item.strip(), key=f"ing_{i}"):
+                    temp_to_add.append(item.strip())
+            
+            if st.button("➕ Ajouter à l'épicerie"):
+                for s in temp_to_add:
+                    send_action({"action": "add_shop", "article": s})
+                st.toast("Ajouté !")
+        else:
+            st.write("Aucun ingrédient répertorié.")
+
+        st.divider()
+        st.subheader("📝 Préparation")
+        prep_txt = r.get('Préparation', 'Aucune instruction.')
+        st.write(prep_txt)
 # --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Nouvelle Recette")
@@ -243,6 +260,7 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+
 
 
 
