@@ -165,27 +165,24 @@ elif st.session_state.page == "details":
         st.subheader("⭐ Votre avis")
         comm_brut = str(r.get('Commentaires', ''))
         
-        # On extrait la note pour l'afficher proprement en texte
-        note_actuelle = "Pas encore noté"
+        # Extraction sécurisée de la note pour mémoire
+        note_memoire = 0
         txt_display = comm_brut
         if "Note: " in comm_brut:
             try:
-                note_actuelle = comm_brut.split("Note: ")[1].split("|")[0].strip()
+                note_memoire = int(comm_brut.split("Note: ")[1].split("/5")[0])
                 if "| " in comm_brut:
                     txt_display = comm_brut.split("| ")[1]
-            except:
-                pass
+            except: pass
 
-        st.write(f"**Note actuelle :** {note_actuelle}")
+        st.write(f"**Note actuelle :** {'⭐' * note_memoire if note_memoire > 0 else 'Pas encore noté'}")
         
-        # On retire l'argument par défaut qui fait planter
-        # On utilise une clé simple sans caractères spéciaux
         new_note = st.feedback("stars", key=f"fb_{hash(r['Titre'])}")
         
         new_comm = st.text_area("Commentaire :", value=txt_display)
         if st.button("💾 Sauver l'avis"):
-            val_note = (new_note + 1) if new_note is not None else 0
-            format_avis = f"Note: {val_note}/5 | {new_comm}"
+            val_finale = (new_note + 1) if new_note is not None else note_memoire
+            format_avis = f"Note: {val_finale}/5 | {new_comm}"
             if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": format_avis}):
                 st.rerun()
 
@@ -200,9 +197,13 @@ elif st.session_state.page == "details":
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r.get('Préparation', 'Aucune instruction.'))
+
 # --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
+    if st.button("⬅️ Retour à la bibliothèque"):
+        st.session_state.page = "home"; st.rerun()
+        
     t1, t2, t3 = st.tabs(["🪄 Import URL", "⚡ Vrac", "📝 Manuel"])
     with t3:
         with st.form("m_form"):
@@ -214,10 +215,14 @@ elif st.session_state.page == "add":
             m_cat = st.selectbox("Catégorie", CATEGORIES[1:])
             m_ing = st.text_area("Ingrédients *")
             m_pre = st.text_area("Préparation")
+            
             if st.form_submit_button("💾 Sauver"):
-                payload = {"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_pre_t, "temps_cuisson": m_cui_t, "date": datetime.now().strftime("%d/%m/%Y")}
-                if send_action(payload):
-                    st.session_state.page = "home"; st.rerun()
+                if m_t and m_ing:
+                    payload = {"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_pre_t, "temps_cuisson": m_cui_t, "date": datetime.now().strftime("%d/%m/%Y")}
+                    if send_action(payload):
+                        st.session_state.page = "home"; st.rerun()
+                else:
+                    st.error("Titre et ingrédients obligatoires.")
 
 # --- ÉDITION ---
 elif st.session_state.page == "edit":
@@ -238,9 +243,8 @@ elif st.session_state.page == "edit":
         new_plan = st.text_input("Date Prévue (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
         
         col_btn1, col_btn2 = st.columns([1, 1])
-        save_btn = col_btn1.form_submit_button("💾 Enregistrer les modifications")
-        # Le bouton annuler à l'intérieur du formulaire pour l'alignement
-        cancel_btn = col_btn2.form_submit_button("❌ Annuler / Retour")
+        save_btn = col_btn1.form_submit_button("💾 Enregistrer")
+        cancel_btn = col_btn2.form_submit_button("❌ Annuler")
 
         if save_btn:
             if send_action({"action": "delete", "titre": r['Titre']}):
@@ -252,37 +256,15 @@ elif st.session_state.page == "edit":
                     "date_prevue": new_plan, "date": r.get('Date', '')
                 }
                 if send_action(payload):
-                    st.success("Modifié !"); st.session_state.page = "home"; st.rerun()
+                    st.session_state.page = "home"; st.rerun()
         
         if cancel_btn:
             st.session_state.page = "details"; st.rerun()
 
-# --- ÉPICERIE & PLANNING ---
+# --- ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Épicerie")
     if st.button("🗑 Tout vider"):
         send_action({"action": "clear_shop"})
     try:
-        df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
-        for idx, row in df_shop.iterrows():
-            item = row.iloc[0]
-            if not pd.isna(item):
-                ca, cb = st.columns([0.8, 0.2])
-                ca.write(f"⬜ {item}")
-                if cb.button("❌", key=f"d_{idx}"):
-                    send_action({"action": "remove_item_shop", "article": item})
-    except:
-        st.info("Vide.")
-
-elif st.session_state.page == "planning":
-    st.header("📅 Agenda")
-    df = load_data()
-    if not df.empty:
-        plan = df[df['Date_Prevue'] != ''].copy()
-        for _, row in plan.iterrows():
-            st.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
-
-
-
-
-
+        df_shop = pd.read_csv(f"{URL_CSV_SHOP}&nocache
