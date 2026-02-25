@@ -90,7 +90,7 @@ with st.sidebar:
 # 4. PAGES
 # ======================================================
 
-# --- PAGE PLAY STORE (TA VERSION ORIGINALE) ---
+# --- PAGE PLAY STORE ---
 if st.session_state.page == "playstore":
     st.markdown('<div class="app-header">', unsafe_allow_html=True)
     st.image("https://via.placeholder.com/100", width=100)
@@ -102,18 +102,21 @@ if st.session_state.page == "playstore":
     """)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown("")
+    
     col1, col2 = st.columns([1,3])
     with col1:
         if st.button("📥 Installer", use_container_width=True):
             st.success("Application installée avec succès ! 🎉")
+            
     st.divider()
-   st.subheader("📸 Aperçu")
-    c1, c2, c3 = st.columns(3)
+    st.subheader("📸 Aperçu")
     
-    # "images/" est le nom du dossier que tu as créé
-    c1.image("images/capture1.png", caption="Ma Bibliothèque")
-    c2.image("images/capture2.png", caption="Mon Planning")
-    c3.image("images/capture3.png", caption="Mes Courses")
+    c1, c2, c3 = st.columns(3)
+    # Prépare tes chemins d'images ici pour ce soir
+    c1.image("https://via.placeholder.com/250x500", caption="Bibliothèque")
+    c2.image("https://via.placeholder.com/250x500", caption="Planning")
+    c3.image("https://via.placeholder.com/250x500", caption="Épicerie")
+    
     st.divider()
     st.subheader("📝 À propos de cette application")
     st.write("""
@@ -125,6 +128,7 @@ if st.session_state.page == "playstore":
     ✔ Synchronisation Google  
     Une solution parfaite pour organiser vos repas comme un chef !
     """)
+    
     st.divider()
     st.subheader("ℹ️ Informations")
     st.write("""
@@ -271,5 +275,6 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
