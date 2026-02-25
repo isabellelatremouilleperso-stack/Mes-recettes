@@ -60,7 +60,7 @@ def load_data():
 if "page" not in st.session_state: st.session_state.page = "home"
 
 # ======================================================
-# 3. SIDEBAR (RETOUR DU PLANNING)
+# 3. SIDEBAR
 # ======================================================
 with st.sidebar:
     st.title("👨‍🍳 Mes Recettes")
@@ -82,9 +82,12 @@ with st.sidebar:
 # 4. PAGES
 # ======================================================
 
-# --- ACCUEIL ---
+# --- ACCUEIL (AVEC BOUTON ACTUALISER) ---
 if st.session_state.page == "home":
-    st.header("📚 Bibliothèque")
+    c1, c2 = st.columns([4, 1])
+    c1.header("📚 Bibliothèque")
+    if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
+    
     df = load_data()
     search = st.text_input("🔍 Rechercher")
     if not df.empty:
@@ -101,7 +104,42 @@ if st.session_state.page == "home":
                         if st.button("Voir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
-# --- PLANNING (RESTAURÉ) ---
+# --- ÉPICERIE (CASES À COCHER + SUPPRESSION SÉLECTIVE) ---
+elif st.session_state.page == "shop":
+    st.header("🛒 Ma Liste d'épicerie")
+    
+    try:
+        # On charge la liste actuelle
+        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
+        if not df_s.empty:
+            articles_selectionnes = []
+            for idx, row in df_s.iterrows():
+                article = row.iloc[0]
+                # Chaque article a sa case à cocher
+                if st.checkbox(f"{article}", key=f"shop_{idx}"):
+                    articles_selectionnes.append(article)
+            
+            st.divider()
+            col_del1, col_del2 = st.columns(2)
+            
+            # Bouton pour retirer seulement les cochés
+            if col_del1.button("🗑 Retirer articles cochés", use_container_width=True):
+                if articles_selectionnes:
+                    for item in articles_selectionnes:
+                        send_action({"action": "remove_shop", "article": item})
+                    st.success("Articles retirés !"); time.sleep(0.5); st.rerun()
+                else:
+                    st.warning("Cochez des articles à supprimer.")
+            
+            # Bouton pour tout effacer (au cas où)
+            if col_del2.button("🧨 TOUT EFFACER", type="secondary", use_container_width=True):
+                send_action({"action": "clear_shop"}); st.rerun()
+        else:
+            st.info("Votre liste d'épicerie est vide.")
+    except:
+        st.info("Votre liste d'épicerie est vide.")
+
+# --- PLANNING ---
 elif st.session_state.page == "planning":
     st.header("📅 Planning des Repas")
     df = load_data()
@@ -110,12 +148,10 @@ elif st.session_state.page == "planning":
         if not plan.empty:
             for _, row in plan.iterrows():
                 with st.expander(f"{row['Date_Prevue']} - {row['Titre']}"):
-                    st.write(f"**Catégorie:** {row['Catégorie']}")
                     if st.button("Voir la fiche", key=f"p_{row['Titre']}"):
                         st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
         else:
-            st.info("Aucun repas planifié. Allez dans une fiche recette pour définir une date.")
-    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+            st.info("Aucun repas planifié.")
 
 # --- DÉTAILS ---
 elif st.session_state.page == "details":
@@ -126,31 +162,27 @@ elif st.session_state.page == "details":
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        st.subheader("📅 Planning")
         date_p = st.text_input("Date JJ/MM/AAAA", value=r.get('Date_Prevue', ''))
-        c_p1, c_p2 = st.columns(2)
-        if c_p1.button("📅 Planning", use_container_width=True):
+        if st.button("📅 Enregistrer au planning", use_container_width=True):
             send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_p}); st.rerun()
-        if c_p2.button("🗓 Google", type="primary", use_container_width=True):
-            send_action({"action": "calendar", "titre": r['Titre'], "date_prevue": date_p, "ingredients": r['Ingrédients']})
         
     with col_r:
         st.subheader("🛒 Ingrédients")
         lignes_ing = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
-        selection = []
+        selection_recette = []
         for i, ligne in enumerate(lignes_ing):
-            if st.checkbox(ligne, key=f"ch_{i}"): selection.append(ligne)
+            if st.checkbox(ligne, key=f"rec_{i}"): selection_recette.append(ligne)
         
         if st.button("📥 AJOUTER À L'ÉPICERIE", type="primary", use_container_width=True):
-            if selection:
-                for item in selection: send_action({"action": "add_shop", "article": item})
-                st.success("Articles ajoutés !"); time.sleep(1)
+            if selection_recette:
+                for item in selection_recette: send_action({"action": "add_shop", "article": item})
+                st.success("Ajouté !"); time.sleep(0.5)
 
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r['Préparation'])
 
-# --- AJOUTER ---
+# --- AJOUTER RECETTE ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     t1, t2, t3 = st.tabs(["🔗 URL", "📝 Vrac", "⌨️ Manuel"])
@@ -160,26 +192,17 @@ elif st.session_state.page == "add":
             m_cats = st.multiselect("Catégories", CATEGORIES)
             c1, c2, c3 = st.columns(3)
             m_por = c1.text_input("Portions")
-            m_prepa = c2.text_input("Prépa")
-            m_cuis = c3.text_input("Cuisson")
-            m_ing = st.text_area("Ingrédients (ligne par ligne)")
-            m_pre = st.text_area("Préparation")
+            m_pre = c2.text_input("Prépa")
+            m_cui = c3.text_input("Cuisson")
+            m_ing = st.text_area("Ingrédients (un par ligne)")
+            m_eta = st.text_area("Préparation")
             m_img = st.text_input("URL Image")
             if st.form_submit_button("💾 Sauver"):
-                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_prepa, "temps_cuisson": m_cuis, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
+                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_eta, "portions": m_por, "temps_prepa": m_pre, "temps_cuisson": m_cui, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
-
-# --- ÉPICERIE ---
-elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'épicerie")
-    if st.button("🗑 Tout vider"): send_action({"action": "clear_shop"}); st.rerun()
-    try:
-        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
-        for idx, row in df_s.iterrows(): st.write(f"⬜ {row.iloc[0]}")
-    except: st.info("Vide.")
 
 # --- AIDE ---
 elif st.session_state.page == "help":
     st.title("❓ Aide")
-    st.write("Le planning affiche vos recettes datées. L'épicerie utilise des cases à cocher.")
+    st.write("- **Actualiser** : met à jour la liste depuis Google Sheets.\n- **Épicerie** : cochez ce que vous avez acheté et cliquez sur 'Retirer articles cochés'.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
