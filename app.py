@@ -147,9 +147,27 @@ elif st.session_state.page == "details":
         if str(r['Source']).startswith("http"):
             st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Ouvrir le lien </a>', unsafe_allow_html=True)
         
+        # --- SECTION AVIS ET COMMENTAIRES ---
+        st.subheader("⭐ Avis & Notes")
+        
+        # Affichage du commentaire actuel s'il existe dans la colonne L
+        comm_actuel = str(r.get('Commentaires', ''))
+        if comm_actuel:
+            st.caption("Dernière note enregistrée :")
+            st.info(comm_actuel)
+        
         note = st.feedback("stars", key=f"note_{r['Titre']}")
+        txt_comm = st.text_area("Mes notes (astuces, modifs...)", placeholder="Ex: Mettre moins de sucre la prochaine fois.")
+        
         if st.button("💾 Sauver l'avis"):
-            send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": f"Note: {note}/5"})
+            # On combine la note et le texte pour la colonne L
+            note_str = f"{note}/5" if note is not None else "?"
+            valeur_finale = f"Note: {note_str} | {txt_comm}"
+            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": valeur_finale}):
+                st.toast("Avis enregistré !")
+                time.sleep(1)
+                st.rerun()
+        # ------------------------------------
         
         st.divider()
         d_p = st.date_input("Planifier le :", value=datetime.now())
@@ -174,7 +192,6 @@ elif st.session_state.page == "details":
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r['Préparation'])
-
 # --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Nouvelle Recette")
@@ -228,6 +245,7 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+
 
 
 
