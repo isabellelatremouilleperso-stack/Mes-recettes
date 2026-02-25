@@ -145,7 +145,7 @@ elif st.session_state.page == "details":
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         if str(r['Source']).startswith("http"):
-            st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Voir la vidéo</a>', unsafe_allow_html=True)
+            st.markdown(f'<a href="{r["Source"]}" target="_blank" class="source-btn">🔗 Ouvrir le lien </a>', unsafe_allow_html=True)
         
         note = st.feedback("stars", key=f"note_{r['Titre']}")
         if st.button("💾 Sauver l'avis"):
@@ -228,5 +228,6 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+
 
 
