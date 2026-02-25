@@ -3,11 +3,6 @@ import requests
 import pandas as pd
 from datetime import datetime
 import time
-from bs4 import Beaimport streamlit as st
-import requests
-import pandas as pd
-from datetime import datetime
-import time
 from bs4 import BeautifulSoup
 
 # ======================================================
@@ -549,6 +544,7 @@ elif st.session_state.page == "planning":
                 if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
                     send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}); st.rerun()
         else: st.info("Rien de prévu.")
+
 
 
 
