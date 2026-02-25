@@ -138,43 +138,36 @@ elif st.session_state.page == "details":
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400")
         
-        # --- ÉTOILES & NOTES ---
-        st.subheader("⭐ Avis & Notes")
+       # --- ÉTOILES & NOTES (Version sécurisée) ---
+        st.subheader("⭐ Avis & Étoiles")
         comm_brut = str(r.get('Commentaires', ''))
         
-        # On essaie d'extraire la note existante (ex: "Note: 4/5") pour l'afficher par défaut
-        note_initiale = None
+        # On initialise note_init à 0 (aucune étoile)
+        note_init = 0
         if "Note: " in comm_brut:
             try:
-                note_str = comm_brut.split("Note: ")[1].split("/5")[0]
-                note_initiale = int(note_str) - 1 # Feedback stars commence à 0
+                # On extrait le chiffre (ex: "4" de "Note: 4/5")
+                extraits = comm_brut.split("Note: ")[1].split("/5")[0]
+                # st.feedback attend un index (0 à 4) pour 1 à 5 étoiles
+                note_init = int(extraits) - 1
             except:
-                pass
+                note_init = 0 # En cas d'erreur de texte, on met 0
 
-        # Affichage des étoiles
-        note = st.feedback("stars", key=f"note_{r['Titre']}", item_to_value=lambda x: x, 
-                           initial_value=note_initiale)
+        # Sécurité : on s'assure que note_init est bien entre 0 et 4
+        if not (0 <= note_init <= 4):
+            note_init = 0
+
+        # On affiche le composant
+        note = st.feedback("stars", key=f"note_{r['Titre']}", initial_value=note_init)
         
-        # Texte du commentaire (on enlève la partie "Note: X/5" pour ne garder que le texte)
+        # Gestion du texte du commentaire
         comm_texte = comm_brut.split(" | ")[1] if " | " in comm_brut else comm_brut
         txt_comm = st.text_area("Notes personnelles :", value=comm_texte)
         
-        if st.button("💾 Sauver l'avis"):
+        if st.button("💾 Enregistrer la note"):
             val_note = (note + 1) if note is not None else 0
-            # Format standard pour la cellule Google Sheets
-            valeur_finale = f"Note: {val_note}/5 | {txt_comm}"
-            
-            # On utilise l'action 'update_notes' qui doit être gérée par ton script Google
-            success = send_action({
-                "action": "update_notes", 
-                "titre": r['Titre'], 
-                "commentaires": valeur_finale
-            })
-            if success:
-                st.toast("Note enregistrée sur Google Sheets !")
+            if send_action({"action": "update_notes", "titre": r['Titre'], "commentaires": f"Note: {val_note}/5 | {txt_comm}"}):
                 st.rerun()
-
-    with col_r:
         # --- PLANNING ---
         st.subheader("🗓 Planifier cette recette")
         date_p = st.text_input("Date prévue (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
@@ -496,6 +489,7 @@ elif st.session_state.page == "planning":
                 if st.button("📖 Voir", key=f"pv_{row['Titre']}"):
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
         else: st.info("Rien de prévu.")
+
 
 
 
