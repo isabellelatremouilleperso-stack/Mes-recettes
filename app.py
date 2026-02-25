@@ -140,14 +140,39 @@ elif st.session_state.page == "details":
         
         # --- ÉTOILES & NOTES ---
         st.subheader("⭐ Avis & Notes")
-        comm_actuel = str(r.get('Commentaires', ''))
-        note = st.feedback("stars", key=f"note_{r['Titre']}")
-        txt_comm = st.text_area("Notes personnelles :", value=comm_actuel.split(" | ")[1] if " | " in comm_actuel else comm_actuel)
+        comm_brut = str(r.get('Commentaires', ''))
+        
+        # On essaie d'extraire la note existante (ex: "Note: 4/5") pour l'afficher par défaut
+        note_initiale = None
+        if "Note: " in comm_brut:
+            try:
+                note_str = comm_brut.split("Note: ")[1].split("/5")[0]
+                note_initiale = int(note_str) - 1 # Feedback stars commence à 0
+            except:
+                pass
+
+        # Affichage des étoiles
+        note = st.feedback("stars", key=f"note_{r['Titre']}", item_to_value=lambda x: x, 
+                           initial_value=note_initiale)
+        
+        # Texte du commentaire (on enlève la partie "Note: X/5" pour ne garder que le texte)
+        comm_texte = comm_brut.split(" | ")[1] if " | " in comm_brut else comm_brut
+        txt_comm = st.text_area("Notes personnelles :", value=comm_texte)
+        
         if st.button("💾 Sauver l'avis"):
             val_note = (note + 1) if note is not None else 0
+            # Format standard pour la cellule Google Sheets
             valeur_finale = f"Note: {val_note}/5 | {txt_comm}"
-            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": valeur_finale}):
-                st.toast("Avis enregistré !"); st.rerun()
+            
+            # On utilise l'action 'update_notes' qui doit être gérée par ton script Google
+            success = send_action({
+                "action": "update_notes", 
+                "titre": r['Titre'], 
+                "commentaires": valeur_finale
+            })
+            if success:
+                st.toast("Note enregistrée sur Google Sheets !")
+                st.rerun()
 
     with col_r:
         # --- PLANNING ---
@@ -262,3 +287,4 @@ elif st.session_state.page == "planning":
                 if st.button("📖 Voir", key=f"pv_{row['Titre']}"):
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
         else: st.info("Rien de prévu.")
+
