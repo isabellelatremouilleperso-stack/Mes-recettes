@@ -178,13 +178,25 @@ elif st.session_state.page == "details":
                 st.session_state.recipe_data['Commentaires'] = valeur_finale
                 st.rerun()
         
+      # --- SECTION CALENDRIER (CORRIGÉE) ---
         st.divider()
         d_p = st.date_input("Planifier le :", value=datetime.now())
+        
         if st.button("📅 Envoyer au Calendrier"):
             f_date = d_p.strftime("%d/%m/%Y")
-            if send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date}):
-                send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r['Ingrédients']})
-
+            
+            # 1. On met à jour la date dans Google Sheets
+            update_sheet = send_action({"action":"update", "titre_original": r['Titre'], "date_prevue": f_date})
+            
+            if update_sheet:
+                # 2. On envoie l'événement au Calendrier Google
+                send_action({"action":"calendar", "titre": r['Titre'], "date_prevue": f_date, "ingredients": r.get('Ingrédients', '')})
+                
+                # 3. LE COUP DE POUCE POUR LE PLANNING
+                st.cache_data.clear() # On vide la mémoire pour que le planning voit la nouvelle date
+                st.success(f"Planifié pour le {f_date}")
+                time.sleep(1) # On laisse 1 sec au Cloud pour respirer
+                st.rerun()    # On relance pour valider l'affichage
     # --- COLONNE DROITE : INGRÉDIENTS ET PRÉPARATION (CE QUI MANQUAIT) ---
     with col_r:
         st.subheader("🛒 Ingrédients")
@@ -246,20 +258,41 @@ elif st.session_state.page == "shop":
 # --- PLANNING ---
 elif st.session_state.page == "planning":
     st.header("📅 Agenda")
+    # On force un rechargement frais
     df = load_data()
+    
     if not df.empty:
-        plan = df[df['Date_Prevue'] != ''].copy()
-        if plan.empty: st.info("Rien de prévu.")
+        # On s'assure que la colonne Date_Prevue est traitée comme du texte et nettoyée
+        df['Date_Prevue'] = df['Date_Prevue'].astype(str).str.strip()
+        
+        # On filtre : on ne garde que ce qui ressemble à une date (contient un '/')
+        plan = df[df['Date_Prevue'].str.contains('/', na=False)].copy()
+        
+        if plan.empty:
+            st.info("Rien de prévu pour le moment.")
         else:
+            # Conversion sécurisée des dates pour le tri
             plan['dt_object'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
-            plan = plan.sort_values('dt_object')
+            plan = plan.dropna(subset=['dt_object']).sort_values('dt_object')
+            
             for _, row in plan.iterrows():
-                st.markdown(f'<div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;"><b>{row["Date_Prevue"]}</b> - {row["Titre"]}</div>', unsafe_allow_html=True)
+                st.markdown(f'''
+                <div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;">
+                    <span style="color:#e67e22; font-size:1.1rem;"><b>{row["Date_Prevue"]}</b></span><br>
+                    <span style="font-size:1.2rem;">{row["Titre"]}</span>
+                </div>
+                ''', unsafe_allow_html=True)
+                
                 c1, c2 = st.columns(2)
                 if c1.button("📖 Voir", key=f"p_v_{row['Titre']}", use_container_width=True):
-                    st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+                    st.session_state.recipe_data = row.to_dict()
+                    st.session_state.page = "details"
+                    st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
-                    if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}): st.rerun()
+                    if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
+                        st.cache_data.clear() # Toujours vider le cache après une action
+                        st.rerun()
+
 
 
 
