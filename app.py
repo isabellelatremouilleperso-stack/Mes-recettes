@@ -303,24 +303,55 @@ elif st.session_state.page == "details":
             time.sleep(1)
             st.rerun()
             
-    with c2:
+   with c2:
         st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
         
-        # Petit container pour les ingrédients
-        with st.container():
-            sel = []
-            for i, l in enumerate(ings):
-                if st.checkbox(f"**{l}**", key=f"det_{i}"): 
-                    sel.append(l)
+        # --- CALCULATEUR DE PORTIONS (RECIPE SCALING) ---
+        try:
+            # On récupère les portions de base depuis la colonne 'Portions' de ton Excel
+            portions_orig = int(float(r.get('Portions', 4))) 
+        except:
+            portions_orig = 4 # Par défaut si la colonne est vide
             
-            if st.button("📥 Ajouter la sélection au panier", use_container_width=True, type="primary"):
-                if sel:
-                    for x in sel: send_action({"action": "add_shop", "article": x})
-                    st.toast(f"{len(sel)} articles ajoutés !", icon="🛒")
-                else:
-                    st.warning("Veuillez cocher des ingrédients.")
+        col_p1, col_p2 = st.columns([1, 2])
+        with col_p1:
+            # L'utilisateur choisit son nombre de convives
+            nb_pers = st.number_input("Portions", min_value=1, value=portions_orig)
         
+        # Le facteur multiplicateur (ex: 8 pers / 4 pers = facteur 2)
+        facteur = nb_pers / portions_orig
+        
+        # --- LOGIQUE D'AFFICHAGE DES INGRÉDIENTS ---
+        ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
+        sel = []
+        
+        import re # Import nécessaire pour détecter les nombres
+        
+        for i, ligne in enumerate(ings):
+            # On cherche si la ligne commence par un chiffre
+            match = re.match(r"(\d+[\.,]?\d*)", ligne)
+            
+            if match and facteur != 1:
+                valeur_orig = float(match.group(1).replace(',', '.'))
+                nouvelle_valeur = valeur_orig * facteur
+                # Formatage propre (ex: 400 au lieu de 400.0)
+                val_str = f"{nouvelle_valeur:g}".replace('.', ',')
+                texte_affiche = ligne.replace(match.group(1), val_str, 1)
+            else:
+                texte_affiche = ligne
+
+            # Affichage de l'ingrédient avec sa case à cocher
+            if st.checkbox(f"**{texte_affiche}**", key=f"det_{i}"): 
+                sel.append(texte_affiche)
+        
+        # --- BOUTON D'AJOUT AUX COURSES ---
+        if st.button("📥 Ajouter la sélection au panier", use_container_width=True, type="primary"):
+            if sel:
+                for x in sel: send_action({"action": "add_shop", "article": x})
+                st.toast(f"{len(sel)} articles ajoutés !", icon="🛒")
+            else:
+                st.warning("Veuillez cocher des ingrédients.")
+                
         st.divider()
         st.subheader("📝 Préparation")
         st.info(r['Préparation'])
@@ -353,6 +384,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
