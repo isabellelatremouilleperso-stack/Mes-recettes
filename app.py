@@ -292,28 +292,43 @@ elif st.session_state.page == "home":
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
+    
     with tab1:
         url_link = st.text_input("Lien de la recette")
         if st.button("🪄 Extraire et Importer"):
             t, c = scrape_url(url_link)
-            if t: send_action({"action": "add", "titre": t, "ingredients": c, "preparation": "Import automatique", "date": datetime.now().strftime("%d/%m/%Y")}); st.session_state.page = "home"; st.rerun()
+            if t: 
+                # On ajoute url_link à la fin pour la colonne Source
+                send_action({"action": "add", "titre": t, "ingredients": c, "preparation": "Import automatique", "date": datetime.now().strftime("%d/%m/%Y"), "source": url_link})
+                st.session_state.page = "home"; st.rerun()
+                
     with tab2:
         with st.form("v_f"):
-            v_t = st.text_input("Titre *"); v_cats = st.multiselect("Catégories", CATEGORIES)
+            v_t = st.text_input("Titre *")
+            v_cats = st.multiselect("Catégories", CATEGORIES)
             c1, c2, c3 = st.columns(3)
             v_por, v_pre, v_cui = c1.text_input("Portions"), c2.text_input("Temps Prépa"), c3.text_input("Temps Cuisson")
             v_txt = st.text_area("Texte de la recette", height=250)
+            # --- NOUVEAU CHAMP SOURCE EN VRAC ---
+            v_source = st.text_input("Lien du site d'origine (URL)")
+            
             if st.form_submit_button("🚀 Enregistrer en Vrac"):
-                send_action({"action": "add", "titre": v_t, "categorie": ", ".join(v_cats), "ingredients": v_txt, "preparation": "Import Vrac", "portions": v_por, "temps_prepa": v_pre, "temps_cuisson": v_cui, "date": datetime.now().strftime("%d/%m/%Y")})
+                send_action({"action": "add", "titre": v_t, "categorie": ", ".join(v_cats), "ingredients": v_txt, "preparation": "Import Vrac", "portions": v_por, "temps_prepa": v_pre, "temps_cuisson": v_cui, "source": v_source, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
+                
     with tab3:
         with st.form("m_f"):
-            m_t = st.text_input("Titre *"); m_cats = st.multiselect("Catégories", CATEGORIES)
+            m_t = st.text_input("Titre *")
+            m_cats = st.multiselect("Catégories", CATEGORIES)
             c1, c2, c3 = st.columns(3)
             m_por, m_pre, m_cui = c1.text_input("Portions"), c2.text_input("Préparation"), c3.text_input("Cuisson")
-            m_ing, m_prepa, m_img = st.text_area("Ingrédients"), st.text_area("Étapes"), st.text_input("Lien Image")
+            m_ing, m_prepa = st.text_area("Ingrédients"), st.text_area("Étapes")
+            # --- LES DEUX LIENS IMPORTANTS ---
+            m_img = st.text_input("Lien Image (Lien direct .jpg)")
+            m_source = st.text_input("Lien du site d'origine (URL)")
+            
             if st.form_submit_button("💾 Enregistrer"):
-                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_prepa, "portions": m_por, "temps_prepa": m_pre, "temps_cuisson": m_cui, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
+                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_prepa, "portions": m_por, "temps_prepa": m_pre, "temps_cuisson": m_cui, "image": m_img, "source": m_source, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
 
 # --- DÉTAILS (VERSION BEAUTIFUL) ---
@@ -415,6 +430,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
