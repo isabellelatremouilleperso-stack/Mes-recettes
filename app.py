@@ -174,7 +174,8 @@ elif st.session_state.page == "details":
             except:
                 default_star = 0
 
-        new_note = st.feedback("stars", key=f"star_{r['Titre']}", defaultValue=default_star)
+        # CORRECTION : On utilise default_value au lieu de defaultValue
+        new_note = st.feedback("stars", key=f"star_{r['Titre']}", default_value=default_star)
         new_comm = st.text_area("Commentaire :", value=txt_display)
         if st.button("💾 Sauver l'avis"):
             val_note = (new_note + 1) if new_note is not None else 0
@@ -258,3 +259,4 @@ elif st.session_state.page == "planning":
         plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
             st.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+
