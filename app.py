@@ -200,27 +200,6 @@ elif st.session_state.page == "details":
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r.get('Préparation', 'Aucune instruction.'))
-        # CORRECTION : On utilise default_value au lieu de defaultValue
-        new_note = st.feedback("stars", key=f"star_{r['Titre']}", default_value=default_star)
-        new_comm = st.text_area("Commentaire :", value=txt_display)
-        if st.button("💾 Sauver l'avis"):
-            val_note = (new_note + 1) if new_note is not None else 0
-            format_avis = f"Note: {val_note}/5 | {new_comm}"
-            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": format_avis}):
-                st.rerun()
-
-    with col_r:
-        st.subheader("🛒 Ingrédients")
-        ing_brut = r.get('Ingrédients', '')
-        if ing_brut:
-            ing_list = str(ing_brut).split("\n")
-            for i, item in enumerate(ing_list):
-                if item.strip() and st.checkbox(item.strip(), key=f"ing_{i}"):
-                    pass
-        st.divider()
-        st.subheader("📝 Préparation")
-        st.write(r.get('Préparation', 'Aucune instruction.'))
-
 # --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
@@ -285,6 +264,7 @@ elif st.session_state.page == "planning":
         plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
             st.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+
 
 
 
