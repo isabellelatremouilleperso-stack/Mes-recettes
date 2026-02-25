@@ -169,19 +169,33 @@ elif st.session_state.page == "details":
             if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": f"Note: {val_note}/5 | {new_comm}"}):
                 st.rerun()
 
-    with col_r:
+   with col_r:
         st.subheader("🛒 Ingrédients")
         ing_brut = r.get('Ingrédients', '')
         if ing_brut:
-            ing_list = str(ing_brut).split("\n")
+            # On nettoie la liste des ingrédients
+            ing_list = [i.strip() for i in str(ing_brut).split("\n") if i.strip()]
+            
+            # On crée un dictionnaire pour stocker l'état des cases à cocher
+            to_add = []
+            
             for i, item in enumerate(ing_list):
-                name = item.strip()
-                if name:
-                    ci, cb = st.columns([0.8, 0.2])
-                    ci.checkbox(name, key=f"ing_check_{i}")
-                    if cb.button("🛒", key=f"add_shop_{i}"):
-                        send_action({"action": "add_shop", "article": name})
-                        st.toast(f"Ajouté : {name}")
+                # Si l'utilisateur coche la case, on ajoute l'item à la liste 'to_add'
+                if st.checkbox(item, key=f"check_{i}"):
+                    to_add.append(item)
+            
+            st.divider()
+            
+            # Bouton pour envoyer uniquement la sélection
+            if st.button(f"➕ Ajouter la sélection ({len(to_add)}) à l'épicerie", use_container_width=True):
+                if to_add:
+                    for item in to_add:
+                        send_action({"action": "add_shop", "article": item})
+                    st.success(f"✅ {len(to_add)} ingrédients ajoutés !")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.warning("Veuillez cocher au moins un ingrédient.")
 
         st.divider()
         st.subheader("📝 Préparation")
@@ -262,3 +276,4 @@ elif st.session_state.page == "planning":
             st.warning(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
             if st.button("📖 Voir", key=f"plan_{row['Titre']}"):
                 st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+
