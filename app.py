@@ -165,30 +165,35 @@ elif st.session_state.page == "details":
         st.subheader("⭐ Votre avis")
         comm_brut = str(r.get('Commentaires', ''))
         
-        # --- PARTIE RÉPARÉE POUR LES ÉTOILES ---
-        note_pour_le_widget = None 
+        # 1. Extraction de la note pour affichage (SANS planter le widget)
+        note_actuelle = 0
         txt_display = comm_brut
         if "Note: " in comm_brut:
             try:
-                # On extrait la note (ex: 4)
-                note_extraite = int(comm_brut.split("Note: ")[1].split("/5")[0])
-                # On convertit pour le widget (Note 5/5 -> index 4)
-                note_pour_le_widget = max(0, min(4, note_extraite - 1))
+                note_actuelle = int(comm_brut.split("Note: ")[1].split("/5")[0])
                 if "| " in comm_brut:
                     txt_display = comm_brut.split("| ")[1]
             except:
-                note_pour_le_widget = None
+                note_actuelle = 0
 
-        # Affichage du texte pour être sûr
-        st.write(f"**Note actuelle :** {'⭐' * (note_pour_le_widget + 1) if note_pour_le_widget is not None else 'Pas de note'}")
-        
-        # Le widget AVEC la valeur par défaut pour qu'elles restent allumées
-        new_note = st.feedback("stars", key=f"fb_{hash(r['Titre'])}", default_value=note_pour_le_widget)
+        # 2. Affichage visuel (puisque le widget ne peut pas rester allumé sans planter)
+        if note_actuelle > 0:
+            st.markdown(f"### {'⭐' * note_actuelle}")
+            st.caption(f"Note enregistrée : {note_actuelle}/5")
+        else:
+            st.info("Pas encore de note.")
+
+        # 3. Widget de vote (SANS default_value pour éviter le TypeError)
+        # On change la clé pour être sûr qu'il n'y ait pas de conflit
+        new_note = st.feedback("stars", key=f"feedback_stars_{hash(r['Titre'])}")
         
         new_comm = st.text_area("Commentaire :", value=txt_display)
+        
         if st.button("💾 Sauver l'avis"):
-            # Si pas de clic, on garde l'ancienne note
-            val_finale = (new_note + 1) if new_note is not None else (note_pour_le_widget + 1 if note_pour_le_widget is not None else 0)
+            # Si l'utilisateur clique sur une étoile, on prend la nouvelle.
+            # Sinon (new_note est None), on conserve l'ancienne (note_actuelle).
+            val_finale = (new_note + 1) if new_note is not None else note_actuelle
+            
             format_avis = f"Note: {val_finale}/5 | {new_comm}"
             if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": format_avis}):
                 st.rerun()
@@ -200,7 +205,6 @@ elif st.session_state.page == "details":
             ing_list = str(ing_brut).split("\n")
             for i, item in enumerate(ing_list):
                 if item.strip():
-                    # On garde ta logique de checkbox avec hash
                     st.checkbox(item.strip(), key=f"ing_{hash(item)}_{i}")
         st.divider()
         st.subheader("📝 Préparation")
@@ -311,4 +315,5 @@ elif st.session_state.page == "planning":
             st.warning("La colonne de planning est introuvable.")
     else:
         st.info("Chargez vos recettes pour voir le planning.")
+
 
