@@ -133,45 +133,58 @@ elif st.session_state.page == "details":
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         
-      # --- ÉTOILES & NOTES VERSION STABLE ---
-st.subheader("⭐ Avis & Étoiles")
+    # ======================================================
+# ⭐ SYSTEME D'ÉTOILES ULTRA STABLE
+# ======================================================
 
-comm_brut = str(r.get('Commentaires', ''))
+st.subheader("⭐ Avis & Évaluation")
 
-note_init = 0
-if "Note: " in comm_brut:
+comm_brut = str(r.get("Commentaires", ""))
+
+# --- Extraire note existante ---
+note_init = 5  # valeur par défaut
+
+if "Note:" in comm_brut:
     try:
-        extraits = comm_brut.split("Note: ")[1].split("/5")[0]
-        note_init = int(extraits) - 1
+        note_txt = comm_brut.split("Note:")[1].split("/5")[0].strip()
+        note_init = int(note_txt)
     except:
-        note_init = 0
+        note_init = 5
 
-# 🔥 sécurité totale
-if not isinstance(note_init, int) or note_init < 0 or note_init > 4:
-    note_init = 0
+if note_init not in [1,2,3,4,5]:
+    note_init = 5
 
-note = st.feedback(
-    "stars",
-    key=f"note_{r['Titre']}",
-    initial_value=note_init
+# --- Sélecteur étoiles ---
+note = st.radio(
+    "Votre note :",
+    [1,2,3,4,5],
+    horizontal=True,
+    index=[1,2,3,4,5].index(note_init),
+    key=f"note_{r['Titre']}"
 )
 
+# --- Commentaire texte ---
 comm_texte = ""
-if " | " in comm_brut:
-    comm_texte = comm_brut.split(" | ", 1)[1]
+if "|" in comm_brut:
+    comm_texte = comm_brut.split("|",1)[1].strip()
 
-txt_comm = st.text_area("Notes personnelles :", value=comm_texte)
+txt_comm = st.text_area(
+    "Notes personnelles :",
+    value=comm_texte,
+    key=f"txt_{r['Titre']}"
+)
 
-if st.button("💾 Enregistrer la note"):
-    val_note = (note + 1) if isinstance(note, int) else 0
+# --- Sauvegarde ---
+if st.button("💾 Enregistrer la note", key=f"save_{r['Titre']}"):
+    nouveau_commentaire = f"Note: {note}/5 | {txt_comm}"
+
     if send_action({
         "action": "update_notes",
-        "titre": r['Titre'],
-        "commentaires": f"Note: {val_note}/5 | {txt_comm}"
+        "titre": r["Titre"],
+        "commentaires": nouveau_commentaire
     }):
-        st.toast("Note sauvegardée !")
+        st.success("Note sauvegardée avec succès ⭐")
         st.rerun()
-
 # --- AJOUTER / IMPORT (FUSION TABS) ---
 elif st.session_state.page == "add":
     st.header("➕ Nouvelle Recette")
@@ -260,4 +273,5 @@ elif st.session_state.page == "help":
     - **Étoiles :** Donnez une note pour retrouver vos recettes préférées.
     - **Synchronisation :** Les données sont sauvées en temps réel sur votre Google Sheet.
     """)
+
 
