@@ -258,28 +258,29 @@ elif st.session_state.page == "shop":
 # --- PLANNING ---
 elif st.session_state.page == "planning":
     st.header("📅 Agenda")
-    # On force un rechargement frais
     df = load_data()
     
     if not df.empty:
-        # On s'assure que la colonne Date_Prevue est traitée comme du texte et nettoyée
+        # 1. On nettoie la colonne Date_Prevue
         df['Date_Prevue'] = df['Date_Prevue'].astype(str).str.strip()
         
-        # On filtre : on ne garde que ce qui ressemble à une date (contient un '/')
-        plan = df[df['Date_Prevue'].str.contains('/', na=False)].copy()
+        # 2. On filtre tout ce qui n'est pas vide (on est moins strict que le '/')
+        plan = df[df['Date_Prevue'] != ''].copy()
+        plan = plan[plan['Date_Prevue'] != 'nan'] # Élimine les erreurs de lecture
         
         if plan.empty:
-            st.info("Rien de prévu pour le moment.")
+            st.info("Rien de prévu pour le moment. Allez dans une recette pour la planifier.")
         else:
-            # Conversion sécurisée des dates pour le tri
+            # 3. Conversion pour le tri
             plan['dt_object'] = pd.to_datetime(plan['Date_Prevue'], format='%d/%m/%Y', errors='coerce')
-            plan = plan.dropna(subset=['dt_object']).sort_values('dt_object')
+            plan = plan.sort_values('dt_object')
             
             for _, row in plan.iterrows():
+                # Affichage de la carte planning
                 st.markdown(f'''
                 <div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;">
-                    <span style="color:#e67e22; font-size:1.1rem;"><b>{row["Date_Prevue"]}</b></span><br>
-                    <span style="font-size:1.2rem;">{row["Titre"]}</span>
+                    <span style="color:#e67e22; font-size:1.1rem;"><b>🗓 {row["Date_Prevue"]}</b></span><br>
+                    <span style="font-size:1.2rem; color:white;">{row["Titre"]}</span>
                 </div>
                 ''', unsafe_allow_html=True)
                 
@@ -290,8 +291,10 @@ elif st.session_state.page == "planning":
                     st.rerun()
                 if c2.button("✅ Terminé", key=f"p_d_{row['Titre']}", use_container_width=True):
                     if send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}):
-                        st.cache_data.clear() # Toujours vider le cache après une action
+                        st.cache_data.clear()
                         st.rerun()
+    else:
+        st.error("Impossible de lire les données du Google Sheet.")
 
 
 
