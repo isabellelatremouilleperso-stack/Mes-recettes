@@ -137,6 +137,7 @@ elif st.session_state.page == "home":
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
 # --- DÉTAILS ---
+# --- DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     c_back, c_edit, c_del = st.columns([4, 1, 1])
@@ -164,16 +165,42 @@ elif st.session_state.page == "details":
         
         st.subheader("⭐ Votre avis")
         comm_brut = str(r.get('Commentaires', ''))
-        default_star = 0
+        
+        # On extrait la note pour l'afficher proprement en texte
+        note_actuelle = "Pas encore noté"
         txt_display = comm_brut
         if "Note: " in comm_brut:
             try:
-                partie_note = comm_brut.split("Note: ")[1].split("/5")[0]
-                default_star = max(0, min(4, int(partie_note) - 1))
-                txt_display = comm_brut.split("| ")[1] if "| " in comm_brut else ""
+                note_actuelle = comm_brut.split("Note: ")[1].split("|")[0].strip()
+                if "| " in comm_brut:
+                    txt_display = comm_brut.split("| ")[1]
             except:
-                default_star = 0
+                pass
 
+        st.write(f"**Note actuelle :** {note_actuelle}")
+        
+        # On retire l'argument par défaut qui fait planter
+        # On utilise une clé simple sans caractères spéciaux
+        new_note = st.feedback("stars", key=f"fb_{hash(r['Titre'])}")
+        
+        new_comm = st.text_area("Commentaire :", value=txt_display)
+        if st.button("💾 Sauver l'avis"):
+            val_note = (new_note + 1) if new_note is not None else 0
+            format_avis = f"Note: {val_note}/5 | {new_comm}"
+            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": format_avis}):
+                st.rerun()
+
+    with col_r:
+        st.subheader("🛒 Ingrédients")
+        ing_brut = r.get('Ingrédients', '')
+        if ing_brut:
+            ing_list = str(ing_brut).split("\n")
+            for i, item in enumerate(ing_list):
+                if item.strip():
+                    st.checkbox(item.strip(), key=f"ing_{hash(item)}_{i}")
+        st.divider()
+        st.subheader("📝 Préparation")
+        st.write(r.get('Préparation', 'Aucune instruction.'))
         # CORRECTION : On utilise default_value au lieu de defaultValue
         new_note = st.feedback("stars", key=f"star_{r['Titre']}", default_value=default_star)
         new_comm = st.text_area("Commentaire :", value=txt_display)
@@ -259,4 +286,5 @@ elif st.session_state.page == "planning":
         plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
             st.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+
 
