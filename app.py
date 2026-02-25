@@ -60,21 +60,23 @@ def load_data():
 if "page" not in st.session_state: st.session_state.page = "home"
 
 # ======================================================
-# 3. SIDEBAR
+# 3. SIDEBAR (RETOUR DU PLANNING)
 # ======================================================
 with st.sidebar:
     st.title("👨‍🍳 Mes Recettes")
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
+    if st.button("📅 Planning Repas", use_container_width=True): st.session_state.page = "planning"; st.rerun()
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
     st.divider()
     if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
+    if st.button("❓ Aide", use_container_width=True): st.session_state.page = "help"; st.rerun()
     
     st.divider()
-    st.subheader("🔍 Trouver sur Google")
-    q_google = st.text_input("Recette à chercher :")
+    st.subheader("🔍 Google")
+    q_google = st.text_input("Recette :")
     if q_google:
         link = f"https://www.google.com/search?q={urllib.parse.quote('recette ' + q_google)}"
-        st.link_button("🌐 Aller sur Google", link, use_container_width=True)
+        st.link_button("🌐 Chercher", link, use_container_width=True)
 
 # ======================================================
 # 4. PAGES
@@ -84,8 +86,7 @@ with st.sidebar:
 if st.session_state.page == "home":
     st.header("📚 Bibliothèque")
     df = load_data()
-    search = st.text_input("🔍 Rechercher une recette")
-    
+    search = st.text_input("🔍 Rechercher")
     if not df.empty:
         filtered = df[df['Titre'].str.contains(search, case=False)] if search else df
         rows = filtered.reset_index(drop=True)
@@ -100,7 +101,23 @@ if st.session_state.page == "home":
                         if st.button("Voir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
-# --- DÉTAILS (Cases à cocher + Bouton groupé) ---
+# --- PLANNING (RESTAURÉ) ---
+elif st.session_state.page == "planning":
+    st.header("📅 Planning des Repas")
+    df = load_data()
+    if not df.empty:
+        plan = df[df['Date_Prevue'] != ""].sort_values(by='Date_Prevue')
+        if not plan.empty:
+            for _, row in plan.iterrows():
+                with st.expander(f"{row['Date_Prevue']} - {row['Titre']}"):
+                    st.write(f"**Catégorie:** {row['Catégorie']}")
+                    if st.button("Voir la fiche", key=f"p_{row['Titre']}"):
+                        st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+        else:
+            st.info("Aucun repas planifié. Allez dans une fiche recette pour définir une date.")
+    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
+# --- DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
@@ -109,31 +126,25 @@ elif st.session_state.page == "details":
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        st.divider()
-        st.write(f"⏳ **Prépa :** {r.get('Temps_Prepa', '-')}")
-        st.write(f"🔥 **Cuisson :** {r.get('Temps_Cuisson', '-')}")
+        st.subheader("📅 Planning")
+        date_p = st.text_input("Date JJ/MM/AAAA", value=r.get('Date_Prevue', ''))
+        c_p1, c_p2 = st.columns(2)
+        if c_p1.button("📅 Planning", use_container_width=True):
+            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_p}); st.rerun()
+        if c_p2.button("🗓 Google", type="primary", use_container_width=True):
+            send_action({"action": "calendar", "titre": r['Titre'], "date_prevue": date_p, "ingredients": r['Ingrédients']})
         
     with col_r:
         st.subheader("🛒 Ingrédients")
-        st.write("Cochez les articles à ajouter à votre liste :")
-        
-        # Liste des ingrédients avec cases à cocher
         lignes_ing = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
         selection = []
         for i, ligne in enumerate(lignes_ing):
-            if st.checkbox(ligne, key=f"check_{i}"):
-                selection.append(ligne)
+            if st.checkbox(ligne, key=f"ch_{i}"): selection.append(ligne)
         
-        st.divider()
-        # LE BOUTON POUR INSCRIRE LES ALIMENTS SÉLECTIONNÉS
-        if st.button("📥 AJOUTER À LA LISTE D'ÉPICERIE", type="primary", use_container_width=True):
+        if st.button("📥 AJOUTER À L'ÉPICERIE", type="primary", use_container_width=True):
             if selection:
-                for item in selection:
-                    send_action({"action": "add_shop", "article": item})
-                st.success(f"{len(selection)} articles ajoutés !")
-                time.sleep(1)
-            else:
-                st.warning("Veuillez cocher au moins un ingrédient.")
+                for item in selection: send_action({"action": "add_shop", "article": item})
+                st.success("Articles ajoutés !"); time.sleep(1)
 
         st.divider()
         st.subheader("📝 Préparation")
@@ -142,23 +153,21 @@ elif st.session_state.page == "details":
 # --- AJOUTER ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
-    tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
-    
-    with tab3: # Manuel avec les champs demandés
-        with st.form("manuel_form"):
+    t1, t2, t3 = st.tabs(["🔗 URL", "📝 Vrac", "⌨️ Manuel"])
+    with t3:
+        with st.form("man"):
             m_t = st.text_input("Titre *")
             m_cats = st.multiselect("Catégories", CATEGORIES)
             c1, c2, c3 = st.columns(3)
             m_por = c1.text_input("Portions")
-            m_prepa = c2.text_input("Temps Prépa")
-            m_cuis = c3.text_input("Temps Cuisson")
-            m_ing = st.text_area("Ingrédients (un par ligne)")
+            m_prepa = c2.text_input("Prépa")
+            m_cuis = c3.text_input("Cuisson")
+            m_ing = st.text_area("Ingrédients (ligne par ligne)")
             m_pre = st.text_area("Préparation")
             m_img = st.text_input("URL Image")
             if st.form_submit_button("💾 Sauver"):
-                if m_t:
-                    send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_prepa, "temps_cuisson": m_cuis, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
-                    st.session_state.page = "home"; st.rerun()
+                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_prepa, "temps_cuisson": m_cuis, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
+                st.session_state.page = "home"; st.rerun()
 
 # --- ÉPICERIE ---
 elif st.session_state.page == "shop":
@@ -166,6 +175,11 @@ elif st.session_state.page == "shop":
     if st.button("🗑 Tout vider"): send_action({"action": "clear_shop"}); st.rerun()
     try:
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
-        for idx, row in df_s.iterrows():
-            st.write(f"⬜ {row.iloc[0]}")
-    except: st.info("Votre liste est vide.")
+        for idx, row in df_s.iterrows(): st.write(f"⬜ {row.iloc[0]}")
+    except: st.info("Vide.")
+
+# --- AIDE ---
+elif st.session_state.page == "help":
+    st.title("❓ Aide")
+    st.write("Le planning affiche vos recettes datées. L'épicerie utilise des cases à cocher.")
+    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
