@@ -206,15 +206,30 @@ elif st.session_state.page == "add":
                 st.info("Passez maintenant à l'onglet 'Saisie Vrac' pour valider.")
             else: st.error("Extraction impossible. Copiez-collez manuellement dans 'Saisie Vrac'.")
 
-    with t2:
-        with st.form("vrac_form"):
-            v_t = st.text_input("Titre", value=st.session_state.get('temp_title', ''))
-            v_c = st.text_area("Tout le contenu collé", value=st.session_state.get('temp_content', ''), height=300)
-            v_cat = st.selectbox("Catégorie", CATEGORIES[1:])
-            if st.form_submit_button("🚀 Enregistrement Rapide"):
+   with t2:
+        st.subheader("⚡ Enregistrement Ultra-Rapide")
+        with st.form("vrac_form", clear_on_submit=True):
+            v_t = st.text_input("Titre de la recette", value=st.session_state.get('temp_title', ''))
+            v_c = st.text_area("Colle tout ici (Ingrédients, étapes, etc.)", value=st.session_state.get('temp_content', ''), height=350)
+            
+            # On a retiré le selectbox des catégories ici
+            
+            if st.form_submit_button("🚀 Enregistrer maintenant"):
                 if v_t and v_c:
-                    payload = {"action": "add", "titre": v_t, "categorie": v_cat, "ingredients": v_c, "preparation": "Tri à faire via l'édition", "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
+                    # On définit "Autre" par défaut pour que tu puisses changer plus tard
+                    payload = {
+                        "action": "add", 
+                        "titre": v_t, 
+                        "categorie": "Autre", 
+                        "ingredients": v_c, 
+                        "preparation": "À trier via le bouton Édition", 
+                        "date": datetime.now().strftime("%d/%m/%Y")
+                    }
+                    if send_action(payload): 
+                        st.session_state.page = "home"
+                        st.rerun()
+                else:
+                    st.warning("Le titre et le contenu sont obligatoires.")
 
     with t3:
         with st.form("manuel_form"):
@@ -260,3 +275,4 @@ elif st.session_state.page == "planning":
                 if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
                     send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}); st.rerun()
         else: st.info("Rien de prévu.")
+
