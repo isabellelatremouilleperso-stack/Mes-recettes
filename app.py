@@ -30,7 +30,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Liens vers ta base de données
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
@@ -87,6 +86,7 @@ with st.sidebar:
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
     if st.button("📅 Planning", use_container_width=True): st.session_state.page = "planning"; st.rerun()
     if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
+    if st.button("❓ Aide", use_container_width=True): st.session_state.page = "help"; st.rerun()
     st.divider()
     if st.button("➕ Ajouter / Import", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
     if st.button("🔄 Actualiser", use_container_width=True): st.cache_data.clear(); st.rerun()
@@ -95,8 +95,48 @@ with st.sidebar:
 # 4. LOGIQUE DES PAGES
 # ======================================================
 
+# --- PAGE AIDE ENRICHIE ---
+if st.session_state.page == "help":
+    st.header("❓ Guide complet de l'utilisateur")
+    
+    col_help1, col_help2 = st.columns(2)
+    
+    with col_help1:
+        st.subheader("🚀 Importation & Ajout")
+        st.markdown("""
+        * **Recherche Google** : Utilisez le bouton orange dans l'onglet 'Ajouter' pour l'inspiration.
+        * **Import URL** : Aspire automatiquement titre et contenu depuis un lien.
+        * **Mode Vrac** : Copiez n'importe quel texte. La recette sera classée dans **'Autre'** pour un tri ultérieur.
+        """)
+        
+        st.subheader("📅 Planning & Agenda")
+        st.markdown("""
+        * **Planifier** : Cliquez sur ✏️ sur une fiche et entrez une date (ex: 25/02/2026).
+        * **Bouton Terminé** : Dans l'agenda, cliquez sur ✅ pour vider la date une fois cuisiné.
+        """)
+
+    with col_help2:
+        st.subheader("🛒 Liste de Courses")
+        st.markdown("""
+        * **Cocher pour ajouter** : Dans une fiche, cochez ce qu'il vous manque.
+        * **Centralisation** : Cliquez sur 'Ajouter à l'épicerie' pour tout regrouper.
+        * **Nettoyage** : Supprimez avec ❌ ou videz tout après les courses.
+        """)
+
+        st.subheader("⭐ Notes & Avis")
+        st.markdown("""
+        * **Étoiles** : Notez vos plats après dégustation.
+        * **Commentaires** : Notez vos astuces (ex: 'moins de sucre'). Cliquez bien sur **💾 Sauver l'avis**.
+        """)
+
+    st.info("💡 **Astuce** : Si une nouvelle recette n'apparaît pas, cliquez sur **🔄 Actualiser** à gauche.")
+    
+    if st.button("Retour à la bibliothèque", use_container_width=True): 
+        st.session_state.page = "home"
+        st.rerun()
+
 # --- ACCUEIL ---
-if st.session_state.page == "home":
+elif st.session_state.page == "home":
     st.header("📚 Bibliothèque")
     df = load_data()
     c1, c2 = st.columns([2, 1])
@@ -221,9 +261,10 @@ elif st.session_state.page == "edit":
         new_ing = st.text_area("Ingrédients", value=r['Ingrédients'], height=200)
         new_pre = st.text_area("Préparation", value=r['Préparation'], height=200)
         new_img = st.text_input("URL Image", value=r['Image'])
+        new_plan = st.text_input("Date Prévue (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
         if st.form_submit_button("💾 Enregistrer"):
             if send_action({"action": "delete", "titre": r['Titre']}):
-                payload = {"action": "add", "titre": new_t, "categorie": new_cat, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "date": r['Date']}
+                payload = {"action": "add", "titre": new_t, "categorie": new_cat, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "date_prevue": new_plan, "date": r['Date']}
                 if send_action(payload): st.session_state.page = "home"; st.rerun()
 
 # --- ÉPICERIE ---
