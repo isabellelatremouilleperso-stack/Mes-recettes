@@ -119,7 +119,46 @@ if st.session_state.page == "home":
                         if st.button("Voir", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
-# --- AJOUTER RECETTE ---
+# --- DÉTAILS (Bouton d'épicerie ligne par ligne restauré) ---
+elif st.session_state.page == "details":
+    r = st.session_state.recipe_data
+    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+    st.title(f"🍳 {r['Titre']}")
+    
+    col_l, col_r = st.columns([1, 1.2])
+    with col_l:
+        st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
+        if r.get('Portions'): st.write(f"👥 **Portions :** {r['Portions']}")
+        if r.get('Temps_Prepa'): st.write(f"⏳ **Préparation :** {r['Temps_Prepa']}")
+        if r.get('Temps_Cuisson'): st.write(f"🔥 **Cuisson :** {r['Temps_Cuisson']}")
+        
+    with col_r:
+        st.subheader("📅 Planning")
+        date_p = st.text_input("Date JJ/MM/AAAA", value=r.get('Date_Prevue', ''))
+        c_p1, c_p2 = st.columns(2)
+        if c_p1.button("📅 Planning Interne", use_container_width=True):
+            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_p}); st.rerun()
+        
+        if c_p2.button("🗓 Google Calendar", type="primary", use_container_width=True):
+            send_action({"action": "calendar", "titre": r['Titre'], "date_prevue": date_p, "ingredients": r['Ingrédients']})
+
+        st.divider()
+        st.subheader("🛒 Liste d'épicerie")
+        # Affichage ligne par ligne avec le bouton "+"
+        lignes_ing = str(r['Ingrédients']).split("\n")
+        for i, ligne in enumerate(lignes_ing):
+            if ligne.strip():
+                c_ing, c_btn = st.columns([0.85, 0.15])
+                c_ing.write(f"• {ligne.strip()}")
+                if c_btn.button("➕", key=f"add_shop_{i}"):
+                    send_action({"action": "add_shop", "article": ligne.strip()})
+                    st.toast(f"Ajouté : {ligne.strip()}")
+        
+        st.divider()
+        st.subheader("📝 Préparation")
+        st.write(r['Préparation'])
+
+# --- AJOUTER (Import / Vrac / Manuel) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
@@ -146,70 +185,26 @@ elif st.session_state.page == "add":
         with st.form("manuel_form"):
             m_t = st.text_input("Titre de la recette *")
             m_cats = st.multiselect("Catégories", CATEGORIES)
-            
             c1, c2, c3 = st.columns(3)
             m_por = c1.text_input("Portions")
             m_prepa = c2.text_input("Temps Prépa")
             m_cuis = c3.text_input("Temps Cuisson")
-            
-            m_ing = st.text_area("Ingrédients (un par ligne)")
-            m_pre = st.text_area("Préparation / Étapes")
-            m_img = st.text_input("URL de l'image")
-            
+            m_ing = st.text_area("Ingrédients (une ligne par article)")
+            m_pre = st.text_area("Préparation")
+            m_img = st.text_input("URL Image")
             if st.form_submit_button("💾 Sauver Manuel"):
                 if m_t:
                     send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_pre, "portions": m_por, "temps_prepa": m_prepa, "temps_cuisson": m_cuis, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
                     st.session_state.page = "home"; st.rerun()
 
-# --- DÉTAILS (CORRIGÉ POUR LA LISTE DE COURSES) ---
-elif st.session_state.page == "details":
-    r = st.session_state.recipe_data
-    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
-    st.title(f"🍳 {r['Titre']}")
-    
-    col_l, col_r = st.columns([1, 1.2])
-    with col_l:
-        st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
-        if r.get('Portions'): st.write(f"👥 **Portions :** {r['Portions']}")
-        if r.get('Temps_Prepa'): st.write(f"⏳ **Préparation :** {r['Temps_Prepa']}")
-        if r.get('Temps_Cuisson'): st.write(f"🔥 **Cuisson :** {r['Temps_Cuisson']}")
-        
-    with col_r:
-        st.subheader("📅 Planning")
-        date_p = st.text_input("Date JJ/MM/AAAA", value=r.get('Date_Prevue', ''))
-        c_p1, c_p2 = st.columns(2)
-        if c_p1.button("📅 Planning Interne", use_container_width=True):
-            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_p}); st.rerun()
-        
-        if c_p2.button("🗓 Google Calendar", type="primary", use_container_width=True):
-            send_action({"action": "calendar", "titre": r['Titre'], "date_prevue": date_p, "ingredients": r['Ingrédients']})
-
-        st.divider()
-        st.subheader("🛒 Ingrédients")
-        # --- ICI LE FIX POUR LES COURSES ---
-        ing_bruts = str(r['Ingrédients']).split("\n")
-        for i, ligne in enumerate(ing_bruts):
-            if ligne.strip():
-                ci, cb = st.columns([0.85, 0.15])
-                ci.write(ligne.strip())
-                if cb.button("➕", key=f"add_sh_{i}"):
-                    send_action({"action": "add_shop", "article": ligne.strip()})
-                    st.toast(f"Ajouté : {ligne.strip()}")
-        
-        st.divider()
-        st.subheader("📝 Préparation")
-        st.write(r['Préparation'])
-
 # --- AUTRES PAGES ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste de courses")
-    if st.button("🗑 Tout effacer"): send_action({"action": "clear_shop"}); st.rerun()
+    st.header("🛒 Ma Liste")
+    if st.button("🗑 Tout vider"): send_action({"action": "clear_shop"}); st.rerun()
     try:
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
-        for idx, row in df_s.iterrows():
-            st.write(f"⬜ {row.iloc[0]}")
-    except: st.info("Liste vide.")
-
+        for idx, row in df_s.iterrows(): st.write(f"⬜ {row.iloc[0]}")
+    except: st.info("Vide.")
 elif st.session_state.page == "help":
     st.title("❓ Aide")
-    st.markdown("- Dans **Détails**, cliquez sur le **+** à côté d'un ingrédient pour l'ajouter à votre liste.")
+    st.write("Cliquez sur le '+' à côté d'un ingrédient dans la fiche recette pour l'ajouter à votre liste.")
