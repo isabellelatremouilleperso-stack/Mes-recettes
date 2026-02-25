@@ -303,7 +303,7 @@ elif st.session_state.page == "details":
             time.sleep(1)
             st.rerun()
             
-   with c2:
+    with c2:
         st.subheader("🛒 Ingrédients")
         
         # --- CALCULATEUR DE PORTIONS (RECIPE SCALING) ---
@@ -384,6 +384,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
