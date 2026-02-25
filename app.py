@@ -223,22 +223,39 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "edit":
     r = st.session_state.recipe_data
     st.header(f"✏️ Modifier : {r.get('Titre', '')}")
+    
     with st.form("edit_form"):
         new_t = st.text_input("Titre", value=r.get('Titre', ''))
-        c_e1, c_e2, c_e3 = st.columns(3)
-        new_por = c_e1.text_input("Portions", value=r.get('Portions', ''))
-        new_pre_t = c_e2.text_input("Temps Prép.", value=r.get('Temps_Prepa', ''))
-        new_cui_t = c_e3.text_input("Temps Cuisson", value=r.get('Temps_Cuisson', ''))
+        c1, c2, c3 = st.columns(3)
+        new_por = c1.text_input("Portions", value=r.get('Portions', ''))
+        new_pre_t = c2.text_input("Temps Prép.", value=r.get('Temps_Prepa', ''))
+        new_cui_t = c3.text_input("Temps Cuisson", value=r.get('Temps_Cuisson', ''))
+        
         new_cat = st.selectbox("Catégorie", CATEGORIES[1:], index=CATEGORIES[1:].index(r['Catégorie']) if r.get('Catégorie') in CATEGORIES[1:] else 0)
         new_ing = st.text_area("Ingrédients", value=r.get('Ingrédients', ''), height=150)
         new_pre = st.text_area("Préparation", value=r.get('Préparation', ''), height=150)
         new_img = st.text_input("URL Image", value=r.get('Image', ''))
         new_plan = st.text_input("Date Prévue (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
-        if st.form_submit_button("💾 Enregistrer"):
+        
+        col_btn1, col_btn2 = st.columns([1, 1])
+        save_btn = col_btn1.form_submit_button("💾 Enregistrer les modifications")
+        # Le bouton annuler à l'intérieur du formulaire pour l'alignement
+        cancel_btn = col_btn2.form_submit_button("❌ Annuler / Retour")
+
+        if save_btn:
             if send_action({"action": "delete", "titre": r['Titre']}):
-                payload = {"action": "add", "titre": new_t, "categorie": new_cat, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "portions": new_por, "temps_prepa": new_pre_t, "temps_cuisson": new_cui_t, "date_prevue": new_plan, "date": r.get('Date', '')}
+                payload = {
+                    "action": "add", "titre": new_t, "categorie": new_cat, 
+                    "ingredients": new_ing, "preparation": new_pre, 
+                    "image": new_img, "portions": new_por, 
+                    "temps_prepa": new_pre_t, "temps_cuisson": new_cui_t,
+                    "date_prevue": new_plan, "date": r.get('Date', '')
+                }
                 if send_action(payload):
-                    st.session_state.page = "home"; st.rerun()
+                    st.success("Modifié !"); st.session_state.page = "home"; st.rerun()
+        
+        if cancel_btn:
+            st.session_state.page = "details"; st.rerun()
 
 # --- ÉPICERIE & PLANNING ---
 elif st.session_state.page == "shop":
@@ -264,6 +281,7 @@ elif st.session_state.page == "planning":
         plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
             st.info(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+
 
 
 
