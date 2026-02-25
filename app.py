@@ -131,76 +131,63 @@ elif st.session_state.page == "home":
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     c_back, c_edit, c_del = st.columns([4, 1, 1])
-    if c_back.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
-    if c_edit.button("✏️"): st.session_state.page = "edit"; st.rerun()
-    if c_del.button("🗑️"): st.session_state.confirm_delete = True
-
-    if st.session_state.get('confirm_delete', False):
-        if st.button("✅ Confirmer Suppr."):
-            if send_action({"action": "delete", "titre": r['Titre']}): st.session_state.page = "home"; st.rerun()
-        if st.button("❌ Annuler"): st.session_state.confirm_delete = False; st.rerun()
+    
+    if c_back.button("⬅ Retour"): 
+        st.session_state.page = "home"
+        st.rerun()
+    
+    if c_edit.button("✏️"): 
+        st.session_state.page = "edit"
+        st.rerun()
+        
+    if c_del.button("🗑️"): 
+        if send_action({"action": "delete", "titre": r['Titre']}): 
+            st.session_state.page = "home"
+            st.rerun()
 
     st.title(f"🍳 {r['Titre']}")
+    
+    # Affichage des infos portions et temps (récupérées du formulaire d'ajout)
     st.warning(f"🍽️ {r.get('Portions', '?')} pers. | ⏱️ Prép: {r.get('Temps_Prepa', '?')} | 🔥 Cuisson: {r.get('Temps_Cuisson', '?')}")
     
     col_l, col_r = st.columns([1, 1.2])
+    
     with col_l:
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400")
         
-        st.subheader("⭐ Votre avis")
-        comm_brut = str(r.get('Commentaires', ''))
-        
-        # Logique d'affichage de la note
-        note_actuelle = 0
-        txt_display = comm_brut
-        if "Note: " in comm_brut:
-            try:
-                note_actuelle = int(comm_brut.split("Note: ")[1].split("/5")[0])
-                if "| " in comm_brut: txt_display = comm_brut.split("| ")[1]
-            except: note_actuelle = 0
-
-        if note_actuelle > 0: st.markdown(f"### {'⭐' * note_actuelle}")
-        
-        new_note = st.feedback("stars", key=f"fb_det_{hash(r['Titre'])}")
-        new_comm = st.text_area("Notes personnelles :", value=txt_display)
-        if st.button("💾 Sauver l'avis"):
-            val_note = (new_note + 1) if new_note is not None else note_actuelle
-            if send_action({"action":"update_notes", "titre": r['Titre'], "commentaires": f"Note: {val_note}/5 | {new_comm}"}):
-                st.rerun()
-
-   with col_r:
+    # --- C'est ici que l'alignement doit être parfait ---
+    with col_r:
         st.subheader("🛒 Ingrédients")
         ing_brut = r.get('Ingrédients', '')
         if ing_brut:
-            # On nettoie la liste des ingrédients
+            # On transforme le texte en liste
             ing_list = [i.strip() for i in str(ing_brut).split("\n") if i.strip()]
             
-            # On crée un dictionnaire pour stocker l'état des cases à cocher
-            to_add = []
+            # Liste temporaire pour stocker ce qui est coché
+            selection = []
             
             for i, item in enumerate(ing_list):
-                # Si l'utilisateur coche la case, on ajoute l'item à la liste 'to_add'
-                if st.checkbox(item, key=f"check_{i}"):
-                    to_add.append(item)
+                # On crée la case à cocher
+                if st.checkbox(item, key=f"ing_{i}"):
+                    selection.append(item)
             
             st.divider()
             
-            # Bouton pour envoyer uniquement la sélection
-            if st.button(f"➕ Ajouter la sélection ({len(to_add)}) à l'épicerie", use_container_width=True):
-                if to_add:
-                    for item in to_add:
-                        send_action({"action": "add_shop", "article": item})
-                    st.success(f"✅ {len(to_add)} ingrédients ajoutés !")
+            # Bouton pour n'ajouter QUE les ingrédients cochés
+            if st.button(f"➕ Ajouter la sélection ({len(selection)}) à l'épicerie", use_container_width=True):
+                if selection:
+                    for s in selection:
+                        send_action({"action": "add_shop", "article": s})
+                    st.success(f"{len(selection)} articles ajoutés !")
                     time.sleep(1)
                     st.rerun()
                 else:
-                    st.warning("Veuillez cocher au moins un ingrédient.")
+                    st.error("Veuillez cocher au moins un ingrédient.")
 
         st.divider()
         st.subheader("📝 Préparation")
         st.write(r.get('Préparation', 'Aucune instruction.'))
-
 # --- AJOUTER / IMPORT ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
@@ -276,4 +263,5 @@ elif st.session_state.page == "planning":
             st.warning(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
             if st.button("📖 Voir", key=f"plan_{row['Titre']}"):
                 st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+
 
