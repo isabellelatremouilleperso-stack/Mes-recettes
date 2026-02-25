@@ -227,14 +227,27 @@ elif st.session_state.page == "shop":
 elif st.session_state.page == "planning":
     st.header("📅 Planning")
     df = load_data()
+    
     if not df.empty:
-        plan = df[df['Date_Prevue'] != ""].sort_values(by='Date_Prevue')
-        for _, row in plan.iterrows():
-            st.write(f"📌 **{row['Date_Prevue']}** : {row['Titre']}")
-    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+        # Vérification de sécurité pour éviter le KeyError
+        if 'Date_Prevue' in df.columns:
+            plan = df[df['Date_Prevue'] != ""].sort_values(by='Date_Prevue')
+            if not plan.empty:
+                for _, row in plan.iterrows():
+                    st.write(f"📌 **{row['Date_Prevue']}** : {row['Titre']}")
+            else:
+                st.info("Aucun repas planifié.")
+        else:
+            st.error("⚠️ La colonne 'Date_Prevue' est introuvable dans le fichier source.")
+            st.info(f"Colonnes détectées : {', '.join(df.columns)}")
+            
+    if st.button("⬅ Retour"):
+        st.session_state.page = "home"
+        st.rerun()
 
 # --- AIDE ---
 elif st.session_state.page == "help":
     st.title("❓ Aide")
     st.write("Utilisez le menu pour naviguer. La page Play Store simule l'installation de votre application.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
