@@ -107,11 +107,13 @@ if st.session_state.page == "playstore":
         if st.button("📥 Installer", use_container_width=True):
             st.success("Application installée avec succès ! 🎉")
     st.divider()
-    st.subheader("📸 Aperçu")
+   st.subheader("📸 Aperçu")
     c1, c2, c3 = st.columns(3)
-    c1.image("https://via.placeholder.com/250x500")
-    c2.image("https://via.placeholder.com/250x500")
-    c3.image("https://via.placeholder.com/250x500")
+    
+    # "images/" est le nom du dossier que tu as créé
+    c1.image("images/capture1.png", caption="Ma Bibliothèque")
+    c2.image("images/capture2.png", caption="Mon Planning")
+    c3.image("images/capture3.png", caption="Mes Courses")
     st.divider()
     st.subheader("📝 À propos de cette application")
     st.write("""
@@ -269,4 +271,5 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
