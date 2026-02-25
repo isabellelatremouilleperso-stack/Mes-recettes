@@ -217,24 +217,34 @@ elif st.session_state.page == "add":
                 send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_prepa, "portions": m_por, "temps_prepa": m_pre, "temps_cuisson": m_cui, "image": m_img, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
 
-# --- DÉTAILS ---
+# --- DÉTAILS (AVEC LIEN SOURCE) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
     st.title(f"🍳 {r['Titre']}")
+    
     try: nv = int(float(r.get('Note', 0)))
     except: nv = 0
     st.write("⭐" * nv + "☆" * (5 - nv))
+    
     c1, c2 = st.columns([1, 1.2])
     with c1:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
+        
+        # --- AJOUT DU LIEN SOURCE ---
+        if r.get('Source') and "http" in str(r['Source']):
+            st.markdown(f"🔗 [Consulter la recette originale]({r['Source']})")
+        # ----------------------------
+
         st.divider()
         new_note = st.selectbox("Note", [1,2,3,4,5], index=(nv-1 if 1<=nv<=5 else 4))
         new_comm = st.text_area("Commentaires", value=r.get('Commentaires', ''))
         new_plan = st.text_input("Planifier (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
+        
         if st.button("💾 Sauvegarder", use_container_width=True):
             send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": new_plan, "commentaires": new_comm, "note": new_note})
             st.rerun()
+            
     with c2:
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
@@ -245,7 +255,6 @@ elif st.session_state.page == "details":
             for x in sel: send_action({"action": "add_shop", "article": x})
             st.success("Ajouté !")
         st.divider(); st.subheader("📝 Étapes"); st.write(r['Préparation'])
-
 # --- ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -275,6 +284,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
