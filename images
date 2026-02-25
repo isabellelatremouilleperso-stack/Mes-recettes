@@ -1,0 +1,4 @@
+c1, c2, c3 = st.columns(3)
+    c1.image("images/photo1.png")
+    c2.image("images/photo2.png")
+    c3.image("images/photo3.png")
