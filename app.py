@@ -191,15 +191,30 @@ elif st.session_state.page == "home":
     if c2.button("🔄 Actualiser"): 
         st.cache_data.clear()
         st.rerun()
-    # --- BOUTONS STYLE PRIMAIRE ---
+   # --- NAVIGATION STYLE APPLI MOBILE ---
+    st.markdown("""
+        <style>
+        div.stButton > button {
+            border-radius: 10px;
+            font-weight: bold;
+            height: 3em;
+        }
+        /* Couleur spécifique pour chaque bouton par leur ordre */
+        .stColumn:nth-child(1) button { background-color: #2e7d32; color: white; border: none; } /* Vert */
+        .stColumn:nth-child(2) button { background-color: #1565c0; color: white; border: none; } /* Bleu */
+        .stColumn:nth-child(3) button { background-color: #e67e22; color: white; border: none; } /* Orange */
+        .stColumn:nth-child(4) button { background-color: #546e7a; color: white; border: none; } /* Gris-bleu */
+        </style>
+    """, unsafe_allow_html=True)
+
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
-    if c_nav1.button("📅 Plan", use_container_width=True, type="primary"):
+    if c_nav1.button("📅 Plan", use_container_width=True):
         st.session_state.page = "planning"; st.rerun()
-    if c_nav2.button("🛒 Liste", use_container_width=True, type="primary"):
+    if c_nav2.button("🛒 Liste", use_container_width=True):
         st.session_state.page = "shop"; st.rerun()
-    if c_nav3.button("➕ Créer", use_container_width=True, type="primary"):
+    if c_nav3.button("➕ Ajouter", use_container_width=True):
         st.session_state.page = "add"; st.rerun()
-    if c_nav4.button("❓ Aide", use_container_width=True, type="primary"):
+    if c_nav4.button("❓ Aide", use_container_width=True):
         st.session_state.page = "help"; st.rerun()
     st.divider()
     df = load_data()
@@ -363,6 +378,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
