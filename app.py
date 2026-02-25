@@ -180,11 +180,11 @@ elif st.session_state.page == "edit":
                 new_payload = {"action": "add", "titre": new_t, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "date": r['Date']}
                 if send_action(new_payload): st.session_state.page = "home"; st.rerun()
 
-# --- AJOUTER / IMPORT (AVEC AIDE GOOGLE RÉTABLIE) ---
+# --- AJOUTER / IMPORT ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     
-    # BOUTON GOOGLE ORANGE BIEN VISIBLE
+    # BOUTON GOOGLE ORANGE
     st.markdown("""
         <a href="https://www.google.com/search?q=recette" target="_blank" style="text-decoration:none;">
             <div style="background-color:#e67e22; color:white; text-align:center; padding:15px; border-radius:10px; font-weight:bold; margin-bottom:20px; font-size:1.1rem;">
@@ -196,6 +196,7 @@ elif st.session_state.page == "add":
     t1, t2, t3 = st.tabs(["🪄 Import URL", "⚡ Saisie Vrac", "📝 Manuel"])
     
     with t1:
+        st.subheader("Importation automatique")
         url_input = st.text_input("Lien de la recette (Marmiton, etc.)")
         if st.button("🪄 Extraire les informations"):
             title, content = scrape_url(url_input)
@@ -204,19 +205,19 @@ elif st.session_state.page == "add":
                 st.session_state.temp_title = title
                 st.session_state.temp_content = content
                 st.info("Passez maintenant à l'onglet 'Saisie Vrac' pour valider.")
-            else: st.error("Extraction impossible. Copiez-collez manuellement dans 'Saisie Vrac'.")
+            else:
+                st.error("Extraction impossible. Copiez-collez manuellement dans 'Saisie Vrac'.")
 
-   with t2:
+    with t2:
         st.subheader("⚡ Enregistrement Ultra-Rapide")
         with st.form("vrac_form", clear_on_submit=True):
             v_t = st.text_input("Titre de la recette", value=st.session_state.get('temp_title', ''))
             v_c = st.text_area("Colle tout ici (Ingrédients, étapes, etc.)", value=st.session_state.get('temp_content', ''), height=350)
             
-            # On a retiré le selectbox des catégories ici
+            # Pas de catégorie ici comme demandé !
             
             if st.form_submit_button("🚀 Enregistrer maintenant"):
                 if v_t and v_c:
-                    # On définit "Autre" par défaut pour que tu puisses changer plus tard
                     payload = {
                         "action": "add", 
                         "titre": v_t, 
@@ -232,16 +233,25 @@ elif st.session_state.page == "add":
                     st.warning("Le titre et le contenu sont obligatoires.")
 
     with t3:
-        with st.form("manuel_form"):
+        st.subheader("Nouveau formulaire manuel")
+        with st.form("manuel_form", clear_on_submit=True):
             m_t = st.text_input("Titre *")
-            m_cat = st.selectbox("Catégorie", CATEGORIES[1:])
+            m_cat = st.selectbox("Catégorie *", CATEGORIES[1:])
             m_ing = st.text_area("Ingrédients *")
             m_pre = st.text_area("Préparation")
-            if st.form_submit_button("💾 Sauver Manuel"):
+            if st.form_submit_button("💾 Sauvegarder"):
                 if m_t and m_ing:
-                    payload = {"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
-
+                    payload = {
+                        "action": "add", 
+                        "titre": m_t, 
+                        "categorie": m_cat, 
+                        "ingredients": m_ing, 
+                        "preparation": m_pre, 
+                        "date": datetime.now().strftime("%d/%m/%Y")
+                    }
+                    if send_action(payload): 
+                        st.session_state.page = "home"
+                        st.rerun()
 # --- ÉPICERIE & PLANNING (GARDÉS TEL QUEL) ---
 elif st.session_state.page == "shop":
     st.header("🛒 Épicerie")
@@ -275,4 +285,5 @@ elif st.session_state.page == "planning":
                 if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
                     send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}); st.rerun()
         else: st.info("Rien de prévu.")
+
 
