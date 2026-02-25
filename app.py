@@ -139,9 +139,9 @@ if st.session_state.page == "playstore":
     
     c1, c2, c3 = st.columns(3)
     # Prépare tes chemins d'images ici pour ce soir
-    c1.image("https://via.placeholder.com/250x500", caption="Bibliothèque")
-    c2.image("https://via.placeholder.com/250x500", caption="Planning")
-    c3.image("https://via.placeholder.com/250x500", caption="Épicerie")
+    c1.image("https://i.postimg.cc/9FktmVdb/shared-image.jpg")
+    c2.image("https://i.postimg.cc/yYGX1BmL/shared-image-(1).jpg")
+    c3.image("https://i.postimg.cc/9FktmVdx/shared-image-(2).jpg")
     
     st.divider()
     st.subheader("📝 À propos de cette application")
@@ -406,6 +406,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
