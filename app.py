@@ -11,21 +11,37 @@ import urllib.parse
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
+# Correction de la SyntaxError en utilisant une chaîne brute
 st.markdown("""
 <style>
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
     .recipe-card {
-        background-color: #1e2129; border: 1px solid #3d4455;
-        border-radius: 12px; padding: 10px; height: 230px; 
-        display: flex; flex-direction: column;
-    }import streamlit as st
-import requests
-import pandas as pd
-from datetime import datetime
-import time
-from bs4 import BeautifulSoup
-import urllib.parse
+        background-color: #1e2129; 
+        border: 1px solid #3d4455;
+        border-radius: 12px; 
+        padding: 10px; 
+        height: 230px; 
+        display: flex; 
+        flex-direction: column;
+    }
+    .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
+    .recipe-title {
+        color: white; 
+        margin-top: 8px; 
+        font-size: 0.9rem; 
+        font-weight: bold;
+        display: -webkit-box; 
+        -webkit-line-clamp: 2; 
+        -webkit-box-orient: vertical;
+        overflow: hidden; 
+        height: 2.6em; 
+        line-height: 1.3;
+    }
+    header {visibility: hidden;} 
+    .stDeployButton {display:none;}
+</style>
+""", unsafe_allow_html=True)
 
 # ======================================================
 # 1. CONFIGURATION & DESIGN
@@ -381,4 +397,5 @@ elif st.session_state.page == "help":
     st.title("❓ Aide")
     st.write("Le mode Vrac permet désormais de saisir les portions, temps et catégories en plus du texte.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
