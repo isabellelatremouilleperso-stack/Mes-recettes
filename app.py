@@ -133,47 +133,44 @@ elif st.session_state.page == "details":
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         
-        # --- ÉTOILES & NOTES (CORRECTION TYPEERROR) ---
-        st.subheader("⭐ Avis & Étoiles")
-        comm_brut = str(r.get('Commentaires', ''))
+      # --- ÉTOILES & NOTES VERSION STABLE ---
+st.subheader("⭐ Avis & Étoiles")
+
+comm_brut = str(r.get('Commentaires', ''))
+
+note_init = 0
+if "Note: " in comm_brut:
+    try:
+        extraits = comm_brut.split("Note: ")[1].split("/5")[0]
+        note_init = int(extraits) - 1
+    except:
         note_init = 0
-        if "Note: " in comm_brut:
-            try:
-                extraits = comm_brut.split("Note: ")[1].split("/5")[0]
-                note_init = int(extraits) - 1
-            except: note_init = 0
-        
-        note = st.feedback("stars", key=f"note_{r['Titre']}", initial_value=note_init if 0 <= note_init <= 4 else None)
-        comm_texte = comm_brut.split(" | ")[1] if " | " in comm_brut else comm_brut
-        txt_comm = st.text_area("Notes personnelles :", value=comm_texte)
-        
-        if st.button("💾 Enregistrer la note"):
-            val_note = (note + 1) if note is not None else 0
-            if send_action({"action": "update_notes", "titre": r['Titre'], "commentaires": f"Note: {val_note}/5 | {txt_comm}"}):
-                st.toast("Note sauvegardée !"); st.rerun()
 
-    with col_r:
-        st.subheader("🗓 Planning & Agenda")
-        date_plan = st.text_input("Date (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
-        ca, cb = st.columns(2)
-        if ca.button("📅 Dans mon Planning"):
-            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_plan})
-        if cb.button("🗓 Google Calendar"):
-            send_action({"action": "calendar", "titre": r['Titre'], "date_prevue": date_plan, "ingredients": r['Ingrédients']})
+# 🔥 sécurité totale
+if not isinstance(note_init, int) or note_init < 0 or note_init > 4:
+    note_init = 0
 
-        st.divider()
-        st.subheader("🛒 Ingrédients")
-        ing_list = [i.strip() for i in str(r['Ingrédients']).split("\n") if i.strip()]
-        to_add = []
-        for i, item in enumerate(ing_list):
-            if st.checkbox(item, key=f"ck_{i}"): to_add.append(item)
-        if st.button(f"➕ Ajouter ({len(to_add)}) à l'épicerie"):
-            for s in to_add: send_action({"action": "add_shop", "article": s})
-            st.toast("C'est dans la liste !")
+note = st.feedback(
+    "stars",
+    key=f"note_{r['Titre']}",
+    initial_value=note_init
+)
 
-        st.divider()
-        st.subheader("📝 Instructions")
-        st.write(r['Préparation'])
+comm_texte = ""
+if " | " in comm_brut:
+    comm_texte = comm_brut.split(" | ", 1)[1]
+
+txt_comm = st.text_area("Notes personnelles :", value=comm_texte)
+
+if st.button("💾 Enregistrer la note"):
+    val_note = (note + 1) if isinstance(note, int) else 0
+    if send_action({
+        "action": "update_notes",
+        "titre": r['Titre'],
+        "commentaires": f"Note: {val_note}/5 | {txt_comm}"
+    }):
+        st.toast("Note sauvegardée !")
+        st.rerun()
 
 # --- AJOUTER / IMPORT (FUSION TABS) ---
 elif st.session_state.page == "add":
@@ -263,3 +260,4 @@ elif st.session_state.page == "help":
     - **Étoiles :** Donnez une note pour retrouver vos recettes préférées.
     - **Synchronisation :** Les données sont sauvées en temps réel sur votre Google Sheet.
     """)
+
