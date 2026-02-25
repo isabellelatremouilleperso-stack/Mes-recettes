@@ -29,7 +29,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# LIENS GOOGLE (À vérifier s'ils sont toujours corrects dans ton fichier)
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
@@ -39,6 +38,16 @@ CATEGORIES = ["Toutes","Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer
 # ======================================================
 # 2. FONCTIONS TECHNIQUES
 # ======================================================
+def send_action(payload):
+    with st.spinner("🚀 Action en cours..."):
+        try:
+            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
+            if "Success" in r.text:
+                st.cache_data.clear(); time.sleep(1); return True
+            st.error(f"Erreur script : {r.text}")
+        except Exception as e: st.error(f"Erreur connexion : {e}")
+    return False
+
 def scrape_url(url):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
@@ -53,16 +62,6 @@ def scrape_url(url):
             if 10 < len(txt) < 500: content_list.append(txt)
         return title, "\n".join(dict.fromkeys(content_list))
     except: return None, None
-
-def send_action(payload):
-    with st.spinner("🚀 Action en cours..."):
-        try:
-            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
-            if "Success" in r.text:
-                st.cache_data.clear(); time.sleep(1); return True
-            st.error(f"Erreur script : {r.text}")
-        except Exception as e: st.error(f"Erreur connexion : {e}")
-    return False
 
 @st.cache_data(ttl=5)
 def load_data():
@@ -97,8 +96,8 @@ if st.session_state.page == "home":
     st.header("📚 Bibliothèque")
     df = load_data()
     c1, c2 = st.columns([2, 1])
-    search = c1.text_input("🔍 Rechercher", placeholder="Ex: Lasagnes")
-    cat_f = c2.selectbox("Filtrer par catégorie", CATEGORIES)
+    search = c1.text_input("🔍 Rechercher", placeholder="Ex: Poulet")
+    cat_f = c2.selectbox("Catégorie", CATEGORIES)
     
     if not df.empty:
         filtered = df.copy()
@@ -117,7 +116,7 @@ if st.session_state.page == "home":
                         if st.button("Voir la recette", key=f"btn_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
-# --- DÉTAILS (LE COEUR DU SYSTÈME) ---
+# --- DÉTAILS (AVEC SYSTÈME ULTRA STABLE) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     c_back, c_edit, c_del = st.columns([4, 1, 1])
@@ -127,121 +126,98 @@ elif st.session_state.page == "details":
         if send_action({"action": "delete", "titre": r['Titre']}): st.session_state.page = "home"; st.rerun()
 
     st.title(f"🍳 {r['Titre']}")
-    st.warning(f"🍴 {r.get('Portions', '?')} pers. | 🕒 Prép: {r.get('Temps_Prepa', '?')} | 🔥 Cuisson: {r.get('Temps_Cuisson', '?')}")
-
+    
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
         st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400")
         
-    # ======================================================
-# ⭐ SYSTEME D'ÉTOILES ULTRA STABLE
-# ======================================================
+        # ======================================================
+        # ⭐ SYSTEME D'ÉTOILES ULTRA STABLE INTÉGRÉ
+        # ======================================================
+        st.subheader("⭐ Avis & Évaluation")
+        comm_brut = str(r.get("Commentaires", ""))
+        
+        note_init = 5  # Valeur par défaut
+        if "Note:" in comm_brut:
+            try:
+                note_txt = comm_brut.split("Note:")[1].split("/5")[0].strip()
+                note_init = int(note_txt)
+            except: note_init = 5
+        
+        if note_init not in [1,2,3,4,5]: note_init = 5
 
-st.subheader("⭐ Avis & Évaluation")
+        note = st.radio(
+            "Votre note :",
+            [1,2,3,4,5],
+            horizontal=True,
+            index=[1,2,3,4,5].index(note_init),
+            key=f"note_{r['Titre']}"
+        )
 
-comm_brut = str(r.get("Commentaires", ""))
+        comm_texte = ""
+        if "|" in comm_brut:
+            comm_texte = comm_brut.split("|",1)[1].strip()
 
-# --- Extraire note existante ---
-note_init = 5  # valeur par défaut
+        txt_comm = st.text_area(
+            "Notes personnelles :",
+            value=comm_texte,
+            key=f"txt_{r['Titre']}"
+        )
 
-if "Note:" in comm_brut:
-    try:
-        note_txt = comm_brut.split("Note:")[1].split("/5")[0].strip()
-        note_init = int(note_txt)
-    except:
-        note_init = 5
+        if st.button("💾 Enregistrer la note", key=f"save_{r['Titre']}"):
+            nouveau_commentaire = f"Note: {note}/5 | {txt_comm}"
+            if send_action({"action": "update_notes", "titre": r["Titre"], "commentaires": nouveau_commentaire}):
+                st.success("Note sauvegardée ! ⭐"); st.rerun()
 
-if note_init not in [1,2,3,4,5]:
-    note_init = 5
+    with col_r:
+        st.subheader("🗓 Planning")
+        date_plan = st.text_input("Date JJ/MM/AAAA", value=r.get('Date_Prevue', ''))
+        if st.button("📅 Sauver au calendrier"):
+            send_action({"action": "update_notes", "titre": r['Titre'], "date_prevue": date_plan}); st.rerun()
 
-# --- Sélecteur étoiles ---
-note = st.radio(
-    "Votre note :",
-    [1,2,3,4,5],
-    horizontal=True,
-    index=[1,2,3,4,5].index(note_init),
-    key=f"note_{r['Titre']}"
-)
+        st.divider()
+        st.subheader("🛒 Ingrédients")
+        ing_list = [i.strip() for i in str(r['Ingrédients']).split("\n") if i.strip()]
+        for i, item in enumerate(ing_list):
+            c_i, c_b = st.columns([0.8, 0.2])
+            c_i.write(item)
+            if c_b.button("➕", key=f"add_{i}"):
+                send_action({"action": "add_shop", "article": item}); st.toast("Ajouté !")
+        
+        st.divider()
+        st.subheader("📝 Instructions")
+        st.write(r['Préparation'])
 
-# --- Commentaire texte ---
-comm_texte = ""
-if "|" in comm_brut:
-    comm_texte = comm_brut.split("|",1)[1].strip()
-
-txt_comm = st.text_area(
-    "Notes personnelles :",
-    value=comm_texte,
-    key=f"txt_{r['Titre']}"
-)
-
-# --- Sauvegarde ---
-if st.button("💾 Enregistrer la note", key=f"save_{r['Titre']}"):
-    nouveau_commentaire = f"Note: {note}/5 | {txt_comm}"
-
-    if send_action({
-        "action": "update_notes",
-        "titre": r["Titre"],
-        "commentaires": nouveau_commentaire
-    }):
-        st.success("Note sauvegardée avec succès ⭐")
-        st.rerun()
-# --- AJOUTER / IMPORT (FUSION TABS) ---
+# --- AJOUTER / IMPORT ---
 elif st.session_state.page == "add":
     st.header("➕ Nouvelle Recette")
-    t1, t2 = st.tabs(["🪄 Import Web", "📝 Manuel"])
-    
+    t1, t2 = st.tabs(["🪄 Import URL", "📝 Manuel"])
     with t1:
-        url_in = st.text_input("Collez un lien de recette ici")
-        if st.button("🪄 Extraire les données"):
+        url_in = st.text_input("Lien de la recette")
+        if st.button("🪄 Extraire"):
             title, content = scrape_url(url_in)
             if title:
-                st.session_state.temp_title = title
-                st.session_state.temp_content = content
-                st.success("Extraction réussie !")
-        
-        with st.form("import_form"):
+                st.session_state.temp_title, st.session_state.temp_content = title, content
+                st.success("Prêt !")
+        with st.form("import_f"):
             v_t = st.text_input("Titre", value=st.session_state.get('temp_title', ''))
-            v_c = st.text_area("Contenu (Ingrédients + Prépa)", value=st.session_state.get('temp_content', ''), height=200)
-            if st.form_submit_button("🚀 Enregistrer l'import"):
-                if v_t and v_c:
-                    payload = {"action": "add", "titre": v_t, "ingredients": v_c, "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
-
+            v_c = st.text_area("Contenu", value=st.session_state.get('temp_content', ''), height=200)
+            if st.form_submit_button("Sauvegarder l'import"):
+                send_action({"action": "add", "titre": v_t, "ingredients": v_c, "date": datetime.now().strftime("%d/%m/%Y")})
+                st.session_state.page = "home"; st.rerun()
     with t2:
-        with st.form("manuel_form"):
-            m_t = st.text_input("Nom de la recette *")
-            m_cat = st.selectbox("Catégorie", CATEGORIES[1:])
-            c1, c2, c3 = st.columns(3)
-            m_port = c1.text_input("Portions")
-            m_prep = c2.text_input("Temps Prép")
-            m_cuis = c3.text_input("Temps Cuisson")
-            m_ing = st.text_area("Ingrédients (un par ligne) *")
-            m_pre = st.text_area("Préparation / Instructions")
-            if st.form_submit_button("💾 SAUVEGARDER"):
-                if m_t and m_ing:
-                    payload = {"action": "add", "titre": m_t, "categorie": m_cat, "portions": m_port, "temps_prepa": m_prep, "temps_cuisson": m_cuis, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
-
-# --- ÉDITION ---
-elif st.session_state.page == "edit":
-    r = st.session_state.recipe_data
-    st.header(f"✏️ Modifier : {r['Titre']}")
-    with st.form("edit_form"):
-        new_t = st.text_input("Titre", value=r['Titre'])
-        new_cat = st.selectbox("Catégorie", CATEGORIES[1:], index=CATEGORIES[1:].index(r['Catégorie']) if r['Catégorie'] in CATEGORIES else 0)
-        new_ing = st.text_area("Ingrédients", value=r['Ingrédients'], height=200)
-        new_pre = st.text_area("Préparation", value=r['Préparation'], height=200)
-        new_img = st.text_input("URL Image", value=r['Image'])
-        if st.form_submit_button("💾 Mettre à jour"):
-            if send_action({"action": "delete", "titre": r['Titre']}):
-                payload = {"action": "add", "titre": new_t, "categorie": new_cat, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "date": r['Date']}
-                if send_action(payload): st.session_state.page = "home"; st.rerun()
+        with st.form("manual_f"):
+            m_t = st.text_input("Titre *")
+            m_ing = st.text_area("Ingrédients *")
+            m_pre = st.text_area("Préparation")
+            if st.form_submit_button("Enregistrer"):
+                send_action({"action": "add", "titre": m_t, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
+                st.session_state.page = "home"; st.rerun()
 
 # --- ÉPICERIE ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'Épicerie")
-    if st.button("🗑 Tout effacer"):
-        send_action({"action": "clear_shop"}); st.rerun()
+    st.header("🛒 Épicerie")
+    if st.button("🗑 Vider la liste"): send_action({"action": "clear_shop"}); st.rerun()
     try:
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}")
         for idx, row in df_s.iterrows():
@@ -251,27 +227,18 @@ elif st.session_state.page == "shop":
             ca.write(f"⬜ {item}")
             if cb.button("❌", key=f"del_{idx}"):
                 send_action({"action": "remove_item_shop", "article": item}); st.rerun()
-    except: st.info("La liste est vide.")
+    except: st.info("Vide.")
 
 # --- PLANNING ---
 elif st.session_state.page == "planning":
-    st.header("📅 Planning Repas")
+    st.header("📅 Planning")
     df = load_data()
     if not df.empty:
         plan = df[df['Date_Prevue'] != ''].copy()
         for _, row in plan.iterrows():
             st.info(f"🗓 **{row['Date_Prevue']}** : {row['Titre']}")
-            if st.button("Voir", key=f"v_{row['Titre']}"):
-                st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
 
 # --- AIDE ---
 elif st.session_state.page == "help":
-    st.title("❓ Aide & Support")
-    st.write("**Version 2.0 Premium** | Isabelle Latrémouille")
-    st.markdown("""
-    - **Import :** Utilisez l'onglet 'Import Web' pour gagner du temps.
-    - **Étoiles :** Donnez une note pour retrouver vos recettes préférées.
-    - **Synchronisation :** Les données sont sauvées en temps réel sur votre Google Sheet.
-    """)
-
-
+    st.title("❓ Aide")
+    st.write("Application de gestion de recettes connectée à Google Sheets.")
