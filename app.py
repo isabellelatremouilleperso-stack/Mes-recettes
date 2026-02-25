@@ -21,18 +21,26 @@ st.markdown("""
         display: flex; flex-direction: column;
     }
     .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
-    .recipe-title {
+   .recipe-title {
         color: white; 
         margin-top: 8px; 
         font-size: 0.95rem; 
         font-weight: bold;
-        /* Voici la magie pour les 2 lignes */
+        text-align: center; /* Centre le texte horizontalement */
+        
+        /* Force l'affichage sur 2 lignes */
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
+        
         line-height: 1.2;
-        height: 2.4em; 
+        height: 2.5em; /* Hauteur fixe pour que toutes les cartes soient alignées */
+        
+        /* Aligne le texte au milieu de la zone si une seule ligne */
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .app-header { display: flex; align-items: center; gap: 20px; }
     .app-icon { width: 100px; height: 100px; border-radius: 20px; }
@@ -315,6 +323,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
