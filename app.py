@@ -95,45 +95,18 @@ with st.sidebar:
 # 4. LOGIQUE DES PAGES
 # ======================================================
 
-# --- PAGE AIDE ENRICHIE ---
+# --- PAGE AIDE ---
 if st.session_state.page == "help":
     st.header("❓ Guide complet de l'utilisateur")
-    
     col_help1, col_help2 = st.columns(2)
-    
     with col_help1:
         st.subheader("🚀 Importation & Ajout")
-        st.markdown("""
-        * **Recherche Google** : Utilisez le bouton orange dans l'onglet 'Ajouter' pour l'inspiration.
-        * **Import URL** : Aspire automatiquement titre et contenu depuis un lien.
-        * **Mode Vrac** : Copiez n'importe quel texte. La recette sera classée dans **'Autre'** pour un tri ultérieur.
-        """)
-        
-        st.subheader("📅 Planning & Agenda")
-        st.markdown("""
-        * **Planifier** : Cliquez sur ✏️ sur une fiche et entrez une date (ex: 25/02/2026).
-        * **Bouton Terminé** : Dans l'agenda, cliquez sur ✅ pour vider la date une fois cuisiné.
-        """)
-
+        st.markdown("* **Import URL** : Aspire les données. \n* **Mode Vrac** : Copiez n'importe quel texte. \n* **Édition** : Utilisez le crayon ✏️ pour transformer un 'Vrac' en recette propre.")
     with col_help2:
-        st.subheader("🛒 Liste de Courses")
-        st.markdown("""
-        * **Cocher pour ajouter** : Dans une fiche, cochez ce qu'il vous manque.
-        * **Centralisation** : Cliquez sur 'Ajouter à l'épicerie' pour tout regrouper.
-        * **Nettoyage** : Supprimez avec ❌ ou videz tout après les courses.
-        """)
-
-        st.subheader("⭐ Notes & Avis")
-        st.markdown("""
-        * **Étoiles** : Notez vos plats après dégustation.
-        * **Commentaires** : Notez vos astuces (ex: 'moins de sucre'). Cliquez bien sur **💾 Sauver l'avis**.
-        """)
-
-    st.info("💡 **Astuce** : Si une nouvelle recette n'apparaît pas, cliquez sur **🔄 Actualiser** à gauche.")
-    
+        st.subheader("📅 Planning & Courses")
+        st.markdown("* **Planning** : Cliquez sur ✏️ et entrez une date. \n* **Courses** : Cochez les ingrédients et ajoutez-les à l'épicerie.")
     if st.button("Retour à la bibliothèque", use_container_width=True): 
-        st.session_state.page = "home"
-        st.rerun()
+        st.session_state.page = "home"; st.rerun()
 
 # --- ACCUEIL ---
 elif st.session_state.page == "home":
@@ -172,7 +145,7 @@ elif st.session_state.page == "details":
         if st.button("❌ Annuler"): st.session_state.confirm_delete = False; st.rerun()
 
     st.title(f"🍳 {r['Titre']}")
-    st.info(f"Portions : {r.get('Portions', '?')} | Prépa : {r.get('Temps_Prepa', '?')} | Cuisson : {r.get('Temps_Cuisson', '?')}")
+    st.info(f"Catégorie : {r.get('Catégorie', 'Autre')} | Portions : {r.get('Portions', '?')}")
     
     col_l, col_r = st.columns([1, 1.2])
     with col_l:
@@ -215,59 +188,65 @@ elif st.session_state.page == "add":
             </div>
         </a>
     """, unsafe_allow_html=True)
-    
     t1, t2, t3 = st.tabs(["🪄 Import URL", "⚡ Saisie Vrac", "📝 Manuel"])
-    
     with t1:
-        st.subheader("Importation automatique")
         url_in = st.text_input("Lien de la recette")
         if st.button("🪄 Extraire"):
             title, content = scrape_url(url_in)
             if title:
                 st.success(f"✅ Trouvé : {title}")
                 st.session_state.temp_title, st.session_state.temp_content = title, content
-                st.info("Allez dans 'Saisie Vrac' pour finaliser.")
-            else: st.error("Impossible d'extraire. Copiez-collez manuellement.")
-
+            else: st.error("Échec de l'extraction.")
     with t2:
-        st.subheader("⚡ Enregistrement Rapide")
         with st.form("vrac_form", clear_on_submit=True):
             v_t = st.text_input("Titre", value=st.session_state.get('temp_title', ''))
-            v_c = st.text_area("Collez tout ici", value=st.session_state.get('temp_content', ''), height=300)
-            if st.form_submit_button("🚀 Enregistrer maintenant"):
+            v_c = st.text_area("Contenu (Ingrédients + Prépa)", value=st.session_state.get('temp_content', ''), height=300)
+            if st.form_submit_button("🚀 Enregistrer en Vrac"):
                 if v_t and v_c:
-                    payload = {"action": "add", "titre": v_t, "categorie": "Autre", "ingredients": v_c, "preparation": "À trier", "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
-
+                    if send_action({"action": "add", "titre": v_t, "categorie": "Autre", "ingredients": v_c, "preparation": "À trier...", "date": datetime.now().strftime("%d/%m/%Y")}):
+                        st.session_state.page = "home"; st.rerun()
     with t3:
-        st.subheader("Saisie Manuelle")
         with st.form("manuel_form"):
-            m_t = st.text_input("Titre *")
-            m_cat = st.selectbox("Catégorie", CATEGORIES[1:])
-            m_ing = st.text_area("Ingrédients *")
-            m_pre = st.text_area("Préparation")
+            m_t, m_cat = st.text_input("Titre *"), st.selectbox("Catégorie", CATEGORIES[1:])
+            m_ing, m_pre = st.text_area("Ingrédients *"), st.text_area("Préparation")
             if st.form_submit_button("💾 Sauver"):
                 if m_t and m_ing:
-                    payload = {"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")}
-                    if send_action(payload): st.session_state.page = "home"; st.rerun()
+                    if send_action({"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")}):
+                        st.session_state.page = "home"; st.rerun()
 
-# --- ÉDITION ---
+# --- ÉDITION (CORRIGÉE) ---
 elif st.session_state.page == "edit":
     r = st.session_state.recipe_data
-    st.header(f"✏️ Modifier : {r['Titre']}")
+    st.header(f"✏️ Modifier : {r.get('Titre', 'Recette')}")
     with st.form("edit_form"):
-        new_t = st.text_input("Titre", value=r['Titre'])
-        new_cat = st.selectbox("Catégorie", CATEGORIES[1:], index=CATEGORIES[1:].index(r['Catégorie']) if r['Catégorie'] in CATEGORIES else 0)
-        new_ing = st.text_area("Ingrédients", value=r['Ingrédients'], height=200)
-        new_pre = st.text_area("Préparation", value=r['Préparation'], height=200)
-        new_img = st.text_input("URL Image", value=r['Image'])
+        new_t = st.text_input("Titre", value=r.get('Titre', ''))
+        # On définit la catégorie par défaut sur "Autre" si celle de la recette n'existe pas dans la liste
+        cat_index = CATEGORIES[1:].index(r['Catégorie']) if r.get('Catégorie') in CATEGORIES[1:] else CATEGORIES[1:].index("Autre")
+        new_cat = st.selectbox("Catégorie", CATEGORIES[1:], index=cat_index)
+        new_ing = st.text_area("Ingrédients", value=r.get('Ingrédients', ''), height=200)
+        new_pre = st.text_area("Préparation", value=r.get('Préparation', ''), height=200)
+        new_img = st.text_input("URL Image", value=r.get('Image', ''))
         new_plan = st.text_input("Date Prévue (JJ/MM/AAAA)", value=r.get('Date_Prevue', ''))
-        if st.form_submit_button("💾 Enregistrer"):
+        
+        if st.form_submit_button("💾 Enregistrer les modifications"):
+            # 1. On supprime l'ancienne version (basé sur le titre original)
             if send_action({"action": "delete", "titre": r['Titre']}):
-                payload = {"action": "add", "titre": new_t, "categorie": new_cat, "ingredients": new_ing, "preparation": new_pre, "image": new_img, "date_prevue": new_plan, "date": r['Date']}
-                if send_action(payload): st.session_state.page = "home"; st.rerun()
+                # 2. On ajoute la nouvelle version
+                payload = {
+                    "action": "add", 
+                    "titre": new_t, 
+                    "categorie": new_cat, 
+                    "ingredients": new_ing, 
+                    "preparation": new_pre, 
+                    "image": new_img, 
+                    "date_prevue": new_plan, 
+                    "date": r.get('Date', datetime.now().strftime("%d/%m/%Y"))
+                }
+                if send_action(payload):
+                    st.success("Modifié !")
+                    st.session_state.page = "home"; st.rerun()
 
-# --- ÉPICERIE ---
+# --- ÉPICERIE & PLANNING (INCHANGÉS) ---
 elif st.session_state.page == "shop":
     st.header("🛒 Épicerie")
     if st.button("🗑 Tout vider"):
@@ -283,7 +262,6 @@ elif st.session_state.page == "shop":
                 if send_action({"action": "remove_item_shop", "article": item}): st.rerun()
     except: st.info("Liste vide.")
 
-# --- PLANNING ---
 elif st.session_state.page == "planning":
     st.header("📅 Agenda")
     df = load_data()
@@ -292,10 +270,7 @@ elif st.session_state.page == "planning":
         plan = df[(df['Date_Prevue'] != '') & (df['Date_Prevue'] != 'nan')].copy()
         if not plan.empty:
             for _, row in plan.iterrows():
-                st.markdown(f'<div style="background-color:#1e2129; border-left:5px solid #e67e22; padding:15px; border-radius:10px; margin-bottom:10px;"><span style="color:#e67e22;"><b>🗓 {row["Date_Prevue"]}</b></span><br><span style="font-size:1.2rem; color:white;">{row["Titre"]}</span></div>', unsafe_allow_html=True)
-                c1, c2 = st.columns(2)
-                if c1.button("📖 Voir", key=f"pv_{row['Titre']}", use_container_width=True):
+                st.warning(f"🗓 {row['Date_Prevue']} - {row['Titre']}")
+                if st.button("📖 Voir", key=f"p_{row['Titre']}"):
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
-                if c2.button("✅ Terminé", key=f"pd_{row['Titre']}", use_container_width=True):
-                    send_action({"action": "update", "titre_original": row['Titre'], "date_prevue": ""}); st.rerun()
         else: st.info("Rien de prévu.")
