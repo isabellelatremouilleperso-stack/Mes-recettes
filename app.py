@@ -191,7 +191,17 @@ elif st.session_state.page == "home":
     if c2.button("🔄 Actualiser"): 
         st.cache_data.clear()
         st.rerun()
-    
+    # --- BOUTONS DE NAVIGATION RAPIDE (Ligne 194) ---
+    c_nav1, c_nav2, c_nav3, c_nav4 = st.columns(4)
+    if c_nav1.button("📅 Plan", use_container_width=True):
+        st.session_state.page = "planning"; st.rerun()
+    if c_nav2.button("🛒 Courses", use_container_width=True):
+        st.session_state.page = "shop"; st.rerun()
+    if c_nav3.button("➕ Ajouter", use_container_width=True):
+        st.session_state.page = "add"; st.rerun()
+    if c_nav4.button("❓ Aide", use_container_width=True):
+        st.session_state.page = "help"; st.rerun()
+    st.divider()
     df = load_data()
     
     if not df.empty:
@@ -353,6 +363,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
