@@ -184,26 +184,40 @@ elif st.session_state.page == "planning":
             st.info("Aucun repas planifié pour le moment. Ajoutez une date dans la fiche d'une recette.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
-# --- MODULE BIBLIOTHÈQUE (RECHERCHE TITRE + CATÉGORIE) ---
+# --- MODULE BIBLIOTHÈQUE (RECHERCHE + FILTRE CATÉGORIE) ---
 elif st.session_state.page == "home":
     c1, c2 = st.columns([4, 1])
     c1.header("📚 Ma Bibliothèque")
-    if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
+    if c2.button("🔄 Actualiser"): 
+        st.cache_data.clear()
+        st.rerun()
     
     df = load_data()
-    # On précise dans l'aide que la recherche marche aussi pour les catégories
-    search = st.text_input("🔍 Rechercher un plat ou une catégorie (ex: Poulet, Dessert...)")
     
     if not df.empty:
-        # --- LA LIGNE MAGIQUE ---
-        # Elle cherche dans 'Titre' OU (|) dans 'Catégorie'
-        mask = (
-            df['Titre'].str.contains(search, case=False, na=False) | 
-            df['Catégorie'].str.contains(search, case=False, na=False)
-        )
-        # ------------------------
+        # --- ZONE DE FILTRES ---
+        col_search, col_cat = st.columns([2, 1])
         
-        filtered = df[mask] if search else df
+        with col_search:
+            search = st.text_input("🔍 Rechercher par nom...", placeholder="Ex: Lasagne, Poulet...")
+            
+        with col_cat:
+            # On récupère la liste unique des catégories + une option "Toutes"
+            liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
+            cat_choisie = st.selectbox("📁 Catégorie", liste_categories)
+        
+        # --- LOGIQUE DE FILTRAGE COMBINÉE ---
+        # 1. Filtre par texte (Nom)
+        mask = df['Titre'].str.contains(search, case=False, na=False)
+        
+        # 2. Filtre par catégorie (si différent de "Toutes")
+        if cat_choisie != "Toutes":
+            mask = mask & (df['Catégorie'] == cat_choisie)
+            
+        filtered = df[mask]
+        # ------------------------------------
+        
+        st.write(f"*{len(filtered)} recette(s) trouvée(s)*")
         
         rows = filtered.reset_index(drop=True)
         for i in range(0, len(rows), 3):
@@ -218,6 +232,8 @@ elif st.session_state.page == "home":
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"
                             st.rerun()
+    else:
+        st.warning("Aucune donnée trouvée dans le fichier Excel.")
 
 # --- AJOUTER RECETTE (IMPORT URL + VRAC + MANUEL) ---
 elif st.session_state.page == "add":
@@ -337,6 +353,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
