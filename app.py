@@ -12,35 +12,30 @@ import urllib.parse
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 st.markdown("""
-/* Force le texte de la liste d'épicerie (checkbox) en blanc et plus grand */
+<style>
+    /* 1. FOND ET TITRES */
+    .stApp { background-color: #0e1117; color: #e0e0e0; }
+    h1, h2, h3 { color: #e67e22 !important; }
+
+    /* 2. LISTE D'ÉPICERIE (Tes commandes étaient ici !) */
     .stCheckbox label p {
         color: white !important;
         font-size: 1.1rem !important;
         font-weight: 500 !important;
     }
-
-    /* Optionnel : Donne une petite lueur orange aux cases cochées */
     .stCheckbox [data-testid="stWidgetLabel"] {
         color: white !important;
     }
-<style>
-    /* Fond de l'application */
-    .stApp { background-color: #0e1117; color: #e0e0e0; }
-    h1, h2, h3 { color: #e67e22 !important; }
 
-    /* Correction visuelle pour téléphone (Champs de saisie) */
+    /* 3. SAISIE ET RECHERCHE (Pour téléphone) */
     input, select, textarea, div[data-baseweb="select"] {
         color: white !important;
         background-color: #1e2129 !important;
     }
-    
-    /* Force les étiquettes au-dessus des champs (ex: "Catégorie") en blanc */
     label, .stMarkdown p { color: white !important; }
-
-    /* Rendre le texte de suggestion (placeholder) moins transparent */
     ::placeholder { color: #888888 !important; opacity: 1 !important; }
 
-    /* Style des cartes de recettes */
+    /* 4. CARTES DE RECETTES */
     .recipe-card {
         background-color: #1e2129; border: 1px solid #3d4455;
         border-radius: 12px; padding: 10px; height: 230px; 
@@ -52,6 +47,14 @@ st.markdown("""
         text-align: center; display: flex; align-items: center; justify-content: center;
         height: 2.5em; line-height: 1.2;
     }
+
+    /* 5. BOUTONS DE NAVIGATION COLORÉS */
+    div.stButton > button { border-radius: 10px; font-weight: bold; height: 3em; }
+    [data-testid="column"]:nth-of-type(1) button { background-color: #2e7d32 !important; color: white !important; }
+    [data-testid="column"]:nth-of-type(2) button { background-color: #1565c0 !important; color: white !important; }
+    [data-testid="column"]:nth-of-type(3) button { background-color: #e67e22 !important; color: white !important; }
+    [data-testid="column"]:nth-of-type(4) button { background-color: #c0392b !important; color: white !important; }
+    [data-testid="column"]:nth-of-type(5) button { background-color: #7b1fa2 !important; color: white !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -394,6 +397,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
