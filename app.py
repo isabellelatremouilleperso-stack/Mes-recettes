@@ -99,43 +99,40 @@ def load_data():
 if "page" not in st.session_state: st.session_state.page = "home"
 
 # ======================================================
-# 3. SIDEBAR
+# 3. SIDEBAR (Navigation Unique)
 # ======================================================
-# --- CONFIGURATION DE LA BARRE LATÉRALE ---
 with st.sidebar:
-    # 1. Style pour le logo rond
+    # Style CSS et Logo
     st.markdown("""
     <style>
         .logo-rond {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
+            width: 100px; height: 100px;
+            border-radius: 50%; object-fit: cover;
             border: 3px solid #e67e22;
-            margin: 0 auto 20px auto;
-            display: block;
+            margin: 0 auto 20px auto; display: block;
         }
     </style>
     """, unsafe_allow_html=True)
-
-    # 2. Affichage du Logo
+    
     st.markdown('<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond">', unsafe_allow_html=True)
+    st.title("🍳 Mes Recettes")
+
+    # Un seul exemplaire de chaque bouton avec des "keys" pour être sûr
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+        st.session_state.page = "home"; st.rerun()
+    if st.button("📅 Planning Repas", use_container_width=True, key="nav_plan"): 
+        st.session_state.page = "planning"; st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+        st.session_state.page = "shop"; st.rerun()
     
-    st.title("👨‍🍳 Mes Recettes")
-    
-    # 3. Navigation
-    if st.button("📚 Bibliothèque", use_container_width=True): 
-        st.session_state.page = "home"
-        st.rerun()
-        
-    st.title("👨‍🍳 Mes Recettes")
-    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
-    if st.button("📅 Planning Repas", use_container_width=True): st.session_state.page = "planning"; st.rerun()
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True): st.session_state.page = "shop"; st.rerun()
     st.divider()
-    if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True): st.session_state.page = "add"; st.rerun()
-    if st.button("⭐ Play Store", use_container_width=True): st.session_state.page = "playstore"; st.rerun()
-    if st.button("❓ Aide", use_container_width=True): st.session_state.page = "help"; st.rerun()
+    
+    if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True, key="nav_add"): 
+        st.session_state.page = "add"; st.rerun()
+    if st.button("⭐ Play Store", use_container_width=True, key="nav_play"): 
+        st.session_state.page = "playstore"; st.rerun()
+    if st.button("❓ Aide", use_container_width=True, key="nav_help"): 
+        st.session_state.page = "help"; st.rerun()
 
 # ======================================================
 # 4. PAGES
@@ -350,6 +347,7 @@ elif st.session_state.page == "help":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
 
 
