@@ -220,24 +220,22 @@ elif st.session_state.page == "details":
     # DISPOSITION : IMAGE & NOTES (GAUCHE) | INGRÉDIENTS (DROITE)
     col_gauche, col_droite = st.columns([1, 1.2])
 
-   with col_gauche:
+    with col_gauche: # <-- L'indentation est réparée ici
         # 1. LA PHOTO
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
         
-        # 2. ESPACE ÉVALUATION (Pour que ça reste statique et enregistré)
+        # 2. ESPACE ÉVALUATION
         st.markdown("### ⭐ Ma Note & Avis")
         
-        # On récupère les valeurs actuelles
         note_actuelle = int(float(r.get('Note', 0))) if r.get('Note') else 0
         comm_actuel = str(r.get('Commentaires', ""))
         
-        # Champs de saisie
-        nouvelle_note = st.slider("Note (étoiles)", 0, 5, note_actuelle)
-        nouveau_comm = st.text_area("Mes commentaires / astuces :", value=comm_actuel, height=100)
+        # On ajoute des 'key' pour éviter les bugs de mémoire
+        nouvelle_note = st.slider("Note (étoiles)", 0, 5, note_actuelle, key="val_note")
+        nouveau_comm = st.text_area("Mes commentaires / astuces :", value=comm_actuel, height=100, key="val_comm")
         
-        if st.button("💾 Enregistrer ma note et mon avis"):
-            # On envoie la mise à jour vers Google Sheets
+        if st.button("💾 Enregistrer ma note et mon avis", use_container_width=True):
             succes = send_action({
                 "action": "edit", 
                 "titre": r['Titre'], 
@@ -247,13 +245,12 @@ elif st.session_state.page == "details":
             if succes:
                 st.success("Note et commentaires enregistrés !")
                 st.cache_data.clear()
-                # On met à jour la session pour l'affichage immédiat
                 st.session_state.recipe_data['Note'] = nouvelle_note
                 st.session_state.recipe_data['Commentaires'] = nouveau_comm
                 st.rerun()
 
         st.markdown("---")
-        # 3. TES INFORMATIONS (Catégorie, Portions, Temps)
+        # 3. TES INFORMATIONS
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Non classé')}")
         st.write(f"**👥 Portions :** {r.get('Portions', '-')}")
@@ -269,7 +266,7 @@ elif st.session_state.page == "details":
         ings = [l.strip() for l in str(r.get('Ingrédients', '')).split("\n") if l.strip()]
         sel = []
         for i, l in enumerate(ings):
-            if st.checkbox(l, key=f"chk_det_{i}"): 
+            if st.checkbox(l, key=f"chk_det_final_{i}"): 
                 sel.append(l)
         
         if st.button("📥 Ajouter au Panier", type="primary", use_container_width=True):
@@ -470,6 +467,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
