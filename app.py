@@ -230,101 +230,59 @@ elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     st.header(f"📖 {r['Titre']}")
     
-    # --- BARRE D'OUTILS RAPIDE ---
-    btn_col1, btn_col2, btn_col3 = st.columns([1.5, 1, 1])
+    # --- BARRE D'OUTILS (RETOUR, ÉDITER, SUPPRIMER) ---
+    # On utilise des clés simples (k1, k2, k3) pour éviter les doublons
+    c_nav1, c_nav2, c_nav3 = st.columns([1.5, 1, 1])
     
-    if btn_col1.button("⬅ Retour", use_container_width=True):
+    if c_nav1.button("⬅ Retour", key="nav_ret"):
         st.session_state.page = "home"; st.rerun()
         
-    if btn_col2.button("✏️ Éditer", use_container_width=True):
+    if c_nav2.button("✏️ Éditer", key="nav_edit"):
         st.session_state.page = "edit"; st.rerun()
         
-    # Le bouton poubelle active maintenant un mode "confirmation"
-    if btn_col3.button("🗑️", use_container_width=True):
+    if c_nav3.button("🗑️", key="nav_del"):
         st.session_state.confirm_delete = True
 
-# --- ZONE DE CONFIRMATION DE SUPPRESSION ---
+    # --- ZONE DE CONFIRMATION (S'affiche seulement si on clique sur la poubelle) ---
     if st.session_state.get('confirm_delete', False):
-        st.error("⚠️ SUPPRIMER DÉFINITIVEMENT ?")
-        # On utilise des noms très précis pour les colonnes et les boutons
-        col_confirm_1, col_confirm_2 = st.columns(2)
-        
-        if col_confirm_1.button("✅ OUI, Supprimer", use_container_width=True, key="btn_final_del"):
-            # On vérifie que la fonction send_action reçoit bien les bonnes infos
-            success = send_action({"action": "delete", "titre": r['Titre']})
-            if success:
+        st.warning("⚠️ Supprimer cette recette ?")
+        # On utilise des clés uniques pour ces boutons là aussi
+        conf_1, conf_2 = st.columns(2)
+        if conf_1.button("✅ OUI", key="conf_ok", use_container_width=True):
+            if send_action({"action": "delete", "titre": r['Titre']}):
                 st.cache_data.clear()
                 st.session_state.confirm_delete = False
                 st.success("Supprimé !")
                 time.sleep(1)
                 st.session_state.page = "home"
                 st.rerun()
-            else:
-                st.error("Le script Google n'a pas répondu.")
-
-        if col_confirm_2.button("❌ NON, Annuler", use_container_width=True, key="btn_final_cancel"):
-            st.session_state.confirm_delete = False
-            st.rerun()
-        else:st.error("Erreur de connexion.")
-                
-        # AJOUT DE key="btn_confirm_no" ICI :
-        if conf_c2.button("❌ NON, Annuler", use_container_width=True, key="btn_confirm_no"):
-            st.session_state.confirm_delete = False
-            st.rerun()
-        else:
-                st.error("Erreur de connexion. Vérifiez votre fichier Excel.")
-                
-        if c2.button("❌ NON, Annuler", use_container_width=True):
-            st.session_state.confirm_delete = False
-            st.rerun()
-                
-        if c2.button("❌ NON, Annuler", use_container_width=True):
+        if conf_2.button("❌ NON", key="conf_no", use_container_width=True):
             st.session_state.confirm_delete = False
             st.rerun()
     
     st.divider()
-    # ---------------------------------------
 
-    c1, c2 = st.columns([1, 1.2])
-    # ... (Le reste du code pour les images et ingrédients reste le même)
-
-    c1, c2 = st.columns([1, 1.2])
-    with c1:
+    # --- CORPS DE LA RECETTE ---
+    col_left, col_right = st.columns([1, 1.2])
+    with col_left:
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
-        if r.get('Source') and "http" in str(r['Source']):
-            st.link_button("🌐 Site d'origine", r['Source'], use_container_width=True)
             
-    with c2:
+    with col_right:
         st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
-        if ings:
-            sel = []
-            for i, l in enumerate(ings):
-                if st.checkbox(l, key=f"chk_{i}"):
-                    sel.append(l)
-            
-            if st.button("📥 Ajouter à l'épicerie", use_container_width=True, type="primary"):
-                for it in sel:
-                    send_action({"action": "add_shop", "article": it})
-                st.toast("Ajouté !"); time.sleep(0.5)
-                st.session_state.page = "shop"; st.rerun()
+        # On transforme le texte en liste
+        liste_ing = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
+        for i, ing in enumerate(liste_ing):
+            st.checkbox(ing, key=f"ing_{i}")
+        
+        if st.button("📥 Ajouter au panier", key="add_to_shop", type="primary"):
+            # Ici on ajoute la logique pour envoyer au panier si besoin
+            st.toast("Ajouté !"); time.sleep(0.5)
+            st.session_state.page = "shop"; st.rerun()
 
     st.divider()
     st.subheader("📝 Préparation")
-    st.info(r['Préparation'] if r['Préparation'] else "Aucune étape saisie.")
-elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'épicerie")
-    try:
-        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
-        if not df_s.empty:
-            sel_del = [row.iloc[0] for idx, row in df_s.iterrows() if st.checkbox(row.iloc[0], key=f"sh_{idx}")]
-            if st.button("🗑 Retirer cochés"):
-                for it in sel_del: send_action({"action": "remove_shop", "article": it})
-                st.rerun()
-            if st.button("🧨 Tout vider"): send_action({"action": "clear_shop"}); st.rerun()
-        else: st.info("Liste vide.")
-    except: st.error("Erreur de chargement.")
+    st.info(r['Préparation'] if r['Préparation'] else "Aucune étape.")
 # --- PAGE AJOUTER (Ligne 250 environ) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
@@ -470,6 +428,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
