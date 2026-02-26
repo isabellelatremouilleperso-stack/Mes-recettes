@@ -191,10 +191,65 @@ if st.session_state.page == "home":
         st.warning("Aucune donnée trouvée.")
 
 # --- PAGE DÉTAILS ---
+# --- PAGE DÉTAILS DE LA RECETTE ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
-    st.header(f"📖 {r['Titre']}")
     
+    # Bouton retour
+    if st.button("⬅ Retour à la bibliothèque"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    # TITRE DE LA RECETTE
+    st.header(f"📖 {r.get('Titre', 'Sans titre')}")
+
+    # --- AFFICHAGE DES ÉTOILES (NOUVEAU) ---
+    note_val = r.get('Note', 0)
+    try:
+        # On s'assure que la note est un nombre valide
+        nb_etoiles = int(float(note_val)) if note_val and str(note_val).strip() != "" else 0
+        if nb_etoiles > 0:
+            st.markdown(f"<h3 style='color: #f1c40f; margin-top: -20px;'>{'⭐' * nb_etoiles}</h3>", unsafe_allow_html=True)
+    except:
+        pass
+    # ---------------------------------------
+
+    st.divider()
+
+    # Mise en page en deux colonnes : Image à gauche, Infos à droite
+    col_img, col_info = st.columns([1, 1])
+    
+    with col_img:
+        img_url = r.get('Image') if "http" in str(r.get('Image')) else "https://via.placeholder.com/300"
+        st.image(img_url, use_container_width=True)
+        
+    with col_info:
+        st.subheader("📋 Informations")
+        st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Non classé')}")
+        st.write(f"**👥 Portions :** {r.get('Portions', '-')}")
+        st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa', '-')} min")
+        st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson', '-')} min")
+        
+        if r.get('Source'):
+            st.write(f"**🔗 Source :** [Lien vers la recette]({r.get('Source')})")
+
+    st.divider()
+
+    # Ingrédients et Préparation
+    c1, c2 = st.columns(2)
+    with c1:
+        st.subheader("🛒 Ingrédients")
+        st.write(r.get('Ingrédients', 'Aucun ingrédient listé.'))
+        
+    with c2:
+        st.subheader("🍳 Préparation")
+        st.write(r.get('Préparation', 'Aucune instruction.'))
+
+    # Section Commentaires
+    if r.get('Commentaires'):
+        st.divider()
+        st.subheader("💬 Mes Notes / Commentaires")
+        st.info(r.get('Commentaires'))
     c_nav1, c_nav2, c_nav3 = st.columns([1.5, 1, 1])
     if c_nav1.button("⬅ Retour", key="det_back"): st.session_state.page = "home"; st.rerun()
     if c_nav2.button("✏️ Éditer", key="det_edit"): st.session_state.page = "edit"; st.rerun()
@@ -417,6 +472,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
