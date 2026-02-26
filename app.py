@@ -151,32 +151,42 @@ if st.session_state.page == "home":
             
         rows = df[mask].reset_index(drop=True)
         
+        # Affichage en grille de 3 colonnes
         for i in range(0, len(rows), 3):
             cols = st.columns(3)
             for j in range(3):
                 if i + j < len(rows):
                     row = rows.iloc[i + j]
-                   # --- Dans la partie "home", au moment de générer les colonnes ---
-                        with cols[j]:
+                    
+                    with cols[j]:
+                        # 1. Gestion de l'image
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
-    
-            # On prépare l'affichage des étoiles
-            note = row.get('Note', 0)
-            try:
-            etoiles = "⭐" * int(float(note)) if note else ""
-            except:
-            etoiles = ""
+                        
+                        # 2. Préparation des étoiles (Note)
+                        note = row.get('Note', 0)
+                        try:
+                            # On transforme la note en nombre, puis en étoiles ⭐
+                            valeur_note = int(float(note)) if note and str(note).strip() != "" else 0
+                            etoiles = "⭐" * valeur_note
+                        except:
+                            etoiles = ""
 
-    st.markdown(f"""
-        <div class="recipe-card">
-            <img src="{img}" class="recipe-img">
-            <div class="recipe-title">{row["Titre"]}</div>
-            <div style="text-align: center; color: #f1c40f;">{etoiles}</div>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
-        st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+                        # 3. Affichage visuel de la carte
+                        st.markdown(f"""
+                            <div class="recipe-card">
+                                <img src="{img}" class="recipe-img">
+                                <div class="recipe-title">{row["Titre"]}</div>
+                                <div style="text-align: center; color: #f1c40f; font-size: 1rem; margin-top: 5px;">
+                                    {etoiles}
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # 4. Bouton d'action
+                        if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
 
@@ -407,6 +417,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
