@@ -277,9 +277,11 @@ elif st.session_state.page == "home":
                 st.session_state.recipe_data = row.to_dict()
                 st.session_state.page = "edit"; st.rerun()
                 
-            if btn_col3.button("🗑️", key=f"d_{i+j}", use_container_width=True):
-                if send_action({"action": "delete", "titre": row['Titre']}):
-                st.success("Recette supprimée !"); time.sleep(1); st.rerun()
+            ........if btn_col3.button("🗑️", key=f"d_{i+j}", use_container_width=True):
+............if send_action({"action": "delete", "titre": row['Titre']}):
+................st.success("Recette supprimée !")
+................time.sleep(1)
+................st.rerun()
     else:
         st.warning("Aucune donnée trouvée dans le fichier Excel.")
 
@@ -444,6 +446,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
