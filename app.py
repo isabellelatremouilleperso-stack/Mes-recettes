@@ -241,22 +241,22 @@ elif st.session_state.page=="add":
             v_txt = st.text_area("Texte brut", height=300)
             submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
             
-if submit_vrac:
-    if v_t:
-        payload = {
-            "action": "add",
-            "titre": v_t,
-            "catégorie": v_cat,
-            "ingredients": v_txt,
-            "date": datetime.now().strftime("%d/%m/%Y"),
-            "date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""
-            }
-            send_action(payload)
-            st.session_state.page = "home"
-            st.rerun()
-    else:
-            st.error("Titre obligatoire.")
-
+            # Ce bloc DOIT être à l'intérieur du "with st.form"
+            if submit_vrac:
+                if v_t:
+                    payload = {
+                        "action": "add",
+                        "titre": v_t,
+                        "catégorie": v_cat,
+                        "ingredients": v_txt,
+                        "date": datetime.now().strftime("%d/%m/%Y"),
+                        "date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""
+                    }
+                    send_action(payload)
+                    st.session_state.page = "home"
+                    st.rerun()
+                else:
+                    st.error("Titre obligatoire.")
 
 # --- PAGE ÉPICERIE ---
 # Ce elif doit être aligné au bord gauche, au même niveau que le "if" initial
@@ -351,6 +351,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
