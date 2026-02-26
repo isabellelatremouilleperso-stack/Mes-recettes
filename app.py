@@ -230,7 +230,7 @@ elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     st.header(f"📖 {r['Titre']}")
     
-    # --- BARRE D'OUTILS RAPIDE (EN HAUT) ---
+    # --- BARRE D'OUTILS RAPIDE ---
     btn_col1, btn_col2, btn_col3 = st.columns([1.5, 1, 1])
     
     if btn_col1.button("⬅ Retour", use_container_width=True):
@@ -239,13 +239,28 @@ elif st.session_state.page == "details":
     if btn_col2.button("✏️ Éditer", use_container_width=True):
         st.session_state.page = "edit"; st.rerun()
         
+    # Le bouton poubelle active maintenant un mode "confirmation"
     if btn_col3.button("🗑️", use_container_width=True):
-        if send_action({"action": "delete", "titre": r['Titre']}):
-            st.success("Supprimé !"); time.sleep(1)
-            st.session_state.page = "home"; st.rerun()
+        st.session_state.confirm_delete = True
+
+    # --- ZONE DE CONFIRMATION DE SUPPRESSION ---
+    if st.session_state.get('confirm_delete', False):
+        st.error("⚠️ Voulez-vous vraiment supprimer cette recette ?")
+        c1, c2 = st.columns(2)
+        if c1.button("✅ OUI, Supprimer", use_container_width=True, type="primary"):
+            if send_action({"action": "delete", "titre": r['Titre']}):
+                st.session_state.confirm_delete = False
+                st.success("Supprimé !"); time.sleep(1)
+                st.session_state.page = "home"; st.rerun()
+        if c2.button("❌ NON, Annuler", use_container_width=True):
+            st.session_state.confirm_delete = False
+            st.rerun()
     
     st.divider()
     # ---------------------------------------
+
+    c1, c2 = st.columns([1, 1.2])
+    # ... (Le reste du code pour les images et ingrédients reste le même)
 
     c1, c2 = st.columns([1, 1.2])
     with c1:
@@ -429,6 +444,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
