@@ -102,7 +102,7 @@ if "page" not in st.session_state: st.session_state.page = "home"
 # 3. SIDEBAR (Navigation Unique)
 # ======================================================
 with st.sidebar:
-    # 1. Le Style CSS (Toujours à l'intérieur du with)
+    # 1. Style CSS pour le logo rond
     st.markdown("""
     <style>
         .logo-rond {
@@ -117,34 +117,30 @@ with st.sidebar:
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. L'IMAGE (Elle DOIT avoir les espaces devant pour être dans la sidebar)
+    # 2. Affichage du Logo et du Titre
     st.markdown('<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond">', unsafe_allow_html=True)
-    
-    # 3. LE TITRE
     st.title("🍳 Mes Recettes")
 
-    # 4. Tes boutons (déjà corrects dans ton code)
-    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+    # 3. Boutons de Navigation (UN SEUL EXEMPLAIRE de chaque)
+    if st.button("📚 Bibliothèque", use_container_width=True, key="side_nav_home"): 
         st.session_state.page = "home"; st.rerun()
-    # ... garde la suite de tes boutons comme ils sont ...
-    # ... tes boutons (Lignes 121 et suivantes) sont déjà bien décalés
-    # Un seul exemplaire de chaque bouton avec des "keys" pour être sûr
-    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
-        st.session_state.page = "home"; st.rerun()
-    if st.button("📅 Planning Repas", use_container_width=True, key="nav_plan"): 
+        
+    if st.button("📅 Planning Repas", use_container_width=True, key="side_nav_plan"): 
         st.session_state.page = "planning"; st.rerun()
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+        
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_nav_shop"): 
         st.session_state.page = "shop"; st.rerun()
     
     st.divider()
     
-    if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True, key="nav_add"): 
+    if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True, key="side_nav_add"): 
         st.session_state.page = "add"; st.rerun()
-    if st.button("⭐ Play Store", use_container_width=True, key="nav_play"): 
+        
+    if st.button("⭐ Play Store", use_container_width=True, key="side_nav_play"): 
         st.session_state.page = "playstore"; st.rerun()
-    if st.button("❓ Aide", use_container_width=True, key="nav_help"): 
+        
+    if st.button("❓ Aide", use_container_width=True, key="side_nav_help"): 
         st.session_state.page = "help"; st.rerun()
-
 # ======================================================
 # 4. PAGES
 # ======================================================
@@ -357,6 +353,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
