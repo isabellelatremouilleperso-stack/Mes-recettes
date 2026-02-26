@@ -182,8 +182,8 @@ elif st.session_state.page == "home":
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
                         st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><div class="recipe-title">{row["Titre"]}</div></div>', unsafe_allow_html=True)
                         
-                        # UN SEUL BOUTON ICI : VOIR
-                        if st.button("👁️ Voir la recette", key=f"v_{i+j}", use_container_width=True):
+                       # LE BOUTON DEVIENT VERT GRÂCE AU TYPE PRIMARY
+                        if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True, type="primary"):
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"
                             st.rerun()
@@ -408,5 +408,6 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
