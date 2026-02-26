@@ -220,33 +220,45 @@ elif st.session_state.page == "details":
     # DISPOSITION : IMAGE & NOTES (GAUCHE) | INGRÉDIENTS (DROITE)
     col_gauche, col_droite = st.columns([1, 1.2])
 
-    with col_gauche:
+   with col_gauche:
         # 1. LA PHOTO
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
         
-        # 2. METTRE LES ÉTOILES (Saisie directe)
-        st.write("**Noter cette recette :**")
-        actuelle = int(float(r.get('Note', 0))) if r.get('Note') else 0
-        nouvelle_note = st.feedback("stars", key=f"feed_{r['Titre']}")
+        # 2. ESPACE ÉVALUATION (Pour que ça reste statique et enregistré)
+        st.markdown("### ⭐ Ma Note & Avis")
         
-        # Si l'utilisateur change la note, on envoie l'action tout de suite
-        if nouvelle_note is not None and nouvelle_note + 1 != actuelle:
-            if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note + 1}):
-                st.success(f"Note mise à jour : {nouvelle_note + 1} ⭐")
-                time.sleep(1)
+        # On récupère les valeurs actuelles
+        note_actuelle = int(float(r.get('Note', 0))) if r.get('Note') else 0
+        comm_actuel = str(r.get('Commentaires', ""))
+        
+        # Champs de saisie
+        nouvelle_note = st.slider("Note (étoiles)", 0, 5, note_actuelle)
+        nouveau_comm = st.text_area("Mes commentaires / astuces :", value=comm_actuel, height=100)
+        
+        if st.button("💾 Enregistrer ma note et mon avis"):
+            # On envoie la mise à jour vers Google Sheets
+            succes = send_action({
+                "action": "edit", 
+                "titre": r['Titre'], 
+                "Note": nouvelle_note, 
+                "Commentaires": nouveau_comm
+            })
+            if succes:
+                st.success("Note et commentaires enregistrés !")
                 st.cache_data.clear()
+                # On met à jour la session pour l'affichage immédiat
+                st.session_state.recipe_data['Note'] = nouvelle_note
+                st.session_state.recipe_data['Commentaires'] = nouveau_comm
                 st.rerun()
 
-        # 3. AFFICHAGE DES NOTES / COMMENTAIRES (Juste sous les étoiles)
-        if r.get('Commentaires'):
-            st.info(f"💬 **Note perso :** {r['Commentaires']}")
-        
         st.markdown("---")
+        # 3. TES INFORMATIONS (Catégorie, Portions, Temps)
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Non classé')}")
         st.write(f"**👥 Portions :** {r.get('Portions', '-')}")
-        st.write(f"**⏱ Prépa :** {r.get('Temps_Prepa', '-')} min | **🔥 Cuisson :** {r.get('Temps_Cuisson', '-')} min")
+        st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa', '-')} min")
+        st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson', '-')} min")
         
         if r.get('Source') and "http" in str(r.get('Source')):
             st.link_button("🌐 Voir la source", r['Source'], use_container_width=True)
@@ -458,6 +470,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
