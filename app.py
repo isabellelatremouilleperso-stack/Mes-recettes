@@ -230,15 +230,29 @@ elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     st.header(f"📖 {r['Titre']}")
     
-    if st.button("⬅ Retour à la liste", use_container_width=True): 
-        st.session_state.page = "home"; st.rerun()
+    # --- BARRE D'OUTILS RAPIDE (EN HAUT) ---
+    btn_col1, btn_col2, btn_col3 = st.columns([1.5, 1, 1])
     
+    if btn_col1.button("⬅ Retour", use_container_width=True):
+        st.session_state.page = "home"; st.rerun()
+        
+    if btn_col2.button("✏️ Éditer", use_container_width=True):
+        st.session_state.page = "edit"; st.rerun()
+        
+    if btn_col3.button("🗑️", use_container_width=True):
+        if send_action({"action": "delete", "titre": r['Titre']}):
+            st.success("Supprimé !"); time.sleep(1)
+            st.session_state.page = "home"; st.rerun()
+    
+    st.divider()
+    # ---------------------------------------
+
     c1, c2 = st.columns([1, 1.2])
     with c1:
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
         if r.get('Source') and "http" in str(r['Source']):
-            st.link_button("🌐 Voir le site d'origine", r['Source'], use_container_width=True)
+            st.link_button("🌐 Site d'origine", r['Source'], use_container_width=True)
             
     with c2:
         st.subheader("🛒 Ingrédients")
@@ -252,33 +266,12 @@ elif st.session_state.page == "details":
             if st.button("📥 Ajouter à l'épicerie", use_container_width=True, type="primary"):
                 for it in sel:
                     send_action({"action": "add_shop", "article": it})
-                st.toast(f"{len(sel)} articles ajoutés !"); time.sleep(0.5)
+                st.toast("Ajouté !"); time.sleep(0.5)
                 st.session_state.page = "shop"; st.rerun()
 
     st.divider()
     st.subheader("📝 Préparation")
     st.info(r['Préparation'] if r['Préparation'] else "Aucune étape saisie.")
-
-    # --- NOUVELLE SECTION : GESTION DE LA RECETTE ---
-    st.divider()
-    st.subheader("⚙️ Gestion")
-    
-    # On utilise un expander pour que ce soit discret
-    with st.expander("Modifier ou Supprimer cette recette"):
-        col_ed, col_del = st.columns(2)
-        
-        # Bouton Éditer (Bleu)
-        if col_ed.button("✏️ Éditer", use_container_width=True):
-            st.session_state.recipe_data = r
-            st.session_state.page = "edit"
-            st.rerun()
-            
-        # Bouton Supprimer (Rouge)
-        if col_del.button("🗑️ Supprimer", use_container_width=True):
-            if send_action({"action": "delete", "titre": r['Titre']}):
-                st.success("Recette supprimée !")
-                time.sleep(1)
-                st.session_state.page = "home"; st.rerun()
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
     try:
@@ -436,6 +429,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
