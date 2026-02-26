@@ -410,61 +410,37 @@ elif st.session_state.page == "shop":
     except:
         st.error("Erreur lors du chargement de la liste.")
 
-elif st.session_state.page == "aide":
-    st.title("❓ Centre d'Aide")
-    st.subheader("Comment utiliser votre carnet de recettes")
+elif st.session_state.page == "add":
+    st.header("➕ Nouvelle Recette")
+    t1, t2, t3 = st.tabs(["🔗 Réseaux", "📝 Vrac", "⌨️ Manuel"])
 
-    # Style pour rendre les expanders plus visibles
-    st.markdown("""
-        <style>
-        .stExpander {
-            background-color: #1e2130 !important;
-            border-radius: 10px !important;
-            border: 1px solid #3e445b !important;
-            margin-bottom: 10px !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
+    with t1:
+        st.markdown("### 📱 Instagram / TikTok / FB")
+        soc_url = st.text_input("Lien de la vidéo")
+        soc_titre = st.text_input("Nom du plat")
+        if st.button("🚀 Sauvegarder le lien", use_container_width=True):
+            if soc_url and soc_titre:
+                send_action({"action": "add", "titre": soc_titre, "source": soc_url, "preparation": f"Lien vidéo : {soc_url}", "date": datetime.now().strftime("%d/%m/%Y")})
+                st.success("Lien enregistré !"); st.session_state.page = "home"; st.rerun()
 
-    # Système d'accordéons interactifs
-    with st.expander("📱 Enregistrer depuis Instagram / TikTok / FB", expanded=True):
-        st.write("""
-            1. Allez sur l'onglet **Ajouter**.
-            2. Choisissez **Réseaux Sociaux**.
-            3. Collez le lien de la vidéo et donnez un nom.
-            4. La recette est sauvegardée avec un bouton direct vers la vidéo !
-        """)
+    with t2:
+        # Bloc Vrac pour le texte brut
+        v_t = st.text_input("Titre", key="v_tit")
+        v_txt = st.text_area("Texte de la recette", height=150)
+        if st.button("🪄 Ajouter en vrac", use_container_width=True):
+            send_action({"action": "add", "titre": v_t, "ingredients": v_txt, "date": datetime.now().strftime("%d/%m/%Y")})
+            st.session_state.page = "home"; st.rerun()
 
-    with st.expander("🛒 Gérer ma liste d'épicerie"):
-        st.write("""
-            - Ouvrez une recette dans la bibliothèque.
-            - Cochez les ingrédients qu'il vous manque.
-            - Cliquez sur le bouton **Ajouter au panier**.
-            - Retrouvez tout dans l'onglet **Épicerie** pour faire vos courses !
-        """)
-
-    with st.expander("📅 Planning & Calendrier"):
-        st.write("""
-            Pour organiser votre semaine :
-            - Ajoutez une date dans le formulaire de la recette.
-            - Les recettes s'afficheront par ordre chronologique dans votre bibliothèque.
-        """)
-
-    with st.expander("🖼️ Astuce pour les images"):
-        st.write("""
-            Vous voulez une jolie photo ? 
-            - Cherchez le plat sur Google Images.
-            - Faites un **appui long** (ou clic droit) sur l'image.
-            - Choisissez **'Copier l'adresse de l'image'**.
-            - Collez ce lien dans la case Image de votre recette.
-        """)
-
-    st.divider()
-    
-    # Bouton de retour plus stylé
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True, type="primary"):
-        st.session_state.page = "home"
-        st.rerun()
+    with t3:
+        # Formulaire complet
+        with st.form("f_man"):
+            m_t = st.text_input("Titre *")
+            m_cat = st.selectbox("Catégorie", CATEGORIES)
+            m_ing = st.text_area("Ingrédients")
+            m_pre = st.text_area("Préparation")
+            if st.form_submit_button("💾 Créer la fiche"):
+                send_action({"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
+                st.session_state.page = "home"; st.rerun()
 
 
 
