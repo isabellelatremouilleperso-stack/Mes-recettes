@@ -6,6 +6,24 @@ import time
 from bs4 import BeautifulSoup
 import urllib.parse
 
+st.set_page_config(page_title="Mes Recettes", layout="wide")
+
+# FORCE LE DESIGN DES BOITES SOMBRES
+st.markdown("""
+    <style>
+    .help-box {
+        background-color: #1e2130 !important;
+        padding: 20px !important;
+        border-radius: 15px !important;
+        border-left: 6px solid #2e7d32 !important;
+        margin-bottom: 20px !important;
+        color: white !important;
+    }
+    .help-box h3 { color: #4caf50 !important; margin-top: 0 !important; }
+    .help-box p { color: #cfd8dc !important; }
+    </style>
+""", unsafe_allow_html=True)
+
 # ======================================================
 # 1. CONFIGURATION & DESIGN
 # ======================================================
@@ -442,15 +460,18 @@ elif st.session_state.page == "add":
                 st.rerun()
                 
 elif st.session_state.page == "aide":
-    st.markdown("""
-        <div style="background-color: blue; padding: 50px; border-radius: 20px; text-align: center;">
-            <h1 style="color: white;">TEST DE MISE À JOUR</h1>
-            <p style="color: white;">Si vous voyez ce message sur fond bleu, le code fonctionne !</p>
-        </div>
-    """, unsafe_allow_html=True)
-    if st.button("⬅ Retour"):
+    st.header("❓ Aide & Tutoriel")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown('<div class="help-box"><h3>📝 Ajouter</h3><p>Utilisez l\'onglet <b>Réseaux Sociaux</b> pour Instagram/TikTok. Collez le lien dans <b>Source</b> pour ne pas perdre la vidéo.</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="help-box"><h3>🛒 Épicerie</h3><p>Cochez les ingrédients manquants dans une recette. Ils s\'ajoutent tout seuls à votre liste de courses.</p></div>', unsafe_allow_html=True)
+    
+    with col_b:
+        st.markdown('<div class="help-box"><h3>📅 Planning</h3><p>Saisissez une date sur la fiche d\'une recette. Elle apparaîtra dans votre calendrier de la semaine.</p></div>', unsafe_allow_html=True)
+        st.markdown('<div class="help-box"><h3>⭐ Notes</h3><p>Donnez des étoiles et notez vos astuces (ex: "Cuisson 10min") avant de sauvegarder.</p></div>', unsafe_allow_html=True)
+
+    if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"; st.rerun()
-
-
 
 
