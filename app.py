@@ -250,33 +250,33 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
-# --- PAGE PLAYSTORE ---
 elif st.session_state.page == "playstore":
     st.markdown(f'<center><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-playstore"></center>', unsafe_allow_html=True)
     st.markdown("""
     <center>
-        <h2>Mes Recettes Pro</h2>
-        <p style="color: #e67e22; font-weight: bold;">⭐ 4.9 ★ (128 avis)</p>
-        <p>👩‍🍳 Par Isabelle Latrémouille | 📥 1 000+ téléchargements</p>
+        <h3>Mes Recettes Pro</h3>
+        <p>👩‍🍳 Isabelle Latrémouille</p>
+        <p style="color: #e67e22;">⭐ 4.9 ★ (128 avis)</p>
+        <p>📥 1 000+ téléchargements</p>
     </center>
     """, unsafe_allow_html=True)
-    
-    if st.button("📥 Installer l'application", use_container_width=True, type="primary"):
-        st.success("Lien de téléchargement généré ! 🎉")
+
+    if st.button("📥 Installer", use_container_width=True, key="install_btn"):
+        st.success("Application installée avec succès ! 🎉")
     
     st.divider()
     
-    # Affichage des captures d'écran
+    # Grille d'images (Captures d'écran)
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", caption="Ma Bibliothèque")
+        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", use_container_width=True)
     with c2:
-        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", caption="Détails Recette")
+        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", use_container_width=True)
     with c3:
-        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", caption="Liste d'Épicerie")
-    
+        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", use_container_width=True)
+
     st.divider()
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True, key="back_play"):
         st.session_state.page = "home"
         st.rerun()
 
@@ -292,4 +292,5 @@ elif st.session_state.page == "help":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
