@@ -275,6 +275,14 @@ elif st.session_state.page == "home":
 # --- AJOUTER RECETTE (IMPORT URL + VRAC + MANUEL) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
+    # Bouton d'aide à la recherche
+    st.markdown(f"""
+        <a href="https://www.google.com/search?q=recettes+de+cuisine" target="_blank" style="text-decoration: none;">
+            <div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px;">
+                🔍 Chercher une idée sur Google
+            </div>
+        </a>
+    """, unsafe_allow_html=True)
     tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
     
     with tab1:
@@ -423,6 +431,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
