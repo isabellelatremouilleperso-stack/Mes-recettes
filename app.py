@@ -250,33 +250,65 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
+# --- PAGE PLAY STORE ---
 elif st.session_state.page == "playstore":
-    st.markdown(f'<center><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-playstore"></center>', unsafe_allow_html=True)
-    st.markdown("""
-    <center>
-        <h3>Mes Recettes Pro</h3>
-        <p>👩‍🍳 Isabelle Latrémouille</p>
-        <p style="color: #e67e22;">⭐ 4.9 ★ (128 avis)</p>
-        <p>📥 1 000+ téléchargements</p>
-    </center>
-    """, unsafe_allow_html=True)
-
-    if st.button("📥 Installer", use_container_width=True, key="install_btn"):
+    # En-tête avec Logo et Infos
+    col_logo, col_info = st.columns([1, 3])
+    
+    with col_logo:
+        # Ton vrai logo
+        st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=120)
+        
+    with col_info:
+        st.markdown("""
+        ### Mes Recettes Pro
+        **👩‍🍳 Isabelle Latrémouille** ⭐ 4.9 ★ (128 avis)  
+        📥 1 000+ téléchargements
+        """)
+    
+    # Bouton d'installation
+    if st.button("📥 Installer l'application", use_container_width=True, type="primary", key="install_play"):
         st.success("Application installée avec succès ! 🎉")
     
     st.divider()
     
-    # Grille d'images (Captures d'écran)
+    # Section Aperçu (Captures d'écran réelles)
+    st.subheader("📸 Aperçu")
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", use_container_width=True)
+        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", caption="Ma Bibliothèque")
     with c2:
-        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", use_container_width=True)
+        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", caption="Détails de Recette")
     with c3:
-        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", use_container_width=True)
+        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", caption="Liste d'Épicerie")
+    
+    st.divider()
+    
+    # Description et Infos Techniques
+    col_desc, col_tech = st.columns(2)
+    
+    with col_desc:
+        st.subheader("📝 À propos")
+        st.write("""
+        **Mes Recettes Pro** est votre compagnon culinaire ultime.
+        * ✔ Gestion intuitive des recettes
+        * ✔ Système de notes ⭐
+        * ✔ Planning hebdomadaire 📅
+        * ✔ Liste d'épicerie intelligente 🛒
+        * ✔ Synchronisation Cloud
+        """)
+        
+    with col_tech:
+        st.subheader("ℹ️ Informations")
+        st.write("""
+        **Version** : 2.0 Premium  
+        **Mise à jour** : Février 2026  
+        **Catégorie** : Cuisine  
+        **Développeur** : Isabelle Latrémouille
+        """)
 
     st.divider()
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True, key="back_play"):
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True, key="back_from_play"):
         st.session_state.page = "home"
         st.rerun()
 
@@ -292,5 +324,6 @@ elif st.session_state.page == "help":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
 
