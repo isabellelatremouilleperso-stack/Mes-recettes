@@ -102,24 +102,31 @@ if "page" not in st.session_state: st.session_state.page = "home"
 # 3. SIDEBAR (Navigation Unique)
 # ======================================================
 with st.sidebar:
-    # Style CSS (Lignes 106 à 115) - Bien décalé à droite
+    # 1. Le Style CSS (Toujours à l'intérieur du with)
     st.markdown("""
     <style>
         .logo-rond {
-            width: 100px; height: 100px;
-            border-radius: 50%; object-fit: cover;
-            border: 3px solid #e67e22;
-            margin: 0 auto 20px auto; display: block;
+            width: 100px !important;
+            height: 100px !important;
+            border-radius: 50% !important;
+            object-fit: cover !important;
+            border: 3px solid #e67e22 !important;
+            margin: 0 auto 20px auto !important;
+            display: block !important;
         }
     </style>
     """, unsafe_allow_html=True)
 
-    # L'IMAGE (Ligne 117) - DOIT ÊTRE DÉCALÉE AUSSI !
+    # 2. L'IMAGE (Elle DOIT avoir les espaces devant pour être dans la sidebar)
     st.markdown('<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond">', unsafe_allow_html=True)
     
-    # LE TITRE (Ligne 118) - DOIT ÊTRE DÉCALÉ AUSSI !
+    # 3. LE TITRE
     st.title("🍳 Mes Recettes")
 
+    # 4. Tes boutons (déjà corrects dans ton code)
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+        st.session_state.page = "home"; st.rerun()
+    # ... garde la suite de tes boutons comme ils sont ...
     # ... tes boutons (Lignes 121 et suivantes) sont déjà bien décalés
     # Un seul exemplaire de chaque bouton avec des "keys" pour être sûr
     if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
@@ -350,6 +357,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
