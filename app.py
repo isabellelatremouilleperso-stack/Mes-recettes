@@ -162,23 +162,25 @@ elif st.session_state.page == "home":
         if cat_choisie != "Toutes": mask = mask & (df['Catégorie'] == cat_choisie)
         filtered = df[mask]
         
-        rows = filtered.reset_index(drop=True)
+      rows = filtered.reset_index(drop=True)
         for i in range(0, len(rows), 3):
             cols = st.columns(3)
             for j in range(3):
                 if i + j < len(rows):
                     row = rows.iloc[i + j]
                     with cols[j]:
+                        # Affichage de la carte
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
                         st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><div class="recipe-title">{row["Titre"]}</div></div>', unsafe_allow_html=True)
-                        b1, b2, b3 = st.columns(3)
-                        if b1.button("👁️", key=f"v_{i+j}"):
-                            st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
-                        if b2.button("✏️", key=f"e_{i+j}"):
-                            st.session_state.recipe_data = row.to_dict(); st.session_state.page = "edit"; st.rerun()
-                        if b3.button("🗑️", key=f"d_{i+j}"):
-                            if send_action({"action": "delete", "titre": row['Titre']}):
-                                st.success("Supprimé !"); time.sleep(1); st.rerun()
+                        
+                        # UN SEUL BOUTON ICI : VOIR
+                        if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
+
+    else:
+        st.warning("Aucune donnée trouvée dans le fichier Excel.")
 
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
@@ -399,3 +401,4 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
