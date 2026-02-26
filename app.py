@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 # ======================================================
-# 1. CONFIGURATION & DESIGN
+# CONFIGURATION & DESIGN
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
@@ -22,7 +22,6 @@ st.markdown("""
         background-color: #1e2129;
         color: #ffffff;
     }
-    .sidebar .css-1d391kg { font-weight: bold !important; }
 
     /* LISTE D'ÉPICERIE */
     .stCheckbox label p {
@@ -74,7 +73,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ======================================================
-# 2. LIENS & CONSTANTES
+# LIENS & CONSTANTES
 # ======================================================
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
@@ -83,7 +82,7 @@ URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCb
 CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
 
 # ======================================================
-# 3. FONCTIONS
+# FONCTIONS
 # ======================================================
 def send_action(payload):
     with st.spinner("🚀 Action..."):
@@ -120,7 +119,7 @@ def load_data():
 if "page" not in st.session_state: st.session_state.page = "home"
 
 # ======================================================
-# 4. SIDEBAR
+# SIDEBAR
 # ======================================================
 with st.sidebar:
     st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=100)
@@ -133,16 +132,18 @@ with st.sidebar:
     if st.button("❓ Aide"): st.session_state.page="help"; st.rerun()
 
 # ======================================================
-# 5. PAGES
+# PAGES
 # ======================================================
 
-# --- PAGE ACCUEIL ---
+# --- PAGE BIBLIOTHEQUE ---
 if st.session_state.page=="home":
-    st.header("📚 Ma Bibliothèque")
+    c1, c2 = st.columns([4,1])
+    c1.header("📚 Ma Bibliothèque")
+    if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
     df = load_data()
     if not df.empty:
         col_search, col_cat = st.columns([2,1])
-        with col_search: search = st.text_input("🔍 Rechercher...")
+        with col_search: search = st.text_input("🔍 Rechercher...", placeholder="Ex: Lasagne...")
         with col_cat:
             liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
             cat_choisie = st.selectbox("📁 Catégorie", liste_categories)
@@ -168,7 +169,7 @@ if st.session_state.page=="home":
                             st.rerun()
     else: st.warning("Aucune donnée trouvée.")
 
-# --- PAGE DÉTAILS ---
+# --- PAGE DETAILS ---
 elif st.session_state.page=="details":
     r = st.session_state.recipe_data
     st.header(f"📖 {r.get('Titre','Sans titre')}")
@@ -199,12 +200,16 @@ elif st.session_state.page=="details":
 # --- PAGE AJOUT ---
 elif st.session_state.page=="add":
     st.header("➕ Ajouter une Recette")
-    tab1, tab2, tab3 = st.tabs(["🌐 URL","🎬 Vidéo","📝 Vrac"])
-    
-    # --- Onglet URL ---
+    tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Auto)", "🎬 Lien Vidéo", "📝 Vrac / Manuel"])
+    # URL
     with tab1:
+        google_query = st.text_input("🔎 Rechercher sur Google")
+        if google_query:
+            query_encoded = urllib.parse.quote(google_query)
+            google_url = f"https://www.google.com/search?q={query_encoded}"
+            st.markdown(f"[🌍 Rechercher sur Google]({google_url})", unsafe_allow_html=True)
         url_input = st.text_input("Collez l'URL ici")
-        if st.button("🔍 Analyser site"):
+        if st.button("🔍 Analyser le site"):
             titre, contenu = scrape_url(url_input)
             if titre:
                 st.session_state.temp_titre = titre
@@ -218,8 +223,7 @@ elif st.session_state.page=="add":
                 send_action({"action":"add","titre":t_edit,"preparation":c_edit,"source":url_input,"date":datetime.now().strftime("%d/%m/%Y")})
                 del st.session_state.temp_titre
                 st.success("Recette ajoutée !")
-    
-    # --- Onglet Vidéo ---
+    # Vidéo
     with tab2:
         vid_url = st.text_input("Lien vidéo (Insta/TikTok/FB)")
         vid_titre = st.text_input("Nom de la recette")
@@ -227,8 +231,7 @@ elif st.session_state.page=="add":
             if vid_url and vid_titre:
                 send_action({"action":"add","titre":vid_titre,"preparation":f"Vidéo : {vid_url}","source":vid_url,"date":datetime.now().strftime("%d/%m/%Y")})
                 st.success("Vidéo enregistrée !")
-    
-    # --- Onglet Vrac ---
+    # Vrac
     with tab3:
         v_t = st.text_input("Titre")
         v_cat = st.selectbox("Catégorie",CATEGORIES)
@@ -257,7 +260,21 @@ elif st.session_state.page=="shop":
                 send_action({"action":"clear_shop"}); st.rerun()
     except: st.error("Erreur chargement liste")
 
-# --- PAGE PLAY STORE ---
+# --- PAGE PLANNING ---
+elif st.session_state.page=="planning":
+    st.header("📅 Planning Repas")
+    df = load_data()
+    if not df.empty:
+        plan = df[df['Date_Prevue'].astype(str).str.strip()!=""].sort_values(by='Date_Prevue')
+        for _,row in plan.iterrows():
+            with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
+                if st.button("Voir la fiche", key=f"plan_{row['Titre']}"):
+                    st.session_state.recipe_data = row.to_dict()
+                    st.session_state.page = "details"
+                    st.rerun()
+    if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
+
+# --- PAGE PLAYSTORE ---
 elif st.session_state.page=="playstore":
     st.markdown("""
     <div class="playstore-container">
@@ -267,13 +284,17 @@ elif st.session_state.page=="playstore":
         <p>⭐ 4.9 (128 avis) | 📥 1 000+ téléchargements</p>
     </div>
     """, unsafe_allow_html=True)
+    c1,c2,c3 = st.columns(3)
+    c1.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", caption="Bibliothèque")
+    c2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", caption="Détails recette")
+    c3.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", caption="Épicerie")
     if st.button("📥 Installer l'application", use_container_width=True): st.success("Installée ! 🎉")
 
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
     if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
-    st.markdown('<div class="help-box"><h3>📝 Ajouter Recette</h3><p>Onglet URL / Vidéo / Vrac pour ajouter vos recettes.</p></div>', unsafe_allow_html=True)
-    st.markdown('<div class="help-box"><h3>📅 Planning Repas</h3><p>Planifiez vos recettes facilement.</p></div>', unsafe_allow_html=True)
-    st.markdown('<div class="help-box"><h3>🛒 Liste Épicerie</h3><p>Cochez les ingrédients pour les ajouter ici.</p></div>', unsafe_allow_html=True)
-    st.markdown('<div class="help-box"><h3>🌐 Liens Import</h3><p>Google Sheets : {0}<br>Épicerie : {1}<br>Script : {2}</p></div>'.format(URL_CSV, URL_CSV_SHOP, URL_SCRIPT), unsafe_allow_html=True)
+    st.markdown('<div class="help-box"><h3>📝 Ajouter Recette</h3><p>Onglets URL, Vidéo ou Vrac pour ajouter vos recettes.</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="help-box"><h3>📅 Planning Repas</h3><p>Planifiez vos recettes facilement et ouvrez les détails.</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="help-box"><h3>🛒 Liste d\'épicerie</h3><p>Cochez les ingrédients pour les envoyer ici. Supprimez ou videz la liste facilement.</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="help-box"><h3>🌐 Liens Utiles</h3><p>Google Sheet Recettes : {0}<br>Épicerie : {1}<br>Script : {2}</p></div>'.format(URL_CSV, URL_CSV_SHOP, URL_SCRIPT), unsafe_allow_html=True)
