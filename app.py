@@ -274,34 +274,55 @@ elif st.session_state.page == "add":
     # On utilise 3 onglets pour que tu aies toutes les options sous la main
     tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Auto)", "🎬 Lien Vidéo", "📝 Vrac / Manuel"])
 
-   # --- 1. L'IMPORTATION URL (Le bouton "Google" / Analyse) ---
+# --- 1. L'IMPORTATION URL (Le bouton "Google" / Analyse) ---
     with tab1:
         st.subheader("Extraire depuis un site")
         
-        # On s'assure que le champ URL est bien là
-        web_url = st.text_input("Collez l'URL ici", key="web_url_input", placeholder="https://...")
+        # Le champ de saisie
+        url_input = st.text_input("Collez l'URL ici", key="url_auto_google")
         
-        # FORCE L'AFFICHAGE DU BOUTON :
-        # S'il n'apparaît pas, vérifie s'il n'y a pas un message d'erreur rouge tout en haut du site
-        if st.button("🔍 Analyser le site", key="btn_google_new", use_container_width=True):
-            if web_url:
-                with st.spinner("Analyse en cours..."):
+        # LE BOUTON : On le met seul, sans "if" autour pour l'affichage
+        bouton_clique = st.button("🔍 Analyser le site", key="btn_google_permanent")
+        
+        # L'ACTION : Elle ne se déclenche QUE si on clique
+        if bouton_clique:
+            if url_input:
+                with st.spinner("Recherche et analyse en cours..."):
                     try:
-                        res = scrape_url(web_url)
-                        if res and res[0]: # Si on a un titre
-                            st.session_state.temp_titre = res[0]
-                            # Nettoyage rapide du contenu
-                            lignes = res[1].split('\n')
-                            tri = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
-                            st.session_state.temp_contenu = "\n".join(tri)
+                        # Appel de ta fonction scrape_url
+                        resultat = scrape_url(url_input)
+                        if resultat and resultat[0]:
+                            st.session_state.temp_titre = resultat[0]
+                            # Tri des lignes pour ne garder que l'essentiel
+                            lignes = resultat[1].split('\n')
+                            propre = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
+                            st.session_state.temp_contenu = "\n".join(propre)
                             st.rerun()
                         else:
-                            st.error("L'analyse n'a rien donné. Vérifie l'URL.")
+                            st.error("L'analyse n'a rien trouvé sur ce site.")
                     except Exception as e:
-                        st.error(f"Erreur technique : {e}")
+                        st.error(f"Erreur : {e}")
             else:
-                st.warning("Veuillez entrer une URL d'abord.")
+                st.warning("Veuillez coller un lien d'abord.")
 
+        # ZONE DE MODIFICATION (Apparaît après l'analyse)
+        if "temp_titre" in st.session_state:
+            st.markdown("---")
+            edit_titre = st.text_input("Titre extrait", value=st.session_state.temp_titre)
+            edit_cont = st.text_area("Contenu extrait (Triez ici !)", value=st.session_state.temp_contenu, height=250)
+            
+            if st.button("💾 Enregistrer dans la bibliothèque"):
+                send_action({
+                    "action": "add", 
+                    "titre": edit_titre, 
+                    "preparation": edit_cont, 
+                    "source": url_input, 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
+                del st.session_state.temp_titre
+                st.success("Recette enregistrée !")
+                st.session_state.page = "home"
+                st.rerun()
         # Affichage des champs de modification après l'analyse
         if "temp_titre" in st.session_state:
             st.divider()
@@ -515,6 +536,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
