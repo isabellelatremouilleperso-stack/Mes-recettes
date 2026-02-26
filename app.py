@@ -149,39 +149,46 @@ elif st.session_state.page == "planning":
 elif st.session_state.page == "home":
     c1, c2 = st.columns([4, 1])
     c1.header("📚 Ma Bibliothèque")
-    if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
+    if c2.button("🔄 Actualiser"): 
+        st.cache_data.clear()
+        st.rerun()
     
+    st.divider()
     df = load_data()
+    
     if not df.empty:
         col_search, col_cat = st.columns([2, 1])
-        search = col_search.text_input("🔍 Rechercher...", placeholder="Ex: Lasagne...")
-        liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
-        cat_choisie = col_cat.selectbox("📁 Catégorie", liste_categories)
+        with col_search:
+            search = st.text_input("🔍 Rechercher...", placeholder="Ex: Lasagne...")
+        with col_cat:
+            liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
+            cat_choisie = st.selectbox("📁 Catégorie", liste_categories)
         
+        # --- FILTRAGE ---
         mask = df['Titre'].str.contains(search, case=False, na=False)
-        if cat_choisie != "Toutes": mask = mask & (df['Catégorie'] == cat_choisie)
-        filtered = df[mask]
+        if cat_choisie != "Toutes":
+            mask = mask & (df['Catégorie'] == cat_choisie)
+            
+        # ICI : Alignement parfait sous le "if cat_choisie"
+        rows = filtered.reset_index(drop=True) if 'filtered' in locals() else df[mask].reset_index(drop=True)
         
-      rows = filtered.reset_index(drop=True)
+        # --- AFFICHAGE DE LA GRILLE ---
         for i in range(0, len(rows), 3):
             cols = st.columns(3)
             for j in range(3):
                 if i + j < len(rows):
                     row = rows.iloc[i + j]
                     with cols[j]:
-                        # Affichage de la carte
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
                         st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><div class="recipe-title">{row["Titre"]}</div></div>', unsafe_allow_html=True)
                         
                         # UN SEUL BOUTON ICI : VOIR
-                        if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
+                        if st.button("👁️ Voir la recette", key=f"v_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"
                             st.rerun()
-
     else:
         st.warning("Aucune donnée trouvée dans le fichier Excel.")
-
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     st.markdown('<a href="https://www.google.com/search?q=recettes+de+cuisine" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px;">🔍 Chercher une idée sur Google</div></a>', unsafe_allow_html=True)
@@ -401,4 +408,5 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
