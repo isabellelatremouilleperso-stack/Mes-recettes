@@ -410,23 +410,52 @@ elif st.session_state.page == "shop":
     except:
         st.error("Erreur lors du chargement de la liste.")
 
-# --- PAGE AIDE (RESTAURÉE) ---
-elif st.session_state.page == "help":
-    st.title("❓ Aide & Mode d'emploi")
+elif st.session_state.page == "aide":
+    st.header("❓ Centre d'Aide & Astuces")
+    
+    # CSS local pour les boîtes d'aide (si pas déjà en haut du fichier)
     st.markdown("""
-    ### Bienvenue dans votre carnet de recettes !
+        <style>
+        .help-box {
+            background-color: #1e2130;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #2e7d32;
+            margin-bottom: 20px;
+            min-height: 180px;
+        }
+        .help-box h3 { color: #4caf50; margin-top: 0; }
+        .help-box p { font-size: 0.9rem; color: #cfd8dc; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    col_a, col_b = st.columns(2)
     
-    1. **Bibliothèque** : C'est ici que se trouvent toutes vos recettes. Cliquez sur l'image ou le bouton pour voir le détail.
-    2. **Ajouter** : 
-        - **Import URL** : Collez un lien (ex: Marmiton) pour extraire le texte.
-        - **Tri & Vrac** : Nettoyez le texte extrait ou collez votre propre texte brut ici.
-        - **Manuel** : Remplissez les cases une par une.
-    3. **Épicerie** : Cochez les ingrédients dans une recette, ils s'ajouteront à votre liste globale.
-    4. **Planning** : Pour l'instant, le planning se gère en ajoutant une date dans votre fichier Excel.
-    
-    **Astuce** : Si une modification ne s'affiche pas, cliquez sur le bouton **🔄 Actualiser** en haut de la bibliothèque.
-    """)
-    if st.button("⬅ Retour à l'accueil"):
+    with col_a:
+        st.markdown("""<div class="help-box">
+            <h3>📝 Ajouter une Recette</h3>
+            <p>Utilisez l'onglet <b>Réseaux Sociaux</b> pour Instagram ou TikTok. 
+            Collez le lien dans la case <b>Source</b> pour ne jamais perdre la vidéo d'origine.</p>
+        </div>""", unsafe_allow_html=True)
+        
+        st.markdown("""<div class="help-box">
+            <h3>🛒 Liste d'Épicerie</h3>
+            <p>Dans la fiche d'une recette, cochez les ingrédients manquants. Ils s'ajoutent à votre liste globale automatiquement.</p>
+        </div>""", unsafe_allow_html=True)
+
+    with col_b:
+        st.markdown("""<div class="help-box">
+            <h3>📅 Planning & Calendrier</h3>
+            <p>Ouvrez une recette, choisissez une date et validez. Le plat apparaîtra dans votre menu de la semaine.</p>
+        </div>""", unsafe_allow_html=True)
+        
+        st.markdown("""<div class="help-box">
+            <h3>🖼️ Images du Web</h3>
+            <p>Pour l'image, faites un clic-droit sur une photo du web et choisissez <b>'Copier l'adresse de l'image'</b> puis collez-la.</p>
+        </div>""", unsafe_allow_html=True)
+
+    st.write("---")
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"; st.rerun()
 
 
