@@ -260,7 +260,7 @@ elif st.session_state.page=="add":
                     st.error("Titre obligatoire.")
 
 # --- PAGE ÉPICERIE ---
-# IMPORTANT : Ce 'elif' doit être aligné tout à gauche de votre éditeur
+# Ce elif doit toucher le bord gauche de votre éditeur
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
     if st.button("⬅ Retour"): 
@@ -362,6 +362,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
