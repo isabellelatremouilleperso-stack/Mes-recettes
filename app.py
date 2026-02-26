@@ -203,81 +203,71 @@ elif st.session_state.page == "details":
     st.subheader("📝 Préparation")
     st.info(r['Préparation'] if r['Préparation'] else "Aucune étape.")
 
-# --- PAGE AJOUTER (Complète avec URL, Vidéo et Manuel) ---
+# --- PAGE AJOUTER (Version avec URL, Vidéo et Vrac) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     
-    # On garde les 3 onglets pour que tout soit bien rangé
-    tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Tri intelligent)", "🎬 Lien Vidéo", "⌨️ Manuel"])
+    # On utilise 3 onglets pour que tu aies toutes les options sous la main
+    tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Auto)", "🎬 Lien Vidéo", "📝 Vrac / Manuel"])
 
-    # --- 1. L'IMPORTATION URL AVEC NETTOYAGE ---
+    # --- 1. L'IMPORTATION URL ---
     with tab1:
         st.subheader("Extraire depuis un site")
-        web_url = st.text_input("Collez l'URL (Marmiton, 750g, etc.)", key="web_url")
-        
-        if st.button("🔍 Analyser et Trier", key="btn_web"):
+        web_url = st.text_input("Collez l'URL ici", key="web_url_input")
+        if st.button("🔍 Analyser le site"):
             if web_url:
-                with st.spinner("Tri des données en cours..."):
+                with st.spinner("Analyse..."):
                     titre, contenu = scrape_url(web_url)
                     if titre:
-                        # LE TRI AFFINÉ : On ignore les lignes trop courtes ou trop longues
-                        # pour ne garder que le "vrai" contenu de la recette
+                        # Tri intelligent automatique mais modifiable
                         lignes = contenu.split('\n')
                         tri = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
-                        
                         st.session_state.temp_titre = titre
                         st.session_state.temp_contenu = "\n".join(tri)
-                        st.success("Analyse terminée ! Vérifiez le résultat ci-dessous.")
-                    else:
-                        st.error("Ce site ne permet pas l'extraction automatique.")
-
-        # Zone d'édition pour supprimer le surplus si nécessaire
+        
         if "temp_titre" in st.session_state:
-            with st.container():
-                st.write("---")
-                final_t = st.text_input("Titre détecté", value=st.session_state.temp_titre)
-                final_c = st.text_area("Texte trié (Ingrédients & Étapes)", value=st.session_state.temp_contenu, height=250)
-                st.caption("💡 Vous pouvez effacer les lignes inutiles directement dans le texte ci-dessus.")
-                
-                if st.button("📥 Valider l'Ajout", type="primary"):
-                    send_action({
-                        "action": "add", "titre": final_t, 
-                        "preparation": final_c, "source": web_url,
-                        "date": datetime.now().strftime("%d/%m/%Y")
-                    })
-                    del st.session_state.temp_titre
-                    st.session_state.page = "home"; st.rerun()
-
-    # --- 2. L'IMPORTATION VIDÉO (Inchangé) ---
-    with tab2:
-        st.subheader("Lien Vidéo (Réseaux Sociaux)")
-        s_url = st.text_input("Lien Insta/TikTok/FB")
-        s_t = st.text_input("Nom de la recette", key="soc_titre")
-        if st.button("🚀 Sauvegarder la Vidéo"):
-            if s_url and s_t:
-                send_action({
-                    "action": "add", "titre": s_t, "source": s_url, 
-                    "preparation": f"Lien vidéo : {s_url}", 
-                    "date": datetime.now().strftime("%d/%m/%Y")
-                })
+            t_edit = st.text_input("Titre extrait", value=st.session_state.temp_titre)
+            c_edit = st.text_area("Contenu extrait (Triez ici !)", value=st.session_state.temp_contenu, height=250)
+            if st.button("💾 Enregistrer cet import"):
+                send_action({"action": "add", "titre": t_edit, "preparation": c_edit, "source": web_url, "date": datetime.now().strftime("%d/%m/%Y")})
+                del st.session_state.temp_titre
                 st.session_state.page = "home"; st.rerun()
 
-    # --- 3. LA SAISIE MANUELLE (Inchangé) ---
+    # --- 2. L'IMPORTATION VIDÉO ---
+    with tab2:
+        st.subheader("Lien Vidéo")
+        s_url = st.text_input("Lien Insta/TikTok/FB", key="vid_url")
+        s_t = st.text_input("Nom de la recette", key="vid_titre")
+        if st.button("🚀 Sauvegarder Vidéo"):
+            send_action({"action": "add", "titre": s_t, "source": s_url, "preparation": f"Vidéo : {s_url}", "date": datetime.now().strftime("%d/%m/%Y")})
+            st.session_state.page = "home"; st.rerun()
+
+    # --- 3. L'OPTION VRAC / MANUEL (Celle que tu voulais garder) ---
     with tab3:
-        st.subheader("Saisie Manuelle")
-        with st.form("man_final"):
-            m_t = st.text_input("Titre *")
-            m_cat = st.selectbox("Catégorie", CATEGORIES)
-            m_ing = st.text_area("Ingrédients")
-            m_pre = st.text_area("Préparation")
-            if st.form_submit_button("💾 Enregistrer"):
-                if m_t:
+        st.subheader("Saisie libre (Vrac)")
+        st.info("Collez votre texte ici, triez-le comme vous voulez, puis enregistrez.")
+        
+        # On utilise un formulaire pour le vrac/manuel
+        with st.form("form_vrac"):
+            v_t = st.text_input("Titre de la recette *")
+            v_cat = st.selectbox("Catégorie", CATEGORIES)
+            v_txt = st.text_area("Collez votre texte brut ou vos ingrédients ici", height=300, 
+                                 help="Vous pouvez copier-coller un bloc de texte et supprimer ce qui ne sert à rien.")
+            
+            submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
+            
+            if submit_vrac:
+                if v_t:
                     send_action({
-                        "action": "add", "titre": m_t, "catégorie": m_cat,
-                        "ingredients": m_ing, "preparation": m_pre,
+                        "action": "add", 
+                        "titre": v_t, 
+                        "catégorie": v_cat,
+                        "ingredients": v_txt, # Dans le vrac, on met tout dans ingrédients pour que tu puisses trier après
                         "date": datetime.now().strftime("%d/%m/%Y")
                     })
                     st.session_state.page = "home"; st.rerun()
+                else:
+                    st.error("Le titre est obligatoire.")
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -401,6 +391,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
