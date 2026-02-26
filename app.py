@@ -411,52 +411,60 @@ elif st.session_state.page == "shop":
         st.error("Erreur lors du chargement de la liste.")
 
 elif st.session_state.page == "aide":
-    st.header("❓ Centre d'Aide & Astuces")
-    
-    # CSS local pour les boîtes d'aide (si pas déjà en haut du fichier)
+    st.title("❓ Centre d'Aide")
+    st.subheader("Comment utiliser votre carnet de recettes")
+
+    # Style pour rendre les expanders plus visibles
     st.markdown("""
         <style>
-        .help-box {
-            background-color: #1e2130;
-            padding: 20px;
-            border-radius: 15px;
-            border-left: 5px solid #2e7d32;
-            margin-bottom: 20px;
-            min-height: 180px;
+        .stExpander {
+            background-color: #1e2130 !important;
+            border-radius: 10px !important;
+            border: 1px solid #3e445b !important;
+            margin-bottom: 10px !important;
         }
-        .help-box h3 { color: #4caf50; margin-top: 0; }
-        .help-box p { font-size: 0.9rem; color: #cfd8dc; }
         </style>
     """, unsafe_allow_html=True)
 
-    col_a, col_b = st.columns(2)
+    # Système d'accordéons interactifs
+    with st.expander("📱 Enregistrer depuis Instagram / TikTok / FB", expanded=True):
+        st.write("""
+            1. Allez sur l'onglet **Ajouter**.
+            2. Choisissez **Réseaux Sociaux**.
+            3. Collez le lien de la vidéo et donnez un nom.
+            4. La recette est sauvegardée avec un bouton direct vers la vidéo !
+        """)
+
+    with st.expander("🛒 Gérer ma liste d'épicerie"):
+        st.write("""
+            - Ouvrez une recette dans la bibliothèque.
+            - Cochez les ingrédients qu'il vous manque.
+            - Cliquez sur le bouton **Ajouter au panier**.
+            - Retrouvez tout dans l'onglet **Épicerie** pour faire vos courses !
+        """)
+
+    with st.expander("📅 Planning & Calendrier"):
+        st.write("""
+            Pour organiser votre semaine :
+            - Ajoutez une date dans le formulaire de la recette.
+            - Les recettes s'afficheront par ordre chronologique dans votre bibliothèque.
+        """)
+
+    with st.expander("🖼️ Astuce pour les images"):
+        st.write("""
+            Vous voulez une jolie photo ? 
+            - Cherchez le plat sur Google Images.
+            - Faites un **appui long** (ou clic droit) sur l'image.
+            - Choisissez **'Copier l'adresse de l'image'**.
+            - Collez ce lien dans la case Image de votre recette.
+        """)
+
+    st.divider()
     
-    with col_a:
-        st.markdown("""<div class="help-box">
-            <h3>📝 Ajouter une Recette</h3>
-            <p>Utilisez l'onglet <b>Réseaux Sociaux</b> pour Instagram ou TikTok. 
-            Collez le lien dans la case <b>Source</b> pour ne jamais perdre la vidéo d'origine.</p>
-        </div>""", unsafe_allow_html=True)
-        
-        st.markdown("""<div class="help-box">
-            <h3>🛒 Liste d'Épicerie</h3>
-            <p>Dans la fiche d'une recette, cochez les ingrédients manquants. Ils s'ajoutent à votre liste globale automatiquement.</p>
-        </div>""", unsafe_allow_html=True)
-
-    with col_b:
-        st.markdown("""<div class="help-box">
-            <h3>📅 Planning & Calendrier</h3>
-            <p>Ouvrez une recette, choisissez une date et validez. Le plat apparaîtra dans votre menu de la semaine.</p>
-        </div>""", unsafe_allow_html=True)
-        
-        st.markdown("""<div class="help-box">
-            <h3>🖼️ Images du Web</h3>
-            <p>Pour l'image, faites un clic-droit sur une photo du web et choisissez <b>'Copier l'adresse de l'image'</b> puis collez-la.</p>
-        </div>""", unsafe_allow_html=True)
-
-    st.write("---")
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
-        st.session_state.page = "home"; st.rerun()
+    # Bouton de retour plus stylé
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True, type="primary"):
+        st.session_state.page = "home"
+        st.rerun()
 
 
 
