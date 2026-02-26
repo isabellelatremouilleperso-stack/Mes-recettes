@@ -257,20 +257,6 @@ if submit_vrac:
     else:
             st.error("Titre obligatoire.")
 
-# --- PAGE ÉPICERIE ---
-# Ce elif doit être aligné au bord gauche, au même niveau que le premier "if"
-elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'épicerie")
-    if st.button("⬅ Retour"): 
-        st.session_state.page="home"
-        st.rerun()          
-# REPARTEZ D'ICI : Le elif doit toucher le bord gauche (ou être aligné avec le tout premier IF)
-elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'épicerie")
-    if st.button("⬅ Retour"): 
-        st.session_state.page="home"
-        st.rerun()
-    # ... la suite du code
 
 # --- PAGE ÉPICERIE ---
 # Ce elif doit être aligné au bord gauche, au même niveau que le "if" initial
@@ -365,6 +351,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
