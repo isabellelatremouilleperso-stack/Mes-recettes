@@ -89,12 +89,17 @@ def load_data():
         return pd.DataFrame()
 
 # ======================
-# SESSION & SIDEBAR
+# SIDEBAR
 # ======================
-if "page" not in st.session_state: st.session_state.page="home"
-
 with st.sidebar:
-    st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=100)
+    # On utilise le même style CSS que dans le Play Store pour le logo
+    st.markdown("""
+    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+        <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" 
+             style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #e67e22; object-fit: cover;">
+    </div>
+    """, unsafe_allow_html=True)
+    
     st.title("🍳 Mes Recettes")
     if st.button("📚 Bibliothèque",use_container_width=True,key="side_home"): st.session_state.page="home"; st.rerun()
     if st.button("📅 Planning Repas",use_container_width=True,key="side_plan"): st.session_state.page="planning"; st.rerun()
@@ -330,3 +335,4 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
