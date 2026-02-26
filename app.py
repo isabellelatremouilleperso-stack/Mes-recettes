@@ -441,6 +441,44 @@ elif st.session_state.page == "add":
             if st.form_submit_button("💾 Créer la fiche"):
                 send_action({"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page = "home"; st.rerun()
+                
+elif st.session_state.page == "aide":
+    st.header("❓ Centre d'Aide & Astuces")
+    
+    # INJECTION DU STYLE CSS (Indispensable pour voir les boîtes)
+    st.markdown("""
+        <style>
+        .help-box {
+            background-color: #1e2130;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 5px solid #2e7d32;
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+        .help-box h3 { color: #4caf50; margin-top: 0; font-size: 1.2rem; }
+        .help-box p { color: #cfd8dc; font-size: 0.95rem; line-height: 1.5; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Ligne 1 : Ajouter et Planning
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown('<div class="help-box"><h3>📝 Ajouter une Recette</h3><p>Cliquez sur <b>Ajouter</b>. Remplissez le titre et collez le lien <b>Source</b> (Instagram, TikTok). Pour l\'image, faites un clic-droit sur le web et "Copier l\'adresse de l\'image".</p></div>', unsafe_allow_html=True)
+    with col_b:
+        st.markdown('<div class="help-box"><h3>📅 Utiliser le Planning</h3><p>Ouvrez une recette, choisissez une date dans le calendrier et validez. Le plat apparaîtra automatiquement dans votre section planning de la semaine.</p></div>', unsafe_allow_html=True)
+
+    # Ligne 2 : Épicerie et Évaluation
+    col_c, col_d = st.columns(2)
+    with col_c:
+        st.markdown('<div class="help-box"><h3>🛒 Liste d\'Épicerie</h3><p>Dans la fiche d\'une recette, cochez les ingrédients manquants. Ils s\'ajoutent à votre liste globale sur votre téléphone pour le supermarché !</p></div>', unsafe_allow_html=True)
+    with col_d:
+        st.markdown('<div class="help-box"><h3>⭐ Évaluation & Notes</h3><p>Donnez des étoiles et écrivez vos propres ajustements (ex: "moins de sucre") directement dans la zone de texte avant de sauvegarder.</p></div>', unsafe_allow_html=True)
+
+    st.write("---")
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
 elif st.session_state.page == "aide":
     st.header("❓ Centre d'Aide & Astuces")
     
