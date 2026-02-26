@@ -265,7 +265,7 @@ elif st.session_state.page == "details":
         if col_confirm_2.button("❌ NON, Annuler", use_container_width=True, key="btn_final_cancel"):
             st.session_state.confirm_delete = False
             st.rerun()
-            else:st.error("Erreur de connexion.")
+        else:st.error("Erreur de connexion.")
                 
         # AJOUT DE key="btn_confirm_no" ICI :
         if conf_c2.button("❌ NON, Annuler", use_container_width=True, key="btn_confirm_no"):
@@ -470,6 +470,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
