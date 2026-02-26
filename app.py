@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 # ======================================================
-# CONFIGURATION
+# CONFIGURATION & DESIGN SOMBRE PREMIUM
 # ======================================================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
@@ -15,32 +15,45 @@ st.markdown("""
 <style>
 .stApp { background-color: #0e1117; color: #e0e0e0; }
 h1, h2, h3 { color: #e67e22 !important; }
+
 .recipe-card {
     background-color: #1e2129;
     border: 1px solid #3d4455;
     border-radius: 12px;
     padding: 10px;
     height: 230px;
+    display:flex;
+    flex-direction:column;
 }
 .recipe-img {
-    width: 100%;
-    height: 130px;
-    object-fit: cover;
-    border-radius: 8px;
+    width:100%;
+    height:130px;
+    object-fit:cover;
+    border-radius:8px;
 }
 .recipe-title {
-    color: white;
-    margin-top: 8px;
-    font-size: 0.95rem;
-    font-weight: bold;
-    text-align: center;
+    color:white;
+    margin-top:8px;
+    font-size:0.95rem;
+    font-weight:bold;
+    text-align:center;
+}
+.help-box {
+    background-color:#1e2130;
+    padding:20px;
+    border-radius:15px;
+    border-left:5px solid #e67e22;
+    margin-bottom:20px;
 }
 </style>
 """, unsafe_allow_html=True)
 
-URL_CSV = "TON_LIEN_CSV"
-URL_CSV_SHOP = "TON_LIEN_SHOP"
-URL_SCRIPT = "TON_LIEN_SCRIPT"
+# =======================
+# TES LIENS (NE PAS MODIFIER)
+# =======================
+URL_CSV = "https://docs.google.com/..."
+URL_CSV_SHOP = "https://docs.google.com/..."
+URL_SCRIPT = "https://script.google.com/..."
 
 CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
 
@@ -49,7 +62,7 @@ CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes
 # ======================================================
 def send_action(payload):
     try:
-        r = requests.post(URL_SCRIPT, json=payload, timeout=15)
+        r = requests.post(URL_SCRIPT, json=payload, timeout=20)
         if "Success" in r.text:
             st.cache_data.clear()
             return True
@@ -66,9 +79,7 @@ def scrape_url(url):
         title = title.text.strip() if title else "Recette Importée"
         elements = soup.find_all(['li','p'])
         content = "\n".join(
-            dict.fromkeys(
-                [el.text.strip() for el in elements if 10 < len(el.text.strip()) < 500]
-            )
+            dict.fromkeys([el.text.strip() for el in elements if 10 < len(el.text.strip()) < 500])
         )
         return title, content
     except:
@@ -91,6 +102,7 @@ if "page" not in st.session_state:
 # SIDEBAR
 # ======================================================
 with st.sidebar:
+    st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=100)
     st.title("🍳 Mes Recettes")
 
     if st.button("📚 Bibliothèque", use_container_width=True):
@@ -99,7 +111,8 @@ with st.sidebar:
         st.session_state.page="planning"; st.rerun()
     if st.button("🛒 Épicerie", use_container_width=True):
         st.session_state.page="shop"; st.rerun()
-    if st.button("➕ Ajouter", use_container_width=True, type="primary"):
+    st.divider()
+    if st.button("➕ Ajouter Recette", type="primary", use_container_width=True):
         st.session_state.page="add"; st.rerun()
     if st.button("⭐ Play Store", use_container_width=True):
         st.session_state.page="playstore"; st.rerun()
@@ -115,7 +128,7 @@ if st.session_state.page == "home":
     df = load_data()
 
     if not df.empty:
-        search = st.text_input("🔍 Rechercher")
+        search = st.text_input("🔍 Rechercher...")
         mask = df['Titre'].str.contains(search, case=False, na=False)
         rows = df[mask].reset_index(drop=True)
 
@@ -134,15 +147,13 @@ if st.session_state.page == "home":
                         </div>
                         """, unsafe_allow_html=True)
 
-                        if st.button("Voir", key=f"v{i+j}"):
+                        if st.button("Voir la recette", key=f"v{i+j}"):
                             st.session_state.recipe_data=row.to_dict()
                             st.session_state.page="details"
                             st.rerun()
-    else:
-        st.info("Aucune recette.")
 
 # ======================================================
-# PAGE DÉTAILS
+# PAGE DETAILS
 # ======================================================
 elif st.session_state.page=="details":
 
@@ -151,33 +162,41 @@ elif st.session_state.page=="details":
     if st.button("⬅ Retour"):
         st.session_state.page="home"; st.rerun()
 
-    st.header(r["Titre"])
+    st.header(f"📖 {r.get('Titre')}")
 
-    st.subheader("⭐ Ma note")
-    note=st.slider("Note",0,5,int(float(r.get("Note",0))))
-    comm=st.text_area("Commentaires",value=r.get("Commentaires",""))
+    col1,col2 = st.columns([1,1.2])
 
-    if st.button("💾 Sauvegarder"):
-        send_action({"action":"edit","titre":r["Titre"],"Note":note,"Commentaires":comm})
-        st.success("Enregistré")
+    with col1:
+        img=r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
+        st.image(img,use_container_width=True)
 
-    st.subheader("🛒 Ingrédients")
-    st.write(r.get("Ingrédients",""))
+        st.markdown("### ⭐ Ma Note & Avis")
+        note=st.slider("Note",0,5,int(float(r.get("Note",0))))
+        comm=st.text_area("Commentaires",value=r.get("Commentaires",""))
+
+        if st.button("💾 Enregistrer"):
+            send_action({"action":"edit","titre":r["Titre"],"Note":note,"Commentaires":comm})
+            st.success("Enregistré !")
+            st.rerun()
+
+    with col2:
+        st.subheader("🛒 Ingrédients")
+        st.write(r.get("Ingrédients",""))
 
     st.subheader("📝 Préparation")
     st.write(r.get("Préparation",""))
 
 # ======================================================
-# PAGE AJOUTER (PROPRE)
+# PAGE AJOUTER (CORRIGÉE PROPRE)
 # ======================================================
 elif st.session_state.page=="add":
 
-    st.header("➕ Ajouter une recette")
-    tab1,tab2,tab3=st.tabs(["🌐 Site","🎬 Vidéo","📝 Manuel"])
+    st.header("➕ Ajouter une Recette")
+    tab1,tab2,tab3 = st.tabs(["🌐 Site Web","🎬 Vidéo","📝 Manuel"])
 
     with tab1:
-        url=st.text_input("URL recette")
-        if st.button("Analyser"):
+        url=st.text_input("Collez l'URL")
+        if st.button("Analyser le site"):
             if url:
                 t,c=scrape_url(url)
                 if t:
@@ -187,7 +206,7 @@ elif st.session_state.page=="add":
         if "temp_t" in st.session_state:
             t=st.text_input("Titre",value=st.session_state.temp_t)
             c=st.text_area("Contenu",value=st.session_state.temp_c,height=300)
-            if st.button("Enregistrer"):
+            if st.button("💾 Enregistrer import"):
                 send_action({"action":"add","titre":t,"preparation":c,"source":url})
                 del st.session_state.temp_t
                 del st.session_state.temp_c
@@ -199,12 +218,12 @@ elif st.session_state.page=="add":
         u=st.text_input("Lien vidéo")
         if st.button("Sauvegarder vidéo"):
             if t and u:
-                send_action({"action":"add","titre":t,"source":u})
+                send_action({"action":"add","titre":t,"source":u,"preparation":f"Vidéo : {u}"})
                 st.session_state.page="home"
                 st.rerun()
 
     with tab3:
-        with st.form("form"):
+        with st.form("form_vrac"):
             t=st.text_input("Titre *")
             cat=st.selectbox("Catégorie",CATEGORIES)
             txt=st.text_area("Contenu",height=300)
@@ -215,11 +234,19 @@ elif st.session_state.page=="add":
                 st.rerun()
 
 # ======================================================
+# PAGE EPICERIE
+# ======================================================
+elif st.session_state.page=="shop":
+    st.header("🛒 Ma Liste d'épicerie")
+    if st.button("⬅ Retour"):
+        st.session_state.page="home"; st.rerun()
+
+# ======================================================
 # PAGE PLAYSTORE
 # ======================================================
 elif st.session_state.page=="playstore":
     st.header("⭐ Mes Recettes Pro")
-    st.write("⭐ 4.9 | 1 000+ téléchargements")
+    st.write("⭐ 4.9 ★ | 1 000+ téléchargements")
     if st.button("Installer"):
         st.success("Application installée 🎉")
     if st.button("Retour"):
@@ -230,6 +257,6 @@ elif st.session_state.page=="playstore":
 # ======================================================
 elif st.session_state.page=="help":
     st.header("❓ Aide")
-    st.write("Ajoutez des recettes via URL, vidéo ou manuel.")
-    if st.button("Retour"):
+    st.markdown('<div class="help-box"><h3>📝 Ajouter</h3><p>Importez via URL, vidéo ou saisie manuelle.</p></div>',unsafe_allow_html=True)
+    if st.button("⬅ Retour"):
         st.session_state.page="home"; st.rerun()
