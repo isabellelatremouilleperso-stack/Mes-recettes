@@ -275,7 +275,8 @@ elif st.session_state.page == "home":
 # --- AJOUTER RECETTE (IMPORT URL + VRAC + MANUEL) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
-    # Bouton d'aide à la recherche
+    
+    # Bouton vers Google pour trouver des idées
     st.markdown(f"""
         <a href="https://www.google.com/search?q=recettes+de+cuisine" target="_blank" style="text-decoration: none;">
             <div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px;">
@@ -283,55 +284,56 @@ elif st.session_state.page == "add":
             </div>
         </a>
     """, unsafe_allow_html=True)
-    tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
+
+    tab1, tab2, tab3 = st.tabs(["🔗 1. Import URL", "📝 2. Tri & Vrac", "⌨️ 3. Manuel"])
     
+    # Initialisation des variables pour le transfert
+    if 'temp_titre' not in st.session_state: st.session_state.temp_titre = ""
+    if 'temp_content' not in st.session_state: st.session_state.temp_content = ""
+    if 'temp_url' not in st.session_state: st.session_state.temp_url = ""
+
     with tab1:
-        url_link = st.text_input("Collez le lien du site (Marmiton, Ricardo, etc.)")
-        if st.button("🪄 Extraire et Importer"):
+        url_link = st.text_input("Collez le lien du site ici")
+        if st.button("🪄 Extraire les informations"):
             t, c = scrape_url(url_link)
-            if t: 
-                # On ajoute "source": url_link pour que le bouton "Recette originale" fonctionne
-                send_action({
-                    "action": "add", 
-                    "titre": t, 
-                    "ingredients": c, 
-                    "preparation": "Import automatique", 
-                    "source": url_link, 
-                    "date": datetime.now().strftime("%d/%m/%Y")
-                })
-                st.success(f"✅ {t} ajouté avec sa source !")
-                time.sleep(1)
-                st.session_state.page = "home"; st.rerun()
-                
+            if t:
+                st.session_state.temp_titre = t
+                st.session_state.temp_content = c
+                st.session_state.temp_url = url_link
+                st.success("Information extraites ! Allez dans l'onglet 'Tri & Vrac' pour nettoyer le texte.")
+
     with tab2:
         with st.form("v_f"):
-            v_t = st.text_input("Titre *")
+            v_t = st.text_input("Titre *", value=st.session_state.temp_titre)
             v_cats = st.multiselect("Catégories", CATEGORIES)
             c1, c2, c3 = st.columns(3)
             v_por, v_pre, v_cui = c1.text_input("Portions"), c2.text_input("Temps Prépa"), c3.text_input("Temps Cuisson")
-            v_txt = st.text_area("Texte de la recette", height=250)
-            # --- NOUVEAU CHAMP SOURCE EN VRAC ---
-            v_source = st.text_input("Lien du site d'origine (URL)")
             
-            if st.form_submit_button("🚀 Enregistrer en Vrac"):
-                send_action({"action": "add", "titre": v_t, "categorie": ", ".join(v_cats), "ingredients": v_txt, "preparation": "Import Vrac", "portions": v_por, "temps_prepa": v_pre, "temps_cuisson": v_cui, "source": v_source, "date": datetime.now().strftime("%d/%m/%Y")})
-                st.session_state.page = "home"; st.rerun()
-                
-    with tab3:
-        with st.form("m_f"):
-            m_t = st.text_input("Titre *")
-            m_cats = st.multiselect("Catégories", CATEGORIES)
-            c1, c2, c3 = st.columns(3)
-            m_por, m_pre, m_cui = c1.text_input("Portions"), c2.text_input("Préparation"), c3.text_input("Cuisson")
-            m_ing, m_prepa = st.text_area("Ingrédients"), st.text_area("Étapes")
-            # --- LES DEUX LIENS IMPORTANTS ---
-            m_img = st.text_input("Lien Image (Lien direct .jpg)")
-            m_source = st.text_input("Lien du site d'origine (URL)")
+            # Ici tu peux faire ton ménage !
+            v_txt = st.text_area("Texte de la recette (Effacez ce qui est inutile)", value=st.session_state.temp_content, height=300)
             
-            if st.form_submit_button("💾 Enregistrer"):
-                send_action({"action": "add", "titre": m_t, "categorie": ", ".join(m_cats), "ingredients": m_ing, "preparation": m_prepa, "portions": m_por, "temps_prepa": m_pre, "temps_cuisson": m_cui, "image": m_img, "source": m_source, "date": datetime.now().strftime("%d/%m/%Y")})
+            # On garde l'URL source
+            v_source = st.text_input("Lien source", value=st.session_state.temp_url)
+            
+            if st.form_submit_button("🚀 Enregistrer la recette triée"):
+                send_action({
+                    "action": "add", 
+                    "titre": v_t, 
+                    "categorie": ", ".join(v_cats), 
+                    "ingredients": v_txt, 
+                    "preparation": "Import Vrac (trié)", 
+                    "portions": v_por, 
+                    "temps_prepa": v_pre, 
+                    "temps_cuisson": v_cui, 
+                    "source": v_source,
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
+                # On vide la mémoire après enregistrement
+                st.session_state.temp_titre = ""; st.session_state.temp_content = ""; st.session_state.temp_url = ""
                 st.session_state.page = "home"; st.rerun()
 
+    with tab3:
+        # (Garder ton formulaire manuel actuel ici)
 # --- DÉTAILS (VERSION BEAUTIFUL) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
@@ -431,6 +433,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
