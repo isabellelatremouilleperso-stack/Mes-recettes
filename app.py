@@ -190,11 +190,11 @@ if st.session_state.page == "home":
     else:
         st.warning("Aucune donnée trouvée.")
 
-# --- PAGE DÉTAILS DE LA RECETTE (Tes fonctions conservées) ---
+# --- PAGE DÉTAILS DE LA RECETTE (Mise en page réorganisée selon tes préférences) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # --- 1. TES BOUTONS DE NAVIGATION ---
+    # --- 1. TES BOUTONS DE NAVIGATION (Gardés en haut) ---
     c_nav1, c_nav2, c_nav3 = st.columns([1.5, 1, 1])
     if c_nav1.button("⬅ Retour", key="det_back"): 
         st.session_state.page = "home"; st.rerun()
@@ -203,7 +203,7 @@ elif st.session_state.page == "details":
     if c_nav3.button("🗑️", key="det_del"): 
         st.session_state.confirm_delete = True
 
-    # --- 2. TA CONFIRMATION DE SUPPRESSION ---
+    # --- 2. TA CONFIRMATION DE SUPPRESSION (Gardée) ---
     if st.session_state.get('confirm_delete', False):
         st.error("⚠️ Supprimer cette recette ?")
         conf1, conf2 = st.columns(2)
@@ -215,42 +215,43 @@ elif st.session_state.page == "details":
 
     st.divider()
 
-    # --- 3. TON TITRE ET TES ÉTOILES ---
+    # --- 3. TON TITRE ---
     st.header(f"📖 {r.get('Titre', 'Sans titre')}")
-    note_val = r.get('Note', 0)
-    try:
-        nb_etoiles = int(float(note_val)) if note_val and str(note_val).strip() != "" else 0
-        if nb_etoiles > 0:
-            st.markdown(f"<h3 style='color: #f1c40f; margin-top: -15px;'>{'⭐' * nb_etoiles}</h3>", unsafe_allow_html=True)
-    except: pass
 
-    # --- 4. TON IMAGE ET TES INFOS (Catégorie, Portions, Temps) ---
-    c_img, c_info = st.columns([1, 1.2])
-    with c_img:
+    # --- 4. NOUVELLE DISPOSITION : IMAGE (GAUCHE) | INGRÉDIENTS (DROITE) ---
+    col_gauche, col_droite = st.columns([1, 1.2])
+
+    with col_gauche:
+        # L'image en haut à gauche
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
-        if r.get('Source') and "http" in str(r.get('Source')):
-            st.link_button("🌐 Voir la source", r['Source'], use_container_width=True)
-            
-    with c_info:
+        
+        # --- TES ÉTOILES ET INFOS (Déplacées sous la photo comme demandé) ---
+        note_val = r.get('Note', 0)
+        try:
+            nb_etoiles = int(float(note_val)) if note_val and str(note_val).strip() != "" else 0
+            if nb_etoiles > 0:
+                st.markdown(f"<h3 style='color: #f1c40f; text-align: center; margin-top: 10px;'>{'⭐' * nb_etoiles}</h3>", unsafe_allow_html=True)
+        except: pass
+        
+        st.markdown("---")
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Non classé')}")
         st.write(f"**👥 Portions :** {r.get('Portions', '-')}")
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa', '-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson', '-')} min")
+        
+        if r.get('Source') and "http" in str(r.get('Source')):
+            st.link_button("🌐 Voir la source", r['Source'], use_container_width=True)
 
-    st.divider()
-
-    # --- 5. TES INGRÉDIENTS AVEC CASES À COCHER ET PANIER ---
-    col_ing, col_prep = st.columns([1, 1.5])
-    
-    with col_ing:
+    with col_droite:
+        # --- TES INGRÉDIENTS SUR LE CÔTÉ DE LA PHOTO ---
         st.subheader("🛒 Ingrédients")
-        # On garde ton système de découpage par ligne
         ings = [l.strip() for l in str(r.get('Ingrédients', '')).split("\n") if l.strip()]
         sel = []
         for i, l in enumerate(ings):
-            if st.checkbox(l, key=f"chk_{i}"): 
+            # On utilise une clé unique pour éviter les conflits
+            if st.checkbox(l, key=f"chk_det_{i}"): 
                 sel.append(l)
         
         if st.button("📥 Ajouter au Panier", type="primary", use_container_width=True):
@@ -258,16 +259,16 @@ elif st.session_state.page == "details":
                 send_action({"action": "add_shop", "article": it})
             st.toast("Ajouté !"); time.sleep(0.5); st.session_state.page = "shop"; st.rerun()
 
-    # --- 6. TA PRÉPARATION ET TES COMMENTAIRES ---
-    with col_prep:
-        st.subheader("📝 Préparation")
-        st.info(r.get('Préparation', 'Aucune étape.'))
+    st.divider()
+
+    # --- 5. TA PRÉPARATION ET TES COMMENTAIRES (En bas) ---
+    st.subheader("📝 Préparation")
+    st.info(r.get('Préparation', 'Aucune étape.'))
         
     if r.get('Commentaires'):
         st.divider()
         st.subheader("💬 Mes Notes / Commentaires")
         st.write(r['Commentaires'])
-
 # --- PAGE AJOUTER (Version avec URL, Vidéo et Vrac) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
@@ -456,6 +457,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
