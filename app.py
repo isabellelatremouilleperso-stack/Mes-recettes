@@ -1,15 +1,3 @@
-import streamlit as st
-import requests
-import pandas as pd
-from datetime import datetime
-import time
-from bs4 import BeautifulSoup
-import urllib.parse
-
-# ======================================================
-# 1. CONFIGURATION & DESIGN
-# ======================================================
-st.set_page_config(page_tiimport streamlit as st
 import requests
 import pandas as pd
 from datetime import datetime
@@ -1238,6 +1226,7 @@ elif st.session_state.page == "aide":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
 
 
