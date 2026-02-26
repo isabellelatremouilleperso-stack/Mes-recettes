@@ -203,35 +203,81 @@ elif st.session_state.page == "details":
     st.subheader("📝 Préparation")
     st.info(r['Préparation'] if r['Préparation'] else "Aucune étape.")
 
-# --- PAGE AJOUTER ---
+# --- PAGE AJOUTER (Complète avec URL, Vidéo et Manuel) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
-    tab1, tab2, tab3 = st.tabs(["🔗 Réseaux Sociaux", "📝 Vrac", "⌨️ Manuel"])
     
+    # On garde les 3 onglets pour que tout soit bien rangé
+    tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Tri intelligent)", "🎬 Lien Vidéo", "⌨️ Manuel"])
+
+    # --- 1. L'IMPORTATION URL AVEC NETTOYAGE ---
     with tab1:
-        s_url = st.text_input("Lien Vidéo (Insta/TikTok/FB)")
-        s_t = st.text_input("Nom du plat", key="soc_t")
-        if st.button("🚀 Sauvegarder Source"):
+        st.subheader("Extraire depuis un site")
+        web_url = st.text_input("Collez l'URL (Marmiton, 750g, etc.)", key="web_url")
+        
+        if st.button("🔍 Analyser et Trier", key="btn_web"):
+            if web_url:
+                with st.spinner("Tri des données en cours..."):
+                    titre, contenu = scrape_url(web_url)
+                    if titre:
+                        # LE TRI AFFINÉ : On ignore les lignes trop courtes ou trop longues
+                        # pour ne garder que le "vrai" contenu de la recette
+                        lignes = contenu.split('\n')
+                        tri = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
+                        
+                        st.session_state.temp_titre = titre
+                        st.session_state.temp_contenu = "\n".join(tri)
+                        st.success("Analyse terminée ! Vérifiez le résultat ci-dessous.")
+                    else:
+                        st.error("Ce site ne permet pas l'extraction automatique.")
+
+        # Zone d'édition pour supprimer le surplus si nécessaire
+        if "temp_titre" in st.session_state:
+            with st.container():
+                st.write("---")
+                final_t = st.text_input("Titre détecté", value=st.session_state.temp_titre)
+                final_c = st.text_area("Texte trié (Ingrédients & Étapes)", value=st.session_state.temp_contenu, height=250)
+                st.caption("💡 Vous pouvez effacer les lignes inutiles directement dans le texte ci-dessus.")
+                
+                if st.button("📥 Valider l'Ajout", type="primary"):
+                    send_action({
+                        "action": "add", "titre": final_t, 
+                        "preparation": final_c, "source": web_url,
+                        "date": datetime.now().strftime("%d/%m/%Y")
+                    })
+                    del st.session_state.temp_titre
+                    st.session_state.page = "home"; st.rerun()
+
+    # --- 2. L'IMPORTATION VIDÉO (Inchangé) ---
+    with tab2:
+        st.subheader("Lien Vidéo (Réseaux Sociaux)")
+        s_url = st.text_input("Lien Insta/TikTok/FB")
+        s_t = st.text_input("Nom de la recette", key="soc_titre")
+        if st.button("🚀 Sauvegarder la Vidéo"):
             if s_url and s_t:
-                send_action({"action": "add", "titre": s_t, "source": s_url, "preparation": f"Vidéo: {s_url}", "date": datetime.now().strftime("%d/%m/%Y")})
+                send_action({
+                    "action": "add", "titre": s_t, "source": s_url, 
+                    "preparation": f"Lien vidéo : {s_url}", 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
                 st.session_state.page = "home"; st.rerun()
 
-    with tab2:
-        v_t = st.text_input("Titre", key="vrac_t")
-        v_txt = st.text_area("Texte complet", height=200)
-        if st.button("🪄 Ajouter Vrac"):
-            send_action({"action": "add", "titre": v_t, "ingredients": v_txt, "date": datetime.now().strftime("%d/%m/%Y")})
-            st.session_state.page = "home"; st.rerun()
-
+    # --- 3. LA SAISIE MANUELLE (Inchangé) ---
     with tab3:
-        with st.form("man_f"):
+        st.subheader("Saisie Manuelle")
+        with st.form("man_final"):
             m_t = st.text_input("Titre *")
+            m_cat = st.selectbox("Catégorie", CATEGORIES)
             m_ing = st.text_area("Ingrédients")
             m_pre = st.text_area("Préparation")
             if st.form_submit_button("💾 Enregistrer"):
-                send_action({"action": "add", "titre": m_t, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
-                st.session_state.page = "home"; st.rerun()
-
+                if m_t:
+                    send_action({
+                        "action": "add", "titre": m_t, "catégorie": m_cat,
+                        "ingredients": m_ing, "preparation": m_pre,
+                        "date": datetime.now().strftime("%d/%m/%Y")
+                    })
+                    st.session_state.page = "home"; st.rerun()
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -355,6 +401,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
