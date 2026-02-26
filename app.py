@@ -254,3 +254,148 @@ elif st.session_state.page == "shop":
             if st.button("🧨 Tout vider"): send_action({"action": "clear_shop"}); st.rerun()
         else: st.info("Liste vide.")
     except: st.error("Erreur de chargement.")
+# --- PAGE AJOUTER (Ligne 250 environ) ---
+elif st.session_state.page == "add":
+    st.header("➕ Ajouter une Recette")
+    
+    st.markdown('<a href="https://www.google.com/search?q=recettes+de+cuisine" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold; margin-bottom: 20px;">🔍 Chercher une idée sur Google</div></a>', unsafe_allow_html=True)
+
+    tab1, tab2, tab3 = st.tabs(["🔗 1. Import URL", "📝 2. Tri & Vrac", "⌨️ 3. Manuel"])
+    
+    if 'temp_titre' not in st.session_state: st.session_state.temp_titre = ""
+    if 'temp_content' not in st.session_state: st.session_state.temp_content = ""
+    if 'temp_url' not in st.session_state: st.session_state.temp_url = ""
+
+    with tab1:
+        url_link = st.text_input("Collez le lien ici")
+        if st.button("🪄 Extraire"):
+            t, c = scrape_url(url_link)
+            if t:
+                st.session_state.temp_titre, st.session_state.temp_content, st.session_state.temp_url = t, c, url_link
+                st.success("Extrait ! Passez à l'onglet 2.")
+
+    with tab2:
+        with st.form("v_f"):
+            v_t = st.text_input("Titre *", value=st.session_state.temp_titre)
+            v_cats = st.multiselect("Catégories", CATEGORIES)
+            v_txt = st.text_area("Contenu", value=st.session_state.temp_content, height=250)
+            v_src = st.text_input("Source", value=st.session_state.temp_url)
+            if st.form_submit_button("🚀 Enregistrer"):
+                send_action({"action": "add", "titre": v_t, "categorie": ", ".join(v_cats), "ingredients": v_txt, "preparation": "Import Vrac", "source": v_src, "date": datetime.now().strftime("%d/%m/%Y")})
+                st.session_state.page = "home"; st.rerun()
+
+    with tab3:
+        with st.form("m_f"):
+            st.info("Saisie manuelle complète")
+            m_t = st.text_input("Titre de la recette *")
+            m_cat = st.selectbox("Catégorie", CATEGORIES)
+            m_ing = st.text_area("Ingrédients (un par ligne)")
+            m_pre = st.text_area("Préparation / Étapes")
+            m_img = st.text_input("Lien vers une image (Optionnel)")
+            if st.form_submit_button("💾 Enregistrer la recette"):
+                if m_t:
+                    send_action({
+                        "action": "add", 
+                        "titre": m_t, 
+                        "categorie": m_cat, 
+                        "ingredients": m_ing, 
+                        "preparation": m_pre, 
+                        "image": m_img,
+                        "date": datetime.now().strftime("%d/%m/%Y")
+                    })
+                    st.success("Recette ajoutée !")
+                    st.session_state.page = "home"; st.rerun()
+                else:
+                    st.error("Le titre est obligatoire.")
+
+# --- PAGE DÉTAILS (VISUALISATION) ---
+elif st.session_state.page == "details":
+    r = st.session_state.recipe_data
+    st.header(f"📖 {r['Titre']}")
+    
+    if st.button("⬅ Retour à la bibliothèque"): 
+        st.session_state.page = "home"; st.rerun()
+    
+    c1, c2 = st.columns([1, 1.2])
+    with c1:
+        img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
+        st.image(img_url, use_container_width=True)
+        if r.get('Source') and "http" in str(r['Source']):
+            st.link_button("🌐 Voir le site d'origine", r['Source'], use_container_width=True)
+            
+    with c2:
+        st.subheader("🛒 Ingrédients")
+        ings = [l.strip() for l in str(r['Ingrédients']).split("\n") if l.strip()]
+        if ings:
+            sel = []
+            for i, l in enumerate(ings):
+                if st.checkbox(l, key=f"chk_{i}"):
+                    sel.append(l)
+            
+            if st.button("📥 Envoyer à la liste d'épicerie", use_container_width=True, type="primary"):
+                for it in sel:
+                    send_action({"action": "add_shop", "article": it})
+                st.toast(f"{len(sel)} articles ajoutés !"); time.sleep(0.5)
+                st.session_state.page = "shop"; st.rerun()
+        else:
+            st.write("Aucun ingrédient listé.")
+
+    st.divider()
+    st.subheader("📝 Préparation")
+    st.info(r['Préparation'] if r['Préparation'] else "Aucune étape saisie.")
+
+    # --- ZONE DE GESTION CACHÉE ---
+    st.divider()
+    with st.expander("🛠️ Options avancées"):
+        col_del, col_edit = st.columns(2)
+        if col_del.button("🗑️ Supprimer cette recette", use_container_width=True):
+            if send_action({"action": "delete", "titre": r['Titre']}):
+                st.success("Recette supprimée !"); time.sleep(1)
+                st.session_state.page = "home"; st.rerun()
+        st.write("Pour modifier le texte, utilisez le fichier Excel directement.")
+
+# --- PAGE ÉPICERIE ---
+elif st.session_state.page == "shop":
+    st.header("🛒 Ma Liste d'épicerie")
+    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+    
+    try:
+        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
+        if not df_s.empty:
+            items_to_delete = []
+            for idx, row in df_s.iterrows():
+                if st.checkbox(str(row.iloc[0]), key=f"sh_{idx}"):
+                    items_to_delete.append(str(row.iloc[0]))
+            
+            st.divider()
+            c1, c2 = st.columns(2)
+            if c1.button("🗑 Retirer les cochés", use_container_width=True):
+                for item in items_to_delete:
+                    send_action({"action": "remove_shop", "article": item})
+                st.rerun()
+            if c2.button("🧨 Tout vider", use_container_width=True):
+                send_action({"action": "clear_shop"})
+                st.rerun()
+        else:
+            st.info("Votre liste d'épicerie est vide.")
+    except:
+        st.error("Erreur lors du chargement de la liste.")
+
+# --- PAGE AIDE (RESTAURÉE) ---
+elif st.session_state.page == "help":
+    st.title("❓ Aide & Mode d'emploi")
+    st.markdown("""
+    ### Bienvenue dans votre carnet de recettes !
+    
+    1. **Bibliothèque** : C'est ici que se trouvent toutes vos recettes. Cliquez sur l'image ou le bouton pour voir le détail.
+    2. **Ajouter** : 
+        - **Import URL** : Collez un lien (ex: Marmiton) pour extraire le texte.
+        - **Tri & Vrac** : Nettoyez le texte extrait ou collez votre propre texte brut ici.
+        - **Manuel** : Remplissez les cases une par une.
+    3. **Épicerie** : Cochez les ingrédients dans une recette, ils s'ajouteront à votre liste globale.
+    4. **Planning** : Pour l'instant, le planning se gère en ajoutant une date dans votre fichier Excel.
+    
+    **Astuce** : Si une modification ne s'affiche pas, cliquez sur le bouton **🔄 Actualiser** en haut de la bibliothèque.
+    """)
+    if st.button("⬅ Retour à l'accueil"):
+        st.session_state.page = "home"; st.rerun()
