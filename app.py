@@ -190,11 +190,11 @@ if st.session_state.page == "home":
     else:
         st.warning("Aucune donnée trouvée.")
 
-# --- PAGE DÉTAILS DE LA RECETTE (Mise en page réorganisée selon tes préférences) ---
+# --- PAGE DÉTAILS DE LA RECETTE (Avec Notation Directe) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # --- 1. TES BOUTONS DE NAVIGATION (Gardés en haut) ---
+    # Navigation et Suppression
     c_nav1, c_nav2, c_nav3 = st.columns([1.5, 1, 1])
     if c_nav1.button("⬅ Retour", key="det_back"): 
         st.session_state.page = "home"; st.rerun()
@@ -203,7 +203,6 @@ elif st.session_state.page == "details":
     if c_nav3.button("🗑️", key="det_del"): 
         st.session_state.confirm_delete = True
 
-    # --- 2. TA CONFIRMATION DE SUPPRESSION (Gardée) ---
     if st.session_state.get('confirm_delete', False):
         st.error("⚠️ Supprimer cette recette ?")
         conf1, conf2 = st.columns(2)
@@ -215,42 +214,49 @@ elif st.session_state.page == "details":
 
     st.divider()
 
-    # --- 3. TON TITRE ---
+    # TITRE PRINCIPAL
     st.header(f"📖 {r.get('Titre', 'Sans titre')}")
 
-    # --- 4. NOUVELLE DISPOSITION : IMAGE (GAUCHE) | INGRÉDIENTS (DROITE) ---
+    # DISPOSITION : IMAGE & NOTES (GAUCHE) | INGRÉDIENTS (DROITE)
     col_gauche, col_droite = st.columns([1, 1.2])
 
     with col_gauche:
-        # L'image en haut à gauche
+        # 1. LA PHOTO
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
         
-        # --- TES ÉTOILES ET INFOS (Déplacées sous la photo comme demandé) ---
-        note_val = r.get('Note', 0)
-        try:
-            nb_etoiles = int(float(note_val)) if note_val and str(note_val).strip() != "" else 0
-            if nb_etoiles > 0:
-                st.markdown(f"<h3 style='color: #f1c40f; text-align: center; margin-top: 10px;'>{'⭐' * nb_etoiles}</h3>", unsafe_allow_html=True)
-        except: pass
+        # 2. METTRE LES ÉTOILES (Saisie directe)
+        st.write("**Noter cette recette :**")
+        actuelle = int(float(r.get('Note', 0))) if r.get('Note') else 0
+        nouvelle_note = st.feedback("stars", key=f"feed_{r['Titre']}")
+        
+        # Si l'utilisateur change la note, on envoie l'action tout de suite
+        if nouvelle_note is not None and nouvelle_note + 1 != actuelle:
+            if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note + 1}):
+                st.success(f"Note mise à jour : {nouvelle_note + 1} ⭐")
+                time.sleep(1)
+                st.cache_data.clear()
+                st.rerun()
+
+        # 3. AFFICHAGE DES NOTES / COMMENTAIRES (Juste sous les étoiles)
+        if r.get('Commentaires'):
+            st.info(f"💬 **Note perso :** {r['Commentaires']}")
         
         st.markdown("---")
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Non classé')}")
         st.write(f"**👥 Portions :** {r.get('Portions', '-')}")
-        st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa', '-')} min")
-        st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson', '-')} min")
+        st.write(f"**⏱ Prépa :** {r.get('Temps_Prepa', '-')} min | **🔥 Cuisson :** {r.get('Temps_Cuisson', '-')} min")
         
         if r.get('Source') and "http" in str(r.get('Source')):
             st.link_button("🌐 Voir la source", r['Source'], use_container_width=True)
 
     with col_droite:
-        # --- TES INGRÉDIENTS SUR LE CÔTÉ DE LA PHOTO ---
+        # 4. INGRÉDIENTS SUR LE CÔTÉ
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients', '')).split("\n") if l.strip()]
         sel = []
         for i, l in enumerate(ings):
-            # On utilise une clé unique pour éviter les conflits
             if st.checkbox(l, key=f"chk_det_{i}"): 
                 sel.append(l)
         
@@ -261,14 +267,9 @@ elif st.session_state.page == "details":
 
     st.divider()
 
-    # --- 5. TA PRÉPARATION ET TES COMMENTAIRES (En bas) ---
+    # 5. PRÉPARATION EN BAS
     st.subheader("📝 Préparation")
-    st.info(r.get('Préparation', 'Aucune étape.'))
-        
-    if r.get('Commentaires'):
-        st.divider()
-        st.subheader("💬 Mes Notes / Commentaires")
-        st.write(r['Commentaires'])
+    st.write(r.get('Préparation', 'Aucune étape.'))
 # --- PAGE AJOUTER (Version avec URL, Vidéo et Vrac) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
@@ -457,6 +458,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
