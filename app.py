@@ -5,6 +5,7 @@ from datetime import datetime
 import time
 from bs4 import BeautifulSoup
 import urllib.parse
+import webbrowser
 
 # ======================================================
 # 1. CONFIGURATION & DESIGN
@@ -276,53 +277,70 @@ elif st.session_state.page == "add":
 
 # --- 1. L'IMPORTATION URL (Le bouton "Google" / Analyse) ---
     with tab1:
-        st.subheader("Extraire depuis un site")
-        
-        # Le champ de saisie
-        url_input = st.text_input("Collez l'URL ici", key="url_auto_google")
-        
-        # LE BOUTON : On le met seul, sans "if" autour pour l'affichage
-        bouton_clique = st.button("🔍 Analyser le site", key="btn_google_permanent")
-        
-        # L'ACTION : Elle ne se déclenche QUE si on clique
-        if bouton_clique:
-            if url_input:
-                with st.spinner("Recherche et analyse en cours..."):
-                    try:
-                        # Appel de ta fonction scrape_url
-                        resultat = scrape_url(url_input)
-                        if resultat and resultat[0]:
-                            st.session_state.temp_titre = resultat[0]
-                            # Tri des lignes pour ne garder que l'essentiel
-                            lignes = resultat[1].split('\n')
-                            propre = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
-                            st.session_state.temp_contenu = "\n".join(propre)
-                            st.rerun()
-                        else:
-                            st.error("L'analyse n'a rien trouvé sur ce site.")
-                    except Exception as e:
-                        st.error(f"Erreur : {e}")
-            else:
-                st.warning("Veuillez coller un lien d'abord.")
+    st.subheader("Extraire depuis un site")
 
-        # ZONE DE MODIFICATION (Apparaît après l'analyse)
-        if "temp_titre" in st.session_state:
-            st.markdown("---")
-            edit_titre = st.text_input("Titre extrait", value=st.session_state.temp_titre)
-            edit_cont = st.text_area("Contenu extrait (Triez ici !)", value=st.session_state.temp_contenu, height=250)
-            
-            if st.button("💾 Enregistrer dans la bibliothèque"):
-                send_action({
-                    "action": "add", 
-                    "titre": edit_titre, 
-                    "preparation": edit_cont, 
-                    "source": url_input, 
-                    "date": datetime.now().strftime("%d/%m/%Y")
-                })
-                del st.session_state.temp_titre
-                st.success("Recette enregistrée !")
-                st.session_state.page = "home"
-                st.rerun()
+    # ===============================
+    # 🔎 RECHERCHE GOOGLE AJOUTÉE ICI
+    # ===============================
+    google_query = st.text_input("🔎 Rechercher sur Google")
+
+    if google_query:
+        query_encoded = urllib.parse.quote(google_query)
+        google_url = f"https://www.google.com/search?q={query_encoded}"
+        st.link_button("🌍 Rechercher sur Google", google_url)
+
+    st.divider()
+
+    # ===============================
+    # 🌐 IMPORTATION PAR URL (EXISTANT)
+    # ===============================
+    url_input = st.text_input("Collez l'URL ici", key="url_auto_google")
+
+    bouton_clique = st.button("🔍 Analyser le site", key="btn_google_permanent")
+
+    if bouton_clique:
+        if url_input:
+            with st.spinner("Recherche et analyse en cours..."):
+                try:
+                    resultat = scrape_url(url_input)
+                    if resultat and resultat[0]:
+                        st.session_state.temp_titre = resultat[0]
+                        lignes = resultat[1].split('\n')
+                        propre = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
+                        st.session_state.temp_contenu = "\n".join(propre)
+                        st.rerun()
+                    else:
+                        st.error("L'analyse n'a rien trouvé sur ce site.")
+                except Exception as e:
+                    st.error(f"Erreur : {e}")
+        else:
+            st.warning("Veuillez coller un lien d'abord.")
+
+    # ===============================
+    # ✏️ ZONE MODIFICATION APRÈS IMPORT
+    # ===============================
+    if "temp_titre" in st.session_state:
+        st.markdown("---")
+        t_edit = st.text_input("Titre extrait", value=st.session_state.temp_titre)
+        c_edit = st.text_area("Contenu extrait (Triez ici !)", value=st.session_state.temp_contenu, height=250)
+
+        col_save1, col_save2 = st.columns(2)
+
+        if col_save1.button("💾 Enregistrer", type="primary", use_container_width=True):
+            send_action({
+                "action": "add",
+                "titre": t_edit,
+                "preparation": c_edit,
+                "source": url_input,
+                "date": datetime.now().strftime("%d/%m/%Y")
+            })
+            del st.session_state.temp_titre
+            st.session_state.page = "home"
+            st.rerun()
+
+        if col_save2.button("❌ Annuler", use_container_width=True):
+            del st.session_state.temp_titre
+            st.rerun()
         # Affichage des champs de modification après l'analyse
         if "temp_titre" in st.session_state:
             st.divider()
@@ -536,6 +554,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
