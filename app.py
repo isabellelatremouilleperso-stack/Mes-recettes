@@ -265,7 +265,7 @@ elif st.session_state.page == "details":
         if conf_c2.button("❌ NON, Annuler", use_container_width=True, key="btn_confirm_no"):
             st.session_state.confirm_delete = False
             st.rerun()
-            else:
+        else:
                 st.error("Erreur de connexion. Vérifiez votre fichier Excel.")
                 
         if c2.button("❌ NON, Annuler", use_container_width=True):
@@ -464,6 +464,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
