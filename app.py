@@ -81,34 +81,18 @@ def scrape_url(url):
 @st.cache_data(ttl=5)
 def load_data():
     try:
-        # 1. Lecture du flux CSV
         df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
-        
-        # 2. Nettoyage basique
         df = df.fillna('')
-        
-        # 3. On s'assure que les noms de colonnes dans le code correspondent 
-        # à ceux de votre tableur (on enlève les espaces pour éviter les bugs)
         df.columns = [c.strip() for c in df.columns]
-        
         return df
-    except Exception as e:
-        st.error(f"Erreur de lecture : {e}")
+    except:
         return pd.DataFrame()
-        
-# --- UTILISATION DE LA FONCTION ---
-df = load_data()
-st.write("DEBUG: lignes chargées:", len(df))
-st.write(df.head(5))
 
 # ======================
-# SESSION
+# SESSION & SIDEBAR
 # ======================
 if "page" not in st.session_state: st.session_state.page="home"
 
-# ======================
-# SIDEBAR
-# ======================
 with st.sidebar:
     st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=100)
     st.title("🍳 Mes Recettes")
@@ -121,15 +105,13 @@ with st.sidebar:
     if st.button("❓ Aide",use_container_width=True,key="side_help"): st.session_state.page="help"; st.rerun()
 
 # ======================
-# PAGES
+# LOGIQUE DES PAGES
 # ======================
 
-# --- PAGE ACCUEIL / BIBLIOTHEQUE ---
 if st.session_state.page == "home":
     c1,c2 = st.columns([4,1])
     c1.header("📚 Ma Bibliothèque")
     if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
-
     st.divider()
     df = load_data()
     if not df.empty:
@@ -165,7 +147,6 @@ if st.session_state.page == "home":
     else:
         st.warning("Aucune donnée trouvée.")
 
-# --- PAGE DÉTAILS ---
 elif st.session_state.page=="details":
     r = st.session_state.recipe_data
     c_nav1,c_nav2,c_nav3 = st.columns([1.5,1,1])
@@ -174,7 +155,6 @@ elif st.session_state.page=="details":
     if c_nav3.button("🗑️ Supprimer"): 
         if send_action({"action":"delete","titre":r['Titre']}):
             st.session_state.page="home"; st.rerun()
-
     st.divider()
     st.header(f"📖 {r.get('Titre','Sans titre')}")
     col_g,col_d = st.columns([1,1.2])
@@ -189,15 +169,12 @@ elif st.session_state.page=="details":
         if st.button("💾 Enregistrer ma note",use_container_width=True):
             if send_action({"action":"edit","titre":r['Titre'],"Note":nouvelle_note,"Commentaires":nouveau_comm}):
                 st.success("Note enregistrée !"); st.session_state.recipe_data['Note']=nouvelle_note; st.session_state.recipe_data['Commentaires']=nouveau_comm; st.rerun()
-        st.markdown("---")
+    with col_d:
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
         st.write(f"**👥 Portions :** {r.get('Portions','-')}")
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
-        if r.get('Source') and "http" in str(r.get('Source')):
-            st.link_button("🌐 Voir la source", r['Source'], use_container_width=True)
-    with col_d:
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
         sel=[]
@@ -210,7 +187,6 @@ elif st.session_state.page=="details":
     st.subheader("📝 Préparation")
     st.write(r.get('Préparation','Aucune étape.'))
 
-# --- PAGE AJOUTER ---
 elif st.session_state.page=="add":
     st.header("➕ Ajouter une Recette")
     tab1,tab2,tab3 = st.tabs(["🌐 Site Web (Auto)","🎬 Lien Vidéo","📝 Vrac / Manuel"])
@@ -232,33 +208,21 @@ elif st.session_state.page=="add":
             if s_url and s_t:
                 send_action({"action":"add","titre":s_t,"source":s_url,"preparation":f"Vidéo : {s_url}","date":datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page="home"; st.rerun()
-    # Dans l'onglet "Vrac / Manuel"
-# --- FIN DE LA PAGE AJOUTER ---
-with tab3:
+    with tab3:
         with st.form("form_vrac"):
             v_t = st.text_input("Titre *")
             v_cat = st.selectbox("Catégorie", CATEGORIES)
             v_date = st.date_input("Planifier pour le (optionnel)", value=None)
             v_txt = st.text_area("Texte brut", height=300)
             submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
-            
             if submit_vrac:
                 if v_t:
-                    payload = {
-                        "action": "add",
-                        "titre": v_t,
-                        "catégorie": v_cat,
-                        "ingredients": v_txt,
-                        "date": datetime.now().strftime("%d/%m/%Y"),
-                        "date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""
-                    }
+                    payload = {"action": "add","titre": v_t,"catégorie": v_cat,"ingredients": v_txt,"date": datetime.now().strftime("%d/%m/%Y"),"date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""}
                     send_action(payload)
-                    st.session_state.page = "home"
-                    st.rerun()
+                    st.session_state.page = "home"; st.rerun()
                 else:
                     st.error("Titre obligatoire.")
-
-# --- PAGE ÉPICERIE (BIEN ALIGNÉE À GAUCHE) ---
+# --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
     if st.button("⬅ Retour"): 
@@ -285,12 +249,11 @@ elif st.session_state.page == "shop":
     except: 
         st.error("Erreur de chargement de l'épicerie.")
 
-# --- PAGE PLANNING (BIEN ALIGNÉE À GAUCHE) ---
+# --- PAGE PLANNING ---
 elif st.session_state.page == "planning":
     st.header("📅 Planning")
     df = load_data()
     if not df.empty:
-        # On s'assure que la colonne Date_Prevue existe
         if 'Date_Prevue' in df.columns:
             plan = df[df['Date_Prevue'].astype(str).str.strip() != ""].sort_values(by='Date_Prevue')
             for _, row in plan.iterrows():
@@ -305,17 +268,65 @@ elif st.session_state.page == "planning":
         st.session_state.page = "home"
         st.rerun()
 
-# --- PAGE PLAYSTORE & AIDE (RESTE DU CODE) ---
-elif st.session_state.page == "playstore":
-    st.markdown("### 📥 Installer l'application", unsafe_allow_html=True)
-    if st.button("Retour à la Bibliothèque"): 
-        st.session_state.page = "home"
-        st.rerun()
+# --- PAGE PLAYSTORE (RESTAURÉE) ---
+elif st.session_state.page=="playstore":
+    st.markdown("""
+    <div class="playstore-container">
+        <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond-centre">
+        <h1>Mes Recettes Pro</h1>
+        <p>👩‍🍳 Isabelle Latrémouille</p>
+        <p>⭐ 4.9 ★ (128 avis) | 📥 1 000+ téléchargements</p>
+    </div>
+    """,unsafe_allow_html=True)
+    if st.button("📥 Installer l'application",use_container_width=True,type="primary"):
+        st.success("Application installée ! 🎉")
+    st.divider()
+    c1,c2,c3=st.columns(3)
+    c1.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg",caption="Ma Bibliothèque")
+    c2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg",caption="Détails")
+    c3.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg",caption="Liste d'Épicerie")
+    st.divider()
+    col_desc,col_tech=st.columns(2)
+    with col_desc:
+        st.subheader("📝 À propos")
+        st.write("Mes Recettes Pro est votre compagnon culinaire ultime.\n✔ Gestion intuitive\n✔ Notes ⭐\n✔ Planning 📅\n✔ Liste d'épicerie 🛒\n✔ Synchronisation Cloud")
+    with col_tech:
+        st.subheader("ℹ️ Infos")
+        st.write("Version : 2.0 Premium\nMise à jour : Février 2026\nCatégorie : Cuisine\nDéveloppeur : Isabelle Latrémouille")
+    st.divider()
+    if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
+        st.session_state.page="home"; st.rerun()
 
-elif st.session_state.page == "help":
-    st.header("❓ Aide")
-    if st.button("Retour à la Bibliothèque"): 
-        st.session_state.page = "home"
-        st.rerun()
-
-   
+# --- PAGE AIDE (RESTAURÉE) ---
+elif st.session_state.page=="help":
+    st.header("❓ Aide & Astuces")
+    ca,cb=st.columns(2)
+    with ca:
+        st.markdown("""
+        <div class="help-box">
+            <h3>📝 Ajouter Recette</h3>
+            <p>🌐 Site Web, 🎬 Vidéo ou 📝 Vrac/manuel pour ajouter vos recettes.</p>
+        </div>
+        """,unsafe_allow_html=True)
+        st.markdown("""
+        <div class="help-box">
+            <h3>🔍 Rechercher</h3>
+            <p>Recherchez par titre ou filtre par catégorie dans la bibliothèque.</p>
+        </div>
+        """,unsafe_allow_html=True)
+    with cb:
+        st.markdown("""
+        <div class="help-box">
+            <h3>🛒 Liste d'Épicerie</h3>
+            <p>Cochez les ingrédients pour les ajouter. Retirer ou vider la liste à tout moment.</p>
+        </div>
+        """,unsafe_allow_html=True)
+        st.markdown("""
+        <div class="help-box">
+            <h3>📅 Planning</h3>
+            <p>Planifiez vos repas et accédez directement aux fiches des recettes.</p>
+        </div>
+        """,unsafe_allow_html=True)
+    st.divider()
+    if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
+        st.session_state.page="home"; st.rerun()
