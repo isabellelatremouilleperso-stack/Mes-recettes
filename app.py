@@ -259,8 +259,7 @@ elif st.session_state.page == "details":
                 time.sleep(1)
                 st.session_state.page = "home"
                 st.rerun()
-            else:
-                st.error("Erreur de connexion.")
+            else:st.error("Erreur de connexion.")
                 
         # AJOUT DE key="btn_confirm_no" ICI :
         if conf_c2.button("❌ NON, Annuler", use_container_width=True, key="btn_confirm_no"):
@@ -465,6 +464,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
