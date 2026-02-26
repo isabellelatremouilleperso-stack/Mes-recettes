@@ -51,9 +51,11 @@ h1, h2, h3 { color: #e67e22 !important; }
 # =======================
 # TES LIENS (NE PAS MODIFIER)
 # =======================
-URL_CSV = "https://docs.google.com/..."
-URL_CSV_SHOP = "https://docs.google.com/..."
-URL_SCRIPT = "https://script.google.com/..."
+URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
+
+URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
+
+URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
 CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
 
@@ -260,3 +262,4 @@ elif st.session_state.page=="help":
     st.markdown('<div class="help-box"><h3>📝 Ajouter</h3><p>Importez via URL, vidéo ou saisie manuelle.</p></div>',unsafe_allow_html=True)
     if st.button("⬅ Retour"):
         st.session_state.page="home"; st.rerun()
+
