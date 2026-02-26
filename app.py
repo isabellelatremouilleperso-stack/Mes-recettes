@@ -226,24 +226,30 @@ elif st.session_state.page=="add":
                 st.session_state.page="home"; st.rerun()
     # Dans l'onglet "Vrac / Manuel"
 with st.form("form_vrac"):
-    v_t = st.text_input("Titre *")
-    v_cat = st.selectbox("Catégorie", CATEGORIES)
-    v_date = st.date_input("Planifier pour le (optionnel)", value=None) # Ajout de la date
-    v_txt = st.text_area("Ingrédients & Étapes", height=300)
-    
-    submit_vrac = st.form_submit_button("💾 Enregistrer")
-    if submit_vrac and v_t:
-        payload = {
-            "action": "add",
-            "titre": v_t,
-            "catégorie": v_cat,
-            "ingredients": v_txt,
-            "date": datetime.now().strftime("%d/%m/%Y"),
-            "date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""
-        }
-        send_action(payload)
-        st.session_state.page = "home"
-        st.rerun()
+            v_t = st.text_input("Titre *")
+            v_cat = st.selectbox("Catégorie", CATEGORIES)
+            # Assurez-vous que v_date est défini avant le submit
+            v_date = st.date_input("Planifier pour le (optionnel)", value=None) 
+            v_txt = st.text_area("Texte brut (Ingrédients et Préparation)", height=300)
+            
+            submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
+            
+            if submit_vrac:
+                if v_t:
+                    payload = {
+                        "action": "add",
+                        "titre": v_t,
+                        "catégorie": v_cat,
+                        "ingredients": v_txt,
+                        "date": datetime.now().strftime("%d/%m/%Y"),
+                        "date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""
+                    }
+                    if send_action(payload):
+                        st.success("Recette ajoutée !")
+                        st.session_state.page = "home"
+                        st.rerun()
+                else:
+                    st.error("Le titre est obligatoire.")
 
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page=="shop":
@@ -337,6 +343,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
