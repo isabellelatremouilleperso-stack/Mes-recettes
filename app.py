@@ -253,8 +253,32 @@ elif st.session_state.page == "planning":
 # --- PAGE PLAYSTORE ---
 elif st.session_state.page == "playstore":
     st.markdown(f'<center><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-playstore"></center>', unsafe_allow_html=True)
-    st.markdown("### Mes Recettes Pro\n⭐ 4.9 ★ (128 avis)")
-    if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+    st.markdown("""
+    <center>
+        <h2>Mes Recettes Pro</h2>
+        <p style="color: #e67e22; font-weight: bold;">⭐ 4.9 ★ (128 avis)</p>
+        <p>👩‍🍳 Par Isabelle Latrémouille | 📥 1 000+ téléchargements</p>
+    </center>
+    """, unsafe_allow_html=True)
+    
+    if st.button("📥 Installer l'application", use_container_width=True, type="primary"):
+        st.success("Lien de téléchargement généré ! 🎉")
+    
+    st.divider()
+    
+    # Affichage des captures d'écran
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", caption="Ma Bibliothèque")
+    with c2:
+        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", caption="Détails Recette")
+    with c3:
+        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", caption="Liste d'Épicerie")
+    
+    st.divider()
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
 
 # --- PAGE AIDE ---
 elif st.session_state.page == "help":
@@ -268,3 +292,4 @@ elif st.session_state.page == "help":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
