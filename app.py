@@ -344,9 +344,8 @@ elif st.session_state.page == "help":
     with cb:
         st.markdown('<div class="help-box"><h3>🛒 Épicerie</h3><p>Cochez les ingrédients dans une recette pour les envoyer ici.</p></div>', unsafe_allow_html=True)
     
-    if st.button("⬅ Retour", use_container_width=True):
-        st.session_state.page = "home"
-        st.rerun()
+    if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
+        st.session_state.page = "home"; st.rerun()
 
 
 
