@@ -226,23 +226,7 @@ elif st.session_state.page == "home":
         </style>
     """, unsafe_allow_html=True)
 
-   # --- NAVIGATION À 5 BOUTONS (Ligne 194) ---
-    c_nav1, c_nav2, c_nav3, c_nav4, c_nav5 = st.columns(5)
-    
-    if c_nav1.button("📅", use_container_width=True, help="Planning"):
-        st.session_state.page = "planning"; st.rerun()
-        
-    if c_nav2.button("🛒", use_container_width=True, help="Courses"):
-        st.session_state.page = "shop"; st.rerun()
-        
-    if c_nav3.button("➕", use_container_width=True, help="Ajouter"):
-        st.session_state.page = "add"; st.rerun()
-        
-    if c_nav4.button("⭐", use_container_width=True, help="Play Store"):
-        st.session_state.page = "playstore"; st.rerun()
-        
-    if c_nav5.button("❓", use_container_width=True, help="Aide"):
-        st.session_state.page = "help"; st.rerun()
+ 
         
     st.divider()
     df = load_data()
@@ -430,6 +414,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
