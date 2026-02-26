@@ -52,17 +52,56 @@ def send_action(payload):
         except: pass
     return False
 
+import json
+
 def scrape_url(url):
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         res = requests.get(url, headers=headers, timeout=10)
         res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, 'html.parser')
+        
+        # --- TENTATIVE 1 : Données structurées JSON-LD (La plus propre) ---
+        json_data = soup.find('script', type='application/ld+json')
+        if json_data:
+            try:
+                data = json.loads(json_data.string)
+                # Parfois c'est une liste, on cherche l'objet 'Recipe'
+                recipe = data if not isinstance(data, list) else next((item for item in data if item.get('@type') == 'Recipe'), None)
+                
+                if recipe:
+                    title = recipe.get('name', '')
+                    ingredients = "\n".join(recipe.get('recipeIngredient', []))
+                    # La préparation peut être une liste d'étapes
+                    steps = recipe.get('recipeInstructions', [])
+                    if isinstance(steps, list):
+                        prep = "\n".join([s.get('text', str(s)) for s in steps])
+                    else:
+                        prep = str(steps)
+                    
+                    full_content = f"🛒 INGRÉDIENTS :\n{ingredients}\n\n📝 PRÉPARATION :\n{prep}"
+                    return title, full_content
+            except: pass
+
+        # --- TENTATIVE 2 : Sélecteurs classiques (Si JSON-LD échoue) ---
         title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
+        
+        # On cherche spécifiquement les zones d'ingrédients souvent nommées par classe
+        ingredients_tags = soup.select('[class*="ingredient"], [class*="list-ing"]')
+        prep_tags = soup.select('[class*="instruction"], [class*="preparation"], [class*="step"]')
+        
+        if ingredients_tags or prep_tags:
+            ing_text = "\n".join([el.text.strip() for el in ingredients_tags])
+            prep_text = "\n".join([el.text.strip() for el in prep_tags])
+            return title, f"🛒 INGRÉDIENTS :\n{ing_text}\n\n📝 PRÉPARATION :\n{prep_text}"
+
+        # --- TENTATIVE 3 : Extraction brute (Dernier recours) ---
         elements = soup.find_all(['li', 'p'])
         content = "\n".join(dict.fromkeys([el.text.strip() for el in elements if 10 < len(el.text.strip()) < 500]))
         return title, content
-    except: return None, None
+
+    except Exception as e:
+        return f"Erreur : {str(e)}", None
 
 @st.cache_data(ttl=5)
 def load_data():
@@ -230,3 +269,4 @@ elif st.session_state.page == "help":
     st.title("❓ Aide")
     st.write("1. Ajoutez via URL ou manuel.\n2. Cochez les ingrédients pour l'épicerie.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
