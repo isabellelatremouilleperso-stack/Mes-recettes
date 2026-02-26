@@ -243,21 +243,32 @@ elif st.session_state.page == "details":
     if btn_col3.button("🗑️", use_container_width=True):
         st.session_state.confirm_delete = True
 
-  # --- ZONE DE CONFIRMATION DE SUPPRESSION ---
+ # --- ZONE DE CONFIRMATION DE SUPPRESSION ---
     if st.session_state.get('confirm_delete', False):
-        st.warning("⚠️ Voulez-vous vraiment supprimer cette recette ?")
+        st.error("⚠️ SUPPRIMER DÉFINITIVEMENT ?")
         c1, c2 = st.columns(2)
         
         if c1.button("✅ OUI, Supprimer", use_container_width=True):
-            # 1. On lance l'action vers Google
-            if send_action({"action": "delete", "titre": r['Titre']}):
-                # 2. On nettoie TOUT pour forcer la disparition
+            # 1. On lance l'ordre de suppression
+            success = send_action({"action": "delete", "titre": r['Titre']})
+            
+            if success:
+                # 2. LE SECRET : On vide le cache ET on réinitialise les données
+                st.cache_data.clear() 
+                if 'df' in st.session_state:
+                    del st.session_state['df'] # On force l'appli à oublier l'ancienne liste
+                
+                st.success("C'est fait ! Retour à l'accueil...")
                 st.session_state.confirm_delete = False
-                st.cache_data.clear() # On vide le cache des recettes
-                st.success("Suppression réussie !")
                 time.sleep(1)
                 st.session_state.page = "home"
                 st.rerun()
+            else:
+                st.error("Erreur de connexion. Vérifiez votre fichier Excel.")
+                
+        if c2.button("❌ NON, Annuler", use_container_width=True):
+            st.session_state.confirm_delete = False
+            st.rerun()
                 
         if c2.button("❌ NON, Annuler", use_container_width=True):
             st.session_state.confirm_delete = False
@@ -451,6 +462,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
