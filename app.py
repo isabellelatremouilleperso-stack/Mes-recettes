@@ -278,12 +278,21 @@ elif st.session_state.page == "add":
     tab1, tab2, tab3 = st.tabs(["🔗 Import URL", "📝 Vrac", "⌨️ Manuel"])
     
     with tab1:
-        url_link = st.text_input("Lien de la recette")
+        url_link = st.text_input("Collez le lien du site (Marmiton, Ricardo, etc.)")
         if st.button("🪄 Extraire et Importer"):
             t, c = scrape_url(url_link)
             if t: 
-                # On ajoute url_link à la fin pour la colonne Source
-                send_action({"action": "add", "titre": t, "ingredients": c, "preparation": "Import automatique", "date": datetime.now().strftime("%d/%m/%Y"), "source": url_link})
+                # On ajoute "source": url_link pour que le bouton "Recette originale" fonctionne
+                send_action({
+                    "action": "add", 
+                    "titre": t, 
+                    "ingredients": c, 
+                    "preparation": "Import automatique", 
+                    "source": url_link, 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
+                st.success(f"✅ {t} ajouté avec sa source !")
+                time.sleep(1)
                 st.session_state.page = "home"; st.rerun()
                 
     with tab2:
@@ -414,6 +423,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
