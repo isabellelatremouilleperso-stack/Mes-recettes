@@ -347,10 +347,10 @@ elif st.session_state.page == "add":
                 st.session_state.page = "home"; st.rerun()
 
 with tab3:
-        st.write("Formulaire manuel en cours de configuration...")
-        # Tu pourras remettre ton formulaire ici plus tard
-        
-# --- DÉTAILS (REVIENT BIEN TOUT À GAUCHE) ---
+        st.write("📝 Formulaire manuel en cours de configuration...")
+        # Tu pourras rajouter tes champs de saisie ici plus tard
+
+# --- DÉTAILS (REVIENT BIEN COLLÉ À GAUCHE) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
@@ -449,6 +449,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
