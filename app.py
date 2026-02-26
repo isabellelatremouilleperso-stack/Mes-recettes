@@ -279,7 +279,6 @@ elif st.session_state.page == "home":
                 
           if btn_col3.button("🗑️", key=f"d_{i+j}", use_container_width=True):
                 if send_action({"action": "delete", "titre": row['Titre']}):
-                    # Ajoute 4 espaces ici :
                     st.success("Recette supprimée !")
                     time.sleep(1)
                     st.rerun()
@@ -447,6 +446,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
