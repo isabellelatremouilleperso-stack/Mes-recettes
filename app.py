@@ -352,15 +352,21 @@ with tab3:
             m_t = st.text_input("Titre de la recette *")
             m_ing = st.text_area("Ingrédients (un par ligne)")
             m_pre = st.text_area("Préparation / Étapes")
-            if st.form_submit_button("💾 Enregistrer la recette"):
-                send_action({"action": "add", "titre": m_t, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
-                st.success("Recette ajoutée !")
+           if st.form_submit_button("💾 Enregistrer"):
+                send_action({
+                    "action": "add", 
+                    "titre": m_t, 
+                    "ingredients": m_ing, 
+                    "preparation": m_prepa, 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
                 st.session_state.page = "home"
                 st.rerun()
 
-# --- ICI : LE ELIF DOIT ÊTRE COLLÉ AU BORD GAUCHE (Ligne 354) ---
+# --- ICI : LE ELIF DOIT ÊTRE COLLÉ AU BORD GAUCHE SANS AUCUN ESPACE ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
+    st.header(f"📖 {r['Titre']}")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
     
     st.title(f"🍳 {r['Titre']}")
@@ -457,6 +463,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
