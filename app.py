@@ -264,7 +264,6 @@ elif st.session_state.page == "help":
         st.markdown('<div class="help-box"><h3>📝 Ajouter</h3><p>Utilisez l\'onglet <b>Réseaux Sociaux</b> pour Instagram/TikTok.</p></div>', unsafe_allow_html=True)
     with cb:
  st.markdown('<div class="help-box"><h3>🛒 Épicerie</h3><p>Cochez les ingrédients dans une recette pour les envoyer ici.</p></div>', unsafe_allow_html=True)
-    
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
@@ -1186,6 +1185,7 @@ elif st.session_state.page == "help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
 
 
