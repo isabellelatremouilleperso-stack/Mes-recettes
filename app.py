@@ -262,22 +262,23 @@ elif st.session_state.page == "home":
             for j in range(3):
                 if i + j < len(rows):
                     row = rows.iloc[i + j]
-        with cols[j]:
+      with cols[j]:
             img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
             st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><div class="recipe-title">{row["Titre"]}</div></div>', unsafe_allow_html=True)
             
-            # --- LES 3 BOUTONS D'ACTION (👁️, ✏️, 🗑️) ---
             btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 1])
             
             if btn_col1.button("👁️", key=f"v_{i+j}", use_container_width=True):
                 st.session_state.recipe_data = row.to_dict()
-                st.session_state.page = "details"; st.rerun()
+                st.session_state.page = "details"
+                st.rerun()
                 
             if btn_col2.button("✏️", key=f"e_{i+j}", use_container_width=True):
                 st.session_state.recipe_data = row.to_dict()
-                st.session_state.page = "edit"; st.rerun()
+                st.session_state.page = "edit"
+                st.rerun()
                 
-          if btn_col3.button("🗑️", key=f"d_{i+j}", use_container_width=True):
+            if btn_col3.button("🗑️", key=f"d_{i+j}", use_container_width=True):
                 if send_action({"action": "delete", "titre": row['Titre']}):
                     st.success("Recette supprimée !")
                     time.sleep(1)
@@ -446,6 +447,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
