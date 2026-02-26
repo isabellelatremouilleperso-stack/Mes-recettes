@@ -156,11 +156,27 @@ if st.session_state.page == "home":
             for j in range(3):
                 if i + j < len(rows):
                     row = rows.iloc[i + j]
-                    with cols[j]:
+                   # --- Dans la partie "home", au moment de générer les colonnes ---
+                        with cols[j]:
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
-                        st.markdown(f'<div class="recipe-card"><img src="{img}" class="recipe-img"><div class="recipe-title">{row["Titre"]}</div></div>', unsafe_allow_html=True)
-                        if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True, type="primary"):
-                            st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
+    
+            # On prépare l'affichage des étoiles
+            note = row.get('Note', 0)
+            try:
+            etoiles = "⭐" * int(float(note)) if note else ""
+            except:
+            etoiles = ""
+
+    st.markdown(f"""
+        <div class="recipe-card">
+            <img src="{img}" class="recipe-img">
+            <div class="recipe-title">{row["Titre"]}</div>
+            <div style="text-align: center; color: #f1c40f;">{etoiles}</div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
+        st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
 
@@ -391,6 +407,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
