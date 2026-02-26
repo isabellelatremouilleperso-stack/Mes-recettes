@@ -234,7 +234,7 @@ elif st.session_state.page=="add":
                 st.session_state.page="home"; st.rerun()
     # Dans l'onglet "Vrac / Manuel"
 # --- FIN DE LA PAGE AJOUTER ---
-    with tab3:
+with tab3:
         with st.form("form_vrac"):
             v_t = st.text_input("Titre *")
             v_cat = st.selectbox("Catégorie", CATEGORIES)
@@ -242,7 +242,6 @@ elif st.session_state.page=="add":
             v_txt = st.text_area("Texte brut", height=300)
             submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
             
-            # Ce bloc doit être aligné SOUS le bouton submit
             if submit_vrac:
                 if v_t:
                     payload = {
@@ -259,14 +258,12 @@ elif st.session_state.page=="add":
                 else:
                     st.error("Titre obligatoire.")
 
-# --- PAGE ÉPICERIE ---
-# Ce elif doit toucher le bord gauche de votre éditeur
+# --- PAGE ÉPICERIE (BIEN ALIGNÉE À GAUCHE) ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
     if st.button("⬅ Retour"): 
         st.session_state.page = "home"
         st.rerun()
-    
     try:
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         if not df_s.empty:
@@ -286,94 +283,39 @@ elif st.session_state.page == "shop":
         else: 
             st.info("Liste vide.")
     except: 
-        st.error("Erreur de chargement.")  
+        st.error("Erreur de chargement de l'épicerie.")
 
-# --- PAGE PLANNING ---
-elif st.session_state.page=="planning":
+# --- PAGE PLANNING (BIEN ALIGNÉE À GAUCHE) ---
+elif st.session_state.page == "planning":
     st.header("📅 Planning")
-    df=load_data()
+    df = load_data()
     if not df.empty:
-        plan=df[df['Date_Prevue'].astype(str).str.strip()!=""].sort_values(by='Date_Prevue')
-        for _,row in plan.iterrows():
-            with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
-                if st.button("Voir la fiche",key=f"p_{row['Titre']}"):
-                    st.session_state.recipe_data=row.to_dict(); st.session_state.page="details"; st.rerun()
-    if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
+        # On s'assure que la colonne Date_Prevue existe
+        if 'Date_Prevue' in df.columns:
+            plan = df[df['Date_Prevue'].astype(str).str.strip() != ""].sort_values(by='Date_Prevue')
+            for _, row in plan.iterrows():
+                with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
+                    if st.button("Voir la fiche", key=f"p_{row['Titre']}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+        else:
+            st.warning("Aucun repas planifié pour le moment.")
+    if st.button("⬅ Retour"): 
+        st.session_state.page = "home"
+        st.rerun()
 
-# --- PAGE PLAYSTORE ---
-elif st.session_state.page=="playstore":
-    st.markdown("""
-    <div class="playstore-container">
-        <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond-centre">
-        <h1>Mes Recettes Pro</h1>
-        <p>👩‍🍳 Isabelle Latrémouille</p>
-        <p>⭐ 4.9 ★ (128 avis) | 📥 1 000+ téléchargements</p>
-    </div>
-    """,unsafe_allow_html=True)
-    if st.button("📥 Installer l'application",use_container_width=True,type="primary"):
-        st.success("Application installée ! 🎉")
-    st.divider()
-    c1,c2,c3=st.columns(3)
-    c1.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg",caption="Ma Bibliothèque")
-    c2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg",caption="Détails")
-    c3.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg",caption="Liste d'Épicerie")
-    st.divider()
-    col_desc,col_tech=st.columns(2)
-    with col_desc:
-        st.subheader("📝 À propos")
-        st.write("Mes Recettes Pro est votre compagnon culinaire ultime.\n✔ Gestion intuitive\n✔ Notes ⭐\n✔ Planning 📅\n✔ Liste d'épicerie 🛒\n✔ Synchronisation Cloud")
-    with col_tech:
-        st.subheader("ℹ️ Infos")
-        st.write("Version : 2.0 Premium\nMise à jour : Février 2026\nCatégorie : Cuisine\nDéveloppeur : Isabelle Latrémouille")
-    st.divider()
-    if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
-        st.session_state.page="home"; st.rerun()
+# --- PAGE PLAYSTORE & AIDE (RESTE DU CODE) ---
+elif st.session_state.page == "playstore":
+    st.markdown("### 📥 Installer l'application", unsafe_allow_html=True)
+    if st.button("Retour à la Bibliothèque"): 
+        st.session_state.page = "home"
+        st.rerun()
 
-# --- PAGE AIDE ---
-elif st.session_state.page=="help":
-    st.header("❓ Aide & Astuces")
-    ca,cb=st.columns(2)
-    with ca:
-        st.markdown("""
-        <div class="help-box">
-            <h3>📝 Ajouter Recette</h3>
-            <p>🌐 Site Web, 🎬 Vidéo ou 📝 Vrac/manuel pour ajouter vos recettes.</p>
-        </div>
-        """,unsafe_allow_html=True)
-        st.markdown("""
-        <div class="help-box">
-            <h3>🔍 Rechercher</h3>
-            <p>Recherchez par titre ou filtre par catégorie dans la bibliothèque.</p>
-        </div>
-        """,unsafe_allow_html=True)
-    with cb:
-        st.markdown("""
-        <div class="help-box">
-            <h3>🛒 Liste d'Épicerie</h3>
-            <p>Cochez les ingrédients pour les ajouter. Retirer ou vider la liste à tout moment.</p>
-        </div>
-        """,unsafe_allow_html=True)
-        st.markdown("""
-        <div class="help-box">
-            <h3>📅 Planning</h3>
-            <p>Planifiez vos repas et accédez directement aux fiches des recettes.</p>
-        </div>
-        """,unsafe_allow_html=True)
-    st.markdown("---")
-    if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
-        st.session_state.page="home"; st.rerun()
+elif st.session_state.page == "help":
+    st.header("❓ Aide")
+    if st.button("Retour à la Bibliothèque"): 
+        st.session_state.page = "home"
+        st.rerun()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+   
