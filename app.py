@@ -229,12 +229,14 @@ with tab3:
         with st.form("form_vrac"):
             v_t = st.text_input("Titre *")
             v_cat = st.selectbox("Catégorie", CATEGORIES)
+            # Assurez-vous que v_date est bien créé ici
             v_date = st.date_input("Planifier pour le (optionnel)", value=None)
             v_txt = st.text_area("Texte brut", height=300)
             submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
             
             if submit_vrac:
                 if v_t:
+                    # Le payload doit être fermé correctement avec }
                     payload = {
                         "action": "add",
                         "titre": v_t,
@@ -243,15 +245,16 @@ with tab3:
                         "date": datetime.now().strftime("%d/%m/%Y"),
                         "date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""
                     }
+                    # L'appel de fonction doit être fermé avec )
                     send_action(payload)
                     st.session_state.page = "home"
                     st.rerun()
                 else:
                     st.error("Titre obligatoire.")
 
-
 # --- PAGE ÉPICERIE ---
-elif st.session_state.page=="shop":
+# Ce elif doit être aligné au bord gauche, au même niveau que le "if" initial
+elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
     if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
     try:
@@ -342,6 +345,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
