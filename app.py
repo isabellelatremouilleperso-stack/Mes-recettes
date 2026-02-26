@@ -267,56 +267,86 @@ elif st.session_state.page == "details":
     # 5. PRÉPARATION EN BAS
     st.subheader("📝 Préparation")
     st.write(r.get('Préparation', 'Aucune étape.'))
-# --- PAGE AJOUTER (Version avec URL, Vidéo et Vrac) ---
+# --- PAGE AJOUTER (Version complète avec URL, Vidéo et Vrac) ---
 elif st.session_state.page == "add":
     st.header("➕ Ajouter une Recette")
     
     # On utilise 3 onglets pour que tu aies toutes les options sous la main
     tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Auto)", "🎬 Lien Vidéo", "📝 Vrac / Manuel"])
 
-    # --- 1. L'IMPORTATION URL ---
+    # --- 1. L'IMPORTATION URL (Le bouton "Google" / Analyse) ---
     with tab1:
         st.subheader("Extraire depuis un site")
         web_url = st.text_input("Collez l'URL ici", key="web_url_input")
-        if st.button("🔍 Analyser le site"):
-            if web_url:
-                with st.spinner("Analyse..."):
-                    titre, contenu = scrape_url(web_url)
-                    if titre:
-                        # Tri intelligent automatique mais modifiable
-                        lignes = contenu.split('\n')
-                        tri = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
-                        st.session_state.temp_titre = titre
-                        st.session_state.temp_contenu = "\n".join(tri)
         
+        if st.button("🔍 Analyser le site", key="btn_analyse_google"):
+            if web_url:
+                with st.spinner("Analyse en cours..."):
+                    try:
+                        titre, contenu = scrape_url(web_url)
+                        if titre:
+                            # Tri intelligent automatique mais modifiable
+                            lignes = contenu.split('\n')
+                            # On garde les lignes de texte significatives
+                            tri = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
+                            st.session_state.temp_titre = titre
+                            st.session_state.temp_contenu = "\n".join(tri)
+                        else:
+                            st.error("Impossible d'extraire les données du site.")
+                    except Exception as e:
+                        st.error(f"Erreur lors de l'analyse : {e}")
+        
+        # Si l'analyse a réussi, on affiche les champs de modification
         if "temp_titre" in st.session_state:
+            st.markdown("---")
             t_edit = st.text_input("Titre extrait", value=st.session_state.temp_titre)
             c_edit = st.text_area("Contenu extrait (Triez ici !)", value=st.session_state.temp_contenu, height=250)
+            
             if st.button("💾 Enregistrer cet import"):
-                send_action({"action": "add", "titre": t_edit, "preparation": c_edit, "source": web_url, "date": datetime.now().strftime("%d/%m/%Y")})
+                send_action({
+                    "action": "add", 
+                    "titre": t_edit, 
+                    "preparation": c_edit, 
+                    "source": web_url, 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
+                # On nettoie la mémoire après l'enregistrement
                 del st.session_state.temp_titre
-                st.session_state.page = "home"; st.rerun()
+                st.success("Recette ajoutée avec succès !")
+                st.session_state.page = "home"
+                st.rerun()
 
     # --- 2. L'IMPORTATION VIDÉO ---
     with tab2:
         st.subheader("Lien Vidéo")
         s_url = st.text_input("Lien Insta/TikTok/FB", key="vid_url")
         s_t = st.text_input("Nom de la recette", key="vid_titre")
+        
         if st.button("🚀 Sauvegarder Vidéo"):
-            send_action({"action": "add", "titre": s_t, "source": s_url, "preparation": f"Vidéo : {s_url}", "date": datetime.now().strftime("%d/%m/%Y")})
-            st.session_state.page = "home"; st.rerun()
+            if s_t and s_url:
+                send_action({
+                    "action": "add", 
+                    "titre": s_t, 
+                    "source": s_url, 
+                    "preparation": f"Vidéo : {s_url}", 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
+                st.session_state.page = "home"
+                st.rerun()
+            else:
+                st.warning("Veuillez remplir le titre et le lien.")
 
-    # --- 3. L'OPTION VRAC / MANUEL (Celle que tu voulais garder) ---
+    # --- 3. L'OPTION VRAC / MANUEL ---
     with tab3:
         st.subheader("Saisie libre (Vrac)")
         st.info("Collez votre texte ici, triez-le comme vous voulez, puis enregistrez.")
         
-        # On utilise un formulaire pour le vrac/manuel
         with st.form("form_vrac"):
             v_t = st.text_input("Titre de la recette *")
-            v_cat = st.selectbox("Catégorie", CATEGORIES)
+            # Utilise ta liste CATEGORIES définie au début de ton code
+            v_cat = st.selectbox("Catégorie", CATEGORIES if 'CATEGORIES' in locals() else ["Autre"])
             v_txt = st.text_area("Collez votre texte brut ou vos ingrédients ici", height=300, 
-                                 help="Vous pouvez copier-coller un bloc de texte et supprimer ce qui ne sert à rien.")
+                               help="Vous pouvez copier-coller un bloc de texte et supprimer ce qui ne sert à rien.")
             
             submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
             
@@ -326,10 +356,11 @@ elif st.session_state.page == "add":
                         "action": "add", 
                         "titre": v_t, 
                         "catégorie": v_cat,
-                        "ingredients": v_txt, # Dans le vrac, on met tout dans ingrédients pour que tu puisses trier après
+                        "ingredients": v_txt, 
                         "date": datetime.now().strftime("%d/%m/%Y")
                     })
-                    st.session_state.page = "home"; st.rerun()
+                    st.session_state.page = "home"
+                    st.rerun()
                 else:
                     st.error("Le titre est obligatoire.")
 # --- PAGE ÉPICERIE ---
@@ -455,6 +486,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
