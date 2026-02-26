@@ -274,27 +274,56 @@ elif st.session_state.page == "add":
     # On utilise 3 onglets pour que tu aies toutes les options sous la main
     tab1, tab2, tab3 = st.tabs(["🌐 Site Web (Auto)", "🎬 Lien Vidéo", "📝 Vrac / Manuel"])
 
-    # --- 1. L'IMPORTATION URL (Le bouton "Google" / Analyse) ---
+   # --- 1. L'IMPORTATION URL (Le bouton "Google" / Analyse) ---
     with tab1:
         st.subheader("Extraire depuis un site")
-        web_url = st.text_input("Collez l'URL ici", key="web_url_input")
         
-        if st.button("🔍 Analyser le site", key="btn_analyse_google"):
+        # On s'assure que le champ URL est bien là
+        web_url = st.text_input("Collez l'URL ici", key="web_url_input", placeholder="https://...")
+        
+        # FORCE L'AFFICHAGE DU BOUTON :
+        # S'il n'apparaît pas, vérifie s'il n'y a pas un message d'erreur rouge tout en haut du site
+        if st.button("🔍 Analyser le site", key="btn_google_new", use_container_width=True):
             if web_url:
                 with st.spinner("Analyse en cours..."):
                     try:
-                        titre, contenu = scrape_url(web_url)
-                        if titre:
-                            # Tri intelligent automatique mais modifiable
-                            lignes = contenu.split('\n')
-                            # On garde les lignes de texte significatives
+                        res = scrape_url(web_url)
+                        if res and res[0]: # Si on a un titre
+                            st.session_state.temp_titre = res[0]
+                            # Nettoyage rapide du contenu
+                            lignes = res[1].split('\n')
                             tri = [l.strip() for l in lignes if 10 < len(l.strip()) < 350]
-                            st.session_state.temp_titre = titre
                             st.session_state.temp_contenu = "\n".join(tri)
+                            st.rerun()
                         else:
-                            st.error("Impossible d'extraire les données du site.")
+                            st.error("L'analyse n'a rien donné. Vérifie l'URL.")
                     except Exception as e:
-                        st.error(f"Erreur lors de l'analyse : {e}")
+                        st.error(f"Erreur technique : {e}")
+            else:
+                st.warning("Veuillez entrer une URL d'abord.")
+
+        # Affichage des champs de modification après l'analyse
+        if "temp_titre" in st.session_state:
+            st.divider()
+            t_edit = st.text_input("Titre extrait", value=st.session_state.temp_titre)
+            c_edit = st.text_area("Contenu extrait (Triez ici !)", value=st.session_state.temp_contenu, height=250)
+            
+            c_save1, c_save2 = st.columns(2)
+            if c_save1.button("💾 Enregistrer", type="primary", use_container_width=True):
+                send_action({
+                    "action": "add", 
+                    "titre": t_edit, 
+                    "preparation": c_edit, 
+                    "source": web_url, 
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                })
+                del st.session_state.temp_titre
+                st.session_state.page = "home"
+                st.rerun()
+            
+            if c_save2.button("❌ Annuler", use_container_width=True):
+                del st.session_state.temp_titre
+                st.rerun()
         
         # Si l'analyse a réussi, on affiche les champs de modification
         if "temp_titre" in st.session_state:
@@ -486,6 +515,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
