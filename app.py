@@ -102,17 +102,22 @@ if "page" not in st.session_state: st.session_state.page = "home"
 # 3. SIDEBAR
 # ======================================================
 with st.sidebar:
+    # Vérifie que ton code ressemble à ceci (avec les guillemets triples) :
+st.markdown("""
+<style>
     .logo-rond {
         width: 100px;
         height: 100px;
-        border-radius: 50%; /* Rend l'image parfaitement ronde */
+        border-radius: 50%;
         object-fit: cover;
-        border: 3px solid #e67e22; /* Bordure orange */
+        border: 3px solid #e67e22;
         margin-bottom: 20px;
         display: block;
         margin-left: auto;
         margin-right: auto;
     }
+</style>
+""", unsafe_allow_html=True)
     st.title("👨‍🍳 Mes Recettes")
     if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page = "home"; st.rerun()
     if st.button("📅 Planning Repas", use_container_width=True): st.session_state.page = "planning"; st.rerun()
@@ -335,6 +340,7 @@ elif st.session_state.page == "help":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
 
 
