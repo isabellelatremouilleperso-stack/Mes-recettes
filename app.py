@@ -81,13 +81,21 @@ def scrape_url(url):
 @st.cache_data(ttl=5)
 def load_data():
     try:
-        df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}").fillna('')
-        cols = ['Date','Titre','Source','Ingrédients','Préparation','Date_Prevue','Image','Catégorie','Portions','Temps_Prepa','Temps_Cuisson','Commentaires','Note','Video']
-        df.columns = cols[:len(df.columns)]
+        # 1. Lecture du flux CSV
+        df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
+        
+        # 2. Nettoyage basique
+        df = df.fillna('')
+        
+        # 3. On s'assure que les noms de colonnes dans le code correspondent 
+        # à ceux de votre tableur (on enlève les espaces pour éviter les bugs)
+        df.columns = [c.strip() for c in df.columns]
+        
         return df
-    except:
+    except Exception as e:
+        st.error(f"Erreur de lecture : {e}")
         return pd.DataFrame()
-
+        
 # --- UTILISATION DE LA FONCTION ---
 df = load_data()
 st.write("DEBUG: lignes chargées:", len(df))
@@ -350,6 +358,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
