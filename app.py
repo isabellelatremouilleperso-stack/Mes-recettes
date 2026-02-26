@@ -246,19 +246,25 @@ elif st.session_state.page == "details":
 # --- ZONE DE CONFIRMATION DE SUPPRESSION ---
     if st.session_state.get('confirm_delete', False):
         st.error("⚠️ SUPPRIMER DÉFINITIVEMENT ?")
-        conf_c1, conf_c2 = st.columns(2) # On change le nom des colonnes pour éviter les conflits
+        # On utilise des noms très précis pour les colonnes et les boutons
+        col_confirm_1, col_confirm_2 = st.columns(2)
         
-        if conf_c1.button("✅ OUI, Supprimer", use_container_width=True, key="btn_confirm_yes"):
+        if col_confirm_1.button("✅ OUI, Supprimer", use_container_width=True, key="btn_final_del"):
+            # On vérifie que la fonction send_action reçoit bien les bonnes infos
             success = send_action({"action": "delete", "titre": r['Titre']})
             if success:
-                st.cache_data.clear() 
-                if 'df' in st.session_state:
-                    del st.session_state['df']
+                st.cache_data.clear()
                 st.session_state.confirm_delete = False
-                st.success("C'est fait !")
+                st.success("Supprimé !")
                 time.sleep(1)
                 st.session_state.page = "home"
                 st.rerun()
+            else:
+                st.error("Le script Google n'a pas répondu.")
+
+        if col_confirm_2.button("❌ NON, Annuler", use_container_width=True, key="btn_final_cancel"):
+            st.session_state.confirm_delete = False
+            st.rerun()
             else:st.error("Erreur de connexion.")
                 
         # AJOUT DE key="btn_confirm_no" ICI :
@@ -464,6 +470,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
