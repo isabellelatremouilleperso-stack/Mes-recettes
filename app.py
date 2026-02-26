@@ -202,21 +202,53 @@ elif st.session_state.page == "add":
             st.session_state.update(res)
             st.info("Données analysées. Vérifiez l'onglet 2.")
 
+    # --- REMPLACE UNIQUEMENT LA PARTIE "TAB2" DANS TON CODE OU REPRENDS CE BLOC ---
+
     with tab2:
         with st.form("form_final"):
-            f_t = st.text_input("Titre *", value=st.session_state.temp_titre)
+            f_t = st.text_input("Titre de la recette *", value=st.session_state.get('temp_titre', ""))
             f_cat = st.selectbox("Catégorie", CATEGORIES)
+            
+            # --- AJOUT DES URLS ---
+            f_source = st.text_input("🔗 Lien de la source (Site web)", value=url_link if 'url_link' in locals() else "")
+            f_video = st.text_input("🎥 Lien de la vidéo (YouTube, TikTok...)", value="")
+            
+            st.divider()
+            
             c1, c2, c3 = st.columns(3)
-            f_prepa = c1.text_input("⏳ Prépa", value=st.session_state.get('t_prepa', ""))
-            f_cuis = c2.text_input("🔥 Cuisson", value=st.session_state.get('t_cuisson', ""))
+            f_prepa = c1.text_input("⏳ Temps Prépa", value=st.session_state.get('t_prepa', ""))
+            f_cuis = c2.text_input("🔥 Temps Cuisson", value=st.session_state.get('t_cuisson', ""))
             f_port = c3.text_input("🍽 Portions", value=st.session_state.get('port', ""))
-            f_ing = st.text_area("🛒 Ingrédients", value=st.session_state.get('ing', ""), height=150)
-            f_prep = st.text_area("📝 Préparation", value=st.session_state.get('prep', ""), height=150)
-            f_img = st.text_input("Lien Image", value="")
-            if st.form_submit_button("🚀 ENREGISTRER"):
-                payload = {"action": "add", "titre": f_t, "categorie": f_cat, "ingredients": f_ing, "preparation": f_prep, "Temps_Prepa": f_prepa, "Temps_Cuisson": f_cuis, "Portions": f_port, "image": f_img, "date": datetime.now().strftime("%d/%m/%Y")}
+            
+            f_ing = st.text_area("🛒 Ingrédients (Isolés par l'analyse)", value=st.session_state.get('ing', ""), height=150)
+            f_prep = st.text_area("📝 Étapes de préparation", value=st.session_state.get('prep', ""), height=200)
+            
+            f_img = st.text_input("🖼️ Lien de l'image (URL)", value="")
+            
+            if st.form_submit_button("🚀 ENREGISTRER TOUT DANS LE CLOUD"):
+                # On prépare toutes les données pour ton Google Script
+                payload = {
+                    "action": "add",
+                    "titre": f_t,
+                    "categorie": f_cat,
+                    "source": f_source,      # RÉINTÉGRÉ
+                    "video": f_video,        # RÉINTÉGRÉ
+                    "ingredients": f_ing,
+                    "preparation": f_prep,
+                    "Temps_Prepa": f_prepa,
+                    "Temps_Cuisson": f_cuis,
+                    "Portions": f_port,
+                    "image": f_img,
+                    "date": datetime.now().strftime("%d/%m/%Y")
+                }
+                
                 if send_action(payload):
-                    st.success("Recette ajoutée !"); time.sleep(1); st.session_state.page = "home"; st.rerun()
+                    st.success("✅ Recette complète enregistrée !")
+                    time.sleep(1)
+                    st.session_state.page = "home"
+                    st.rerun()
+                else:
+                    st.error("❌ Erreur lors de l'envoi. Vérifie ta connexion.")
 
 # --- DÉTAILS ---
 elif st.session_state.page == "details":
@@ -276,3 +308,4 @@ elif st.session_state.page == "help":
     st.title("❓ Aide")
     st.markdown("1. **Ajouter** : Collez une URL ou du texte brut, puis utilisez l'onglet Ventilation pour distribuer automatiquement les ingrédients et la préparation.\n2. **Épicerie** : Cochez dans la recette pour envoyer au panier.")
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
