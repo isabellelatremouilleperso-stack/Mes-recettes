@@ -99,47 +99,29 @@ def load_data():
 if "page" not in st.session_state: st.session_state.page = "home"
 
 # ======================================================
-# 3. SIDEBAR (Navigation Unique)
+# 3. SIDEBAR (Version Originale Restaurée)
 # ======================================================
 with st.sidebar:
-    # 1. Style CSS pour le logo rond
-    st.markdown("""
-    <style>
-        .logo-rond {
-            width: 100px !important;
-            height: 100px !important;
-            border-radius: 50% !important;
-            object-fit: cover !important;
-            border: 3px solid #e67e22 !important;
-            margin: 0 auto 20px auto !important;
-            display: block !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # 2. Affichage du Logo et du Titre
-    st.markdown('<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond">', unsafe_allow_html=True)
+    # On utilise la méthode directe qui fonctionnait au début
+    st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=100)
+    
     st.title("🍳 Mes Recettes")
 
-    # 3. Boutons de Navigation (UN SEUL EXEMPLAIRE de chaque)
-    if st.button("📚 Bibliothèque", use_container_width=True, key="side_nav_home"): 
+    # NAVIGATION (Vérifie bien qu'il n'y a pas de doublons en dessous !)
+    if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"): 
         st.session_state.page = "home"; st.rerun()
-        
-    if st.button("📅 Planning Repas", use_container_width=True, key="side_nav_plan"): 
+    if st.button("📅 Planning Repas", use_container_width=True, key="side_plan"): 
         st.session_state.page = "planning"; st.rerun()
-        
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_nav_shop"): 
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"): 
         st.session_state.page = "shop"; st.rerun()
     
     st.divider()
     
-    if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True, key="side_nav_add"): 
+    if st.button("➕ AJOUTER RECETTE", type="primary", use_container_width=True, key="side_add"): 
         st.session_state.page = "add"; st.rerun()
-        
-    if st.button("⭐ Play Store", use_container_width=True, key="side_nav_play"): 
+    if st.button("⭐ Play Store", use_container_width=True, key="side_play"): 
         st.session_state.page = "playstore"; st.rerun()
-        
-    if st.button("❓ Aide", use_container_width=True, key="side_nav_help"): 
+    if st.button("❓ Aide", use_container_width=True, key="side_help"): 
         st.session_state.page = "help"; st.rerun()
 # ======================================================
 # 4. PAGES
@@ -353,6 +335,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
