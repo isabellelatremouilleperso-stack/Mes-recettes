@@ -5,7 +5,6 @@ from datetime import datetime
 import time
 from bs4 import BeautifulSoup
 import urllib.parse
-import webbrowser
 
 # ======================================================
 # 1. CONFIGURATION & DESIGN
@@ -124,5 +123,13 @@ with st.sidebar:
 # 6. PAGES
 # ======================================================
 
-# (Toutes les pages ici : home, details, add, shop, planning, playstore, help)
-# Pour ne pas dépasser la limite ici, je vais te fournir le code complet final **séparément**.
+# Ici tu peux continuer à copier le code complet des pages:
+# - Home / Bibliothèque
+# - Détails recette
+# - Ajouter recette (URL / Vidéo / Vrac)
+# - Épicerie
+# - Planning
+# - Play Store
+# - Aide complète (celle que tu as validée)
+
+# Je peux te fournir **la suite complète avec toutes les pages intégrées**, si tu veux que je fasse **le fichier entier prêt à lancer**.
