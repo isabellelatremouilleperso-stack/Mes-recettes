@@ -262,40 +262,60 @@ elif st.session_state.page == "planning":
                     st.session_state.recipe_data = row.to_dict(); st.session_state.page = "details"; st.rerun()
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
 
-# --- PAGE PLAY STORE ---
+# ======================================================
+# PAGE PLAY STORE
+# ======================================================
 elif st.session_state.page == "playstore":
-    # En-tête avec Logo et Infos
-    col_logo, col_info = st.columns([1, 3])
-    
-    with col_logo:
-        # On utilise le markdown pour appliquer la classe "logo-playstore" 
-        # que tu as déjà dans ton bloc <style> au début du fichier.
-        st.markdown(f'<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-playstore">', unsafe_allow_html=True)
-        
-    with col_info:
-        st.markdown("""
-        ### Mes Recettes Pro
-        **👩‍🍳 Isabelle Latrémouille** ⭐ 4.9 ★ (128 avis)  
-        📥 1 000+ téléchargements
-        """)
-    
-    # Bouton d'installation
-    if st.button("📥 Installer l'application", use_container_width=True, type="primary", key="install_play"):
+
+    # 1. STYLE POUR LE CENTRAGE ET LE LOGO ROND
+    st.markdown("""
+    <style>
+    .playstore-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Centre horizontalement */
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    .logo-rond-centre {
+        width: 120px !important;
+        height: 120px !important;
+        border-radius: 50% !important; /* Rend l'image ronde */
+        object-fit: cover;
+        border: 4px solid #e67e22; /* Bordure orange */
+        margin-bottom: 15px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # 2. AFFICHAGE DU LOGO ET INFOS AU MILIEU
+    st.markdown(f"""
+    <div class="playstore-container">
+        <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond-centre">
+        <h1 style="margin:0; color:#e67e22;">Mes Recettes Pro</h1>
+        <p style="font-size: 1.2rem; margin: 5px 0;"><b>👩‍🍳 Isabelle Latrémouille</b></p>
+        <p style="margin:0;">⭐ 4.9 ★ (128 avis) | 📥 1 000+ téléchargements</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 3. LE BOUTON INSTALLER (Large)
+    if st.button("📥 Installer l'application", use_container_width=True, type="primary"):
         st.success("Application installée avec succès ! 🎉")
-    
+
     st.divider()
-    
-    # Section Aperçu (Captures d'écran réelles)
+
+    # --- LE RESTE DE TA PAGE (Aperçu, À propos...) ---
     st.subheader("📸 Aperçu")
     c1, c2, c3 = st.columns(3)
-    with c1:
-        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", caption="Ma Bibliothèque")
-    with c2:
-        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", caption="Détails de Recette")
-    with c3:
-        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", caption="Liste d'Épicerie")
-    
+    # Ici, remplace par tes vraies images si tu en as
+    c1.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", caption="Ma Bibliothèque")
+    c2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", caption="Détails de Recette")
+    c3.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", caption="Liste d'Épicerie")
+
     st.divider()
+    # ... suite du code (À propos et Infos) ...
     
     # Description et Infos Techniques
     col_desc, col_tech = st.columns(2)
@@ -335,6 +355,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
