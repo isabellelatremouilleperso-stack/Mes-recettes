@@ -268,8 +268,9 @@ elif st.session_state.page == "playstore":
     col_logo, col_info = st.columns([1, 3])
     
     with col_logo:
-        # Ton vrai logo
-        st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=120)
+        # On utilise le markdown pour appliquer la classe "logo-playstore" 
+        # que tu as déjà dans ton bloc <style> au début du fichier.
+        st.markdown(f'<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-playstore">', unsafe_allow_html=True)
         
     with col_info:
         st.markdown("""
@@ -323,7 +324,6 @@ elif st.session_state.page == "playstore":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True, key="back_from_play"):
         st.session_state.page = "home"
         st.rerun()
-
 # --- PAGE AIDE ---
 elif st.session_state.page == "help":
     st.header("❓ Aide & Astuces")
@@ -335,6 +335,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
