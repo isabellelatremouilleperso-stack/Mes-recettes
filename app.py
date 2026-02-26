@@ -114,13 +114,16 @@ with st.sidebar:
 # ======================
 
 if st.session_state.page == "home":
-    c1,c2 = st.columns([4,1])
+   c1, c2 = st.columns([4, 1])
     c1.header("📚 Ma Bibliothèque")
-    if c2.button("🔄 Actualiser"): st.cache_data.clear(); st.rerun()
+    if c2.button("🔄 Actualiser"): 
+        st.cache_data.clear()
+        st.rerun()
     st.divider()
+    
     df = load_data()
     if not df.empty:
-        col_search,col_cat = st.columns([2,1])
+        col_search, col_cat = st.columns([2, 1])
         with col_search:
             search = st.text_input("🔍 Rechercher...", placeholder="Ex: Lasagne...")
         with col_cat:
@@ -129,25 +132,42 @@ if st.session_state.page == "home":
         
         mask = df['Titre'].str.contains(search, case=False, na=False)
         if cat_choisie != "Toutes":
-            mask = mask & (df['Catégorie']==cat_choisie)
+            mask = mask & (df['Catégorie'] == cat_choisie)
         
+        # --- LOGIQUE D'AFFICHAGE AVEC BADGES ---
+        def get_cat_color(cat):
+            colors = {
+                "Poulet": "#FF5733", "Bœuf": "#C70039", "Dessert": "#FF33FF",
+                "Légumes": "#28B463", "Poisson": "#3498DB", "Pâtes": "#F1C40F"
+            }
+            return colors.get(cat, "#e67e22")
+
         rows = df[mask].reset_index(drop=True)
-        for i in range(0,len(rows),3):
+        for i in range(0, len(rows), 3):
             cols = st.columns(3)
             for j in range(3):
                 if i+j < len(rows):
                     row = rows.iloc[i+j]
                     with cols[j]:
                         img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
+                        cat_label = row['Catégorie'] if row['Catégorie'] else "Autre"
+                        cat_color = get_cat_color(cat_label)
+                        
                         st.markdown(f"""
                         <div class="recipe-card">
                             <img src="{img}" class="recipe-img">
+                            <div style="text-align:center; margin-top:5px;">
+                                <span style="background-color:{cat_color}; color:white; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold; text-transform:uppercase;">
+                                    {cat_label}
+                                </span>
+                            </div>
                             <div class="recipe-title">{row['Titre']}</div>
                         </div>
                         """, unsafe_allow_html=True)
+                        
                         if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
-                            st.session_state.recipe_data=row.to_dict()
-                            st.session_state.page="details"
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
                             st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
@@ -335,4 +355,5 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
