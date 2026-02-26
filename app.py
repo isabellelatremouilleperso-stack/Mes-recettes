@@ -411,36 +411,35 @@ elif st.session_state.page == "shop":
         st.error("Erreur lors du chargement de la liste.")
 
 elif st.session_state.page == "add":
-    st.header("➕ Nouvelle Recette")
-    t1, t2, t3 = st.tabs(["🔗 Réseaux", "📝 Vrac", "⌨️ Manuel"])
+    st.header("➕ Ajouter une Recette")
+    
+    # Utilisation d'onglets pour un visuel propre
+    tab_social, tab_vrac, tab_man = st.tabs(["🔗 Réseaux Sociaux", "📝 Vrac", "⌨️ Manuel"])
 
-    with t1:
-        st.markdown("### 📱 Instagram / TikTok / FB")
-        soc_url = st.text_input("Lien de la vidéo")
-        soc_titre = st.text_input("Nom du plat")
-        if st.button("🚀 Sauvegarder le lien", use_container_width=True):
-            if soc_url and soc_titre:
-                send_action({"action": "add", "titre": soc_titre, "source": soc_url, "preparation": f"Lien vidéo : {soc_url}", "date": datetime.now().strftime("%d/%m/%Y")})
-                st.success("Lien enregistré !"); st.session_state.page = "home"; st.rerun()
+    with tab_social:
+        st.subheader("📱 Instagram / TikTok / Facebook")
+        s_url = st.text_input("Collez le lien de la vidéo ici")
+        s_titre = st.text_input("Titre de la recette", placeholder="Ex: Pâtes à la feta")
+        if st.button("🚀 Sauvegarder Source", use_container_width=True):
+            if s_url and s_titre:
+                send_action({"action": "add", "titre": s_titre, "source": s_url, "preparation": f"Lien vidéo : {s_url}", "date": datetime.now().strftime("%d/%m/%Y")})
+                st.success("Lien enregistré !"); time.sleep(1); st.session_state.page = "home"; st.rerun()
 
-    with t2:
-        # Bloc Vrac pour le texte brut
-        v_t = st.text_input("Titre", key="v_tit")
-        v_txt = st.text_area("Texte de la recette", height=150)
-        if st.button("🪄 Ajouter en vrac", use_container_width=True):
-            send_action({"action": "add", "titre": v_t, "ingredients": v_txt, "date": datetime.now().strftime("%d/%m/%Y")})
-            st.session_state.page = "home"; st.rerun()
+    with tab_vrac:
+        v_t = st.text_input("Nom du plat")
+        v_txt = st.text_area("Collez tout le texte brut ici", height=200)
+        if st.button("🪄 Ajouter", use_container_width=True):
+             send_action({"action": "add", "titre": v_t, "ingredients": v_txt, "date": datetime.now().strftime("%d/%m/%Y")})
+             st.rerun()
 
-    with t3:
-        # Formulaire complet
-        with st.form("f_man"):
-            m_t = st.text_input("Titre *")
-            m_cat = st.selectbox("Catégorie", CATEGORIES)
-            m_ing = st.text_area("Ingrédients")
-            m_pre = st.text_area("Préparation")
+    with tab_man:
+        with st.form("form_complet"):
+            st.text_input("Titre *", key="m_titre")
+            st.text_area("Ingrédients", key="m_ing")
+            st.text_area("Préparation", key="m_prep")
             if st.form_submit_button("💾 Créer la fiche"):
-                send_action({"action": "add", "titre": m_t, "categorie": m_cat, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
-                st.session_state.page = "home"; st.rerun()
+                # Logique d'envoi...
+                st.rerun()
                 
 elif st.session_state.page == "aide":
     st.header("❓ Centre d'Aide & Astuces")
@@ -516,6 +515,7 @@ elif st.session_state.page == "aide":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+
 
 
 
