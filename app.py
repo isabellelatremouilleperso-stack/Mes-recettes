@@ -233,6 +233,7 @@ elif st.session_state.page=="add":
                 send_action({"action":"add","titre":s_t,"source":s_url,"preparation":f"Vidéo : {s_url}","date":datetime.now().strftime("%d/%m/%Y")})
                 st.session_state.page="home"; st.rerun()
     # Dans l'onglet "Vrac / Manuel"
+# --- FIN DE LA PAGE AJOUTER ---
     with tab3:
         with st.form("form_vrac"):
             v_t = st.text_input("Titre *")
@@ -241,7 +242,7 @@ elif st.session_state.page=="add":
             v_txt = st.text_area("Texte brut", height=300)
             submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
             
-            # Ce bloc DOIT être à l'intérieur du "with st.form"
+            # Ce bloc doit être aligné SOUS le bouton submit
             if submit_vrac:
                 if v_t:
                     payload = {
@@ -259,23 +260,33 @@ elif st.session_state.page=="add":
                     st.error("Titre obligatoire.")
 
 # --- PAGE ÉPICERIE ---
-# Ce elif doit être aligné au bord gauche, au même niveau que le "if" initial
+# IMPORTANT : Ce 'elif' doit être aligné tout à gauche de votre éditeur
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
-    if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
+    if st.button("⬅ Retour"): 
+        st.session_state.page = "home"
+        st.rerun()
+    
     try:
-        df_s=pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
+        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         if not df_s.empty:
-            to_del=[]
-            for idx,row in df_s.iterrows():
-                if st.checkbox(str(row.iloc[0]),key=f"sh_{idx}"): to_del.append(str(row.iloc[0]))
-            c1,c2=st.columns(2)
+            to_del = []
+            for idx, row in df_s.iterrows():
+                if st.checkbox(str(row.iloc[0]), key=f"sh_{idx}"): 
+                    to_del.append(str(row.iloc[0]))
+            
+            c1, c2 = st.columns(2)
             if c1.button("🗑 Retirer"):
-                for it in to_del: send_action({"action":"remove_shop","article":it})
+                for it in to_del: 
+                    send_action({"action": "remove_shop", "article": it})
                 st.rerun()
-            if c2.button("🧨 Vider"): send_action({"action":"clear_shop"}); st.rerun()
-        else: st.info("Liste vide.")
-    except: st.error("Erreur de chargement.")
+            if c2.button("🧨 Vider"): 
+                send_action({"action": "clear_shop"})
+                st.rerun()
+        else: 
+            st.info("Liste vide.")
+    except: 
+        st.error("Erreur de chargement.")  
 
 # --- PAGE PLANNING ---
 elif st.session_state.page=="planning":
@@ -351,6 +362,7 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
