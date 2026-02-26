@@ -102,7 +102,7 @@ if "page" not in st.session_state: st.session_state.page = "home"
 # 3. SIDEBAR (Navigation Unique)
 # ======================================================
 with st.sidebar:
-    # Style CSS et Logo
+    # Style CSS (Lignes 106 à 115) - Bien décalé à droite
     st.markdown("""
     <style>
         .logo-rond {
@@ -113,10 +113,14 @@ with st.sidebar:
         }
     </style>
     """, unsafe_allow_html=True)
-    
+
+    # L'IMAGE (Ligne 117) - DOIT ÊTRE DÉCALÉE AUSSI !
     st.markdown('<img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond">', unsafe_allow_html=True)
+    
+    # LE TITRE (Ligne 118) - DOIT ÊTRE DÉCALÉ AUSSI !
     st.title("🍳 Mes Recettes")
 
+    # ... tes boutons (Lignes 121 et suivantes) sont déjà bien décalés
     # Un seul exemplaire de chaque bouton avec des "keys" pour être sûr
     if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
         st.session_state.page = "home"; st.rerun()
@@ -346,6 +350,7 @@ elif st.session_state.page == "help":
     
     if st.button("⬅ Retour", use_container_width=True, key="btn_retour_aide"): 
         st.session_state.page = "home"; st.rerun()
+
 
 
 
