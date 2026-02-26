@@ -80,6 +80,8 @@ def scrape_url(url):
 
 @st.cache_data(ttl=5)
 def load_data():
+    st.write("DEBUG: lignes chargées:", len(df))
+    st.write(df.head(5))
     try:
         df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}").fillna('')
         cols = ['Date','Titre','Source','Ingrédients','Préparation','Date_Prevue','Image','Catégorie','Portions','Temps_Prepa','Temps_Cuisson','Commentaires','Note']
@@ -323,3 +325,4 @@ elif st.session_state.page=="help":
     st.markdown("---")
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
