@@ -347,10 +347,18 @@ elif st.session_state.page == "add":
                 st.session_state.page = "home"; st.rerun()
 
 with tab3:
-        st.write("📝 Formulaire manuel en cours de configuration...")
-        # Tu pourras rajouter tes champs de saisie ici plus tard
+        st.info("Saisie manuelle : remplissez les champs ci-dessous.")
+        with st.form("m_f"):
+            m_t = st.text_input("Titre de la recette *")
+            m_ing = st.text_area("Ingrédients (un par ligne)")
+            m_pre = st.text_area("Préparation / Étapes")
+            if st.form_submit_button("💾 Enregistrer la recette"):
+                send_action({"action": "add", "titre": m_t, "ingredients": m_ing, "preparation": m_pre, "date": datetime.now().strftime("%d/%m/%Y")})
+                st.success("Recette ajoutée !")
+                st.session_state.page = "home"
+                st.rerun()
 
-# --- DÉTAILS (REVIENT BIEN COLLÉ À GAUCHE) ---
+# --- ICI : LE ELIF DOIT ÊTRE COLLÉ AU BORD GAUCHE (Ligne 354) ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
@@ -449,6 +457,7 @@ elif st.session_state.page == "help":
     4. **Actualiser** : Si vous avez modifié le fichier Excel directement, utilisez le bouton 🔄 en haut de la bibliothèque.
     """)
     if st.button("⬅ Retour"): st.session_state.page = "home"; st.rerun()
+
 
 
 
