@@ -243,26 +243,29 @@ elif st.session_state.page == "details":
     if btn_col3.button("🗑️", use_container_width=True):
         st.session_state.confirm_delete = True
 
- # --- ZONE DE CONFIRMATION DE SUPPRESSION ---
+# --- ZONE DE CONFIRMATION DE SUPPRESSION ---
     if st.session_state.get('confirm_delete', False):
         st.error("⚠️ SUPPRIMER DÉFINITIVEMENT ?")
-        c1, c2 = st.columns(2)
+        conf_c1, conf_c2 = st.columns(2) # On change le nom des colonnes pour éviter les conflits
         
-        if c1.button("✅ OUI, Supprimer", use_container_width=True):
-            # 1. On lance l'ordre de suppression
+        if conf_c1.button("✅ OUI, Supprimer", use_container_width=True, key="btn_confirm_yes"):
             success = send_action({"action": "delete", "titre": r['Titre']})
-            
             if success:
-                # 2. LE SECRET : On vide le cache ET on réinitialise les données
                 st.cache_data.clear() 
                 if 'df' in st.session_state:
-                    del st.session_state['df'] # On force l'appli à oublier l'ancienne liste
-                
-                st.success("C'est fait ! Retour à l'accueil...")
+                    del st.session_state['df']
                 st.session_state.confirm_delete = False
+                st.success("C'est fait !")
                 time.sleep(1)
                 st.session_state.page = "home"
                 st.rerun()
+            else:
+                st.error("Erreur de connexion.")
+                
+        # AJOUT DE key="btn_confirm_no" ICI :
+        if conf_c2.button("❌ NON, Annuler", use_container_width=True, key="btn_confirm_no"):
+            st.session_state.confirm_delete = False
+            st.rerun()
             else:
                 st.error("Erreur de connexion. Vérifiez votre fichier Excel.")
                 
@@ -462,6 +465,7 @@ elif st.session_state.page == "help":
     """)
     if st.button("⬅ Retour à l'accueil"):
         st.session_state.page = "home"; st.rerun()
+
 
 
 
