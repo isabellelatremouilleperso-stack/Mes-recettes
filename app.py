@@ -362,29 +362,29 @@ elif st.session_state.page=="details":
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
         st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
+        # On récupère les ingrédients et on nettoie la liste
+        raw_ings = str(r.get('Ingrédients',''))
+        ings = [l.strip() for l in raw_ings.split("\n") if l.strip()]
 
-        # --- DEBUT DU NOUVEAU CODE ---
-        container_ecran = st.container()
-        container_papier = st.container()
+        if ings:
+            # --- ZONE ÉCRAN (Tablette) ---
+            container_ecran = st.container()
+            with container_ecran:
+                st.markdown('<div class="no-print">', unsafe_allow_html=True)
+                for i, l in enumerate(ings):
+                    st.checkbox(l, key=f"chk_det_final_{i}")
+                st.markdown('</div>', unsafe_allow_html=True)
 
-        with container_ecran:
-            # S'affiche sur la tablette, mais caché à l'imprimante
-            st.markdown('<div class="no-print">', unsafe_allow_html=True)
-            sel = []
-            for i, l in enumerate(ings):
-                if st.checkbox(l, key=f"chk_det_final_{i}"): 
-                    sel.append(l)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-        with container_papier:
-            # Caché sur la tablette, mais s'affiche en NOIR à l'imprimante
-            st.markdown('<div class="only-print">', unsafe_allow_html=True)
-            # On crée une liste de texte simple avec des puces (•)
-            liste_print = "\n".join([f"• {ing}" for ing in ings])
-            st.markdown(liste_print)
-            st.markdown('</div>', unsafe_allow_html=True)
-        # --- FIN DU NOUVEAU CODE ---
+            # --- ZONE PAPIER (Impression) ---
+            container_papier = st.container()
+            with container_papier:
+                st.markdown('<div class="only-print" style="color: black !important; display: block;">', unsafe_allow_html=True)
+                # On écrit chaque ingrédient avec une puce noire
+                for ing in ings:
+                    st.markdown(f"<p style='color: black !important;'>• {ing}</p>", unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            st.write("Aucun ingrédient trouvé.")
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -669,6 +669,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
