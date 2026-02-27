@@ -19,33 +19,26 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 
 st.markdown("""
 <style>
-/* --- ÉCRAN --- */
-.only-print { display: none; }
+/* --- ÉCRAN (Garde ton style habituel) --- */
+.only-print { display: none !important; }
 
 @media print {
-    /* 1. On cache la version interactive et TOUS les boutons Streamlit */
-    .no-print, .stButton, button, [data-testid="stSidebar"], [data-testid="stHeader"] {
+    /* 1. CACHE LE BOUTON ET LA SIDEBAR */
+    .no-print, [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button {
         display: none !important;
     }
 
-    /* 2. On affiche la version texte et on force le NOIR */
-    .only-print {
-        display: block !important;
+    /* 2. FORCE LE FOND BLANC PARTOUT */
+    .stApp, .main, .block-container, [data-testid="stMainView"] {
+        background-color: white !important;
         color: black !important;
     }
 
-    /* 3. On force tous les textes à être visibles */
-    p, li, div, span {
+    /* 3. FORCE LE TEXTE EN NOIR PUR (Crucial pour les ingrédients) */
+    .only-print, p, span, li, div, h1, h2, h3 {
         color: black !important;
         visibility: visible !important;
-    }
-
-    /* 4. Ton réglage de largeur (image 439f41) */
-    .main .block-container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 0.5cm !important;
-        margin: 0 !important;
+        display: block !important;
     }
 }
 </style>
@@ -669,6 +662,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
