@@ -534,17 +534,31 @@ elif st.session_state.page == "shop":
 elif st.session_state.page == "planning":
     st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning</h1>', unsafe_allow_html=True)
     
-    if st.button("⬅ Retour"):
-        st.session_state.page = "home"
-        st.rerun()
+    # --- BARRE D'ACTIONS (Retour et Tout vider) ---
+    col_nav, col_clear = st.columns([1, 1])
+    with col_nav:
+        if st.button("⬅ Retour", use_container_width=True):
+            st.session_state.page = "home"
+            st.rerun()
+    with col_clear:
+        # Ce bouton vide le Sheets mais NE TOUCHE PAS au Calendrier Google
+        if st.button("🗑️ Vider le planning", use_container_width=True, help="Efface uniquement la liste dans Google Sheets"):
+            with st.spinner("Nettoyage..."):
+                if send_action({"action": "clear_planning"}):
+                    st.cache_data.clear()
+                    import time
+                    time.sleep(1)
+                    st.rerun()
+
+    st.divider()
 
     try:
         df_plan = pd.read_csv(URL_CSV_PLAN)
         
-        if df_plan.empty:
-            st.info("Le planning est vide.")
+        if df_plan.empty or len(df_plan) == 0:
+            st.info("Ton planning est vide.")
         else:
-            # --- NETTOYAGE ---
+            # --- NETTOYAGE ET TRI ---
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
             df_plan = df_plan.dropna(subset=['Date', 'Titre'])
             df_plan = df_plan.sort_values(by='Date')
@@ -553,10 +567,23 @@ elif st.session_state.page == "planning":
             jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
             mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
 
-            # ==========================================
-            # C'EST ICI QUE TU COLLES LE BLOC STYLISÉ :
-            # ==========================================
+            # --- AFFICHAGE AVEC SÉPARATEUR DE SEMAINE ---
+            derniere_semaine = -1
+            
             for index, row in df_plan.iterrows():
+                # On récupère le numéro de semaine ISO
+                semaine_actuelle = row['Date'].isocalendar()[1]
+                
+                # Si on change de semaine, on affiche un bandeau visuel
+                if semaine_actuelle != derniere_semaine:
+                    st.markdown(f"""
+                        <div style="background-color: #2e313d; padding: 5px 15px; border-radius: 8px; margin: 20px 0 10px 0; border-left: 3px solid #95a5a6;">
+                            <span style="color: #95a5a6; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">SÉLECTION SEMAINE {semaine_actuelle}</span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    derniere_semaine = semaine_actuelle
+
+                # --- CARTE DE RECETTE ---
                 jour_eng = row['Date'].strftime('%A')
                 mois_eng = row['Date'].strftime('%B')
                 date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {row['Date'].strftime('%d')} {mois_fr.get(mois_eng, mois_eng)}"
@@ -567,23 +594,23 @@ elif st.session_state.page == "planning":
                     st.markdown(f"""
                     <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
                         <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{date_txt}</div>
-                        <div style="color: white; font-size: 1.05rem; margin-top: 2px;">{row['Titre']}</div>
+                        <div style="color: white; font-size: 1.05rem; margin-top: 2px; font-weight: 500;">{row['Titre']}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 
                 with col_btn:
-                    st.write("") 
-                    if st.button("🗑️", key=f"btn_del_{index}_{row['Titre'].replace(' ', '_')}"):
+                    st.write("") # Calage vertical
+                    # Clé unique pour éviter les erreurs de doublons
+                    if st.button("🗑️", key=f"btn_plan_{index}_{semaine_actuelle}"):
                         with st.spinner():
                             if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
                                 st.cache_data.clear()
                                 import time
                                 time.sleep(1.2)
                                 st.rerun()
-            # ==========================================
 
     except Exception as e:
-        st.error(f"Erreur : {e}")
+        st.error(f"Erreur d'affichage du planning : {e}")
 # ==========================================
 # --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
 # ==========================================
@@ -815,6 +842,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
