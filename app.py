@@ -691,17 +691,68 @@ h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5
         st.markdown(fiche_html, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
-    st.header("❓ Aide & Astuces")
-    ca, cb = st.columns(2)
-    ca.markdown('<div class="help-box"><h3>📝 Ajouter Recette</h3><p>Importez via URL (Ricardo, etc.) ou entrez vos propres créations manuellement.</p></div>', unsafe_allow_html=True)
-    ca.markdown('<div class="help-box"><h3>🔍 Recherche</h3><p>Utilisez la barre de recherche et les filtres par catégorie pour retrouver vos plats.</p></div>', unsafe_allow_html=True)
-    cb.markdown('<div class="help-box"><h3>🛒 Liste d\'Épicerie</h3><p>Cochez les ingrédients dans une recette pour les envoyer ici. Pratique pour les courses !</p></div>', unsafe_allow_html=True)
-    cb.markdown('<div class="help-box"><h3>📅 Planning</h3><p>Visualisez vos repas de la semaine directement depuis votre calendrier Google Sheets.</p></div>', unsafe_allow_html=True)
+    st.markdown('<h1 style="color: #e67e22;">❓ Centre d\'aide</h1>', unsafe_allow_html=True)
+    
+    # --- 1. BARRE DE STATUTS RAPIDE ---
+    st.info("💡 **Astuce :** Pour une meilleure expérience sur mobile, ajoutez cette page à votre écran d'accueil via le menu de votre navigateur.")
+
+    # --- 2. LES FONCTIONNALITÉS CLÉS (Grille de cartes) ---
+    st.subheader("🚀 Guide de démarrage")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        <div style="background-color:#1e2130; padding:20px; border-radius:15px; border-left:5px solid #4285F4; height:200px;">
+            <h4 style="color:#4285F4; margin-top:0;">📥 Importer une recette</h4>
+            <p style="font-size:0.9rem;">Copiez l'adresse URL d'un site (ex: Ricardo, Marmiton) et collez-la dans la section <b>Ajouter</b>. 
+            L'intelligence artificielle extraira le titre et les étapes pour vous !</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.write("") # Espace
+        st.markdown("""
+        <div style="background-color:#1e2130; padding:20px; border-radius:15px; border-left:5px solid #28B463; height:200px;">
+            <h4 style="color:#28B463; margin-top:0;">🛒 Liste de courses</h4>
+            <p style="font-size:0.9rem;">Dans la fiche d'une recette, cochez les ingrédients manquants et cliquez sur <b>Ajouter au panier</b>. 
+            Ils apparaîtront instantanément dans votre liste d'épicerie.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown("""
+        <div style="background-color:#1e2130; padding:20px; border-radius:15px; border-left:5px solid #e67e22; height:200px;">
+            <h4 style="color:#e67e22; margin-top:0;">📝 Gérer vos favoris</h4>
+            <p style="font-size:0.9rem;">Utilisez la barre de recherche en haut de la <b>Bibliothèque</b> pour filtrer par nom ou par catégorie. 
+            Vous pouvez aussi noter vos recettes de 1 à 5 étoiles.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.write("") # Espace
+        st.markdown("""
+        <div style="background-color:#1e2130; padding:20px; border-radius:15px; border-left:5px solid #FF33FF; height:200px;">
+            <h4 style="color:#FF33FF; margin-top:0;">📅 Planning</h4>
+            <p style="font-size:0.9rem;">Le planning se synchronise avec votre Google Sheets. Vous y retrouverez les dates prévues pour vos prochains repas 
+            pour ne plus jamais manquer d'inspiration.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- 3. FOIRE AUX QUESTIONS (Expander) ---
     st.divider()
+    st.subheader("🤔 Questions fréquentes")
+    
+    with st.expander("Comment modifier une recette existante ?"):
+        st.write("Allez dans la bibliothèque, ouvrez la recette de votre choix, puis cliquez sur le bouton ✏️ **Éditer** en haut de la page.")
+
+    with st.expander("L'image de ma recette ne s'affiche pas ?"):
+        st.write("Assurez-vous que le lien (URL) se termine par .jpg, .png ou .webp. Si vous utilisez Google Images, faites un clic droit sur l'image et choisissez 'Copier l'adresse de l'image'.")
+
+    with st.expander("Comment supprimer un article de la liste d'épicerie ?"):
+        st.write("Dans la page **Ma Liste**, cochez les articles que vous avez achetés, puis cliquez sur le bouton rouge **Retirer les articles sélectionnés**.")
+
+    # --- 4. BOUTON RETOUR ---
+    st.write("")
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
-        st.session_state.page="home"; st.rerun()
-
-
+        st.session_state.page="home"
+        st.rerun()
 
 
 
