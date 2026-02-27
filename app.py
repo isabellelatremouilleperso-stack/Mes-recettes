@@ -6,6 +6,10 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import urllib.parse
 
+# --- INITIALISATION DU SESSION STATE ---
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
+
 # ======================
 # CONFIGURATION & DESIGN
 # ======================
@@ -297,14 +301,13 @@ elif st.session_state.page == "planning":
         st.rerun()
 
 # ==========================================
-# --- PAGE FICHE PRODUIT PLAY STORE (DARK) ---
+# --- PAGE FICHE PRODUIT PLAY STORE (NOIR) ---
 # ==========================================
 elif st.session_state.page == "playstore":
-    # On garde le style sombre de ton appli
+    # On force le texte en blanc pour le fond noir
     st.markdown("""
         <style>
         h1, h2, h3, p, span, li { color: #ffffff !important; }
-        .stMarkdown { color: #ffffff; }
         </style>
     """, unsafe_allow_html=True)
 
@@ -321,37 +324,37 @@ elif st.session_state.page == "playstore":
         """, unsafe_allow_html=True)
     
     with col_titre:
-        st.markdown('<h1 style="font-size: 2rem; margin-bottom: 0;">Mes Recettes Pro</h1>', unsafe_allow_html=True)
+        st.markdown('<h1 style="font-size: 2.2rem; margin-bottom: 0;">Mes Recettes Pro</h1>', unsafe_allow_html=True)
         st.markdown('<p style="color: #e67e22 !important; font-weight: bold; margin-top: 0; font-size: 1.1rem;">VosSoins Inc.</p>', unsafe_allow_html=True)
-        st.write("⭐ 4,9  |  100 k+ Téléchargements")
+        st.write("4,9 ⭐  |  100 k+ Téléchargements")
 
-    # --- ZONE BOUTON / EXPLOSION ---
+    # --- ZONE D'INSTALLATION (EXPLOSION) ---
     st.write("")
     placeholder_action = st.empty()
     
-    # Bouton orange pour aller avec ton thème
-    if placeholder_action.button("📥 Installer", key="btn_install", use_container_width=True):
+    if placeholder_action.button("Installer", key="btn_install", use_container_width=True):
         with placeholder_action:
-            # Le GIF d'explosion direct, sans texte
+            # L'explosion sans aucun message texte
             st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=250)
-            time.sleep(2.2) 
+            time.sleep(2.5) 
         placeholder_action.empty()
-        st.success("✅ Application installée")
+        st.markdown("<p style='text-align:center; color:#28B463; font-weight:bold; font-size:1.2rem;'>✓ Installé</p>", unsafe_allow_html=True)
 
     st.divider()
 
-    # --- DESCRIPTIF ---
+    # --- DESCRIPTIF (Inspiré de tes captures) ---
     st.subheader("À propos de cette appli")
     st.write("""
-    Ajoutez facilement des recettes depuis n'importe quel site web ou créez les vôtres. 
-    Synchronisez vos données sur tous vos appareils pour cuisiner où que vous soyez.
+    **Mes Recettes Pro** combine un gestionnaire de recettes, une liste de courses et un planificateur de repas en une seule application intuitive.
+    
+    Ajoutez facilement des recettes depuis n'importe quel site web. Vous disposez ainsi de votre propre copie de chaque recette complète. 
+    L'application se synchronise avec tous vos appareils pour un accès en ligne où que vous soyez.
     """)
     
     st.markdown("""
-    **Ce que vous allez adorer :**
-    * 📱 Interface intuitive et rapide
-    * 🥗 Planificateur de repas hebdomadaire
-    * 🛒 Liste de courses intelligente
+    **Détails techniques :**
+    * **Dernière mise à jour :** 17 févr. 2026
+    * **Catégorie :** Productivité / Cuisine
     """)
 
     st.divider()
@@ -393,6 +396,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
