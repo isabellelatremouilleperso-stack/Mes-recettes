@@ -540,51 +540,38 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-        # 1. CSS Anti-Noir et Anti-Décalage
+        # 1. CSS Anti-Noir et Optimisation Impression
         st.markdown("""
         <style>
         @media print {
-            [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, iframe, .no-print { 
+            /* Masque absolument tout sauf la fiche */
+            [data-testid="stHeader"], [data-testid="stSidebar"], footer, 
+            .stButton, .no-print, [data-testid="stControlItem"] { 
                 display: none !important; 
             }
             .stApp { background-color: white !important; }
             [data-testid="stAppViewContainer"] { padding: 0 !important; }
-            .paper-sheet { position: relative; top: 0; left: 0; width: 100%; margin: 0; padding: 0; }
+            .paper-sheet { position: absolute; top: 0; left: 0; width: 100%; margin: 0; padding: 0; }
         }
-        .paper-sheet { max-width: 800px; margin: 0 auto; padding: 20px; color: black !important; background-color: white !important; }
+        .paper-sheet { max-width: 800px; margin: 0 auto; padding: 20px; color: black !important; background-color: white !important; font-family: sans-serif; }
         .section-box { background-color: #f8f9fa !important; border: 1px solid #dee2e6 !important; border-radius: 10px; padding: 15px 20px; margin-bottom: 20px; page-break-inside: avoid; }
         h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin: 0 0 10px 0; }
         h3 { color: #e67e22 !important; margin-top: 0; }
-        
-        /* Style pour le bouton d'impression */
-        .print-btn {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #e67e22;
-            color: white !important;
-            text-align: center;
-            text-decoration: none;
-            font-weight: bold;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            font-family: sans-serif;
-        }
         </style>
         """, unsafe_allow_html=True)
 
-        # 2. Boutons (Visibles écran seulement)
+        # 2. Boutons de navigation
         col1, col2 = st.columns(2)
         with col1:
             if st.button("⬅ Retour aux détails", use_container_width=True):
                 st.session_state.page = "details"; st.rerun()
         
         with col2:
-            # Bouton utilisant un composant HTML direct pour forcer l'action
-            st.markdown('<button class="print-btn no-print" onclick="window.print()">🖨️ Lancer l\'impression</button>', unsafe_allow_html=True)
+            # Cette méthode utilise un clic Streamlit pour déclencher le JS du navigateur
+            if st.button("🖨️ Lancer l'impression", use_container_width=True, type="primary"):
+                st.components.v1.html("<script>window.print();</script>", height=0)
 
-        # 3. Traitement Ingrédients (Avec cases ☐)
+        # 3. Traitement des Ingrédients
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = ""
         for l in ing_raw:
@@ -595,10 +582,10 @@ elif st.session_state.page == "print":
             else: 
                 html_ing += f"<p style='margin:3px 0;'>☐ {l}</p>"
         
-        # Définition de la variable manquante
-        prepa_txt = str(r.get('Préparation', 'Aucune instruction fournie.'))
+        # Préparation de la variable texte
+        prepa_txt = str(r.get('Préparation', 'Aucune instruction.'))
 
-        # 4. CONSTRUCTION SÉCURISÉE
+        # 4. Affichage de la fiche
         import inspect
         fiche_html = inspect.cleandoc(f"""
             <div class="paper-sheet">
@@ -634,6 +621,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
