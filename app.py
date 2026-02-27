@@ -540,24 +540,36 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-        # 1. CSS Anti-Noir et Anti-Espace vide
+        # 1. CSS ULTRA-CORRECTEUR
         st.markdown("""
 <style>
-/* Force le blanc partout pour supprimer le fond noir */
-.stApp, .stApp > div, [data-testid="stAppViewContainer"] {
-    background-color: white !important;
-    color: black !important;
+/* Reset complet pour l'impression */
+@media print {
+    /* Cache absolument tout Streamlit */
+    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, iframe {
+        display: none !important;
+    }
+    
+    /* Force le conteneur à ignorer les marges de Streamlit */
+    .stApp { background-color: white !important; }
+    [data-testid="stAppViewContainer"] { padding: 0 !important; }
+
+    .paper-sheet {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
 }
 
-/* Cache tout le superflu */
-[data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton {
-    display: none !important;
-}
-
+/* Style écran */
 .paper-sheet {
     max-width: 800px;
     margin: 0 auto;
-    padding: 10px;
+    padding: 20px;
+    color: black !important;
     background-color: white !important;
 }
 
@@ -570,19 +582,12 @@ elif st.session_state.page == "print":
     page-break-inside: avoid; 
 }
 
-h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin-bottom: 10px; }
-h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; }
-
-@media print {
-    .no-print { display: none !important; }
-    /* On cache le bouton d'impression Streamlit pour gagner de la place en haut */
-    iframe { display: none !important; }
-    .section-box { background-color: white !important; border: 1px solid #ccc !important; }
-}
+h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin: 0 0 10px 0; }
+h3 { color: #e67e22 !important; margin-top: 0; }
 </style>
 """, unsafe_allow_html=True)
 
-        # 2. Boutons
+        # 2. Boutons de navigation (visibles uniquement à l'écran)
         col1, col2 = st.columns([1, 1])
         with col1:
             if st.button("⬅ Retour", use_container_width=True):
@@ -596,7 +601,7 @@ h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !im
                 ">🖨️ Lancer l'impression</button>
             """, height=45)
 
-        # 3. Traitement des Ingrédients (Avec cases ☐)
+        # 3. Préparation des Ingrédients
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = ""
         for l in ing_raw:
@@ -605,17 +610,18 @@ h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !im
             if l.endswith(':'):
                 html_ing += f"<p style='margin:10px 0 5px 0;'><b>{l}</b></p>"
             else:
-                html_ing += f"<p style='margin:2px 0;'>☐ {l}</p>"
+                html_ing += f"<p style='margin:3px 0;'>☐ {l}</p>"
         
-        # 4. Traitement de la Préparation (SANS cases ☐)
+        # 4. Préparation de la Préparation (Texte brut sans cases)
         prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-        # 5. RENDU (Le titre et les ingrédients sont dans le même bloc pour ne pas être séparés)
+        # 5. RENDU FINAL
+        # J'ai regroupé le Titre et les Ingrédients dans le même bloc 'avoid'
         fiche_complete = f"""
 <div class="paper-sheet">
     <div style="page-break-inside: avoid;">
         <h1>{r.get('Titre','Recette')}</h1>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom: 1px solid #eee; padding-bottom:5px;">
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
             <span>Catégorie : {r.get('Catégorie','-')}</span>
             <span>Portions : {r.get('Portions','-')}</span>
             <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
@@ -631,7 +637,7 @@ h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !im
         <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
     </div>
     
-    <p style="text-align:center; color:#888; font-size:0.8em; margin-top:20px;">Fiche générée par Mes Recettes Pro</p>
+    <p style="text-align:center; color:#888; font-size:0.8em;">Fiche générée par Mes Recettes Pro</p>
 </div>
 """
         st.markdown(fiche_complete, unsafe_allow_html=True)
@@ -646,6 +652,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
