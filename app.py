@@ -373,11 +373,12 @@ elif st.session_state.page=="details":
             st.markdown('</div>', unsafe_allow_html=True)
 
             # --- VERSION PAPIER (Impression) ---
-            # On force le style ici pour que ce soit immanquable
-            st.markdown('<div class="only-print">', unsafe_allow_html=True)
+            # On utilise du HTML simple pour être certain que le texte soit noir
+            html_papier = '<div class="only-print">'
             for l in ings:
-                st.markdown(f'<p style="color: black !important; font-size: 14pt; margin: 0;">• {l}</p>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                html_papier += f'<p style="color: black !important; margin: 0; font-size: 14pt;">• {l}</p>'
+            html_papier += '</div>'
+            st.markdown(html_papier, unsafe_allow_html=True)
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -662,6 +663,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
