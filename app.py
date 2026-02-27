@@ -312,8 +312,12 @@ elif st.session_state.page=="details":
 # --- PAGE AJOUTER ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
-        st.session_state.page = "home"; st.rerun()
+  with c_nav2:
+        if st.button("✏️ Éditer", use_container_width=True): 
+            # On stocke la recette actuelle dans une variable spéciale "edit"
+            st.session_state.recipe_to_edit = st.session_state.recipe_data
+            st.session_state.page = "add"
+            st.rerun()
         
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
@@ -615,6 +619,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
