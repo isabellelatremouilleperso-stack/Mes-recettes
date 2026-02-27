@@ -15,13 +15,14 @@ if 'page' not in st.session_state:
 # ======================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
+# UN SEUL BLOC CSS NETTOYÉ
 st.markdown("""
 <style>
-/* --- DESIGN ÉCRAN (Dark Mode par défaut) --- */
+/* --- DESIGN ÉCRAN --- */
 .only-print { display: none !important; }
 
 @media print {
-    /* 1. ON CACHE LE SURFLU */
+    /* 1. CACHE LE SURFLU */
     .no-print, [data-testid="stSidebar"], [data-testid="stHeader"], 
     .stButton, button, header, footer, [data-testid="stDecoration"] {
         display: none !important;
@@ -34,7 +35,7 @@ st.markdown("""
         color: black !important;
     }
 
-    /* 3. UTILISE TOUTE LA LARGEUR DE LA PAGE */
+    /* 3. UTILISE TOUTE LA LARGEUR */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
@@ -42,22 +43,21 @@ st.markdown("""
         margin: 0 !important;
     }
 
-    /* 4. REND LE TEXTE ET LES LISTES VISIBLES */
+    /* 4. REND LES INGRÉDIENTS VISIBLES */
     .only-print {
         display: block !important;
         visibility: visible !important;
         color: black !important;
-        font-size: 12pt !important;
     }
 
-    /* Force absolument tout le texte en noir (pour contrer le mode sombre) */
+    /* FORCE TOUS LES TEXTES EN NOIR */
     h1, h2, h3, h4, p, span, li, div {
         color: black !important;
     }
 
-    /* 5. AJUSTE LES IMAGES POUR LE PAPIER */
+    /* 5. AJUSTE LES IMAGES */
     img {
-        max-width: 8cm !important;
+        max-width: 10cm !important;
         border-radius: 10px !important;
     }
 }
@@ -375,17 +375,17 @@ elif st.session_state.page=="details":
         ings = [l.strip() for l in raw_ings.split("\n") if l.strip()]
 
         if ings:
-            # --- CE QUE TU VOIS SUR TA TABLETTE ---
+            # --- VERSION ÉCRAN (Tablette) ---
             st.markdown('<div class="no-print">', unsafe_allow_html=True)
             for i, l in enumerate(ings):
                 st.checkbox(l, key=f"chk_print_final_{i}")
             st.markdown('</div>', unsafe_allow_html=True)
 
-            # --- CE QUI SORT SUR TON PAPIER (On force le noir ici aussi) ---
-            st.markdown('<div class="only-print" style="color: black !important;">', unsafe_allow_html=True)
+            # --- VERSION PAPIER (Impression) ---
+            # On force le style ici pour que ce soit immanquable
+            st.markdown('<div class="only-print">', unsafe_allow_html=True)
             for l in ings:
-                # Utilisation d'un texte simple avec une puce
-                st.write(f"• {l}")
+                st.markdown(f'<p style="color: black !important; font-size: 14pt; margin: 0;">• {l}</p>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
@@ -671,6 +671,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
