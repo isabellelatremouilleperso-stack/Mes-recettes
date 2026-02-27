@@ -568,10 +568,25 @@ elif st.session_state.page == "print":
             st.session_state.page = "details"
             st.rerun()
     with col2:
-        st.markdown(
-            '<button onclick="window.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression</button>',
-            unsafe_allow_html=True
-        )
+        # Cette méthode est la plus compatible pour forcer l'ouverture du menu d'impression
+        st.components.v1.html("""
+            <html>
+                <body>
+                    <button onclick="window.parent.print()" style="
+                        width: 100%; 
+                        height: 38px; 
+                        background-color: #e67e22; 
+                        color: white; 
+                        border: none; 
+                        border-radius: 5px; 
+                        cursor: pointer; 
+                        font-weight: bold;
+                        font-size: 14px;
+                        font-family: 'Segoe UI', sans-serif;
+                    ">🖨️ Lancer l'impression</button>
+                </body>
+            </html>
+        """, height=45)
 
     # 3. Préparation des données
     lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
@@ -617,6 +632,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
