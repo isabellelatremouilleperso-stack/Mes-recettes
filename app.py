@@ -599,16 +599,16 @@ elif st.session_state.page == "print":
     
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # 4. Construction du HTML
+   # 4. CONSTRUCTION DU HTML (Collé au bord gauche, sans espaces)
     fiche_complete = f"""
 <div class="paper-sheet">
-<h1>{r.get('Titre','Recette')}</h1>
-<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
+<h1 style="page-break-after: avoid;">{r.get('Titre','Recette')}</h1>
+<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px; page-break-after: avoid;">
 <span>Catégorie : {r.get('Catégorie','-')}</span>
 <span>Portions : {r.get('Portions','-')}</span>
 <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
 </div>
-<div class="section-box">
+<div class="section-box" style="page-break-before: avoid;">
 <h3>🛒 Ingrédients</h3>
 {html_ing_list}
 </div>
@@ -632,6 +632,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
