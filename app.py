@@ -745,44 +745,52 @@ elif st.session_state.page == "shop":
         st.rerun()
 
     try:
-        # On force la lecture sans cache pour voir les changements immédiats
+        # On force la lecture sans cache avec un timestamp
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
-            to_del = []
-            # On affiche les articles
-            for idx, row in df_s.iterrows():
-                article_nom = str(row.iloc[0])
-                if article_nom.strip(): # On ignore les lignes vides
-                    if st.checkbox(article_nom, key=f"sh_{idx}"):
-                        to_del.append(article_nom)
-            
-            st.divider()
-            c1, c2 = st.columns(2)
-            
-            # BOUTON 1 : Retirer les sélectionnés
-            if c1.button("🗑 Retirer les articles sélectionnés", use_container_width=True, type="primary"):
-                if to_del:
-                    # ON ENVOIE TOUTE LA LISTE D'UN COUP
-                    if send_action({"action": "remove_shop", "articles": to_del}):
-                        st.toast(f"{len(to_del)} article(s) retiré(s) !")
-                        st.cache_data.clear()
-                        st.rerun()
-                else:
-                    st.warning("Cochez des articles à retirer.")
-
-            # BOUTON 2 : Tout vider
-            if c2.button("🧨 Vider toute la liste", use_container_width=True):
+            # On utilise un formulaire Streamlit pour éviter que la page ne saute à chaque clic
+            with st.form("shop_form"):
+                to_del = []
+                st.write("Cochez les articles à retirer de la liste :")
+                
+                # On affiche les articles
+                for idx, row in df_s.iterrows():
+                    article_nom = str(row.iloc[0]).strip()
+                    if article_nom: # On ignore les lignes vides
+                        # Si coché, on ajoute à la liste to_del
+                        if st.checkbox(article_nom, key=f"sh_{idx}"):
+                            to_del.append(article_nom)
+                
+                st.divider()
+                
+                # Le bouton de validation du formulaire
+                submit_del = st.form_submit_button("🗑 Retirer les articles sélectionnés", use_container_width=True)
+                
+            # Bouton "Vider tout" hors du formulaire pour plus de sécurité
+            if st.button("🧨 Vider toute la liste", use_container_width=True):
                 if send_action({"action": "clear_shop"}):
-                    st.toast("Liste vidée !")
                     st.cache_data.clear()
+                    st.success("Liste vidée !")
                     st.rerun()
+
+            # Logique de suppression suite au clic sur le bouton du formulaire
+            if submit_del:
+                if to_del:
+                    with st.spinner("Mise à jour..."):
+                        # ENVOI UNIQUE à Google Apps Script
+                        if send_action({"action": "remove_shop", "articles": to_del}):
+                            st.cache_data.clear()
+                            st.toast(f"Retiré : {len(to_del)} article(s)")
+                            st.rerun()
+                else:
+                    st.warning("Veuillez cocher au moins un article.")
+                    
         else:
             st.info("Votre liste est vide pour le moment.")
             
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
-
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1171,6 +1179,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
