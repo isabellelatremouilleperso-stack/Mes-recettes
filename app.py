@@ -548,40 +548,47 @@ elif st.session_state.page == "print":
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Boutons de contrôle
+    # 2. Boutons de contrôle (Visibles à l'écran seulement)
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("⬅ Retour", use_container_width=True):
-            st.session_state.page = "details"; st.rerun()
+            st.session_state.page = "details"
+            st.rerun()
     with col2:
         st.markdown('<button onclick="window.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression</button>', unsafe_allow_html=True)
 
-    # 3. Données
+    # 3. Préparation des données
     lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
-    html_ing_list = "".join([f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>" if l.endswith(':') else f"<p style='margin:3px 0;'>☐ {l}</p>" for l in lignes_ing])
+    html_ing_list = ""
+    for l in lignes_ing:
+        if l.endswith(':'):
+            html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
+        else:
+            html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
     
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # 4. LA VARIABLE SÉCURISÉE (Utilisation de textwrap.dedent pour tuer les boîtes noires)
-    fiche_complete = textwrap.dedent(f"""
-        <div class="paper-sheet">
-        <h1>{r.get('Titre','Recette')}</h1>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-        </div>
-        <div class="section-box">
-        <h3>🛒 Ingrédients</h3>
-        {html_ing_list}
-        </div>
-        <div class="section-box page-break">
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
-        </div>
-        <p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
-        </div>
-    """).strip()
+    # 4. CONSTRUCTION SANS INDENTATION (Pour éviter les boîtes noires)
+    # On colle les balises à gauche pour que Streamlit ne les prenne pas pour du code
+    fiche_complete = f"""
+<div class="paper-sheet">
+<h1>{r.get('Titre','Recette')}</h1>
+<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
+<span>Catégorie : {r.get('Catégorie','-')}</span>
+<span>Portions : {r.get('Portions','-')}</span>
+<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+</div>
+<div class="section-box">
+<h3>🛒 Ingrédients</h3>
+{html_ing_list}
+</div>
+<div class="section-box page-break">
+<h3>👨‍🍳 Préparation</h3>
+<div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
+</div>
+<p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
+</div>
+"""
 
     st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
@@ -595,6 +602,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
