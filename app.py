@@ -539,7 +539,10 @@ elif st.session_state.page == "details":
             st.info(notes_texte)
         else:
             st.write("*Aucune note pour le moment.*")
-
+    st.write("DEBUG - Données reçues pour cette recette :", r.to_dict()) # Ajoute ça temporairement
+    with col_d:
+    st.subheader("📋 Informations")
+    # ... la suite de ton code
     with col_d:
         st.subheader("📋 Informations")
         
@@ -1193,6 +1196,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
