@@ -536,105 +536,98 @@ elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
         st.warning("Aucune recette sélectionnée.")
         if st.button("⬅ Retour"):
-            st.session_state.page = "home"; st.rerun()
+            st.session_state.page = "home"
+            st.rerun()
     else:
         r = st.session_state.recipe_data
 
-        # 1. CSS CHIRURGICAL : On rase tout pour ne laisser que la fiche
+        # 1. CSS Anti-Noir et Anti-Vide
         st.markdown("""
 <style>
-/* 1. Force le BLANC ABSOLU sur tous les niveaux de Streamlit */
-div[data-testid="stAppViewContainer"], 
-div[data-testid="stMainViewContainer"], 
-.stApp, html, body {
+/* Force le blanc sur toutes les couches possibles */
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
     background-color: white !important;
     color: black !important;
 }
 
-/* 2. Supprime totalement les éléments d'interface qui créent du vide en haut */
+/* Cache tout le superflu de Streamlit */
 [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, iframe {
     display: none !important;
 }
 
-/* 3. Style de la fiche pour l'écran */
 .paper-sheet {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0px 20px;
     background-color: white !important;
     color: black !important;
-    min-height: 100vh;
-}
-
-/* 4. Règles spécifiques à l'impression */
-@media print {
-    @page { margin: 0; }
-    body { margin: 1cm; }
-    .paper-sheet { 
-        position: absolute; 
-        top: 0; 
-        left: 0; 
-        width: 100%; 
-        margin: 0 !important; 
-        padding: 0 !important;
-    }
-    .no-print { display: none !important; }
-    .section-box { page-break-inside: avoid !important; border: 1px solid #ccc !important; }
 }
 
 .section-box {
     background-color: #f8f9fa !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 10px; 
-    padding: 15px 20px; 
+    padding: 15px; 
     margin-bottom: 20px;
 }
 
-h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin: 0 0 10px 0; padding-top: 0; }
+h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin-top: 0; }
 h3 { color: #e67e22 !important; margin-top: 0; }
+
+@media print {
+    .stApp { background-color: white !important; }
+    .paper-sheet { position: absolute; top: 0; left: 0; width: 100%; margin: 0; }
+    .no-print { display: none !important; }
+    .section-box { page-break-inside: avoid !important; background-color: white !important; }
+}
 </style>
 """, unsafe_allow_html=True)
 
-        # 2. Boutons de navigation (Uniquement pour l'écran)
+        # 2. Boutons de navigation (Simples)
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("⬅ Retour au menu", use_container_width=True):
-                st.session_state.page = "details"; st.rerun()
+            if st.button("⬅ Retour", use_container_width=True):
+                st.session_state.page = "details"
+                st.rerun()
         with col2:
-            # Lien simple : moins de risques de décalage que le composant html
-            st.markdown('<a href="javascript:window.print()" class="no-print" style="display:block; text-align:center; width:100%; height:38px; line-height:38px; background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;">🖨️ Lancer l\'impression</a>', unsafe_allow_html=True)
+            # Bouton d'impression en HTML simple pour éviter les erreurs
+            st.markdown('<a href="javascript:window.print()" style="display:block; text-align:center; width:100%; height:38px; line-height:38px; background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;">🖨️ Lancer l\'impression</a>', unsafe_allow_html=True)
 
-        # 3. Préparation propre des données
-        ing_raw = str(r.get('Ingrédients','')).split('\n')
-        html_ing = "".join([f"<p style='margin:10px 0 5px 0;'><b>{l.strip()}</b></p>" if l.strip().endswith(':') else f"<p style='margin:2px 0;'>☐ {l.strip()}</p>" for l in ing_raw if l.strip()])
+        # 3. Préparation des données (Méthode simple)
+        ing_txt = str(r.get('Ingrédients',''))
+        html_ing = ""
+        for line in ing_txt.split('\n'):
+            line = line.strip()
+            if not line: continue
+            if line.endswith(':'):
+                html_ing += f"<p style='margin:10px 0 5px 0;'><b>{line}</b></p>"
+            else:
+                html_ing += f"<p style='margin:2px 0;'>☐ {line}</p>"
         
-        prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
+        prepa_txt = str(r.get('Préparation','')).replace('\n', '<br>')
 
-        # 4. CONSTRUCTION DU HTML (Soudé pour éviter les sauts de page)
-        # On utilise une seule f-string sans espaces de début de ligne (cleandoc alternatif)
-        fiche_html = (
-            f'<div class="paper-sheet">'
-            f'<div style="page-break-inside: avoid;">'
-            f'<h1>{r.get("Titre","Recette")}</h1>'
-            f'<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">'
-            f'<span>Catégorie : {r.get("Catégorie","-")}</span>'
-            f'<span>Portions : {r.get("Portions","-")}</span>'
-            f'<span>Temps : {r.get("Temps_Prepa","0")} + {r.get("Temps_Cuisson","0")} min</span>'
-            f'</div>'
-            f'<div class="section-box">'
-            f'<h3>🛒 Ingrédients</h3>'
-            f'{html_ing}'
-            f'</div>'
-            f'</div>'
-            f'<div class="section-box">'
-            f'<h3>👨‍🍳 Préparation</h3>'
-            f'<div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>'
-            f'</div>'
-            f'<p style="text-align:center; color:#888; font-size:0.8em;">Fiche générée par Mes Recettes Pro</p>'
-            f'</div>'
-        )
-
-        st.markdown(fiche_html, unsafe_allow_html=True)
+        # 4. RENDU FINAL (Version incassable)
+        st.markdown(f"""
+<div class="paper-sheet">
+    <div style="page-break-inside: avoid;">
+        <h1>{r.get('Titre','Recette')}</h1>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
+            <span>Catégorie : {r.get('Catégorie','-')}</span>
+            <span>Portions : {r.get('Portions','-')}</span>
+            <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+        </div>
+        <div class="section-box">
+            <h3>🛒 Ingrédients</h3>
+            {html_ing}
+        </div>
+    </div>
+    <div class="section-box">
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="line-height:1.6;">{prepa_txt}</div>
+    </div>
+    <p style="text-align:center; color:#888; font-size:0.8em;">Fiche générée par Mes Recettes Pro</p>
+</div>
+""", unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -646,6 +639,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
