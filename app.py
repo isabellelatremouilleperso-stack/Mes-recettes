@@ -531,7 +531,7 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     st.write("Détails de la recette")
 
-# --- PAGE IMPRIMABLE FINALE (AVEC SAUT DE PAGE INTELLIGENT) ---
+# --- PAGE IMPRIMABLE FINALE (ZÉRO BOITE NOIRE) ---
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
         st.error("Aucune donnée de recette trouvée.")
@@ -556,32 +556,20 @@ elif st.session_state.page == "print":
 <style>
 @media print {
     [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe { display: none !important; }
-    
     html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stCanvas"], .main {
         background-color: white !important;
         color: black !important;
     }
-
-    /* On remonte le titre au maximum */
     [data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; }
     .print-sheet { margin-top: -60px !important; }
-
-    /* SAUT DE PAGE : On force la préparation à commencer sur une nouvelle page 
-       si les ingrédients prennent déjà beaucoup de place */
-    .page-break { 
-        page-break-before: always; 
-        margin-top: 20px;
-    }
-    
-    /* Évite de couper une ligne ou un paragraphe en deux */
+    .page-break { page-break-before: always; margin-top: 20px; }
     p, div, li { page-break-inside: avoid; }
 }
-
 .print-sheet { background: white !important; color: black !important; padding: 20px; font-family: sans-serif; }
 .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
 .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
 h1 { color: black !important; margin: 0 !important; font-size: 30px; }
-h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -589,36 +577,30 @@ h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
         prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
-
-        # 4. LOGIQUE DE SAUT DE PAGE
-        # Si tu as plus de 15 ingrédients, on force la préparation sur la page suivante
+        
+        # Logique de saut de page
         nb_ingredients = len([l for l in ing_raw if l.strip()])
         class_saut_page = "page-break" if nb_ingredients > 15 else ""
 
-        # 5. RENDU FINAL
+        # 4. RENDU FINAL (SANS AUCUNE INDENTATION DANS LE TEXTE)
+        # TRÈS IMPORTANT : Ne rajoute pas d'espaces au début des lignes ci-dessous !
         fiche_html = f"""
 <div class="print-sheet">
-    <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
-    
-    <div class="info-box">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-
-    <div style="margin-bottom: 15px;">
-        <h3>🛒 Ingrédients</h3>
-        <div style="column-count: 2; column-gap: 30px; font-size: 13px;">{html_ing}</div>
-    </div>
-
-    <div class="{class_saut_page}">
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="line-height: 1.5; text-align: justify; font-size: 13px;">{prepa_final}</div>
-    </div>
-    
-    <div style="text-align:center; color:#888; font-size:11px; margin-top:30px; border-top:1px solid #eee; padding-top:10px;">
-        Généré par Mes Recettes Pro
-    </div>
+<div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
+<div class="info-box">
+<span>Catégorie : {r.get('Catégorie','-')}</span>
+<span>Portions : {r.get('Portions','-')}</span>
+<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+</div>
+<div style="margin-bottom: 15px;">
+<h3>🛒 Ingrédients</h3>
+<div style="column-count: 2; column-gap: 30px; font-size: 13px;">{html_ing}</div>
+</div>
+<div class="{class_saut_page}">
+<h3>👨‍🍳 Préparation</h3>
+<div style="line-height: 1.5; text-align: justify; font-size: 13px;">{prepa_final}</div>
+</div>
+<div style="text-align:center; color:#888; font-size:11px; margin-top:30px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
 </div>
 """
         st.markdown(fiche_html, unsafe_allow_html=True)
@@ -633,6 +615,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
