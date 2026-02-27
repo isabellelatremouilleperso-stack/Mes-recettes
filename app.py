@@ -524,85 +524,98 @@ elif st.session_state.page == "playstore":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
+    # 1. STYLE CSS (Propre et efficace)
     st.markdown("""
         <style>
         .stApp { background-color: white !important; color: black !important; }
         [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
-
+        
         .paper-sheet {
             background-color: white;
             color: black;
-            font-family: 'Segoe UI', serif;
-            max-width: 800px;
+            font-family: 'Segoe UI', sans-serif;
+            max-width: 850px;
             margin: 0 auto;
+            padding: 20px;
         }
 
         .print-box {
-            background-color: #f9f9f9;
-            border: 1px solid #eee;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
             border-radius: 10px;
             padding: 20px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
-        h3 { border-bottom: 1px solid #e67e22; color: #e67e22 !important; padding-bottom: 5px; }
+        h1 { color: black !important; border-bottom: 3px solid #e67e22; padding-bottom: 10px; }
+        h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
 
         @media print {
             .no-print { display: none !important; }
-            .print-box { border: none; background: none; padding: 0; }
+            .print-box { border: 1px solid #ccc; background-color: white !important; }
             .page-break { page-break-before: always; }
-            /* Force le noir pour l'encre */
             * { color: black !important; }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Barre d’instructions
-    with st.container():
-        st.markdown("""
-            <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 10px; color: #856404; margin-bottom: 20px;" class="no-print">
-                <strong>🖨️ Prêt pour l'impression</strong><br>
-                Utilisez le menu de votre navigateur (les 3 points ⋮) puis <strong>Imprimer</strong>.
-            </div>
-        """, unsafe_allow_html=True)
+    # 2. BARRE D'INSTRUCTIONS (no-print)
+    st.markdown("""
+        <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 10px; color: #856404; margin-bottom: 20px;" class="no-print">
+            <strong>💡 Prêt pour l'impression :</strong> Utilisez <b>CTRL+P</b> ou le menu <b>Imprimer</b> de votre navigateur.
+        </div>
+    """, unsafe_allow_html=True)
 
-        if st.button("⬅ Retourner à la recette", use_container_width=True):
-            st.session_state.page = "details"
-            st.rerun()
+    if st.button("⬅ Retourner à la recette", use_container_width=True):
+        st.session_state.page = "details"
+        st.rerun()
 
-    # --- LOGIQUE DE DÉCOUPAGE DES DONNÉES ---
-    texte_brut = str(r.get('Ingrédients', ''))
+    # 3. LOGIQUE DE DÉCOUPAGE (Indispensable pour ta sauce spaghetti)
+    texte_complet = str(r.get('Ingrédients', ''))
     import re
-    # On coupe si on voit "Préparation" ou "Instructions"
-    split_match = re.search(r'(?i)Préparation|Preparation|Instructions', texte_brut)
+    # On sépare si on trouve le mot "Préparation" dans le champ ingrédients
+    split_match = re.search(r'(?i)Préparation|Preparation', texte_complet)
     
     if split_match:
-        ingredients_txt = texte_brut[:split_match.start()].strip()
-        # On garde le reste comme préparation si le champ officiel est vide
-        prepa_txt = texte_brut[split_match.start():].strip()
+        ingredients_txt = texte_complet[:split_match.start()].strip()
+        prepa_txt = texte_complet[split_match.start():].strip()
     else:
-        ingredients_txt = texte_brut
+        ingredients_txt = texte_complet
         prepa_txt = r.get('Préparation', '')
 
-    lignes = [l.strip() for l in ingredients_txt.split('\n') if l.strip()]
+    # Préparation des lignes d'ingrédients
+    lignes_ing = [l.strip() for l in ingredients_txt.split('\n') if l.strip()]
+    html_ingredients = ""
+    for l in lignes_ing:
+        if l.endswith(':'): # C'est un titre (ex: Liquides :)
+            html_ingredients += f"<p style='margin: 8px 0 3px 0;'><b>{l}</b></p>"
+        else: # C'est un ingrédient
+            html_ingredients += f"<p style='margin: 3px 0;'>☐ {l}</p>"
 
-    # --- Rendu HTML ---
+    # 4. RENDU FINAL (Tout dans un seul f-string pour éviter les bugs d'affichage)
     st.markdown(f"""
         <div class="paper-sheet">
-            <h1 style="color: black; border-bottom: 3px solid #e67e22; padding-bottom: 10px;">{r.get('Titre', 'Recette')}</h1>
-            <p><strong>🍴 Catégorie :</strong> {r.get('Catégorie', '-')} | <strong>👥 Portions :</strong> {r.get('Portions', '-')} | <strong>⏱ Temps :</strong> {r.get('Temps_Prepa', '0')} min + {r.get('Temps_Cuisson', '0')} min</p>
+            <h1>{r.get('Titre', 'Recette')}</h1>
             
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold;">
+                <span>Catégorie : {r.get('Catégorie', '-')}</span>
+                <span>Portions : {r.get('Portions', '-')}</span>
+                <span>Temps : {r.get('Temps_Prepa', '0')} + {r.get('Temps_Cuisson', '0')} min</span>
+            </div>
+
             <div class="print-box">
                 <h3>🛒 Ingrédients</h3>
-                {"".join([f"<p style='margin:5px 0;'>{'<b>' + l + '</b>' if l.endswith(':') else '☐ ' + l}</p>" for l in lignes])}
+                {html_ingredients}
             </div>
-            
+
             <div class="print-box page-break">
                 <h3>👨‍🍳 Préparation</h3>
-                <div style="white-space: pre-wrap; line-height: 1.5;">{prepa_txt}</div>
+                <div style="white-space: pre-wrap; line-height: 1.6;">{prepa_txt}</div>
             </div>
-            
-            <p style="text-align:center; font-size: 0.8em; color: #888;" class="no-print">--- Fin de la fiche ---</p>
+
+            <p style="text-align: center; font-size: 0.8em; color: #666; margin-top: 30px;">
+                Fiche générée par Mes Recettes Pro
+            </p>
         </div>
     """, unsafe_allow_html=True)
 # --- PAGE AIDE ---
@@ -616,6 +629,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
