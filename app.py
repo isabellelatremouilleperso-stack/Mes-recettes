@@ -364,7 +364,7 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # BARRE DE NAVIGATION
+    # BARRE DE NAVIGATION (Boutons en haut)
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
     with c_nav1:
         if st.button("⬅ Retour", use_container_width=True): 
@@ -397,7 +397,7 @@ elif st.session_state.page == "details":
         except:
             st.write("Pas encore notée")
 
-    # --- CORPS DE LA PAGE ---
+    # --- CORPS DE LA PAGE (IMAGE + INFOS) ---
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
@@ -408,7 +408,7 @@ elif st.session_state.page == "details":
         else:
             st.image("https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # SECTION NOTES (COMMENTAIRES)
+        # SECTION NOTES
         st.markdown("### 📝 Mes Notes")
         notes = r.get('Commentaires', '')
         if notes:
@@ -421,7 +421,6 @@ elif st.session_state.page == "details":
         
         # AFFICHAGE DES TEMPS ET PORTIONS
         t1, t2, t3 = st.columns(3)
-        # On cherche les clés possibles (majuscules ou minuscules)
         t1.metric("🕒 Prépa", f"{r.get('Temps_Prepa', r.get('temps_prepa', '-'))} min")
         t2.metric("🔥 Cuisson", f"{r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))} min")
         t3.metric("🍽️ Portions", r.get('Portions', r.get('portions', '-')))
@@ -438,32 +437,33 @@ elif st.session_state.page == "details":
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
         date_plan = st.date_input("Choisir une date", value=datetime.now(), key="plan_date")
-        if st.button("🗓️ Ajouter au planning", use_container_width=True):
-            send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)})
-            # Envoi au calendrier Google
-            send_action({
+        if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
+            res1 = send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)})
+            res2 = send_action({
                 "action": "calendar", 
                 "titre": r['Titre'], 
                 "date_prevue": date_plan.strftime("%d/%m/%Y"),
                 "ingredients": r.get('Ingrédients', '')
             })
-            st.success("Ajouté au planning !")
+            if res1 and res2:
+                st.success("✅ Ajouté partout !")
+                st.cache_data.clear()
 
         st.divider()
 
-        # SECTION INGRÉDIENTS
+        # SECTION INGRÉDIENTS (avec cases à cocher)
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         ings = [l.strip() for l in str(ings_raw).split("\n") if l.strip()]
         selected_ings = []
         for i, line in enumerate(ings):
-            if st.checkbox(line, key=f"chk_{i}"):
+            if st.checkbox(line, key=f"chk_det_{i}"):
                 selected_ings.append(line)
         
-        if st.button("📥 Ajouter au Panier", use_container_width=True):
+        if st.button("📥 Ajouter la sélection au Panier", use_container_width=True):
             for item in selected_ings:
                 send_action({"action": "add_shop", "article": item})
-            st.toast("Ingrédients envoyés à la liste de courses !")
+            st.toast("Ingrédients envoyés !")
 
     st.divider()
 
@@ -473,61 +473,7 @@ elif st.session_state.page == "details":
     if prep:
         st.write(prep)
     else:
-        st.warning("Aucune étape de préparation enregistrée pour cette recette.")
-    
-    # ... code précédent (header, etc.)
-    col_g, col_d = st.columns([1, 1.2])
-    
-    with col_g:
-        img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
-        st.image(img_url, use_container_width=True)
-        # Bloc Note/Commentaire ici...
-
-    with col_d: # <-- Vérifie bien que ce 'w' est aligné avec le 'w' de 'with col_g'
-        st.subheader("📋 Informations")
-        st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
-        
-        st.divider()
-       # --- SECTION PLANNING ---
-        st.subheader("📅 Planifier ce repas")
-        date_plan = st.date_input("Choisir une date", value=datetime.now())
-        
-        if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
-            # 1. Ajout dans ton onglet Planning (pour l'app)
-            res1 = send_action({
-                "action": "plan", 
-                "titre": r['Titre'], 
-                "date": str(date_plan)
-            })
-            
-            # 2. Ajout dans le vrai Google Calendar
-            # On formate la date en JJ/MM/AAAA comme attendu par ton script GS
-            date_formatee = date_plan.strftime("%d/%m/%Y")
-            res2 = send_action({
-                "action": "calendar", 
-                "titre": r['Titre'], 
-                "date_prevue": date_formatee,
-                "ingredients": r.get('Ingrédients', '')
-            })
-            
-            if res1 and res2:
-                st.success(f"✅ Ajouté au planning et à Google Calendar !")
-                st.cache_data.clear()
-            else:
-                st.warning("Ajouté au planning, mais erreur avec Google Calendar.")
-        
-        st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
-        sel = []
-        for i, l in enumerate(ings):
-            if st.checkbox(l, key=f"chk_det_{i}"): 
-                sel.append(l)
-        
-        if st.button("📥 Ajouter la sélection au Panier", use_container_width=True):
-            for it in sel:
-                send_action({"action":"add_shop","article":it})
-            st.toast("Ingrédients ajoutés !")
-
+        st.warning("Aucune étape de préparation enregistrée.")
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
@@ -1106,6 +1052,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
