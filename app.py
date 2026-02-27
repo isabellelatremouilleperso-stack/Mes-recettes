@@ -93,6 +93,10 @@ if st.session_state.page != "print":
 # ======================
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
+
+# Voici l'URL générée avec ton GID 536412190
+URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=536412190&single=true&output=csv"
+
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
 
 CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
@@ -504,58 +508,47 @@ elif st.session_state.page == "shop":
     except:
         st.error("Erreur de chargement de la liste.")
 
-# --- PAGE PLANNING AMÉLIORÉE ---
 elif st.session_state.page == "planning":
-    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Hebdomadaire</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Repas</h1>', unsafe_allow_html=True)
     
-    # Boutons de contrôle
-    col_btn1, col_btn2 = st.columns([1, 1])
-    with col_btn1:
+    col_nav, col_clear = st.columns([1, 1])
+    with col_nav:
         if st.button("⬅ Retour", use_container_width=True):
             st.session_state.page = "home"; st.rerun()
-    with col_btn2:
+    with col_clear:
         if st.button("🗑️ Vider le planning", use_container_width=True):
             if send_action({"action": "clear_planning"}):
-                st.cache_data.clear(); st.rerun()
+                st.cache_data.clear(); st.success("Planning vidé !"); st.rerun()
 
     st.divider()
 
-    # On charge les données de l'onglet Planning
-    # Note: Assure-toi que ta fonction load_data() peut lire l'onglet "Planning"
-    df_plan = load_data(sheet_name="Planning") 
+    try:
+        # Lecture de l'onglet Planning via la nouvelle constante
+        df_plan = pd.read_csv(URL_CSV_PLAN)
+        
+        if df_plan.empty:
+            st.info("Aucun repas planifié. Ajoutez-en un depuis la bibliothèque !")
+        else:
+            # On s'assure que la colonne Date est bien formatée
+            df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
+            df_plan = df_plan.sort_values(by='Date')
 
-    if df_plan.empty:
-        st.info("Votre planning est vide. Ajoutez des recettes depuis leur fiche descriptive !")
-    else:
-        # Conversion des dates pour trier
-        df_plan['Date'] = pd.to_datetime(df_plan['Date'])
-        df_plan = df_plan.sort_values(by='Date')
-
-        # Affichage visuel
-        for _, row in df_plan.iterrows():
-            date_formatee = row['Date'].strftime('%A %d %b')
-            
-            with st.container():
+            for index, row in df_plan.iterrows():
+                date_txt = row['Date'].strftime('%A %d %B') if not pd.isnull(row['Date']) else "Date inconnue"
+                
                 st.markdown(f"""
-                <div style="background-color: #1e2129; padding: 15px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
-                    <small style="color: #e67e22; font-weight: bold;">{date_formatee.upper()}</small>
-                    <h3 style="margin: 0;">{row['Titre']}</h3>
+                <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
+                    <b style="color: #e67e22;">{date_txt.upper()}</b><br>
+                    <span style="font-size: 1.2rem;">{row['Titre']}</span>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                c1, c2 = st.columns([3, 1])
-                if c1.button(f"Voir la recette", key=f"btn_{row['Titre']}_{row['Date']}"):
-                    # Logique pour retrouver la recette et l'afficher
-                    pass
-                if c2.button("❌", key=f"del_{row['Titre']}_{row['Date']}"):
-                    send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'])})
-                    st.cache_data.clear(); st.rerun()
-                    st.write("") # Espace
-        else:
-            st.info("Aucun repas n'est prévu pour les jours à venir. Allez dans la fiche d'une recette pour l'ajouter ici !")
-    else:
-        st.warning("La colonne de planning est introuvable. Vérifiez votre Google Sheet.")
-
+                if st.button(f"❌ Retirer", key=f"del_{index}"):
+                    if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
+                        st.cache_data.clear(); st.rerun()
+                        
+    except Exception as e:
+        st.error("Impossible de charger le planning. Vérifiez que l'onglet 'Planning' est bien publié sur le Web (Fichier > Partager > Publier sur le Web).")
 # ==========================================
 # --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
 # ==========================================
@@ -787,6 +780,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
