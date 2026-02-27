@@ -361,36 +361,30 @@ elif st.session_state.page=="details":
         st.write(f"**👥 Portions :** {r.get('Portions','-')}")
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
-       st.subheader("🛒 Ingrédients")
-ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
+        st.subheader("🛒 Ingrédients")
+        ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
 
-# Création des deux zones de conteneur
-container_ecran = st.container()
-container_papier = st.container()
+        # --- DEBUT DU NOUVEAU CODE ---
+        container_ecran = st.container()
+        container_papier = st.container()
 
-with container_ecran:
-    # Ce bloc s'affiche sur ta tablette mais est masqué à l'imprimante
-    st.markdown('<div class="no-print">', unsafe_allow_html=True)
-    sel = []
-    for i, l in enumerate(ings):
-        if st.checkbox(l, key=f"chk_det_final_{i}"): 
-            sel.append(l)
-    st.markdown('</div>', unsafe_allow_html=True)
+        with container_ecran:
+            # S'affiche sur la tablette, mais caché à l'imprimante
+            st.markdown('<div class="no-print">', unsafe_allow_html=True)
+            sel = []
+            for i, l in enumerate(ings):
+                if st.checkbox(l, key=f"chk_det_final_{i}"): 
+                    sel.append(l)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-with container_papier:
-    # Ce bloc est caché sur ta tablette mais apparaît en NOIR sur le papier
-    st.markdown('<div class="only-print">', unsafe_allow_html=True)
-    # On transforme la liste en texte simple avec des puces (•)
-    liste_pour_impression = "\n".join([f"• {ing}" for ing in ings])
-    st.markdown(liste_pour_impression)
-    st.markdown('</div>', unsafe_allow_html=True)
-        if st.button("📥 Ajouter au Panier",use_container_width=True):
-            for it in sel: send_action({"action":"add_shop","article":it})
-            st.toast("Ajouté !"); st.session_state.page="shop"; st.rerun()
-    st.divider()
-    st.subheader("📝 Préparation")
-    st.write(r.get('Préparation','Aucune étape.'))
-
+        with container_papier:
+            # Caché sur la tablette, mais s'affiche en NOIR à l'imprimante
+            st.markdown('<div class="only-print">', unsafe_allow_html=True)
+            # On crée une liste de texte simple avec des puces (•)
+            liste_print = "\n".join([f"• {ing}" for ing in ings])
+            st.markdown(liste_print)
+            st.markdown('</div>', unsafe_allow_html=True)
+        # --- FIN DU NOUVEAU CODE ---
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -675,6 +669,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
