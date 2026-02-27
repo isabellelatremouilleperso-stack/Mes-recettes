@@ -278,15 +278,20 @@ elif st.session_state.page=="details":
     st.write(r.get('Préparation','Aucune étape.'))
 
 # ==========================================
-# --- PAGE : AJOUTER UNE RECETTE (STRUCTURE ORIGINALE + NOTES) ---
+# --- PAGE : AJOUTER UNE RECETTE (MULTI-CATÉGORIES + IMPRESSION) ---
 # ==========================================
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
-    # --- NAVIGATION RAPIDE ---
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+    # --- NAVIGATION ET IMPRESSION ---
+    c_nav, c_print = st.columns([3, 1])
+    if c_nav.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+    
+    # Injection JavaScript pour l'impression
+    if c_print.button("🖨️ Imprimer cette fiche", use_container_width=True):
+        st.markdown("<script>window.print();</script>", unsafe_allow_html=True)
 
     st.write("") 
 
@@ -304,7 +309,6 @@ elif st.session_state.page == "add":
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
-    # Bouton HTML Direct
     c_btn.markdown(f"""
         <a href="{target_url}" target="_blank" style="text-decoration: none;">
             <div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">
@@ -334,16 +338,16 @@ elif st.session_state.page == "add":
 
     st.divider()
 
-    # --- FORMULAIRE (LA STRUCTURE DE TA PHOTO) ---
+    # --- FORMULAIRE (STRUCTURE ORIGINALE CONSERVÉE) ---
     with st.container():
-        # Ligne 1 : Titre et Catégorie
+        # Ligne 1 : Titre et Catégories (Passage en MULTISELECT)
         col_t, col_c = st.columns([2, 1])
         titre = col_t.text_input("🏷️ Nom de la recette", 
                                  value=st.session_state.get('scraped_title', ''),
                                  placeholder="Ex: Lasagne de maman")
         
-        cat_index = CATEGORIES.index("Autre") if "Autre" in CATEGORIES else 0
-        categorie = col_c.selectbox("📁 Catégorie", CATEGORIES, index=cat_index)
+        # Ici on peut maintenant choisir plusieurs catégories
+        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
 
         # Ligne 2 : Paramètres de cuisson
         st.markdown("#### ⏱️ Paramètres de cuisson")
@@ -368,7 +372,7 @@ elif st.session_state.page == "add":
         st.markdown("#### 🖼️ Visuel")
         img_url = st.text_input("Lien de l'image (URL)", placeholder="https://...")
 
-        # --- NOUVELLE SECTION : COMMENTAIRES / NOTES ---
+        # --- SECTION : COMMENTAIRES / NOTES ---
         st.markdown("#### 📝 Mes Notes & Astuces")
         commentaires = st.text_area("Ajoutez vos conseils (ex: Moins de sucre, temps de repos...)", 
                                     height=100,
@@ -379,10 +383,13 @@ elif st.session_state.page == "add":
         # --- BOUTON SAUVEGARDE ---
         if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
+                # On transforme la liste des catégories en texte pour la sauvegarde
+                cat_finales = ", ".join(cat_choisies)
+                
                 payload = {
                     "action": "add",
                     "titre": titre,
-                    "Catégorie": categorie,
+                    "Catégorie": cat_finales,
                     "Ingrédients": ingredients,
                     "Préparation": instructions,
                     "Image": img_url,
@@ -390,7 +397,7 @@ elif st.session_state.page == "add":
                     "Temps_Cuisson": t_cuis,
                     "Portions": port,
                     "Note": 0,
-                    "Commentaires": commentaires  # Enregistre tes notes ici
+                    "Commentaires": commentaires
                 }
                 if send_action(payload):
                     st.success(f"✅ '{titre}' ajouté avec succès !")
@@ -562,6 +569,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
