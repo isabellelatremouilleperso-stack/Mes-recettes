@@ -19,48 +19,33 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 
 st.markdown("""
 <style>
-/* --- LOOK ÉCRAN --- */
-.stApp { background-color: #0e1117; color: #e0e0e0; }
+/* --- ÉCRAN --- */
+.only-print { display: none; }
 
-/* --- LOOK IMPRESSION --- */
 @media print {
-    /* 1. ON SUPPRIME TOUT LE DÉCOR */
-    [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button, header, footer {
+    /* 1. On cache la version interactive et TOUS les boutons Streamlit */
+    .no-print, .stButton, button, [data-testid="stSidebar"], [data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* 2. ON FORCE LE BLANC SUR LES CONTENEURS */
-    .stApp, .main, .block-container, [data-testid="stMainView"] {
-        background-color: white !important;
+    /* 2. On affiche la version texte et on force le NOIR */
+    .only-print {
+        display: block !important;
         color: black !important;
     }
 
-    /* 3. LA MÉTHODE RADICALE POUR LE TEXTE */
-    /* On cible TOUS les éléments HTML possibles (*) pour les forcer en noir */
-    @page { margin: 1cm; }
-    
-    * {
+    /* 3. On force tous les textes à être visibles */
+    p, li, div, span {
         color: black !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
+        visibility: visible !important;
     }
 
-    /* 4. CIBLE SPÉCIFIQUE POUR LES INGRÉDIENTS (CHECKBOXES) */
-    /* On force l'affichage du texte à côté des petites cases */
-    div[data-testid="stCheckbox"] label span {
-        color: black !important;
-    }
-    
-    div[data-testid="stCheckbox"] p {
-        color: black !important;
-        font-weight: bold !important;
-    }
-
-    /* 5. ÉLARGISSEMENT MAXIMUM */
+    /* 4. Ton réglage de largeur (image 439f41) */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 0 !important;
+        padding: 0.5cm !important;
+        margin: 0 !important;
     }
 }
 </style>
@@ -376,11 +361,29 @@ elif st.session_state.page=="details":
         st.write(f"**👥 Portions :** {r.get('Portions','-')}")
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
-        st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
-        sel=[]
-        for i,l in enumerate(ings):
-            if st.checkbox(l,key=f"chk_det_final_{i}"): sel.append(l)
+       st.subheader("🛒 Ingrédients")
+ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
+
+# Création des deux zones de conteneur
+container_ecran = st.container()
+container_papier = st.container()
+
+with container_ecran:
+    # Ce bloc s'affiche sur ta tablette mais est masqué à l'imprimante
+    st.markdown('<div class="no-print">', unsafe_allow_html=True)
+    sel = []
+    for i, l in enumerate(ings):
+        if st.checkbox(l, key=f"chk_det_final_{i}"): 
+            sel.append(l)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+with container_papier:
+    # Ce bloc est caché sur ta tablette mais apparaît en NOIR sur le papier
+    st.markdown('<div class="only-print">', unsafe_allow_html=True)
+    # On transforme la liste en texte simple avec des puces (•)
+    liste_pour_impression = "\n".join([f"• {ing}" for ing in ings])
+    st.markdown(liste_pour_impression)
+    st.markdown('</div>', unsafe_allow_html=True)
         if st.button("📥 Ajouter au Panier",use_container_width=True):
             for it in sel: send_action({"action":"add_shop","article":it})
             st.toast("Ajouté !"); st.session_state.page="shop"; st.rerun()
@@ -672,6 +675,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
