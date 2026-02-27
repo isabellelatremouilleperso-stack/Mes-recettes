@@ -524,14 +524,14 @@ elif st.session_state.page == "print":
 
     r = st.session_state.recipe_data
 
-    # Style blanc spécial impression
+# Style blanc spécial impression
+   
     st.markdown("""
-        <style>
-        .stApp { background-color: white; color: black; }
-        header, footer, [data-testid="stSidebar"] { display: none; }
-        </style>
-    """, unsafe_allow_html=True)
-
+       <style>
+       .stApp { background-color: white; color: black; }
+       header, footer, [data-testid="stSidebar"] { display: none; }
+       </style>
+""", unsafe_allow_html=True)
     st.title(r.get("Titre", "Recette"))
 
     st.write(f"Catégorie : {r.get('Catégorie','')}")
@@ -577,6 +577,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
