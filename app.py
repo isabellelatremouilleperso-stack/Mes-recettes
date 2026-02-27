@@ -59,30 +59,22 @@ st.markdown("""
 
 /* --- DESIGN IMPRESSION (L'ULTIME) --- */
 @media print {
-    /* 1. ON CACHE ABSOLUMENT TOUT LE SUPERFLU */
-    [data-testid="stSidebar"], 
-    [data-testid="stHeader"], 
-    .stButton, 
-    button, 
-    header, 
-    footer,
-    .stDownloadButton,
-    [data-testid="stDecoration"] {
+    /* 1. ON CACHE LE SUPERFLU */
+    [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button, .no-print {
         display: none !important;
-        height: 0px !important;
     }
 
-    /* 2. FORCE LE BLANC TOTAL */
-    .stApp, .main, .block-container, [data-testid="stMainView"], [data-testid="stVerticalBlock"] {
-        background-color: white !important;
+    /* 2. ON FORCE L'AFFICHAGE DU CONTENU D'IMPRESSION */
+    .only-print {
+        display: block !important;
+        visibility: visible !important;
         color: black !important;
     }
 
-    /* 3. FORCE LE TEXTE EN NOIR PUR */
-    h1, h2, h3, h4, p, span, li, label, div {
-        color: black !important;
-    }
-
+    /* 3. FORCE LE BLANC ET NOIR */
+    .stApp { background-color: white !important; }
+    h1, h2, h3, p, li, span { color: black !important; }
+}
     /* 4. ON UTILISE TOUTE LA LARGEUR (Supprime le décalage de la sidebar) */
     .main .block-container {
         max-width: 100% !important;
@@ -669,6 +661,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
