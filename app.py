@@ -544,23 +544,35 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # On utilise le nom exact trouvé dans ton debug : 'Catégorie'
-        cat = r.get('Catégorie', 'Autre')
-        
-        # Sécurité si la case est vide dans Excel
-        if not cat or str(cat).lower() == 'nan':
-            cat = "Autre"
-            
+        # 1. CATÉGORIE
+        cat = r.get('Catégorie', r.get('Categorie', 'Autre'))
+        if not cat or str(cat).lower() == 'nan': cat = "Autre"
         st.write(f"**🍴 Catégorie :** {cat}")
         
-        # Gestion de la source
+        # 2. SOURCE
         source = r.get('Source', '')
         if source and "http" in str(source):
             st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
         
         st.divider()
-        st.info("💡 Les modifications sont synchronisées avec Google Sheets.")
+        
+        # 3. TEMPS (MÉTHODE CHERCHE-TOUT)
+        # On regarde toutes les colonnes possibles pour ne rien rater
+        t_prepa = r.get('Temps de préparation', r.get('Temps_Prepa', r.get('Prepa', '-')))
+        t_cuisson = r.get('Temps de cuisson', r.get('Temps_Cuisson', r.get('Cuisson', '-')))
+        portions = r.get('Portions', r.get('NB Portions', '-'))
 
+        # Nettoyage des valeurs (enlever les .0 si c'est un nombre)
+        def clean_val(v):
+            if v == "-" or not v: return "-"
+            return str(v).split('.')[0]
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric("🕒 Prépa", f"{clean_val(t_prepa)} min" if clean_val(t_prepa) != "-" else "-")
+        c2.metric("🔥 Cuisson", f"{clean_val(t_cuisson)} min" if clean_val(t_cuisson) != "-" else "-")
+        c3.metric("🍽️ Portions", clean_val(portions))
+
+        st.info("💡 Les modifications sont synchronisées avec Google Sheets.")
         
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
@@ -1202,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
