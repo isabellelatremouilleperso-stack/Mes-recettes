@@ -424,27 +424,40 @@ elif st.session_state.page == "details":
         else:
             st.image("https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # 2. SYSTÈME D'ÉTOILES (Correction pour que ça reste)
+        # 2. SYSTÈME D'ÉTOILES (Version robuste anti-erreur)
         st.write("**Évaluer cette recette :**")
         
-        # On récupère la note actuelle pour l'afficher par défaut
-        # Streamlit feedback utilise 0 pour 1 étoile, 1 pour 2 étoiles... donc on fait -1
+        # On force la conversion en entier pour éviter le plantage Streamlit
         try:
-            valeur_actuelle = int(float(r.get('Note', r.get('note', 0)))) - 1
-            if valeur_actuelle < 0: valeur_actuelle = None
+            # On récupère la note (Note ou note)
+            raw_note = r.get('Note', r.get('note', 0))
+            
+            if raw_note is None or str(raw_note).strip() == "" or str(raw_note) == "None":
+                valeur_actuelle = None
+            else:
+                # On convertit en float puis en int (pour gérer les "4.0")
+                # Feedback : 0 = 1 étoile, donc on fait -1
+                valeur_actuelle = int(float(raw_note)) - 1
+                
+                # Sécurités pour rester dans les bornes de l'outil (0 à 4)
+                if valeur_actuelle < 0: valeur_actuelle = None
+                if valeur_actuelle is not None and valeur_actuelle > 4: valeur_actuelle = 4
         except:
             valeur_actuelle = None
 
+        # Affichage du composant
         nouveau_choix = st.feedback("stars", key=f"star_det_{r['Titre']}", value=valeur_actuelle)
         
         if nouveau_choix is not None:
             note_finale = nouveau_choix + 1
-            # On vérifie si la note est différente de l'ancienne avant d'envoyer
-            if note_finale != (valeur_actuelle + 1 if valeur_actuelle is not None else 0):
+            # On compare avec l'ancienne note pour ne pas renvoyer pour rien
+            ancienne_note = (valeur_actuelle + 1) if valeur_actuelle is not None else 0
+            
+            if note_finale != ancienne_note:
                 if send_action({"action": "edit", "titre": r['Titre'], "Note": note_finale}):
                     st.toast(f"Note enregistrée : {note_finale} ⭐")
                     st.cache_data.clear()
-                    # Mise à jour immédiate pour l'affichage sans recharger
+                    # On met à jour la donnée locale pour éviter le saut visuel
                     st.session_state.recipe_data['Note'] = note_finale
                     st.rerun()
         
@@ -1101,6 +1114,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
