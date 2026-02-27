@@ -27,13 +27,13 @@ h1,h2,h3 { color: #e67e22 !important; }
 
 /* --- DESIGN IMPRESSION (LE SAUVETEUR D'ENCRE) --- */
 @media print {
-    /* 1. On force le fond blanc et le texte noir sur ABSOLUMENT TOUT */
+    /* 1. On force le blanc sur TOUTE la page */
     html, body, .stApp, [data-testid="stMainView"], .main, .block-container {
         background-color: white !important;
         color: black !important;
     }
 
-    /* 2. On fait disparaître la barre latérale, le logo et les boutons */
+    /* 2. On CACHE la barre latérale, les boutons et le logo */
     [data-testid="stSidebar"], 
     [data-testid="stSidebarNav"],
     .stSidebar,
@@ -45,14 +45,16 @@ h1,h2,h3 { color: #e67e22 !important; }
     .stSlider {
         display: none !important;
         width: 0 !important;
+        visibility: hidden !important;
     }
 
-    /* 3. On force les titres et textes en noir (pas de gris, pas d'orange) */
+    /* 3. On force les textes en noir (titres, ingrédients, étapes) */
     h1, h2, h3, h4, h5, h6, p, span, label, div, li {
         color: black !important;
+        -webkit-print-color-adjust: exact; /* Force le rendu des couleurs sur certains navigateurs */
     }
 
-    /* 4. On utilise toute la largeur de la feuille */
+    /* 4. On utilise toute la largeur de la feuille (très important !) */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
@@ -60,10 +62,10 @@ h1,h2,h3 { color: #e67e22 !important; }
         margin: 0 !important;
     }
 
-    /* 5. On s'assure que les images restent à une taille raisonnable */
+    /* 5. On cadre l'image de la recette proprement */
     img {
-        max-width: 8cm !important;
-        border-radius: 5px !important;
+        max-width: 10cm !important;
+        border-radius: 8px !important;
     }
 }
 </style>
@@ -653,6 +655,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
