@@ -524,90 +524,87 @@ elif st.session_state.page == "playstore":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # Style CSS Correction "Page Coupée" et Couleurs
     st.markdown("""
         <style>
         .stApp { background-color: white !important; color: black !important; }
-        [data-testid="stHeader"], [data-testid="stSidebar"], footer { display: none !important; }
-        .main .block-container { max-width: 100% !important; padding: 20px !important; }
-        
-        p, li, h3 { 
-            orphans: 3; widows: 3; 
-            break-inside: avoid-page !important; 
-            color: black !important;
+        [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
+
+        .paper-sheet {
+            background-color: white;
+            color: black;
+            font-family: 'Segoe UI', serif;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        .paper-sheet { background-color: white; color: black; font-family: sans-serif; }
-        
+        .print-box {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h3 { border-bottom: 1px solid #e67e22; color: #e67e22 !important; padding-bottom: 5px; }
+
         @media print {
             .no-print { display: none !important; }
-            .stButton { display: none !important; }
+            .print-box { border: none; background: none; padding: 0; }
+            .page-break { page-break-before: always; }
+            /* Force le noir pour l'encre */
             * { color: black !important; }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- BARRE D'INSTRUCTIONS ---
+    # Barre d’instructions
     with st.container():
-        st.info("💡 **Prêt pour l'impression :** Utilisez le menu de votre navigateur (ou CTRL+P) pour imprimer.")
+        st.markdown("""
+            <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 10px; color: #856404; margin-bottom: 20px;" class="no-print">
+                <strong>🖨️ Prêt pour l'impression</strong><br>
+                Utilisez le menu de votre navigateur (les 3 points ⋮) puis <strong>Imprimer</strong>.
+            </div>
+        """, unsafe_allow_html=True)
+
         if st.button("⬅ Retourner à la recette", use_container_width=True):
             st.session_state.page = "details"
             st.rerun()
 
-    st.divider()
+    # --- LOGIQUE DE DÉCOUPAGE DES DONNÉES ---
+    texte_brut = str(r.get('Ingrédients', ''))
+    import re
+    # On coupe si on voit "Préparation" ou "Instructions"
+    split_match = re.search(r'(?i)Préparation|Preparation|Instructions', texte_brut)
+    
+    if split_match:
+        ingredients_txt = texte_brut[:split_match.start()].strip()
+        # On garde le reste comme préparation si le champ officiel est vide
+        prepa_txt = texte_brut[split_match.start():].strip()
+    else:
+        ingredients_txt = texte_brut
+        prepa_txt = r.get('Préparation', '')
 
-    # --- LOGIQUE DE NETTOYAGE ---
-    lignes = str(r.get('Ingrédients', '')).split('\n')
-    ingredients_propres = []
-    prep_extraite = []
-    est_dans_prep = False
+    lignes = [l.strip() for l in ingredients_txt.split('\n') if l.strip()]
 
-    for l in lignes:
-        l_strip = l.strip()
-        if not l_strip: continue
-        
-        # Si on détecte un mot clé de préparation, on arrête de mettre des carrés
-        if any(x in l_strip.lower() for x in ["préparation", "étape", "instruction"]):
-            est_dans_prep = True
-        
-        if est_dans_prep:
-            prep_extraite.append(l_strip)
-        else:
-            ingredients_propres.append(l_strip)
-
-    # Fusion avec le champ préparation officiel s'il existe
-    prep_finale = r.get('Préparation', '')
-    if len(prep_finale) < 10 and prep_extraite:
-        prep_finale = "\n".join(prep_extraite)
-
-    # --- LE CORPS DE LA RECETTE ---
+    # --- Rendu HTML ---
     st.markdown(f"""
         <div class="paper-sheet">
-            <h1 style="border-bottom: 3px solid #e67e22; padding-bottom: 10px; color: black;">{r.get('Titre', 'Recette')}</h1>
+            <h1 style="color: black; border-bottom: 3px solid #e67e22; padding-bottom: 10px;">{r.get('Titre', 'Recette')}</h1>
+            <p><strong>🍴 Catégorie :</strong> {r.get('Catégorie', '-')} | <strong>👥 Portions :</strong> {r.get('Portions', '-')} | <strong>⏱ Temps :</strong> {r.get('Temps_Prepa', '0')} min + {r.get('Temps_Cuisson', '0')} min</p>
             
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold;">
-                <span>Catégorie : {r.get('Catégorie', '-')}</span>
-                <span>Portions : {r.get('Portions', '-')}</span>
-                <span>Temps : {r.get('Temps_Prepa', '0')} min + {r.get('Temps_Cuisson', '0')} min</span>
-            </div>
-
-            <h3 style="background-color: #f8f9fa; padding: 8px; border-left: 5px solid #e67e22;">🛒 Ingrédients</h3>
-            <div style="margin-bottom: 25px;">
-                {"".join([f"<p style='margin: 3px 0;'>☐ {ing}</p>" for ing in ingredients_propres])}
-            </div>
-
-            <h3 style="background-color: #f8f9fa; padding: 8px; border-left: 5px solid #e67e22;">👨‍🍳 Préparation</h3>
-            <div style="white-space: pre-wrap; line-height: 1.6; padding: 10px;">
-                {prep_finale}
+            <div class="print-box">
+                <h3>🛒 Ingrédients</h3>
+                {"".join([f"<p style='margin:5px 0;'>{'<b>' + l + '</b>' if l.endswith(':') else '☐ ' + l}</p>" for l in lignes])}
             </div>
             
-            <br>
-            <p style="font-style: italic; font-size: 0.8em; border-top: 1px solid #ddd; padding-top: 10px; color: #666;">
-                Généré par Mes Recettes Pro - {datetime.now().strftime('%d/%m/%Y')}
-            </p>
+            <div class="print-box page-break">
+                <h3>👨‍🍳 Préparation</h3>
+                <div style="white-space: pre-wrap; line-height: 1.5;">{prepa_txt}</div>
+            </div>
+            
+            <p style="text-align:center; font-size: 0.8em; color: #888;" class="no-print">--- Fin de la fiche ---</p>
         </div>
     """, unsafe_allow_html=True)
-
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -619,6 +616,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
