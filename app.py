@@ -298,8 +298,8 @@ elif st.session_state.page == "add":
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight
-# --- SUITE DE LA PAGE AJOUTER ---
-    st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
+# Utilisation du code HTML &#127760; pour l'émoji globe afin d'éviter le SyntaxError
+    st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">&#127760; Importer depuis le Web</h3>""", unsafe_allow_html=True)
     col_url, col_go = st.columns([4, 1])
     url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...")
     
@@ -488,6 +488,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
