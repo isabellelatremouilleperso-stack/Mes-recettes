@@ -443,7 +443,6 @@ elif st.session_state.page == "details":
                 send_action({"action":"add_shop","article":it})
             st.toast("Ingrédients ajoutés !")
 
-# --- PAGE AJOUTER ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
@@ -461,7 +460,7 @@ elif st.session_state.page == "add":
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
-    url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...")
+    url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...", key="url_main")
     
     if col_go.button("Extraire ✨", use_container_width=True):
         if url_input:
@@ -480,40 +479,45 @@ elif st.session_state.page == "add":
     
     with st.container():
         col_t, col_c = st.columns([2, 1])
-        # Utilise la valeur extraite si elle existe
-        titre = col_t.text_input("🏷️ Nom de la recette", value=st.session_state.get('scraped_title', ''), placeholder="Ex: Lasagne de maman")
+        # On utilise une variable intermédiaire pour plus de sûreté
+        titre_val = st.session_state.get('scraped_title', '')
+        titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman")
+        
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
         
-        # --- SOURCE CORRIGÉE : On utilise url_input par défaut ---
-        source_url = st.text_input("🔗 Lien source (URL de la recette)", value=url_input if url_input else "", placeholder="https://www.ricardocuisine.com/...")
+        # SOURCE : On s'assure que si l'URL est extraite, elle va ici
+        source_url = st.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
         
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15")
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45")
-        port = cp3.text_input("🍽️ Portions", placeholder="4")
+        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
+        port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
         
         st.divider()
         
         ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", height=300, placeholder="2 tasses de farine...")
-        # Utilise la valeur extraite pour les instructions
-        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=st.session_state.get('scraped_content', ''), height=300)
+        # On s'assure que les ingrédients ne sont pas écrasés par l'extraction si on a déjà écrit
+        ingredients = ci.text_area("🍎 Ingrédients", height=300, placeholder="2 tasses de farine...", key="ing_area")
         
-        img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...")
-        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, placeholder="Ajustements, variantes...")
+        # ÉTAPES : On force la valeur extraite si elle existe
+        prep_val = st.session_state.get('scraped_content', '')
+        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=prep_val, height=300, key="prep_area")
+        
+        img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...", key="img_url")
+        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, key="notes_area")
         
         st.divider()
         
         if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
                 import datetime
-                # PAYLOAD CORRIGÉ : On envoie source_url au lieu de "Streamlit App"
+                # On prépare l'envoi
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre,
-                    "source": source_url, # <-- Maintenant ça enregistre le vrai lien !
+                    "source": source_url,
                     "ingredients": ingredients,
                     "preparation": instructions,
                     "image": img_url,
@@ -527,9 +531,10 @@ elif st.session_state.page == "add":
                 if send_action(payload):
                     st.success(f"✅ '{titre}' a été ajoutée !")
                     st.cache_data.clear()
-                    # Nettoyage de la mémoire
+                    # On vide proprement les états d'extraction
                     for key in ['scraped_title', 'scraped_content']:
-                        if key in st.session_state: del st.session_state[key]
+                        if key in st.session_state:
+                            st.session_state[key] = ""
                     time.sleep(1)
                     st.session_state.page = "home"
                     st.rerun()
@@ -1016,6 +1021,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
