@@ -19,48 +19,49 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 
 st.markdown("""
 <style>
-/* --- LOOK ÉCRAN (DARK) --- */
+/* --- DESIGN ÉCRAN (DARK MODE) --- */
 .stApp { background-color: #0e1117; color: #e0e0e0; }
+h1, h2, h3 { color: #e67e22 !important; }
+[data-testid="stSidebar"] { background-color: #1e2129; color: white; }
+.stButton button { background-color: #e67e22; color: white; }
 
-/* --- LOOK IMPRESSION (PRO & ÉCO) --- */
+/* Correction de la ligne qui causait l'erreur */
+.stCheckbox label p { 
+    color: white !important; 
+    font-size: 1.1rem !important; 
+    font-weight: 500 !important; 
+}
+
+/* --- DESIGN IMPRESSION (LE SAUVETEUR D'ENCRE) --- */
 @media print {
-    /* 1. On cache TOUT sauf la zone de texte de la recette */
-    [data-testid="stSidebar"], 
-    [data-testid="stHeader"], 
-    .stButton, 
-    header, 
-    footer,
-    section[data-testid="stSidebar"] {
-        display: none !important;
-    }
-
-    /* 2. On force le fond blanc et le texte noir sur toute la page */
-    .stApp, .main, .block-container, [data-testid="stMainView"] {
+    /* On force le blanc sur TOUT et on cache la barre latérale */
+    html, body, .stApp, [data-testid="stMainView"], .main, .block-container, [data-testid="stSidebar"] {
         background-color: white !important;
         color: black !important;
-        padding: 0 !important;
     }
 
-    /* 3. On s'assure que les titres et textes sont bien noirs */
+    /* On cache physiquement la sidebar et les boutons */
+    [data-testid="stSidebar"], section[data-testid="stSidebar"], .stButton, button, header, footer, [data-testid="stHeader"] {
+        display: none !important;
+        width: 0 !important;
+    }
+
+    /* On remet les textes en noir profond */
     h1, h2, h3, h4, p, span, li, label, div {
         color: black !important;
     }
 
-    /* 4. On force la recette à utiliser toute la largeur du papier */
+    /* On utilise toute la largeur pour éviter le décalage à droite */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
+        padding: 1cm !important;
         margin: 0 !important;
-        padding: 20px !important;
-    }
-
-    /* 5. On évite de couper la photo ou les ingrédients en deux pages */
-    img, .stMarkdown {
-        page-break-inside: avoid;
     }
 }
 </style>
 """, unsafe_allow_html=True)
+
 .stApp { background-color: #0e1117; color: #e0e0e0; }
 h1,h2,h3 { color: #e67e22 !important; }
 
@@ -646,6 +647,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
