@@ -279,64 +279,71 @@ if st.session_state.page == "home":
         st.warning("Aucune donnée trouvée.")
 
 # --- PAGE DÉTAILS ---
-elif st.session_state.page=="details":
+elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
+    
     with c_nav1:
-        if st.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
+        if st.button("⬅ Retour", use_container_width=True): 
+            st.session_state.page="home"; st.rerun()
     with c_nav2:
         if st.button("✏️ Éditer", use_container_width=True):
-            # On stocke la recette actuelle pour l'édition
-            st.session_state.recipe_to_edit = st.session_state.recipe_data.copy()
-            st.session_state.page = "edit" # On change vers une page dédiée
-            st.rerun()
+            st.session_state.recipe_to_edit = r.copy()
+            st.session_state.page="edit"; st.rerun()
     with c_nav3:
-        if st.button("🖨️ Version imprimable", use_container_width=True):
-            st.session_state.page = "print"
-            st.rerun()
+        if st.button("🖨️ Imprimer", use_container_width=True):
+            st.session_state.page = "print"; st.rerun()
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True): 
-            if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
+            if send_action({"action":"delete","titre":r['Titre']}):
+                st.session_state.page="home"; st.rerun()
 
     st.divider()
     st.header(f"📖 {r.get('Titre','Sans titre')}")
+    
     col_g, col_d = st.columns([1, 1.2])
+    
     with col_g:
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
-        st.image(img_url,use_container_width=True)
+        st.image(img_url, use_container_width=True)
+        
         st.markdown("### ⭐ Ma Note & Avis")
         note_actuelle = int(float(r.get('Note',0))) if r.get('Note') else 0
-        nouvelle_note = st.slider("Note",0,5,note_actuelle,key="val_note")
-        nouveau_comm = st.text_area("Commentaires / astuces",value=str(r.get('Commentaires',"")),height=100,key="val_comm")
-        if st.button("💾 Enregistrer ma note",use_container_width=True):
+        nouvelle_note = st.slider("Note", 0, 5, note_actuelle, key="val_note")
+        nouveau_comm = st.text_area("Commentaires / astuces", value=str(r.get('Commentaires',"")), height=100, key="val_comm")
+        
+        if st.button("💾 Enregistrer la note", use_container_width=True):
             if send_action({"action":"edit","titre":r['Titre'],"Note":nouvelle_note,"Commentaires":nouveau_comm}):
-                st.success("Note enregistrée !"); st.session_state.recipe_data['Note']=nouvelle_note; st.session_state.recipe_data['Commentaires']=nouveau_comm; st.rerun()
-   with col_d:
+                st.success("Note enregistrée !"); st.rerun()
+
+    with col_d:
         st.subheader("📋 Informations")
-        # ... (tes lignes de catégorie, portions, etc. existantes) ...
+        st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
+        st.write(f"**👥 Portions :** {r.get('Portions','-')}")
+        st.write(f"**⏱ Temps :** {r.get('Temps_Prepa','-')} min (prép) / {r.get('Temps_Cuisson','-')} min (cuisson)")
         
         st.divider()
+        
+        # --- SECTION PLANNING ---
         st.subheader("📅 Planifier ce repas")
-        # On définit la date par défaut (aujourd'hui)
-        date_plan = st.date_input("Choisir une date", value=datetime.now(), key="date_picker")
+        date_plan = st.date_input("Choisir une date", value=datetime.now())
         if st.button("🗓️ Ajouter au planning", use_container_width=True):
-            # On envoie la date au format YYYY-MM-DD
             if send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)}):
                 st.success(f"Planifié pour le {date_plan}")
-                st.toast("Planning mis à jour !")
+        
         st.divider()
         
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
-        sel=[]
-        for i,l in enumerate(ings):
-            if st.checkbox(l,key=f"chk_det_final_{i}"): sel.append(l)
-        if st.button("📥 Ajouter au Panier",use_container_width=True):
-            for it in sel: send_action({"action":"add_shop","article":it})
-            st.toast("Ajouté !"); st.session_state.page="shop"; st.rerun()
-    st.divider()
-    st.subheader("📝 Préparation")
-    st.write(r.get('Préparation','Aucune étape.'))
+        sel = []
+        for i, l in enumerate(ings):
+            if st.checkbox(l, key=f"chk_det_{i}"): 
+                sel.append(l)
+        
+        if st.button("📥 Ajouter la sélection au Panier", use_container_width=True):
+            for it in sel:
+                send_action({"action":"add_shop","article":it})
+            st.toast("Ingrédients ajoutés !")
 
 # --- PAGE AJOUTER ---
 elif st.session_state.page == "add":
@@ -792,6 +799,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
