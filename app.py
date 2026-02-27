@@ -24,37 +24,43 @@ st.markdown("""
 
 /* --- LOOK IMPRESSION --- */
 @media print {
-    /* 1. CACHER LE SUPERFLU */
+    /* 1. ON SUPPRIME TOUT LE DÉCOR */
     [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button, header, footer {
         display: none !important;
     }
 
-    /* 2. FORCE LE BLANC TOTAL */
-    .stApp, .main, .block-container, [data-testid="stMainView"], [data-testid="stVerticalBlock"] {
+    /* 2. ON FORCE LE BLANC SUR LES CONTENEURS */
+    .stApp, .main, .block-container, [data-testid="stMainView"] {
         background-color: white !important;
         color: black !important;
     }
 
-    /* 3. FORCE TOUT LE TEXTE EN NOIR (Correction pour les ingrédients) */
-    /* On cible spécifiquement les paragraphes, les listes et les labels */
-    h1, h2, h3, h4, p, span, li, label, div, b, i {
+    /* 3. LA MÉTHODE RADICALE POUR LE TEXTE */
+    /* On cible TOUS les éléments HTML possibles (*) pour les forcer en noir */
+    @page { margin: 1cm; }
+    
+    * {
         color: black !important;
-        opacity: 1 !important;
-        visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
-    /* 4. CAS PARTICULIER : LES CHECKBOXES D'INGRÉDIENTS */
-    /* Si tes ingrédients sont des cases à cocher, Streamlit les protège. On force le noir ici. */
-    .stCheckbox label p {
+    /* 4. CIBLE SPÉCIFIQUE POUR LES INGRÉDIENTS (CHECKBOXES) */
+    /* On force l'affichage du texte à côté des petites cases */
+    div[data-testid="stCheckbox"] label span {
         color: black !important;
     }
     
-    /* 5. UTILISER TOUTE LA LARGEUR */
+    div[data-testid="stCheckbox"] p {
+        color: black !important;
+        font-weight: bold !important;
+    }
+
+    /* 5. ÉLARGISSEMENT MAXIMUM */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 0px !important;
-        margin: 0px !important;
+        padding: 0 !important;
     }
 }
 </style>
@@ -666,6 +672,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
