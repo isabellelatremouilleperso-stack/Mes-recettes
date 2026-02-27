@@ -165,23 +165,32 @@ def load_data():
 # SIDEBAR
 # ======================
 with st.sidebar:
-    # --- LOGO EN ROND ---
+    # --- CODE POUR LE LOGO ROND ---
     st.markdown("""
         <style>
-        [data-testid="stSidebar"] img {
-            border-radius: 50%; /* Rend l'image parfaitement ronde */
-            border: 3px solid #e67e22; /* Ajoute un petit liseré orange autour */
-            padding: 5px;
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .logo-container img {
+            border-radius: 50%; /* Le cercle parfait */
+            width: 120px;       /* Largeur fixe */
+            height: 120px;      /* Hauteur identique pour éviter l'ovale */
+            object-fit: cover;  /* Empêche de déformer l'image */
+            border: 3px solid #e67e22; /* Ton liseré orange */
+            padding: 2px;
         }
         </style>
+        <div class="logo-container">
+            <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png">
+        </div>
     """, unsafe_allow_html=True)
 
-    col_1, col_2, col_3 = st.columns([1, 2, 1])
-    with col_2:
-        st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=110)
-    
     st.markdown('<h3 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h3>', unsafe_allow_html=True)
-    st.write("")
+    st.divider()
+    
+    # ... la suite de tes boutons (Actualiser, etc.)
     
     if st.button("🔄 Actualiser les données", use_container_width=True):
         st.cache_data.clear()
@@ -975,6 +984,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
