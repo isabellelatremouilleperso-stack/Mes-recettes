@@ -6,13 +6,27 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import urllib.parse
 
+# ======================
+# CONFIGURATION & LIAISON GOOGLE
+# ======================
+
+# REMPLACE CETTE URL par ton URL de déploiement Google Script si elle est différente
+URL_APPS_SCRIPT = "TA_NOUVELLE_URL_ICI" 
+
+def send_action(data):
+    """Envoie les données au script Google Sheets."""
+    try:
+        # L'argument json= est crucial pour que Google reçoive bien les listes (épicerie)
+        response = requests.post(URL_APPS_SCRIPT, json=data, timeout=10)
+        return response.status_code == 200
+    except Exception as e:
+        st.error(f"Erreur de connexion Google : {e}")
+        return False
+
 # --- INITIALISATION DU SESSION STATE ---
 if 'page' not in st.session_state:
     st.session_state.page = "home"
 
-# ======================
-# CONFIGURATION & DESIGN
-# ======================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 if st.session_state.page != "print":
@@ -1179,6 +1193,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
