@@ -540,28 +540,29 @@ elif st.session_state.page == "details":
         else:
             st.write("*Aucune note pour le moment.*")
             
-    # Correction du DEBUG (on enlève .to_dict() car r est déjà un dictionnaire ou une Series)
-# --- RECOPIE CE BLOC EXACTEMENT ---
-st.write("DEBUG - Clés disponibles :", list(r.keys()) if hasattr(r, 'keys') else "Pas de clés")
-st.write("DEBUG - Contenu de r :", r)
+    # --- ICI ON EST BIEN ALIGNÉ SOUS LE 'elif' ---
+    # On affiche le debug juste au-dessus de la colonne de droite pour comprendre
+    st.write("DEBUG - Clés détectées :", list(r.keys()))
 
-with col_d:
-    st.subheader("📋 Informations")
-    
-    # Recherche de la catégorie
-    cat = r.get('Catégorie', r.get('Categorie', r.get('categorie', 'Autre')))
-    if str(cat).lower() == 'nan' or not cat:
-        cat = "Autre"
-    
-    st.write(f"**🍴 Catégorie :** {cat}")
-    
-    # Gestion de la source
-    source = r.get('Source', r.get('source', ''))
-    if source and "http" in str(source):
-        st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
-    
-    st.divider()
-    st.info("💡 Les modifications sont synchronisées avec Google Sheets.")
+    with col_d:
+        st.subheader("📋 Informations")
+        
+        # Recherche de la catégorie
+        cat = r.get('Catégorie', r.get('Categorie', r.get('categorie', 'Autre')))
+        if str(cat).lower() == 'nan' or not cat:
+            cat = "Autre"
+        
+        st.write(f"**🍴 Catégorie :** {cat}")
+        
+        # Gestion de la source
+        source = r.get('Source', r.get('source', ''))
+        if source and "http" in str(source):
+            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+        
+        st.divider()
+        st.info("💡 Les modifications sont synchronisées avec Google Sheets.")
+
+
         
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
@@ -1203,6 +1204,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
