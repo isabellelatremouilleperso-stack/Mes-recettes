@@ -524,7 +524,7 @@ elif st.session_state.page == "playstore":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # 1. CSS (Inchangé, il est très bon)
+    # 1. CSS - On le garde séparé, c'est parfait.
     st.markdown("""
         <style>
         .stApp { background-color: white !important; color: black !important; }
@@ -548,58 +548,54 @@ elif st.session_state.page == "print":
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. Bouton et instructions
+    # 2. Boutons de navigation (en dehors de la zone d'impression)
     if st.button("⬅ Retourner à la recette", use_container_width=True):
         st.session_state.page = "details"
         st.rerun()
 
-    st.markdown("""
-        <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 10px; color: #856404; margin-bottom: 20px;" class="no-print">
-            💡 Pour imprimer : utilisez <b>CTRL+P</b> ou le menu Imprimer du navigateur.
-        </div>
-    """, unsafe_allow_html=True)
+    st.info("💡 Pour imprimer : utilisez CTRL+P (Windows) ou CMD+P (Mac).")
 
-    # 3. Préparation des Ingrédients (Logique corrigée)
-    texte_ing = str(r.get('Ingrédients',''))
-    lignes_ing = [l.strip() for l in texte_ing.split("\n") if l.strip()]
+    # 3. Préparation des données (Logique Python uniquement ici)
+    lignes_ing = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
     
-    html_ing = ""
+    # On génère le HTML des ingrédients ligne par ligne dans une variable
+    html_ing_list = ""
     for l in lignes_ing:
         if l.endswith(':'):
-            html_ing += f"<p style='margin: 10px 0 5px 0;'><b>{l}</b></p>"
+            html_ing_list += f"<p style='margin: 10px 0 5px 0;'><b>{l}</b></p>"
         else:
-            html_ing += f"<p style='margin: 3px 0;'>☐ {l}</p>"
+            html_ing_list += f"<p style='margin: 3px 0;'>☐ {l}</p>"
 
-    # 4. CONSTRUCTION DU BLOC UNIQUE (La solution au problème des blocs noirs)
-    # On met TOUT le HTML dans une seule variable f-string
-    contenu_final = f"""
-    <div class="paper-sheet">
-        <h1>{r.get('Titre', 'Recette')}</h1>
-
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold;">
-            <span>Catégorie : {r.get('Catégorie', '-')}</span>
-            <span>Portions : {r.get('Portions', '-')}</span>
-            <span>Temps : {r.get('Temps_Prepa', '0')} + {r.get('Temps_Cuisson', '0')} min</span>
-        </div>
-
-        <div class="section-box">
-            <h3>🛒 Ingrédients</h3>
-            {html_ing}
-        </div>
-
-        <div class="section-box page-break">
-            <h3>👨‍🍳 Préparation</h3>
-            <div style="white-space: pre-wrap; line-height: 1.6;">{r.get('Préparation','')}</div>
-        </div>
-
-        <p style="text-align: center; font-size: 0.8em; color: #666; margin-top: 30px;">
-            Fiche générée par Mes Recettes Pro
-        </p>
+    # 4. CONSTRUCTION DU BLOC HTML UNIQUE (C'est ici que ça se règle)
+    # Note : On utilise un seul bloc f-string sans espaces devant les balises
+    fiche_complete = f"""
+<div class="paper-sheet">
+    <h1>{r.get('Titre', 'Recette')}</h1>
+    
+    <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold;">
+        <span>Catégorie : {r.get('Catégorie', '-')}</span>
+        <span>Portions : {r.get('Portions', '-')}</span>
+        <span>Temps : {r.get('Temps_Prepa', '0')} + {r.get('Temps_Cuisson', '0')} min</span>
     </div>
-    """
 
-    # 5. UN SEUL AFFICHAGE FINAL
-    st.markdown(contenu_final, unsafe_allow_html=True)
+    <div class="section-box">
+        <h3>🛒 Ingrédients</h3>
+        {html_ing_list}
+    </div>
+
+    <div class="section-box page-break">
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="white-space: pre-wrap; line-height: 1.6;">{r.get('Préparation','')}</div>
+    </div>
+
+    <p style="text-align: center; font-size: 0.8em; color: #666; margin-top: 30px;">
+        Fiche générée par Mes Recettes Pro
+    </p>
+</div>
+"""
+
+    # 5. UN SEUL APPEL POUR TOUT LE CONTENU
+    st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -611,6 +607,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
