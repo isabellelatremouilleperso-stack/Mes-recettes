@@ -254,26 +254,23 @@ elif st.session_state.page=="details":
             st.session_state.page="add"; st.rerun()
     
     with c_nav3:
-        # Un bouton HTML "propre" qui utilise un lien pour déclencher l'impression
+        # Cette version force l'impression de la fenêtre principale (parent)
         st.write(f"""
-            <a href="javascript:window.print()" style="text-decoration: none;">
-                <div style="
-                    background-color: #e67e22;
-                    color: white;
-                    height: 38px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    border-radius: 8px;
-                    font-size: 14px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    border: none;
-                    margin: 0;
-                ">
-                    🖨️ Imprimer
-                </div>
-            </a>
+            <div onclick="window.parent.print()" style="
+                background-color: #e67e22;
+                color: white;
+                height: 38px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                cursor: pointer;
+                user-select: none;
+            ">
+                🖨️ Imprimer
+            </div>
         """, unsafe_allow_html=True)
             
     with c_nav4:
@@ -603,6 +600,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
