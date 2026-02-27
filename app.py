@@ -561,36 +561,40 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # 1. CATÉGORIE (Clé n°7 dans ton debug)
-        cat = r.get('Catégorie', 'Autre')
-        if not cat or str(cat).lower() == 'nan':
-            cat = "Autre"
+        # 1. CATÉGORIE
+        cat = "Autre"
+        for k, v in r.items():
+            if "catégorie" in k.lower():
+                cat = v
+                break
         st.write(f"**🍴 Catégorie :** {cat}")
-        
-        # 2. SOURCE (Clé n°2 dans ton debug)
-        source = r.get('Source', '')
-        if source and "http" in str(source):
-            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
         
         st.divider()
         
-        # 3. TEMPS (Clés n°9 et n°10 dans ton debug)
-        # On utilise EXACTEMENT les noms vus dans la liste orange
-        t_prepa = r.get('Temps de préparation', '-')
-        t_cuisson = r.get('Temps de cuisson', '-')
-        portions = r.get('Portions', '-')
+        # 2. TEMPS (Recherche par mot-clé dans les clés)
+        t_prepa = "-"
+        t_cuisson = "-"
+        for k, v in r.items():
+            if "préparation" in k.lower(): t_prepa = v
+            if "cuisson" in k.lower(): t_cuisson = v
 
-        # Fonction pour nettoyer l'affichage (enlève les .0)
-        def clean(v):
-            if v == "-" or not v or str(v).lower() == "nan": return "-"
-            return str(v).split('.')[0]
+        # Fonction de nettoyage ultime
+        def final_clean(val):
+            s = str(val).strip().lower()
+            if s in ["nan", "none", "", "-", "null"]: return "-"
+            # On ne garde que les chiffres
+            import re
+            nums = re.findall(r'\d+', s)
+            return nums[0] if nums else "-"
 
-        c1, c2, c3 = st.columns(3)
-        c1.metric("🕒 Prépa", f"{clean(t_prepa)} min" if clean(t_prepa) != "-" else "-")
-        c2.metric("🔥 Cuisson", f"{clean(t_cuisson)} min" if clean(t_cuisson) != "-" else "-")
-        c3.metric("🍽️ Portions", clean(portions))
+        p = final_clean(t_prepa)
+        c = final_clean(t_cuisson)
 
-        st.info("💡 Les modifications sont synchronisées avec Google Sheets.")
+        c1, c2 = st.columns(2)
+        c1.metric("🕒 Prépa", f"{p} min" if p != "-" else "-")
+        c2.metric("🔥 Cuisson", f"{c} min" if c != "-" else "-")
+
+        st.info("💡 Synchronisation Google Sheets active.")
         
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
@@ -1232,6 +1236,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
