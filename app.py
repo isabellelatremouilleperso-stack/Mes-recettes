@@ -191,7 +191,24 @@ if st.session_state.page == "home":
     if c2.button("🔄 Actualiser"):
         st.cache_data.clear()
         st.rerun()
+    
     st.divider()
+
+    # --- NOUVELLE BARRE D'OUTILS (Navigation rapide) ---
+    col_nav1, col_nav2 = st.columns(2)
+    with col_nav1:
+        if st.button("📅 Voir mon Planning", use_container_width=True):
+            st.session_state.page = "planning"
+            st.rerun()
+    with col_nav2:
+        # Voici ton bouton Aide-Mémoire facile à retrouver
+        if st.button("📏 Aide-Mémoire & Conversions", use_container_width=True):
+            st.session_state.page = "conversion"
+            st.rerun()
+    
+    st.write("") # Petit espace esthétique
+
+    # --- STYLE CSS (Inchangé) ---
     st.markdown("""
         <style>
         .recipe-card {
@@ -203,6 +220,7 @@ if st.session_state.page == "home":
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             height: 480px;
         }
+        /* ... la suite de ton CSS reste identique ... */
         .recipe-img-container {
             width: 100%;
             height: 320px;
@@ -611,6 +629,73 @@ elif st.session_state.page == "planning":
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
+
+# --- PAGE CONVERSION / AIDE-MÉMOIRE ---
+    elif st.session_state.page == "conversion":
+        # Titre stylisé pour le haut de la page
+        st.markdown('<h1 style="color: #e67e22;">⚖️ Aide-Mémoire Culinaire</h1>', unsafe_allow_html=True)
+        st.write("Convertissez vos mesures et traduisez les termes QC/FR en un clin d'œil.")
+        
+        if st.button("⬅ Retour à l'accueil"):
+            st.session_state.page = "home"
+            st.rerun()
+
+        st.divider()
+
+        # Création des onglets pour une navigation fluide sur mobile
+        tab1, tab2, tab3, tab4 = st.tabs(["🔥 Four", "💧 Liquides", "⚖️ Poids", "📖 Lexique"])
+
+        with tab1:
+            st.subheader("Températures du four")
+            c1, c2 = st.columns(2)
+            with c1:
+                temp_in = st.number_input("Valeur", value=350, step=5, key="temp_val")
+            with c2:
+                mode_temp = st.selectbox("Conversion", ["°F ➔ °C", "°C ➔ °F"], key="temp_mode")
+            
+            if "°F ➔ °C" in mode_temp:
+                res = (temp_in - 32) * 5/9
+                st.success(f"🔥 **{temp_in}°F** vaut environ **{round(res)}°C**")
+            else:
+                res = (temp_in * 9/5) + 32
+                st.success(f"🔥 **{temp_in}°C** vaut environ **{round(res)}°F**")
+
+        with tab2:
+            st.subheader("Volumes (Liquides)")
+            v_val = st.number_input("Quantité", value=1.0, step=0.25, key="vol_val")
+            v_unit = st.selectbox("De", ["Tasse(s)", "Cuillère à soupe (table)", "Cuillère à thé (café)", "Once (oz)"])
+            
+            if "Tasse" in v_unit: st.info(f"💧 = **{int(v_val * 250)} ml**")
+            elif "soupe" in v_unit: st.info(f"💧 = **{int(v_val * 15)} ml**")
+            elif "thé" in v_unit: st.info(f"💧 = **{int(v_val * 5)} ml**")
+            else: st.info(f"💧 = **{int(v_val * 30)} ml**")
+
+        with tab3:
+            st.subheader("Masses (Poids)")
+            p_val = st.number_input("Valeur", value=1.0, step=0.1, key="poids_val")
+            p_unit = st.selectbox("Conversion", ["Livres (lb) ➔ Grammes", "Onces (oz) ➔ Grammes", "Grammes ➔ Onces (oz)"])
+            
+            if "Livres" in p_unit:
+                st.warning(f"⚖️ **{p_val} lb** = **{round(p_val * 454)} g**")
+            elif "Onces" in p_unit:
+                st.warning(f"⚖️ **{p_val} oz** = **{round(p_val * 28.35)} g**")
+            else:
+                st.warning(f"⚖️ **{p_val} g** = **{round(p_val / 28.35, 2)} oz**")
+
+        with tab4:
+            st.subheader("Dictionnaire Québec ⬌ France")
+            search = st.text_input("🔍 Chercher un terme...", "").lower()
+            lexique = {
+                "Poudre à pâte": "Levure chimique", "Soda à pâte": "Bicarbonate de soude",
+                "Crème sure": "Crème aigre", "Sucre à glacer": "Sucre glace",
+                "Farine tout usage": "Farine T55", "Mijoteuse": "Crock pot / Slow cooker",
+                "Papier parchemin": "Papier sulfurisé", "Fécule de maïs": "Maïzena",
+                "Échalote française": "Échalote", "Lait évaporé": "Lait concentré non sucré"
+            }
+            for qc, fr in lexique.items():
+                if search in qc.lower() or search in fr.lower():
+                    st.markdown(f"**{qc}** ➔ *{fr}*")
+                    
 # ==========================================
 # --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
 # ==========================================
@@ -842,6 +927,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
