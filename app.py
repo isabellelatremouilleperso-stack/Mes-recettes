@@ -531,101 +531,111 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     st.write("Détails de la recette")
 
-# --- PAGE IMPRIMABLE FIX (SANS BOITE NOIRE) ---
+# --- PAGE IMPRIMABLE PRO (VERSION FINALE) ---
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
-        st.error("Aucune donnée de recette.")
+        st.error("Aucune donnée de recette trouvée.")
         if st.button("⬅ Retour"): 
             st.session_state.page = "home"
             st.rerun()
     else:
         r = st.session_state.recipe_data
         
-        # 1. CSS POUR L'IMPRESSION ET L'ÉCRAN
-        st.markdown("""
-        <style>
-        /* Force le fond blanc et cache le noir de Streamlit à l'impression */
-        @media print {
-            header, footer, .no-print, [data-testid="stSidebar"], [data-testid="stHeader"] {
-                display: none !important;
-            }
-            .stApp { background-color: white !important; }
-            .printable-content {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                color: black !important;
-                background-color: white !important;
-                visibility: visible !important;
-            }
-        }
-        /* Style pour l'affichage à l'écran */
-        .printable-content {
-            background-color: white !important;
-            color: black !important;
-            padding: 25px;
-            border-radius: 10px;
-            font-family: Arial, sans-serif;
-            margin-top: 10px;
-        }
-        .recipe-header {
-            border-bottom: 3px solid #e67e22;
-            margin-bottom: 15px;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        h1 { color: black !important; margin: 0 !important; }
-        h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        </style>
-        """, unsafe_allow_html=True)
-
-        # 2. BOUTONS DE CONTRÔLE (Visibles à l'écran seulement)
+        # 1. NAVIGATION (ÉCRAN SEULEMENT)
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("⬅ Retour", use_container_width=True):
+            if st.button("⬅ Retour aux détails", use_container_width=True):
                 st.session_state.page = "details"
                 st.rerun()
         with col2:
-            st.markdown('<button onclick="window.print()" style="width:100%; height:38px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;" class="no-print">🖨️ Imprimer maintenant</button>', unsafe_allow_html=True)
+            # MÉTHODE INFAILLIBLE : On utilise st.components pour isoler le script d'impression
+            import streamlit.components.v1 as components
+            print_button_html = """
+            <button onclick="window.parent.print()" style="
+                width: 100%; height: 40px; background-color: #e67e22; 
+                color: white; border: none; border-radius: 5px; 
+                font-weight: bold; cursor: pointer;">
+                🖨️ LANCER L'IMPRESSION
+            </button>
+            """
+            components.html(print_button_html, height=50)
 
-        # 3. PRÉPARATION DES DONNÉES
-        ing_list = str(r.get('Ingrédients','')).split('\n')
-        html_ingredients = "".join([f"<div style='margin-bottom:4px;'>• {i.strip()}</div>" for i in ing_list if i.strip()])
+        # 2. CSS DE FORCE POUR L'IMPRESSION
+        st.markdown("""
+<style>
+@media print {
+    /* On cache tout ce qui appartient à l'interface Streamlit */
+    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe {
+        display: none !important;
+    }
+    /* On force le fond blanc sur le conteneur principal */
+    .stApp { background-color: white !important; }
+    [data-testid="stAppViewContainer"] { background-color: white !important; padding: 0 !important; }
+    
+    .print-sheet {
+        color: black !important;
+        background-color: white !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* Style affichage écran */
+.print-sheet {
+    background-color: white !important;
+    color: black !important;
+    padding: 30px;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+}
+.header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
+.info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 20px; }
+h1 { color: black !important; margin: 0 !important; padding: 0 !important; }
+h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+</style>
+""", unsafe_allow_html=True)
+
+        # 3. PRÉPARATION DU CONTENU
+        # Nettoyage des ingrédients (enlève les lignes vides et ajoute un point)
+        ing_raw = str(r.get('Ingrédients','')).split('\n')
+        html_ing = "".join([f"<div style='margin-bottom:5px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
         
-        preparation_pure = str(r.get('Préparation', '')).replace('\n', '<br>')
+        # Préparation du texte
+        prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
 
-        # 4. LE RENDU FINAL
-        # Note : On utilise une seule grande chaîne sans indentation complexe pour éviter que Streamlit ne croie que c'est du code.
-        fiche_html = f"""
-<div class="printable-content">
-<div class="recipe-header">
-<h1>{r.get('Titre','Recette')}</h1>
+        # 4. RENDU FINAL (Une seule Div propre)
+        st.markdown(f"""
+<div class="print-sheet">
+    <div class="header-line">
+        <h1>{r.get('Titre','Recette')}</h1>
+    </div>
+    
+    <div class="info-box">
+        <span>Catégorie : {r.get('Catégorie','-')}</span>
+        <span>Portions : {r.get('Portions','-')}</span>
+        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <h3>🛒 Ingrédients</h3>
+        <div style="column-count: 2; column-gap: 30px;">
+            {html_ing}
+        </div>
+    </div>
+
+    <div>
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="line-height: 1.6; text-align: justify;">
+            {prepa_final}
+        </div>
+    </div>
+    
+    <div style="text-align:center; color:#888; font-size:12px; margin-top:50px; border-top:1px solid #eee; padding-top:10px;">
+        Fiche générée par Mes Recettes Pro
+    </div>
 </div>
-<div class="info-row">
-<span>Catégorie : {r.get('Catégorie','-')}</span>
-<span>Portions : {r.get('Portions','-')}</span>
-<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-</div>
-<div style="margin-bottom: 20px;">
-<h3>🛒 Ingrédients</h3>
-<div style="column-count: 2; column-gap: 20px;">{html_ingredients}</div>
-</div>
-<div>
-<h3>👨‍🍳 Préparation</h3>
-<div style="line-height: 1.6; text-align: left;">{preparation_pure}</div>
-</div>
-<div style="text-align:center; color:#888; font-size:12px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">
-Généré par Mes Recettes Pro
-</div>
-</div>
-"""
-        st.markdown(fiche_html, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -637,6 +647,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
