@@ -519,21 +519,24 @@ elif st.session_state.page == "playstore":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
- # --- PAGE IMPRIMABLE ---
+# --- PAGE IMPRIMABLE ---
 elif st.session_state.page == "print":
 
     r = st.session_state.recipe_data
 
-# Style blanc spécial impression
-   
+    # Style spécial impression : fond blanc, texte noir, cacher sidebar/header/footer
     st.markdown("""
-       <style>
-       .stApp { background-color: white; color: black; }
-       header, footer, [data-testid="stSidebar"] { display: none; }
-       </style>
-""", unsafe_allow_html=True)
-    st.title(r.get("Titre", "Recette"))
+        <style>
+        .stApp { background-color: white; color: black; }
+        header, footer, [data-testid="stSidebar"], .stButton { display: none !important; }
+        h1,h2,h3,h4,p,span,label { color: black !important; }
+        img { max-width: 100% !important; height: auto !important; border: 1px solid #ddd; }
+        .block-container { padding: 0 !important; margin: 0 !important; }
+        </style>
+    """, unsafe_allow_html=True)
 
+    # Contenu de la recette
+    st.title(r.get("Titre", "Recette"))
     st.write(f"Catégorie : {r.get('Catégorie','')}")
     st.write(f"Portions : {r.get('Portions','')}")
     st.write(f"Préparation : {r.get('Temps_Prepa','')} min")
@@ -552,20 +555,23 @@ elif st.session_state.page == "print":
     st.write(r.get("Préparation",""))
 
     st.divider()
-
     st.caption("Imprimé depuis Mes Recettes Pro")
 
+    # Script pour lancer automatiquement la boîte d'impression
+    st.markdown("""
+    <script>
+    window.onload = function() {
+        window.print();
+    };
+    </script>
+    """, unsafe_allow_html=True)
+
+    # Bouton retour
     col1, col2 = st.columns(2)
     with col1:
         if st.button("⬅ Retour"):
             st.session_state.page = "details"
             st.rerun()
-    with col2:
-        st.markdown("""
-            <script>
-            window.print();
-            </script>
-        """, unsafe_allow_html=True)       
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -577,6 +583,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
