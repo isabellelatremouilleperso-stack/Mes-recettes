@@ -534,53 +534,44 @@ elif st.session_state.page == "shop":
 elif st.session_state.page == "planning":
     st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Repas</h1>', unsafe_allow_html=True)
     
-    # Boutons de navigation et d'action
-    c_nav, c_clear = st.columns([1, 1])
-    with c_nav:
+    col_nav, col_clear = st.columns([1, 1])
+    with col_nav:
         if st.button("⬅ Retour", use_container_width=True):
             st.session_state.page = "home"; st.rerun()
-    with c_clear:
+    with col_clear:
         if st.button("🗑️ Vider le planning", use_container_width=True):
             if send_action({"action": "clear_planning"}):
-                st.cache_data.clear()
-                st.success("Planning vidé !")
-                st.rerun()
+                st.cache_data.clear(); st.success("Planning vidé !"); st.rerun()
 
     st.divider()
 
     try:
-        # On lit directement l'onglet Planning (URL_CSV_PLAN)
+        # ON LIT LE CSV DÉDIÉ AU PLANNING
         df_plan = pd.read_csv(URL_CSV_PLAN)
         
-        if df_plan.empty or len(df_plan.columns) < 2:
-            st.info("Votre planning est vide. Ajoutez des recettes depuis leur fiche !")
+        if df_plan.empty:
+            st.info("Le planning est vide sur Google Sheets.")
         else:
-            # Nettoyage des dates pour éviter les bugs d'affichage
+            # On formate les dates pour l'affichage
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
-            df_plan = df_plan.dropna(subset=['Date'])
             df_plan = df_plan.sort_values(by='Date')
 
-            # Affichage élégant
             for index, row in df_plan.iterrows():
-                date_txt = row['Date'].strftime('%A %d %B') # Ex: Lundi 25 Octobre
+                date_txt = row['Date'].strftime('%A %d %B') if not pd.isnull(row['Date']) else "Date inconnue"
                 
                 st.markdown(f"""
-                <div style="background-color: #1e2129; padding: 15px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
-                    <small style="color: #e67e22; font-weight: bold;">{date_txt.upper()}</small>
-                    <h3 style="margin: 5px 0; color: white;">{row['Titre']}</h3>
+                <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
+                    <b style="color: #e67e22;">{date_txt.upper()}</b><br>
+                    <span style="font-size: 1.2rem; color: white;">{row['Titre']}</span>
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"❌ Retirer du planning", key=f"del_plan_{index}", use_container_width=True):
-                    # On envoie la date au format YYYY-MM-DD pour que le script Google la trouve
+                if st.button(f"❌ Retirer", key=f"del_{index}"):
                     if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                        st.cache_data.clear()
-                        st.rerun()
-                st.write("") 
-
+                        st.cache_data.clear(); st.rerun()
+                        
     except Exception as e:
-        st.error("Impossible de lire le planning.")
-        st.info("Vérifiez que votre fichier Google Sheets est bien 'Publié sur le web' pour TOUT LE DOCUMENT.")
+        st.error(f"Erreur de lecture du planning : {e}")
 # ==========================================
 # --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
 # ==========================================
@@ -812,6 +803,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
