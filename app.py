@@ -167,6 +167,13 @@ with st.sidebar:
         st.session_state.page="planning"; st.rerun()
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
         st.session_state.page="shop"; st.rerun()
+    # --- DANS TA SIDEBAR ---
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
+        st.session_state.page="shop"; st.rerun()
+
+    # AJOUTE CE BOUTON ICI :
+    if st.button("📏 Aide-Mémoire", use_container_width=True, key="side_conv"):
+        st.session_state.page="conversion"; st.rerun()
     
     st.divider()
     
@@ -927,6 +934,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
