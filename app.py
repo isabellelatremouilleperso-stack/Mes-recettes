@@ -478,8 +478,6 @@ elif st.session_state.page == "details":
 # --- FIN DE LA PAGE DÉTAILS ---
 
 elif st.session_state.page == "add":
-    # Ton code pour la page d'ajout continue ici...
-elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"; st.rerun()
@@ -1057,6 +1055,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
