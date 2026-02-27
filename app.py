@@ -439,10 +439,27 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-    r = st.session_state.recipe_data
+    # On récupère le titre de la recette sélectionnée
+    current_title = st.session_state.recipe_data.get('Titre')
     
-    # 1. BARRE DE NAVIGATION (Unique)
+    # CHARGEMENT FRAIS : On recharge le CSV pour avoir les dernières infos (temps, catégories)
+    try:
+        df_fresh = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
+        # On retrouve la ligne correspondant à notre recette
+        fresh_recipe = df_fresh[df_fresh['Titre'] == current_title]
+        
+        if not fresh_recipe.empty:
+            # On met à jour la mémoire de l'appli avec les données fraîches du Excel
+            r = fresh_recipe.iloc[0].to_dict()
+            st.session_state.recipe_data = r
+        else:
+            r = st.session_state.recipe_data
+    except:
+        r = st.session_state.recipe_data
+
+    # --- BARRE DE NAVIGATION (Ton code bouton Retour, Editer, etc.) ---
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
+    # ... la suite de tes boutons ...
     with c_nav1:
         if st.button("⬅ Retour", use_container_width=True): 
             st.session_state.page="home"; st.rerun()
@@ -1214,6 +1231,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
