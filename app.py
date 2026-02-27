@@ -739,30 +739,49 @@ elif st.session_state.page == "edit":
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
+    
     if st.button("⬅ Retour"):
-        st.session_state.page = "home"; st.rerun()
+        st.session_state.page = "home"
+        st.rerun()
+
     try:
+        # On force la lecture sans cache pour voir les changements immédiats
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
+        
         if not df_s.empty:
             to_del = []
+            # On affiche les articles
             for idx, row in df_s.iterrows():
-                # Utilisation de ton style de checklist
-                if st.checkbox(str(row.iloc[0]), key=f"sh_{idx}"):
-                    to_del.append(str(row.iloc[0]))
+                article_nom = str(row.iloc[0])
+                if article_nom.strip(): # On ignore les lignes vides
+                    if st.checkbox(article_nom, key=f"sh_{idx}"):
+                        to_del.append(article_nom)
             
             st.divider()
             c1, c2 = st.columns(2)
-            if c1.button("🗑 Retirer les articles sélectionnés", use_container_width=True):
-                for it in to_del:
-                    send_action({"action": "remove_shop", "article": it})
-                st.rerun()
+            
+            # BOUTON 1 : Retirer les sélectionnés
+            if c1.button("🗑 Retirer les articles sélectionnés", use_container_width=True, type="primary"):
+                if to_del:
+                    # ON ENVOIE TOUTE LA LISTE D'UN COUP
+                    if send_action({"action": "remove_shop", "articles": to_del}):
+                        st.toast(f"{len(to_del)} article(s) retiré(s) !")
+                        st.cache_data.clear()
+                        st.rerun()
+                else:
+                    st.warning("Cochez des articles à retirer.")
+
+            # BOUTON 2 : Tout vider
             if c2.button("🧨 Vider toute la liste", use_container_width=True):
-                send_action({"action": "clear_shop"})
-                st.rerun()
+                if send_action({"action": "clear_shop"}):
+                    st.toast("Liste vidée !")
+                    st.cache_data.clear()
+                    st.rerun()
         else:
             st.info("Votre liste est vide pour le moment.")
-    except:
-        st.error("Erreur de chargement de la liste.")
+            
+    except Exception as e:
+        st.error(f"Erreur de chargement : {e}")
 
 # ======================
 # PAGE PLANNING
@@ -1152,6 +1171,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
