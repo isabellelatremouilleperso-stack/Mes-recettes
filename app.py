@@ -254,23 +254,25 @@ elif st.session_state.page=="details":
             st.session_state.page="add"; st.rerun()
     
     with c_nav3:
-        # Cette version force l'impression de la fenêtre principale (parent)
-        st.write(f"""
-            <div onclick="window.parent.print()" style="
-                background-color: #e67e22;
-                color: white;
-                height: 38px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: bold;
-                cursor: pointer;
-                user-select: none;
-            ">
-                🖨️ Imprimer
-            </div>
+        # On utilise un composant "link_button" natif de Streamlit si disponible, 
+        # ou un lien HTML stylé très simple.
+        st.markdown(f"""
+            <a href="javascript:window.print()" target="_self" style="text-decoration: none;">
+                <div style="
+                    background-color: #e67e22;
+                    color: white;
+                    height: 38px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    border: 2px solid #d35400;
+                ">
+                    🖨️ Imprimer
+                </div>
+            </a>
         """, unsafe_allow_html=True)
             
     with c_nav4:
@@ -600,6 +602,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
