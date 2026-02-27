@@ -15,8 +15,49 @@ if 'page' not in st.session_state:
 # ======================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
+# ... après tes imports et st.set_page_config ...
+
 st.markdown("""
 <style>
+/* --- DESIGN ÉCRAN (DARK MODE) --- */
+.stApp { background-color: #0e1117; color: #e0e0e0; }
+h1,h2,h3 { color: #e67e22 !important; }
+[data-testid="stSidebar"] { background-color: #1e2129; color: white; }
+.stButton button { background-color: #e67e22; color: white; }
+input, select, textarea, div[data-baseweb="select"] { color: white !important; background-color: #1e2129 !important; }
+
+/* --- DESIGN IMPRESSION (SAUVETAGE D'ENCRE) --- */
+@media print {
+    /* 1. On force le blanc partout */
+    .stApp, body, html, [data-testid="stMainView"] {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* 2. On cache tout ce qui ne se mange pas */
+    section[data-testid="stSidebar"], 
+    .stButton, 
+    button,
+    header, 
+    footer,
+    .stSlider,
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    /* 3. On remet les textes en noir pour qu'ils sortent bien */
+    h1, h2, h3, h4, p, span, label, div {
+        color: black !important;
+    }
+
+    /* 4. On s'assure que la recette prend toute la largeur */
+    .main .block-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}
+</style>
+""", unsafe_allow_html=True)
 .stApp { background-color: #0e1117; color: #e0e0e0; }
 h1,h2,h3 { color: #e67e22 !important; }
 
@@ -602,6 +643,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
