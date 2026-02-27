@@ -364,25 +364,25 @@ if st.session_state.page == "home":
 
         # --- FONCTION COULEUR ---
         def get_cat_color(cat):
-        colors = {
-        # Vos catégories existantes
-        "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
-        "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
-        "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
-        "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
-        "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
-        "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
-        "Boisson": "#7FFFD4", "Autre": "#BDC317",
+            colors = {
+                # --- Vos 20 catégories de base ---
+                "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
+                "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
+                "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
+                "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
+                "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
+                "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
+                "Boisson": "#7FFFD4", "Autre": "#BDC317",
         
-        # Nouvelles catégories ajoutées
-        "Air Fryer": "#E67E22", "Boulangerie": "#DEB887", "Condiment": "#DAA520",
-        "Épices": "#CD5C5C", "Fumoir": "#333333", "Indien": "#FF9933",
-        "Libanais": "#EE2436", "Mexicain": "#006341", "Pains": "#F5DEB3",
-        "Pizza": "#FF6347", "Plancha": "#708090", "Poutine": "#6F4E37",
-        "Slow Cooker": "#4B0082", "Sushi": "#FF1493", "Tartare": "#B22222",
-        "Végétarien": "#32CD32"
-    }
-    return colors.get(cat, "#e67e22") # Orange par défaut
+                # --- Nouvelles catégories ajoutées ---
+                "Air Fryer": "#FF4500", "Boulangerie": "#DEB887", "Condiment": "#DAA520",
+                "Épices": "#CD5C5C", "Fumoir": "#333333", "Indien": "#FF9933",
+                "Libanais": "#EE2436", "Mexicain": "#006341", "Pains": "#F5DEB3",
+                "Pizza": "#FF6347", "Plancha": "#708090", "Poutine": "#6F4E37",
+                "Slow Cooker": "#4B0082", "Sushi": "#FF1493", "Tartare": "#B22222",
+                "Végétarien": "#32CD32"
+            }
+            return colors.get(cat, "#e67e22") # Orange par défaut
 
         # --- AFFICHAGE DES RÉSULTATS ---
         # Note : J'ai supprimé la ligne qui écrasait 'rows' ici.
@@ -1137,6 +1137,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
