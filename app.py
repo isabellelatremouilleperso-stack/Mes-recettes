@@ -561,42 +561,34 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # 1. CATÉGORIE
-        cat = r.get('Catégorie', r.get('Categorie', 'Autre'))
-        # On gère le cas 'nan' de pandas
-        if not cat or str(cat).lower() == 'nan': 
+        # 1. CATÉGORIE (Clé n°7 dans ton debug)
+        cat = r.get('Catégorie', 'Autre')
+        if not cat or str(cat).lower() == 'nan':
             cat = "Autre"
         st.write(f"**🍴 Catégorie :** {cat}")
         
-        # 2. SOURCE
+        # 2. SOURCE (Clé n°2 dans ton debug)
         source = r.get('Source', '')
         if source and "http" in str(source):
             st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
         
         st.divider()
         
-        # 3. TEMPS (MÉTHODE CHERCHE-TOUT)
-        # On vérifie les noms exacts de ton Excel
-        t_prepa = r.get('Temps de préparation', r.get('Temps_Prepa', '-'))
-        t_cuisson = r.get('Temps de cuisson', r.get('Temps_Cuisson', '-'))
-        portions = r.get('Portions', r.get('portions', '-'))
+        # 3. TEMPS (Clés n°9 et n°10 dans ton debug)
+        # On utilise EXACTEMENT les noms vus dans la liste orange
+        t_prepa = r.get('Temps de préparation', '-')
+        t_cuisson = r.get('Temps de cuisson', '-')
+        portions = r.get('Portions', '-')
 
-        # Fonction de nettoyage améliorée
-        def clean_val(v):
-            val_str = str(v).strip().lower()
-            if val_str in ["nan", "none", "", "-"]: 
-                return "-"
-            # On garde le nombre entier avant le point (ex: 15.0 -> 15)
+        # Fonction pour nettoyer l'affichage (enlève les .0)
+        def clean(v):
+            if v == "-" or not v or str(v).lower() == "nan": return "-"
             return str(v).split('.')[0]
 
-        p_clean = clean_val(t_prepa)
-        c_clean = clean_val(t_cuisson)
-        port_clean = clean_val(portions)
-
         c1, c2, c3 = st.columns(3)
-        c1.metric("🕒 Prépa", f"{p_clean} min" if p_clean != "-" else "-")
-        c2.metric("🔥 Cuisson", f"{c_clean} min" if c_clean != "-" else "-")
-        c3.metric("🍽️ Portions", port_clean)
+        c1.metric("🕒 Prépa", f"{clean(t_prepa)} min" if clean(t_prepa) != "-" else "-")
+        c2.metric("🔥 Cuisson", f"{clean(t_cuisson)} min" if clean(t_cuisson) != "-" else "-")
+        c3.metric("🍽️ Portions", clean(portions))
 
         st.info("💡 Les modifications sont synchronisées avec Google Sheets.")
         
@@ -1240,6 +1232,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
