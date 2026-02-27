@@ -137,40 +137,14 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # --- CSS SPÉCIAL IMPRESSION (N'affecte pas l'écran) ---
-    st.markdown("""
-        <style>
-        @media print {
-            /* Masque tout sauf la recette */
-            [data-testid="stSidebar"], .no-print, .stButton, header, footer {
-                display: none !important;
-            }
-            /* Force le fond blanc et texte noir pour économiser l'encre */
-            .main, .stApp {
-                background-color: white !important;
-                color: black !important;
-            }
-            h1, h2, h3, p, span, div {
-                color: black !important;
-            }
-            /* Affiche les ingrédients masqués à l'écran */
-            .only-print {
-                display: block !important;
-            }
-        }
-        /* Cache la liste propre à l'impression quand on est sur l'écran */
-        .only-print { display: none; }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Barre de navigation (masquée à l'impression via le CSS ci-dessus)
+    # Barre de navigation
     c_back, c_edit, c_print, c_del = st.columns(4)
     
     if c_back.button("⬅ Retour", use_container_width=True): 
         st.session_state.page="home"; st.rerun()
     
     with c_print:
-        # Le bouton d'impression propre
+        # REMPLACÉ : Utilisation d'un bouton <button> au lieu du lien <a> pour une meilleure compatibilité
         st.markdown("""
             <button onclick="window.print()" style="
                 width: 100%; background:#e67e22; color:white; padding:8px; 
@@ -197,16 +171,16 @@ elif st.session_state.page == "details":
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
         
-        # VERSION ÉCRAN : Avec cases à cocher (masquée à l'impression)
+        # VERSION ÉCRAN : Masquée à l'impression par ton CSS global
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
         for i, l in enumerate(ings): 
             st.checkbox(l, key=f"c_print_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # VERSION PAPIER : Liste à puces propre (masquée à l'écran)
+        # VERSION PAPIER : Affichée uniquement à l'impression par ton CSS global
         html_p = '<div class="only-print">'
         for l in ings: 
-            html_p += f'<p style="margin:0; font-size:14pt;">• {l}</p>'
+            html_p += f'<p style="margin:0; font-size:14pt; color:black;">• {l}</p>'
         st.markdown(html_p + '</div>', unsafe_allow_html=True)
 
     st.subheader("👨‍🍳 Étapes")
@@ -380,5 +354,6 @@ elif st.session_state.page == "add":
             if t and ing:
                 if send_action({"action":"add","titre":t,"Catégorie":cat,"Ingrédients":ing,"Préparation":ins,"Image":img_url}):
                     st.success("Ajouté !"); time.sleep(1); st.session_state.page="home"; st.rerun()   
+
 
 
