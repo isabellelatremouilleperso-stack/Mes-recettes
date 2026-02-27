@@ -552,19 +552,39 @@ elif st.session_state.page == "planning":
         if df_plan.empty:
             st.info("Le planning est vide sur Google Sheets.")
         else:
-            # On formate les dates pour l'affichage
+           # --- NETTOYAGE ET TRI ---
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
+            df_plan = df_plan.dropna(subset=['Date']) # Enlève les lignes sans date
             df_plan = df_plan.sort_values(by='Date')
 
+            # --- DICTIONNAIRES DE TRADUCTION ---
+            jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
+            mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
+
+            # --- AFFICHAGE DES CARTES ---
             for index, row in df_plan.iterrows():
-                date_txt = row['Date'].strftime('%A %d %B') if not pd.isnull(row['Date']) else "Date inconnue"
+                # On prépare la date en français
+                jour_eng = row['Date'].strftime('%A')
+                mois_eng = row['Date'].strftime('%B')
+                jour_num = row['Date'].strftime('%d')
+                date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {jour_num} {mois_fr.get(mois_eng, mois_eng)}"
                 
+                # Design de la carte
                 st.markdown(f"""
                 <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
                     <b style="color: #e67e22;">{date_txt.upper()}</b><br>
                     <span style="font-size: 1.2rem; color: white;">{row['Titre']}</span>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                # Bouton de suppression avec le correctif de cache
+                if st.button(f"❌ Retirer", key=f"del_{index}", use_container_width=True):
+                    with st.spinner("Mise à jour..."):
+                        if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
+                            import time
+                            st.cache_data.clear()
+                            time.sleep(1)
+                            st.rerun()
                 
                 if st.button(f"❌ Retirer", key=f"del_{index}", use_container_width=True):
                     with st.spinner("Mise à jour du planning..."):
@@ -813,6 +833,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
