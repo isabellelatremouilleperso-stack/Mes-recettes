@@ -526,89 +526,86 @@ elif st.session_state.page == "print":
     # Style CSS ultra-précis
     st.markdown("""
         <style>
-        /* 1. Force le fond blanc pour l'écran ET l'imprimante */
-        .stApp, [data-testid="stAppViewContainer"] {
+        /* Force le fond blanc partout */
+        .stApp, [data-testid="stAppViewContainer"], .main {
             background-color: white !important;
             color: black !important;
         }
 
-        /* 2. Cache les éléments inutiles de Streamlit */
-        [data-testid="stHeader"], [data-testid="stSidebar"], footer {
+        /* Cache les éléments Streamlit */
+        [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stDeployButton {
             display: none !important;
         }
 
-        /* 3. Style des boutons de contrôle (visibles seulement à l'écran) */
-        .no-print-bar {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-bottom: 2px solid #e67e22;
+        /* Style pour les boutons à l'écran */
+        .print-controls {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 10px;
+            background-color: #f0f2f6;
+            border-radius: 10px;
         }
 
-        /* 4. CACHER AUTOMATIQUEMENT TOUT LE SUPERFLU SUR LE PAPIER */
+        /* CACHER LES BOUTONS SUR LE PAPIER */
         @media print {
-            .no-print, .stButton, button, .no-print-bar {
+            .no-print, .stButton, button, .print-controls {
                 display: none !important;
             }
-            .stApp {
-                margin: 0 !important;
-                padding: 0 !important;
-            }
+            .stApp { margin: 0 !important; padding: 0 !important; }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- BARRE D'OUTILS VISIBLE À L'ÉCRAN ---
-    col_p1, col_p2 = st.columns([1, 4])
-    with col_p1:
+    # --- BARRE D'OUTILS ---
+    # On utilise des colonnes Streamlit normales pour plus de fiabilité
+    col_nav1, col_nav2 = st.columns([1, 4])
+    
+    with col_nav1:
         if st.button("⬅ Retour"):
             st.session_state.page = "details"
             st.rerun()
-    with col_p2:
-        # Ce bouton déclenche la vraie boîte d'impression du navigateur
+            
+    with col_nav2:
+        # Version simplifiée du bouton d'impression
         st.markdown("""
-            <button onclick="window.print()" style="
+            <a href="javascript:window.print()" style="
+                text-decoration: none;
                 background-color: #e67e22;
                 color: white;
-                border: none;
-                padding: 8px 20px;
-                border-radius: 5px;
+                padding: 10px 25px;
+                border-radius: 8px;
                 font-weight: bold;
-                cursor: pointer;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            ">🖨️ CLIQUEZ ICI POUR IMPRIMER</button>
+                display: inline-block;
+                text-align: center;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            ">🖨️ CLIQUEZ ICI POUR IMPRIMER</a>
         """, unsafe_allow_html=True)
 
     st.divider()
 
-    # --- CONTENU DE LA RECETTE (Ce qui sera sur le papier) ---
-    st.header(f"🍳 {r.get('Titre', 'Recette sans titre')}")
+    # --- CONTENU DE LA RECETTE ---
+    st.header(f"🍳 {r.get('Titre', 'Recette')}")
     
-    # Infos rapides
-    info_cols = st.columns(3)
-    info_cols[0].write(f"**🍴 Catégorie :** {r.get('Catégorie','-')}")
-    info_cols[1].write(f"**👥 Portions :** {r.get('Portions','-')}")
-    info_cols[2].write(f"**⏱ Temps :** {r.get('Temps_Prepa','0')} min prépa + {r.get('Temps_Cuisson','0')} min cuisson")
+    c1, c2, c3 = st.columns(3)
+    c1.write(f"**🍴 Catégorie :** {r.get('Catégorie','')}")
+    c2.write(f"**👥 Portions :** {r.get('Portions','')}")
+    c3.write(f"**⏱ Temps :** {r.get('Temps_Prepa','0')} min + {r.get('Temps_Cuisson','0')} min")
 
     st.write("---")
 
-    col_ing, col_pre = st.columns([1, 2])
+    col_ing, col_pre = st.columns([1, 1.5])
     
     with col_ing:
         st.subheader("🛒 Ingrédients")
-        ingredients = str(r.get("Ingrédients","")).split("\n")
-        for ing in ingredients:
+        ings = str(r.get("Ingrédients","")).split("\n")
+        for ing in ings:
             if ing.strip():
                 st.write(f"☐ {ing.strip()}")
 
     with col_pre:
         st.subheader("👨‍🍳 Préparation")
         st.write(r.get("Préparation",""))
-
-    if r.get("Commentaires"):
-        st.markdown(f"**Note personnelle :** *{r.get('Commentaires')}*")
 
     st.caption(f"Imprimé le {datetime.now().strftime('%d/%m/%Y')} - Mes Recettes Pro")
 # --- PAGE AIDE ---
@@ -622,6 +619,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
