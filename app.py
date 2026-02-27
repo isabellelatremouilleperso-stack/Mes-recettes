@@ -301,36 +301,25 @@ elif st.session_state.page == "details":
     st.divider()
     st.header(f"📖 {r.get('Titre','Sans titre')}")
     
+    # ... code précédent (header, etc.)
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
         st.image(img_url, use_container_width=True)
-        
-        st.markdown("### ⭐ Ma Note & Avis")
-        note_actuelle = int(float(r.get('Note',0))) if r.get('Note') else 0
-        nouvelle_note = st.slider("Note", 0, 5, note_actuelle, key="val_note")
-        nouveau_comm = st.text_area("Commentaires / astuces", value=str(r.get('Commentaires',"")), height=100, key="val_comm")
-        
-        if st.button("💾 Enregistrer la note", use_container_width=True):
-            if send_action({"action":"edit","titre":r['Titre'],"Note":nouvelle_note,"Commentaires":nouveau_comm}):
-                st.success("Note enregistrée !"); st.rerun()
+        # Bloc Note/Commentaire ici...
 
-    with col_d:
+    with col_d: # <-- Vérifie bien que ce 'w' est aligné avec le 'w' de 'with col_g'
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
-        st.write(f"**👥 Portions :** {r.get('Portions','-')}")
-        st.write(f"**⏱ Temps :** {r.get('Temps_Prepa','-')} min (prép) / {r.get('Temps_Cuisson','-')} min (cuisson)")
         
         st.divider()
-        
-        # --- SECTION PLANNING ---
         st.subheader("📅 Planifier ce repas")
         date_plan = st.date_input("Choisir une date", value=datetime.now())
         if st.button("🗓️ Ajouter au planning", use_container_width=True):
+            # On envoie à l'onglet Planning
             if send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)}):
-                st.success(f"Planifié pour le {date_plan}")
-        
+                st.success(f"Ajouté au calendrier pour le {date_plan}")
         st.divider()
         
         st.subheader("🛒 Ingrédients")
@@ -799,6 +788,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
