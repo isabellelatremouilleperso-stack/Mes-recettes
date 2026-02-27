@@ -531,7 +531,7 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     st.write("Détails de la recette")
 
-# --- PAGE IMPRIMABLE PRO (VERSION FINALE) ---
+# --- PAGE IMPRIMABLE FIX (SANS BOITE NOIRE) ---
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
         st.error("Aucune donnée de recette trouvée.")
@@ -541,101 +541,61 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
         
-        # 1. NAVIGATION (ÉCRAN SEULEMENT)
+        # 1. NAVIGATION ET BOUTON (ISOLÉS)
         col1, col2 = st.columns(2)
         with col1:
             if st.button("⬅ Retour aux détails", use_container_width=True):
                 st.session_state.page = "details"
                 st.rerun()
         with col2:
-            # MÉTHODE INFAILLIBLE : On utilise st.components pour isoler le script d'impression
             import streamlit.components.v1 as components
-            print_button_html = """
-            <button onclick="window.parent.print()" style="
-                width: 100%; height: 40px; background-color: #e67e22; 
-                color: white; border: none; border-radius: 5px; 
-                font-weight: bold; cursor: pointer;">
-                🖨️ LANCER L'IMPRESSION
-            </button>
-            """
-            components.html(print_button_html, height=50)
+            # Le script window.parent.print() est le seul qui fonctionne à 100%
+            components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE POUR L'IMPRESSION
+        # 2. CSS DE FORCE (BLANC TOTAL)
         st.markdown("""
 <style>
 @media print {
-    /* On cache tout ce qui appartient à l'interface Streamlit */
-    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe {
-        display: none !important;
-    }
-    /* On force le fond blanc sur le conteneur principal */
+    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe { display: none !important; }
     .stApp { background-color: white !important; }
     [data-testid="stAppViewContainer"] { background-color: white !important; padding: 0 !important; }
-    
-    .print-sheet {
-        color: black !important;
-        background-color: white !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
+    .print-sheet { color: black !important; background: white !important; width: 100% !important; }
 }
-
-/* Style affichage écran */
-.print-sheet {
-    background-color: white !important;
-    color: black !important;
-    padding: 30px;
-    border-radius: 10px;
-    font-family: Arial, sans-serif;
-}
+.print-sheet { background: white !important; color: black !important; padding: 30px; border-radius: 10px; font-family: sans-serif; }
 .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
 .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 20px; }
-h1 { color: black !important; margin: 0 !important; padding: 0 !important; }
+h1 { color: black !important; margin: 0 !important; }
 h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
 </style>
 """, unsafe_allow_html=True)
 
-        # 3. PRÉPARATION DU CONTENU
-        # Nettoyage des ingrédients (enlève les lignes vides et ajoute un point)
+        # 3. TRAITEMENT DES DONNÉES
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = "".join([f"<div style='margin-bottom:5px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
-        
-        # Préparation du texte
         prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
 
-        # 4. RENDU FINAL (Une seule Div propre)
-        st.markdown(f"""
+        # 4. LE RENDU FINAL (SANS INDENTATION POUR ÉVITER LA BOITE NOIRE)
+        # Attention : ne rajoute pas d'espaces au début des lignes ci-dessous
+        fiche_html = f"""
 <div class="print-sheet">
-    <div class="header-line">
-        <h1>{r.get('Titre','Recette')}</h1>
-    </div>
-    
-    <div class="info-box">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-
-    <div style="margin-bottom: 20px;">
-        <h3>🛒 Ingrédients</h3>
-        <div style="column-count: 2; column-gap: 30px;">
-            {html_ing}
-        </div>
-    </div>
-
-    <div>
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="line-height: 1.6; text-align: justify;">
-            {prepa_final}
-        </div>
-    </div>
-    
-    <div style="text-align:center; color:#888; font-size:12px; margin-top:50px; border-top:1px solid #eee; padding-top:10px;">
-        Fiche générée par Mes Recettes Pro
-    </div>
+<div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
+<div class="info-box">
+<span>Catégorie : {r.get('Catégorie','-')}</span>
+<span>Portions : {r.get('Portions','-')}</span>
+<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
 </div>
-""", unsafe_allow_html=True)
+<div style="margin-bottom: 20px;">
+<h3>🛒 Ingrédients</h3>
+<div style="column-count: 2; column-gap: 30px;">{html_ing}</div>
+</div>
+<div>
+<h3>👨‍🍳 Préparation</h3>
+<div style="line-height: 1.6; text-align: justify;">{prepa_final}</div>
+</div>
+<div style="text-align:center; color:#888; font-size:12px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
+</div>
+"""
+        st.markdown(fiche_html, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -647,6 +607,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
