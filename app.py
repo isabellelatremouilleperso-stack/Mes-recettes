@@ -524,79 +524,105 @@ elif st.session_state.page == "playstore":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # 1. CSS (On garde le style tel quel)
+    # --- 1. CSS AMÉLIORÉ ---
     st.markdown("""
-        <style>
-        .stApp { background-color: white !important; color: black !important; }
-        [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
-        .paper-sheet {
-            background-color: white; color: black; font-family: 'Segoe UI', sans-serif;
-            max-width: 850px; margin: 0 auto; padding: 20px;
-        }
-        .section-box {
-            background-color: #f8f9fa; border: 1px solid #dee2e6;
-            border-radius: 10px; padding: 15px 20px; margin-bottom: 25px;
-        }
-        h1 { color: black !important; border-bottom: 3px solid #e67e22; padding-bottom: 10px; }
-        h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        @media print {
-            .no-print { display: none !important; }
-            .section-box { border: 1px solid #ccc; background-color: white !important; }
-            .page-break { page-break-before: always; }
-            * { color: black !important; }
-        }
-        </style>
+    <style>
+    /* Forcer le fond blanc et texte noir pour l'appli en mode print */
+    .stApp { background-color: white !important; color: black !important; }
+    
+    /* Masquer les éléments d'interface Streamlit */
+    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
+    
+    .paper-sheet { 
+        max-width: 850px; 
+        margin: 0 auto; 
+        padding: 20px; 
+        font-family: 'Segoe UI', sans-serif; 
+        color: black !important; 
+    }
+    
+    .section-box { 
+        background-color: #f8f9fa !important; 
+        border: 1px solid #dee2e6 !important; 
+        border-radius: 10px; 
+        padding: 15px 20px; 
+        margin-bottom: 25px; 
+    }
+    
+    /* Amélioration : Couleurs forcées pour l'impression */
+    h1 { 
+        color: black !important; 
+        border-bottom: 3px solid #e67e22 !important; 
+        padding-bottom: 10px; 
+    }
+    
+    h3 { 
+        color: #e67e22 !important; 
+        margin-top: 0; 
+        border-bottom: 1px solid #eee !important; 
+        padding-bottom: 5px; 
+    }
+    
+    @media print { 
+        .no-print { display: none !important; } 
+        .page-break { page-break-before: always; }
+        /* Assure que les boîtes restent visibles sans consommer trop d'encre */
+        .section-box { border: 1px solid #ccc !important; background-color: white !important; }
+    }
+    </style>
     """, unsafe_allow_html=True)
 
-    # 2. Barre de navigation (no-print)
+    # --- 2. BOUTON RETOUR ET INFO ---
     if st.button("⬅ Retourner à la recette", use_container_width=True):
         st.session_state.page = "details"
         st.rerun()
 
-    st.warning("💡 Pour imprimer : utilisez CTRL+P (Windows) ou CMD+P (Mac).")
+    st.info("💡 Pour imprimer : CTRL+P (Windows) ou CMD+P (Mac)")
 
-    # 3. Préparation des données
-    texte_ing = str(r.get('Ingrédients',''))
-    lignes_ing = [l.strip() for l in texte_ing.split("\n") if l.strip()]
+    # --- 3. LOGIQUE DE NETTOYAGE ---
+    # Sécurisation des caractères spéciaux pour éviter les blocs de code noirs
+    lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
     
-    # On construit la chaîne HTML des ingrédients à part
     html_ing_list = ""
     for l in lignes_ing:
         if l.endswith(':'):
-            html_ing_list += f"<p style='margin: 10px 0 5px 0;'><b>{l}</b></p>"
+            # Titres de catégories en gras
+            html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
         else:
-            html_ing_list += f"<p style='margin: 3px 0;'>☐ {l}</p>"
+            # Ingrédients avec case à cocher
+            html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
 
-    # 4. CRÉATION DU BLOC HTML COMPLET (C'est l'étape cruciale)
-    # On met tout dans une seule variable f-string pour éviter les blocs noirs
-    fiche_html = f"""
-    <div class="paper-sheet">
-        <h1>{r.get('Titre', 'Recette')}</h1>
+    # Échappement de la préparation
+    prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold;">
-            <span>Catégorie : {r.get('Catégorie', '-')}</span>
-            <span>Portions : {r.get('Portions', '-')}</span>
-            <span>Temps : {r.get('Temps_Prepa', '0')} + {r.get('Temps_Cuisson', '0')} min</span>
-        </div>
-
-        <div class="section-box">
-            <h3>🛒 Ingrédients</h3>
-            {html_ing_list}
-        </div>
-
-        <div class="section-box page-break">
-            <h3>👨‍🍳 Préparation</h3>
-            <div style="white-space: pre-wrap; line-height: 1.6;">{r.get('Préparation','')}</div>
-        </div>
-
-        <p style="text-align: center; font-size: 0.8em; color: #666; margin-top: 30px;">
-            Fiche générée par Mes Recettes Pro
-        </p>
+    # --- 4. CONSTRUCTION DU BLOC HTML FINAL ---
+    fiche_complete = f"""
+<div class="paper-sheet">
+    <h1>{r.get('Titre','Recette')}</h1>
+    
+    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
+        <span>Catégorie : {r.get('Catégorie','-')}</span>
+        <span>Portions : {r.get('Portions','-')}</span>
+        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
     </div>
-    """
-
-    # 5. UN SEUL APPEL POUR TOUT LE CONTENU
-    st.markdown(fiche_html, unsafe_allow_html=True)
+    
+    <div class="section-box">
+        <h3>🛒 Ingrédients</h3>
+        {html_ing_list}
+    </div>
+    
+    <div class="section-box page-break">
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
+    </div>
+    
+    <p style="text-align:center; font-size:0.8em; color:#666; margin-top:30px;">
+        Fiche générée par Mes Recettes Pro - {r.get('Titre','')}
+    </p>
+</div>
+"""
+    # Affichage en un seul bloc pour éviter les bugs de rendu Markdown
+    st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -608,6 +634,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
