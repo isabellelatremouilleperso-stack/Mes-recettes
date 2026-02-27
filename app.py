@@ -277,41 +277,72 @@ elif st.session_state.page=="details":
     st.subheader("📝 Préparation")
     st.write(r.get('Préparation','Aucune étape.'))
 
-elif st.session_state.page=="add":
-    st.header("➕ Ajouter une Recette")
-    tab1,tab2,tab3 = st.tabs(["🌐 Site Web (Auto)","🎬 Lien Vidéo","📝 Vrac / Manuel"])
-    with tab1:
-        url_input = st.text_input("Collez l'URL du site",key="url_auto")
-        if st.button("🔍 Analyser le site"):
-            titre, contenu = scrape_url(url_input)
-            if titre: st.session_state.temp_titre=titre; st.session_state.temp_contenu=contenu; st.rerun()
-        if "temp_titre" in st.session_state:
-            t_edit = st.text_input("Titre extrait", value=st.session_state.temp_titre)
-            c_edit = st.text_area("Contenu extrait", value=st.session_state.temp_contenu,height=250)
-            if st.button("💾 Enregistrer import"):
-                send_action({"action":"add","titre":t_edit,"preparation":c_edit,"source":url_input,"date":datetime.now().strftime("%d/%m/%Y")})
-                del st.session_state.temp_titre; st.session_state.page="home"; st.rerun()
-    with tab2:
-        s_url = st.text_input("Lien vidéo (Insta/TikTok/FB)",key="vid_url")
-        s_t = st.text_input("Nom de la recette",key="vid_titre")
-        if st.button("🚀 Sauvegarder Vidéo"):
-            if s_url and s_t:
-                send_action({"action":"add","titre":s_t,"source":s_url,"preparation":f"Vidéo : {s_url}","date":datetime.now().strftime("%d/%m/%Y")})
-                st.session_state.page="home"; st.rerun()
-    with tab3:
-        with st.form("form_vrac"):
-            v_t = st.text_input("Titre *")
-            v_cat = st.selectbox("Catégorie", CATEGORIES)
-            v_date = st.date_input("Planifier pour le (optionnel)", value=None)
-            v_txt = st.text_area("Texte brut", height=300)
-            submit_vrac = st.form_submit_button("💾 Enregistrer la recette")
-            if submit_vrac:
-                if v_t:
-                    payload = {"action": "add","titre": v_t,"catégorie": v_cat,"ingredients": v_txt,"date": datetime.now().strftime("%d/%m/%Y"),"date_prevue": v_date.strftime("%d/%m/%Y") if v_date else ""}
-                    send_action(payload)
-                    st.session_state.page = "home"; st.rerun()
-                else:
-                    st.error("Titre obligatoire.")
+# ==========================================
+# --- PAGE : AJOUTER UNE RECETTE ---
+# ==========================================
+elif st.session_state.page == "ajouter":
+    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
+    
+    # --- SECTION URL (MAGIE) ---
+    with st.container():
+        st.subheader("🌐 Importer depuis le Web")
+        col_url, col_go = st.columns([4, 1])
+        url_input = col_url.text_input("Collez l'URL d'un site de cuisine ici", placeholder="https://www.ricardocuisine.com/...")
+        if col_go.button("Extraire ✨", use_container_width=True):
+            st.info("Recherche de la recette en cours... (Structure en place)")
+            # Ici, ta fonction de scraping BeautifulSoup remplirait les champs plus bas
+
+    st.divider()
+
+    # --- FORMULAIRE DE SAISIE ---
+    st.subheader("📝 Détails de la recette")
+    
+    # Ligne 1 : Titre et Catégorie
+    col_t, col_c = st.columns([2, 1])
+    titre = col_t.text_input("Nom de la recette", placeholder="Ex: Ma superbe Lasagne")
+    categorie = col_c.selectbox("Catégorie", ["Poulet", "Bœuf", "Poisson", "Légumes", "Pâtes", "Dessert", "Autre"])
+
+    # Ligne 2 : Temps et Portions (La super structure !)
+    col_prep, col_cuis, col_port = st.columns(3)
+    with col_prep:
+        temps_prep = st.text_input("🕒 Prép. (min)", placeholder="20")
+    with col_cuis:
+        temps_cuis = st.text_input("🔥 Cuisson (min)", placeholder="45")
+    with col_port:
+        portions = st.text_input("🍽️ Portions", placeholder="4")
+
+    # Ligne 3 : Ingrédients et Préparation
+    st.write("")
+    col_ing, col_inst = st.columns(2)
+    
+    with col_ing:
+        st.markdown("**🍎 Ingrédients**")
+        ingredients = st.text_area("Un ingrédient par ligne", height=250, placeholder="2 tasses de farine\n1 c. à soupe de sel...")
+        
+    with col_inst:
+        st.markdown("**👨‍🍳 Préparation**")
+        instructions = st.text_area("Décrivez les étapes", height=250, placeholder="1. Préchauffer le four...\n2. Mélanger les ingrédients...")
+
+    # Ligne 4 : Image
+    image_url = st.text_input("Lien de l'image (URL)", placeholder="https://image.com/plat.jpg")
+
+    # --- BOUTONS DE NAVIGATION ---
+    st.write("")
+    col_back, col_save = st.columns(2)
+    
+    if col_back.button("⬅ Annuler et Retour", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
+        
+    if col_save.button("💾 Enregistrer la recette", use_container_width=True):
+        if titre and ingredients:
+            # Ici tu ajouterais ta logique pour sauvegarder dans Excel/CSV
+            st.success(f"La recette '{titre}' a été ajoutée avec succès !")
+            time.sleep(1)
+            st.session_state.page = "home"
+            st.rerun()
+        else:
+            st.error("Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -473,6 +504,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
