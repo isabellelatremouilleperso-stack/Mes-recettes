@@ -481,16 +481,26 @@ elif st.session_state.page == "details":
         
         st.divider()
 
-        # INFOS (Portions et Temps)
+        # --- INFOS (Portions et Temps) ---
         t1, t2, t3 = st.columns(3)
-        def clean_num(k1, k2):
-            v = r.get(k1, r.get(k2, '-'))
-            if v is None or str(v).strip() in ["", "None", "nan", "-"]: return "-"
-            return str(v).split('.')[0]
 
-        t1.metric("🕒 Prépa", f"{clean_num('Temps_Prepa', 'temps_prepa')}m")
-        t2.metric("🔥 Cuisson", f"{clean_num('Temps_Cuisson', 'temps_cuisson')}m")
-        t3.metric("🍽️ Portions", clean_num('Portions', 'portions'))
+        def clean_num(key_list):
+            # On cherche la première clé qui existe dans les données de la recette
+            val = "-"
+            for k in key_list:
+                if k in r and r[k] is not None and str(r[k]).strip() not in ["", "None", "nan", "-"]:
+                    val = str(r[k]).split('.')[0] # Enlever le .0 si présent
+                    break
+            return val
+
+        # On teste toutes les variantes possibles de noms de colonnes
+        p = clean_num(['Temps_Prepa', 'temps_prepa', 'Prepa'])
+        c = clean_num(['Temps_Cuisson', 'temps_cuisson', 'Cuisson'])
+        port = clean_num(['Portions', 'portions', 'Nb_Portions'])
+
+        t1.metric("🕒 Prépa", f"{p}m" if p != "-" else "-")
+        t2.metric("🔥 Cuisson", f"{c}m" if c != "-" else "-")
+        t3.metric("🍽️ Portions", port)
             
         # NOTES DU CHEF
         st.markdown("### 📝 Mes Notes")
@@ -1127,6 +1137,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
