@@ -269,7 +269,11 @@ elif st.session_state.page=="details":
     with c_nav1:
         if st.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
     with c_nav2:
-        if st.button("✏️ Éditer", use_container_width=True): st.session_state.page="add"; st.rerun()
+        if st.button("✏️ Éditer", use_container_width=True):
+            # On stocke la recette actuelle pour l'édition
+            st.session_state.recipe_to_edit = st.session_state.recipe_data.copy()
+            st.session_state.page = "edit" # On change vers une page dédiée
+            st.rerun()
     with c_nav3:
         if st.button("🖨️ Version imprimable", use_container_width=True):
             st.session_state.page = "print"
@@ -384,6 +388,71 @@ elif st.session_state.page == "add":
                     if 'scraped_title' in st.session_state: del st.session_state.scraped_title
                     if 'scraped_content' in st.session_state: del st.session_state.scraped_content
                     st.session_state.page = "home"; st.rerun()
+            else:
+                st.error("Le titre et les ingrédients sont obligatoires !")
+# --- PAGE ÉDITION (DÉDIÉE) ---
+elif st.session_state.page == "edit":
+    r_edit = st.session_state.get('recipe_to_edit', {})
+    
+    st.markdown('<h1 style="color: #e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
+    
+    if st.button("⬅ Annuler et Retour", use_container_width=True):
+        st.session_state.page = "details"
+        st.rerun()
+    
+    st.divider()
+    
+    with st.container():
+        col_t, col_c = st.columns([2, 1])
+        titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
+        
+        # Sécurité pour le multiselect (évite le crash StreamlitAPIException)
+        raw_cats = str(r_edit.get('Catégorie', 'Autre'))
+        current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
+        valid_cats = [c for c in current_cats if c in CATEGORIES]
+        if not valid_cats: valid_cats = ["Autre"]
+        
+        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=valid_cats)
+        
+        st.markdown("#### ⏱️ Paramètres de cuisson")
+        cp1, cp2, cp3 = st.columns(3)
+        t_prep = cp1.text_input("🕒 Préparation (min)", value=str(r_edit.get('Temps_Prepa', '')))
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=str(r_edit.get('Temps_Cuisson', '')))
+        port = cp3.text_input("🍽️ Portions", value=str(r_edit.get('Portions', '')))
+        
+        st.divider()
+        
+        ci, ce = st.columns(2)
+        ingredients = ci.text_area("🍎 Ingrédients", height=300, value=r_edit.get('Ingrédients', ''))
+        instructions = ce.text_area("👨‍🍳 Étapes de préparation", height=300, value=r_edit.get('Préparation', ''))
+        
+        img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''))
+        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, value=r_edit.get('Commentaires', ''))
+        
+        st.divider()
+        
+        if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True):
+            if titre_edit and ingredients:
+                payload = {
+                    "action": "edit", 
+                    "titre": titre_edit, 
+                    "Catégorie": ", ".join(cat_choisies), 
+                    "Ingrédients": ingredients, 
+                    "Préparation": instructions, 
+                    "Image": img_url, 
+                    "Temps_Prepa": t_prep, 
+                    "Temps_Cuisson": t_cuis, 
+                    "Portions": port, 
+                    "Note": r_edit.get('Note', 0), 
+                    "Commentaires": commentaires
+                }
+                if send_action(payload):
+                    st.success("✅ Recette mise à jour !")
+                    st.cache_data.clear()
+                    # On nettoie et on retourne à l'accueil
+                    if 'recipe_to_edit' in st.session_state: del st.session_state.recipe_to_edit
+                    st.session_state.page = "home"
+                    st.rerun()
             else:
                 st.error("Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
@@ -615,6 +684,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
