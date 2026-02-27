@@ -140,16 +140,26 @@ def send_action(payload):
 
 def scrape_url(url):
     try:
-        headers={'User-Agent':'Mozilla/5.0'}
-        res = requests.get(url,headers=headers,timeout=10)
-        res.encoding=res.apparent_encoding
-        soup=BeautifulSoup(res.text,'html.parser')
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = res.apparent_encoding
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        # Récupération du titre
         title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
-        elements = soup.find_all(['li','p'])
-        content = "\n".join(dict.fromkeys([el.text.strip() for el in elements if 10<len(el.text.strip())<500]))
+        
+        # Récupération plus large des éléments de texte
+        # On augmente la limite à 2000 caractères pour ne pas couper les longues instructions
+        elements = soup.find_all(['li', 'p', 'span']) 
+        raw_list = [el.text.strip() for el in elements if 5 < len(el.text.strip()) < 2000]
+        
+        # Nettoyage des doublons tout en gardant l'ordre
+        content = "\n".join(list(dict.fromkeys(raw_list)))
+        
         return title, content
-    except:
-        return None,None
+    except Exception as e:
+        print(f"Erreur scrap: {e}")
+        return None, None
 
 @st.cache_data(ttl=5)
 def load_data():
@@ -1006,6 +1016,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
