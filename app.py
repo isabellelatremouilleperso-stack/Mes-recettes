@@ -288,26 +288,27 @@ elif st.session_state.page == "add":
         st.session_state.page = "home"
         st.rerun()
 
-    # --- BARRE DE RECHERCHE DIRECTE GOOGLE ---
+   # --- BARRE DE RECHERCHE DIRECTE GOOGLE CANADA ---
     st.markdown("""
         <div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-top: 10px; margin-bottom: 10px;">
-            <h4 style="margin:0; color:white;">🔍 Trouver une idée sur Google</h4>
+            <h4 style="margin:0; color:white;">🔍 Trouver une idée sur Google.ca</h4>
         </div>
     """, unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
     search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Poulet au beurre facile", label_visibility="collapsed")
     
-    # Préparation du lien direct
+    # Préparation du lien direct vers GOOGLE.CA
     import urllib.parse
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
-    target_url = f"https://www.google.com/search?q={query_encoded}" if search_query else "https://www.google.com"
+    # CHANGEMENT ICI : .com devient .ca
+    target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
-    # Le bouton HTML pour un clic direct sans fenêtre intermédiaire
+    # Le bouton HTML (Lien direct)
     c_btn.markdown(f"""
         <a href="{target_url}" target="_blank" style="text-decoration: none;">
             <div style="background-color: #4285F4; color: white; padding: 9px; border-radius: 5px; text-align: center; font-weight: bold; border: none; cursor: pointer;">
-                🌐 Aller sur Google
+                🌐 Aller sur Google.ca
             </div>
         </a>
     """, unsafe_allow_html=True)
@@ -555,6 +556,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
