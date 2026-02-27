@@ -424,41 +424,40 @@ elif st.session_state.page == "details":
         else:
             st.image("https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # 2. SYSTÈME D'ÉTOILES (Version robuste anti-erreur)
-        st.write("**Évaluer cette recette :**")
+        # 2. SYSTÈME DE NOTATION PAR CURSEUR (Plus stable et sans erreur)
+        st.write("**Note de la recette :**")
         
-        # On force la conversion en entier pour éviter le plantage Streamlit
+        # On récupère la note actuelle pour positionner le curseur
         try:
-            # On récupère la note (Note ou note)
-            raw_note = r.get('Note', r.get('note', 0))
-            
-            if raw_note is None or str(raw_note).strip() == "" or str(raw_note) == "None":
-                valeur_actuelle = None
-            else:
-                # On convertit en float puis en int (pour gérer les "4.0")
-                # Feedback : 0 = 1 étoile, donc on fait -1
-                valeur_actuelle = int(float(raw_note)) - 1
-                
-                # Sécurités pour rester dans les bornes de l'outil (0 à 4)
-                if valeur_actuelle < 0: valeur_actuelle = None
-                if valeur_actuelle is not None and valeur_actuelle > 4: valeur_actuelle = 4
+            # On cherche 'Note' ou 'note', par défaut 0
+            val_note = r.get('Note', r.get('note', 0))
+            # On convertit en entier proprement
+            note_actuelle = int(float(val_note)) if val_note else 0
         except:
-            valeur_actuelle = None
+            note_actuelle = 0
 
-        # Affichage du composant
-        nouveau_choix = st.feedback("stars", key=f"star_det_{r['Titre']}", value=valeur_actuelle)
+        # Affichage du curseur (Slider)
+        nouvelle_note = st.select_slider(
+            "Évaluer de 0 à 5",
+            options=[0, 1, 2, 3, 4, 5],
+            value=note_actuelle,
+            key=f"slider_note_{r['Titre']}"
+        )
         
-        if nouveau_choix is not None:
-            note_finale = nouveau_choix + 1
-            # On compare avec l'ancienne note pour ne pas renvoyer pour rien
-            ancienne_note = (valeur_actuelle + 1) if valeur_actuelle is not None else 0
-            
-            if note_finale != ancienne_note:
-                if send_action({"action": "edit", "titre": r['Titre'], "Note": note_finale}):
-                    st.toast(f"Note enregistrée : {note_finale} ⭐")
+        # Affichage visuel des étoiles juste en dessous pour le look
+        if nouvelle_note > 0:
+            st.markdown(f"#### {'⭐' * nouvelle_note}")
+        else:
+            st.caption("Pas encore de note")
+
+        # Sauvegarde automatique uniquement si la note a changé
+        if nouvelle_note != note_actuelle:
+            with st.spinner("Mise à jour de la note..."):
+                if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note}):
+                    st.toast(f"Note mise à jour : {nouvelle_note}/5 ⭐")
                     st.cache_data.clear()
-                    # On met à jour la donnée locale pour éviter le saut visuel
-                    st.session_state.recipe_data['Note'] = note_finale
+                    # On met à jour la session locale pour que ça reste affiché
+                    st.session_state.recipe_data['Note'] = nouvelle_note
                     st.rerun()
         
         st.divider()
@@ -1114,6 +1113,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
