@@ -531,7 +531,7 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     st.write("Détails de la recette")
 
-# --- PAGE IMPRIMABLE PRO OPTIMISÉE ---
+# --- PAGE IMPRIMABLE PRO ---
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
         st.warning("Aucune recette sélectionnée.")
@@ -541,16 +541,16 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-        # --- CSS minimal pour impression ---
+        # --- CSS pour impression propre ---
         st.markdown("""
 <style>
-/* Fond blanc et texte noir */
+/* Fond blanc partout */
 .stApp, [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
     background-color: white !important;
     color: black !important;
 }
 
-/* Cacher les éléments inutiles */
+/* Cacher éléments inutiles */
 [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, iframe {
     display: none !important;
 }
@@ -578,7 +578,8 @@ h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margi
 h3 { color: #e67e22 !important; margin-top:0; }
 
 @media print {
-    body, .stApp, .paper-sheet { background-color: white !important; color: black !important; }
+    body { background-color: white !important; }
+    .stApp, .paper-sheet { background-color: white !important; color: black !important; }
     .section-box { background-color: white !important; page-break-inside: avoid !important; }
     .no-print { display: none !important; }
 }
@@ -594,23 +595,29 @@ h3 { color: #e67e22 !important; margin-top:0; }
         with col2:
             st.markdown(
                 '<a href="javascript:window.print()" style="display:block; text-align:center; width:100%; height:38px; '
-                'line-height:38px; background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;">🖨️ Lancer l\'impression</a>',
+                'line-height:38px; background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;" '
+                'key="print_btn_html">🖨️ Lancer l\'impression</a>',
                 unsafe_allow_html=True
             )
 
-        # --- Préparer les données à afficher ---
+        # --- Préparation des données pour affichage ---
+        ing_txt = str(r.get('Ingrédients',''))
         html_ing = ""
-        for line in str(r.get('Ingrédients','')).split('\n'):
+        for line in ing_txt.split('\n'):
             line = line.strip()
-            if not line: continue
-            html_ing += f"<p style='margin:2px 0;'>{'☐ ' + line if not line.endswith(':') else f'<b>{line}</b>'}</p>"
+            if not line:
+                continue
+            if line.endswith(':'):
+                html_ing += f"<p style='margin:10px 0 5px 0;'><b>{line}</b></p>"
+            else:
+                html_ing += f"<p style='margin:2px 0;'>☐ {line}</p>"
 
         prepa_txt = str(r.get('Préparation','')).replace('\n','<br>')
 
         # --- Rendu final HTML ---
         st.markdown(f"""
 <div class="paper-sheet">
-    <!-- Page 1 : titre et infos -->
+    <!-- Page 1 : Titre + infos -->
     <div style="page-break-after:always;">
         <h1>{r.get('Titre','Recette')}</h1>
         <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
@@ -644,6 +651,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
