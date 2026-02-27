@@ -365,7 +365,6 @@ if st.session_state.page == "home":
         # --- FONCTION COULEUR ---
         def get_cat_color(cat):
             colors = {
-                # --- Vos 20 catégories de base ---
                 "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
                 "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
                 "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
@@ -373,8 +372,6 @@ if st.session_state.page == "home":
                 "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
                 "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
                 "Boisson": "#7FFFD4", "Autre": "#BDC317",
-        
-                # --- Nouvelles catégories ajoutées ---
                 "Air Fryer": "#FF4500", "Boulangerie": "#DEB887", "Condiment": "#DAA520",
                 "Épices": "#CD5C5C", "Fumoir": "#333333", "Indien": "#FF9933",
                 "Libanais": "#EE2436", "Mexicain": "#006341", "Pains": "#F5DEB3",
@@ -382,10 +379,9 @@ if st.session_state.page == "home":
                 "Slow Cooker": "#4B0082", "Sushi": "#FF1493", "Tartare": "#B22222",
                 "Végétarien": "#32CD32"
             }
-            return colors.get(cat, "#e67e22") # Orange par défaut
+            return colors.get(cat, "#e67e22")
 
         # --- AFFICHAGE DES RÉSULTATS ---
-        # Note : J'ai supprimé la ligne qui écrasait 'rows' ici.
         for i in range(0, len(rows), 2):
             grid_cols = st.columns(2) 
             for j in range(2):
@@ -409,9 +405,57 @@ if st.session_state.page == "home":
                             st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
+
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
+    
+    # Bouton Retour
+    if st.button("⬅️ Retour à la bibliothèque"):
+        st.session_state.page = "home"
+        st.rerun()
+
+    col_g, col_d = st.columns([1, 2])
+    
+    with col_g:
+        # IMAGE
+        img_url = r.get('Image', '')
+        st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400", use_container_width=True)
+        
+        # NOTATION (Le curseur stable dont on a parlé)
+        st.write("**Note :**")
+        note_actuelle = int(float(r.get('Note', 0)))
+        nouvelle_note = st.select_slider("Évaluer", options=[0,1,2,3,4,5], value=note_actuelle, key=f"sl_{r['Titre']}")
+        if nouvelle_note != note_actuelle:
+            if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note}):
+                st.cache_data.clear()
+                st.rerun()
+
+        st.divider()
+
+        # LES TEMPS (Voici le correctif pour afficher les chiffres sans le .0)
+        t1, t2, t3 = st.columns(3)
+        # On transforme en texte et on coupe après le point (ex: 4.0 devient 4)
+        p = str(r.get('Temps_Prepa', r.get('temps_prepa', '-'))).split('.')[0]
+        c = str(r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))).split('.')[0]
+        port = str(r.get('Portions', r.get('portions', '-'))).split('.')[0]
+
+        t1.metric("🕒 Prépa", f"{p}m")
+        t2.metric("🔥 Cuisson", f"{c}m")
+        t3.metric("🍽️ Portions", port)
+
+    with col_d:
+        st.title(r['Titre'])
+        st.write(f"**Catégorie :** {r.get('Catégorie', 'N/A')}")
+        
+        st.subheader("🛒 Ingrédients")
+        st.write(r.get('Ingrédients', r.get('ingredients', 'Non renseignés')))
+        
+        st.subheader("👨‍🍳 Préparation")
+        st.write(r.get('Préparation', r.get('preparation', 'Non renseignée')))
+        
+        if r.get('Commentaires'):
+            st.info(f"**Notes :** {r['Commentaires']}")
     
     # BARRE DE NAVIGATION
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
@@ -1137,6 +1181,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
