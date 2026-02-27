@@ -381,6 +381,10 @@ if st.session_state.page == "home":
             }
             return colors.get(cat, "#e67e22")
 
+        # --- NETTOYAGE ANTI-DOUBLONS ---
+        rows = rows.drop_duplicates(subset=['Titre'])  # <-- AJOUTE CETTE LIGNE
+        rows = rows.reset_index(drop=True)             # <-- AJOUTE CETTE LIGNE
+
         # --- AFFICHAGE DES RÉSULTATS ---
         for i in range(0, len(rows), 2):
             grid_cols = st.columns(2) 
@@ -1206,6 +1210,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
