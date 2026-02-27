@@ -147,18 +147,34 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.title("🍳 Mes Recettes")
-    if st.button("📚 Bibliothèque",use_container_width=True,key="side_home"):
-        st.session_state.page="home"; st.rerun()
-    if st.button("📅 Planning Repas",use_container_width=True,key="side_plan"):
-        st.session_state.page="planning"; st.rerun()
-    if st.button("🛒 Ma Liste d'épicerie",use_container_width=True,key="side_shop"):
-        st.session_state.page="shop"; st.rerun()
+
+    # --- BOUTON ACTUALISER (Placé ici pour plus de visibilité) ---
+    if st.button("🔄 Actualiser les données", use_container_width=True):
+        st.cache_data.clear()
+        st.toast("Mise à jour réussie ! 📋")
+        time.sleep(0.5)
+        st.rerun()
+
     st.divider()
-    if st.button("➕ AJOUTER RECETTE",use_container_width=True,key="side_add"):
+
+    if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"):
+        st.session_state.page="home"; st.rerun()
+    if st.button("📅 Planning Repas", use_container_width=True, key="side_plan"):
+        st.session_state.page="planning"; st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
+        st.session_state.page="shop"; st.rerun()
+    
+    st.divider()
+    
+    if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
+        # On s'assure de vider le mode édition si on clique sur AJOUTER
+        if 'recipe_to_edit' in st.session_state:
+            del st.session_state.recipe_to_edit
         st.session_state.page="add"; st.rerun()
-    if st.button("⭐ Play Store",use_container_width=True,key="side_play"):
+        
+    if st.button("⭐ Play Store", use_container_width=True, key="side_play"):
         st.session_state.page="playstore"; st.rerun()
-    if st.button("❓ Aide",use_container_width=True,key="side_help"):
+    if st.button("❓ Aide", use_container_width=True, key="side_help"):
         st.session_state.page="help"; st.rerun()
 # ======================
 # LOGIQUE DES PAGES
@@ -684,6 +700,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
