@@ -10,55 +10,46 @@ import urllib.parse
 if 'page' not in st.session_state:
     st.session_state.page = "home"
 
-# ======================
-# CONFIGURATION & DESIGN
-# ======================
-st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
-
-# UN SEUL BLOC CSS NETTOYÉ
 st.markdown("""
 <style>
-/* --- DESIGN ÉCRAN --- */
+/* --- MODE ÉCRAN --- */
 .only-print { display: none !important; }
 
+/* --- MODE IMPRESSION --- */
 @media print {
-    /* 1. CACHE LE SURFLU */
-    .no-print, [data-testid="stSidebar"], [data-testid="stHeader"], 
-    .stButton, button, header, footer, [data-testid="stDecoration"] {
+    /* 1. On cache TOUTE l'interface Streamlit */
+    header, footer, .no-print, 
+    [data-testid="stSidebar"], 
+    [data-testid="stHeader"],
+    [data-testid="stDecoration"],
+    .stButton {
         display: none !important;
-        height: 0px !important;
     }
 
-    /* 2. FORCE LE FOND BLANC ET TEXTE NOIR */
-    html, body, .stApp, .main, .block-container {
+    /* 2. FORCE le fond blanc sur TOUS les niveaux de conteneurs Streamlit */
+    html, body, .stApp, .main, .block-container, section {
         background-color: white !important;
         color: black !important;
     }
 
-    /* 3. UTILISE TOUTE LA LARGEUR */
-    .main .block-container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 0.5cm !important;
-        margin: 0 !important;
+    /* 3. On force le texte en noir partout pour contrer le mode sombre */
+    h1, h2, h3, h4, p, span, li, div, label {
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 
-    /* 4. REND LES INGRÉDIENTS VISIBLES */
+    /* 4. Affichage de la version papier */
     .only-print {
         display: block !important;
         visibility: visible !important;
-        color: black !important;
     }
 
-    /* FORCE TOUS LES TEXTES EN NOIR */
-    h1, h2, h3, h4, p, span, li, div {
-        color: black !important;
-    }
-
-    /* 5. AJUSTE LES IMAGES */
-    img {
-        max-width: 10cm !important;
-        border-radius: 10px !important;
+    /* 5. On ajuste la mise en page pour que ça prenne toute la feuille */
+    .main .block-container {
+        max-width: 100% !important;
+        padding: 0px !important;
+        margin: 0px !important;
     }
 }
 </style>
@@ -671,6 +662,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
