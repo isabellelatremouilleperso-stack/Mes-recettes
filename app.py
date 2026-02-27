@@ -288,29 +288,61 @@ elif st.session_state.page == "add":
         st.session_state.page = "home"
         st.rerun()
 
-    # --- BARRE DE RECHERCHE DIRECTE GOOGLE.CA ---
+# ==========================================
+# --- PAGE : AJOUTER UNE RECETTE (FORCÉ SUR GOOGLE.CA) ---
+# ==========================================
+elif st.session_state.page == "add":
+    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
+    
+    # --- NAVIGATION ---
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
+
+    # --- BARRE DE RECHERCHE GOOGLE.CA ---
     st.markdown("""
         <div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-top: 10px; margin-bottom: 10px;">
-            <h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4>
+            <h4 style="margin:0; color:white;">🔍 Recherche sur Google Canada (.ca)</h4>
         </div>
     """, unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
-    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâté chinois traditionnel", label_visibility="collapsed")
+    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Poutine maison", label_visibility="collapsed")
     
-    # Préparation du lien direct vers GOOGLE.CA
+    # --- LA CORRECTION EST ICI ---
     import urllib.parse
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
+    # On force l'adresse .ca ici
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
-    # Le bouton "Lien Direct" (Un seul clic = Ouverture immédiate)
+    # Le bouton qui pointe RÉELLEMENT vers .ca
     c_btn.markdown(f"""
         <a href="{target_url}" target="_blank" style="text-decoration: none;">
-            <div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer; border: none;">
+            <div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">
                 🌐 Aller sur Google.ca
             </div>
         </a>
     """, unsafe_allow_html=True)
+
+    # --- LE RESTE DE TON FORMULAIRE (Inchangé pour garder ta structure) ---
+    st.markdown("""
+        <div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 20px;">
+            <h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>
+    """, unsafe_allow_html=True)
+    
+    col_url, col_go = st.columns([4, 1])
+    url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...")
+    
+    if col_go.button("Extraire ✨", use_container_width=True):
+        if url_input:
+            t, c = scrape_url(url_input)
+            if t:
+                st.session_state.scraped_title = t
+                st.session_state.scraped_content = c
+                st.success("Extraction réussie !")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # ... (Le reste de ton code pour le formulaire suit ici)
 
     # --- SECTION URL (IMPORTATION) ---
     st.markdown("""
@@ -625,6 +657,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
