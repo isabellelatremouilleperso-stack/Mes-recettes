@@ -311,12 +311,21 @@ elif st.session_state.page=="details":
         if st.button("💾 Enregistrer ma note",use_container_width=True):
             if send_action({"action":"edit","titre":r['Titre'],"Note":nouvelle_note,"Commentaires":nouveau_comm}):
                 st.success("Note enregistrée !"); st.session_state.recipe_data['Note']=nouvelle_note; st.session_state.recipe_data['Commentaires']=nouveau_comm; st.rerun()
-    with col_d:
+   with col_d:
         st.subheader("📋 Informations")
-        st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
-        st.write(f"**👥 Portions :** {r.get('Portions','-')}")
-        st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
-        st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
+        # ... (tes lignes de catégorie, portions, etc. existantes) ...
+        
+        st.divider()
+        st.subheader("📅 Planifier ce repas")
+        # On définit la date par défaut (aujourd'hui)
+        date_plan = st.date_input("Choisir une date", value=datetime.now(), key="date_picker")
+        if st.button("🗓️ Ajouter au planning", use_container_width=True):
+            # On envoie la date au format YYYY-MM-DD
+            if send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)}):
+                st.success(f"Planifié pour le {date_plan}")
+                st.toast("Planning mis à jour !")
+        st.divider()
+        
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
         sel=[]
@@ -753,6 +762,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
