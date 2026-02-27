@@ -367,10 +367,14 @@ if st.session_state.page == "home":
             # On inverse l'ordre original du dataframe filtré
             rows = rows.iloc[::-1] 
 
+
         # IMPORTANT : On réinitialise l'index UNE SEULE FOIS ici pour valider le tri
         rows = rows.reset_index(drop=True)
 
-        # --- FONCTION COULEUR ---
+        # --- SÉCURITÉ ANTI-DOUBLONS (Post-filtrage) ---
+        # On supprime les doublons sur le titre au cas où le filtre en aurait généré
+        rows = rows.drop_duplicates(subset=['Titre'], keep='first').reset_index(drop=True)
+
         # --- FONCTION COULEUR ---
         def get_cat_color(cat):
             colors = {
@@ -1219,6 +1223,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
