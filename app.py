@@ -523,64 +523,46 @@ elif st.session_state.page == "playstore":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # Style CSS ultra-précis
+    # Style CSS pour forcer le blanc et cacher le superflu
     st.markdown("""
         <style>
-        /* Force le fond blanc partout */
-        .stApp, [data-testid="stAppViewContainer"], .main {
+        /* Force le fond blanc absolu */
+        .stApp, [data-testid="stAppViewContainer"], .main, .block-container {
             background-color: white !important;
             color: black !important;
         }
 
-        /* Cache les éléments Streamlit */
+        /* Cache tout Streamlit */
         [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stDeployButton {
             display: none !important;
         }
 
-        /* Style pour les boutons à l'écran */
-        .print-controls {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 30px;
-            padding: 10px;
-            background-color: #f0f2f6;
-            border-radius: 10px;
+        /* Texte en noir pour l'imprimante */
+        h1, h2, h3, h4, p, span, label, div {
+            color: black !important;
         }
 
-        /* CACHER LES BOUTONS SUR LE PAPIER */
         @media print {
-            .no-print, .stButton, button, .print-controls {
-                display: none !important;
-            }
-            .stApp { margin: 0 !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            /* Cache les boutons Streamlit sur le papier */
+            .stButton button { display: none !important; }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- BARRE D'OUTILS ---
-    # On utilise des colonnes Streamlit normales pour plus de fiabilité
+    # --- BARRE DE CONTRÔLE ---
     col_nav1, col_nav2 = st.columns([1, 4])
     
     with col_nav1:
-        if st.button("⬅ Retour"):
+        if st.button("⬅ Retour", key="btn_back_print"):
             st.session_state.page = "details"
             st.rerun()
             
     with col_nav2:
-        # Version simplifiée du bouton d'impression
-        st.markdown("""
-            <a href="javascript:window.print()" style="
-                text-decoration: none;
-                background-color: #e67e22;
-                color: white;
-                padding: 10px 25px;
-                border-radius: 8px;
-                font-weight: bold;
-                display: inline-block;
-                text-align: center;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            ">🖨️ CLIQUEZ ICI POUR IMPRIMER</a>
-        """, unsafe_allow_html=True)
+        # ÉTAPE 1 : Le bouton Streamlit déclenche un changement d'état
+        if st.button("🖨️ LANCER L'IMPRESSION", type="primary", use_container_width=True):
+            # ÉTAPE 2 : On injecte le JS d'impression seulement APRÈS le clic
+            st.markdown('<script>window.print();</script>', unsafe_allow_html=True)
 
     st.divider()
 
@@ -590,7 +572,13 @@ elif st.session_state.page == "print":
     c1, c2, c3 = st.columns(3)
     c1.write(f"**🍴 Catégorie :** {r.get('Catégorie','')}")
     c2.write(f"**👥 Portions :** {r.get('Portions','')}")
-    c3.write(f"**⏱ Temps :** {r.get('Temps_Prepa','0')} min + {r.get('Temps_Cuisson','0')} min")
+    
+    # Calcul simple du temps total
+    try:
+        t_total = int(r.get('Temps_Prepa', 0)) + int(r.get('Temps_Cuisson', 0))
+    except:
+        t_total = 0
+    c3.write(f"**⏱ Temps Total :** {t_total} min")
 
     st.write("---")
 
@@ -607,7 +595,7 @@ elif st.session_state.page == "print":
         st.subheader("👨‍🍳 Préparation")
         st.write(r.get("Préparation",""))
 
-    st.caption(f"Imprimé le {datetime.now().strftime('%d/%m/%Y')} - Mes Recettes Pro")
+    st.caption(f"Imprimé depuis Mes Recettes Pro - {datetime.now().strftime('%d/%m/%Y')}")
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -619,6 +607,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
