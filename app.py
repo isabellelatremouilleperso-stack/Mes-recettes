@@ -561,32 +561,36 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # 1. RÉCUPÉRATION ROBUSTE (Basée sur ton script Apps Script)
-        # On cherche les noms que ton script utilise (colonne 8, 9, 10, 11)
-        cat = r.get('Catégorie', r.get('categorie', 'Autre'))
-        port = r.get('Portions', r.get('portions', '-'))
-        t_prepa = r.get('Temps de préparation', r.get('temps_prepa', '-'))
-        t_cuisson = r.get('Temps de cuisson', r.get('temps_cuisson', '-'))
-
-        # Nettoyage pour l'affichage
-        def clean(v):
-            if v is None or str(v).lower() in ["nan", "none", "", "-"]: return "-"
-            return str(v).split('.')[0].replace('.0', '')
-
-        # 2. AFFICHAGE
-        st.write(f"**🍴 Catégorie :** {cat if str(cat).lower() != 'nan' else 'Autre'}")
+        # 1. CATÉGORIE
+        # On utilise le nom exact vu dans ton debug (index 7)
+        cat = r.get('Catégorie', 'Autre')
+        if not cat or str(cat).lower() == 'nan':
+            cat = "Autre"
+        st.write(f"**🍴 Catégorie :** {cat}")
         
-        source = r.get('Source', r.get('source', ''))
-        if source and "http" in str(source):
-            st.link_button("🌐 Voir la source", str(source), use_container_width=True)
-            
         st.divider()
+        
+        # 2. RÉCUPÉRATION DES TEMPS (Noms exacts de ton Excel)
+        # On utilise exactement "Temps de préparation" et "Temps de cuisson"
+        t_prepa = r.get('Temps de préparation', '-')
+        t_cuisson = r.get('Temps de cuisson', '-')
+        port = r.get('Portions', '-')
 
-        # 3. LES MÉTRIQUES (Alignées sur ton script J et K)
+        # Fonction pour nettoyer l'affichage
+        def clean_txt(v):
+            val = str(v).strip().lower()
+            if val in ["nan", "none", "", "-"]: return "-"
+            return str(v).split('.')[0] # Enlève le .0 si présent
+
+        p_final = clean_txt(t_prepa)
+        c_final = clean_txt(t_cuisson)
+        port_final = clean_txt(port)
+
+        # 3. AFFICHAGE DES MÉTRIQUES
         c1, c2, c3 = st.columns(3)
-        c1.metric("🕒 Prépa", f"{clean(t_prepa)} min" if clean(t_prepa) != "-" else "-")
-        c2.metric("🔥 Cuisson", f"{clean(t_cuisson)} min" if clean(t_cuisson) != "-" else "-")
-        c3.metric("🍽️ Portions", clean(port))
+        c1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
+        c2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
+        c3.metric("🍽️ Portions", port_final)
 
         st.info("💡 Synchronisation Google Sheets active.")
         
@@ -1230,6 +1234,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
