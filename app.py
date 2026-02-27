@@ -483,26 +483,38 @@ elif st.session_state.page == "add":
         
         if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
+                import datetime
+                
+                # On crée le dictionnaire EXACTEMENT comme ton script Google l'attend
                 payload = {
-                    "action": "add", 
-                    "titre": titre, 
-                    "Catégorie": ", ".join(cat_choisies), 
-                    "Ingrédients": ingredients, 
-                    "Préparation": instructions, 
-                    "Image": img_url, 
-                    "Temps_Prepa": t_prep, 
-                    "Temps_Cuisson": t_cuis, 
-                    "Portions": port, 
-                    "Note": 0, 
-                    "Commentaires": commentaires
+                    "action": "add",
+                    "date": datetime.date.today().strftime("%d/%m/%Y"), # data.date
+                    "titre": titre,                                      # data.titre
+                    "source": "Streamlit App",                           # data.source
+                    "ingredients": ingredients,                          # data.ingredients
+                    "preparation": instructions,                         # data.preparation (clé corrigée !)
+                    "image": img_url,                                    # data.image
+                    "categorie": ", ".join(cat_choisies),                # data.categorie
+                    "portions": port,                                    # data.portions
+                    "temps_prepa": t_prep,                               # data.temps_prepa (clé corrigée !)
+                    "temps_cuisson": t_cuis,                             # data.temps_cuisson
+                    "commentaires": commentaires                         # (Sera vide à l'ajout selon ton .gs)
                 }
-                if send_action(payload):
-                    st.success(f"✅ '{titre}' ajouté !"); time.sleep(1)
-                    if 'scraped_title' in st.session_state: del st.session_state.scraped_title
-                    if 'scraped_content' in st.session_state: del st.session_state.scraped_content
-                    st.session_state.page = "home"; st.rerun()
+
+                with st.spinner("Envoi au grimoire du Chef..."):
+                    if send_action(payload):
+                        st.success(f"✅ '{titre}' a été ajoutée avec succès !")
+                        st.cache_data.clear() # Pour forcer la mise à jour de la liste
+                        time.sleep(1.5)
+                        
+                        # Nettoyage
+                        for key in ['scraped_title', 'scraped_content']:
+                            if key in st.session_state: del st.session_state[key]
+                        
+                        st.session_state.page = "home"
+                        st.rerun()
             else:
-                st.error("Le titre et les ingrédients sont obligatoires !")
+                st.error("🚨 Le titre et les ingrédients sont obligatoires pour ne pas perdre la recette !")
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
@@ -984,6 +996,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
