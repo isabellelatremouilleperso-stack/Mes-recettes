@@ -561,38 +561,34 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # 1. CATÉGORIE
-        cat = "Autre"
-        for k, v in r.items():
-            if "catégorie" in k.lower():
-                cat = v
-                break
-        st.write(f"**🍴 Catégorie :** {cat}")
+        # --- FONCTION DE RÉCUPÉRATION (Celle qui marche pour tes portions) ---
+        def get_val_robuste(keys):
+            for k in keys:
+                v = r.get(k)
+                if v and str(v).strip() not in ["None", "nan", "-", ""]:
+                    return str(v).split('.')[0]
+            return "-"
+
+        # 1. RÉCUPÉRATION DES DONNÉES
+        cat = get_val_robuste(['Catégorie', 'Categorie', 'categorie'])
+        p = get_val_robuste(['Temps de préparation', 'Temps_Prepa', 'prepa'])
+        c = get_val_robuste(['Temps de cuisson', 'Temps_Cuisson', 'cuisson'])
+        port = get_val_robuste(['Portions', 'portions', 'NB Portions'])
+
+        # 2. AFFICHAGE DES LIGNES
+        st.write(f"**🍴 Catégorie :** {cat if cat != '-' else 'Autre'}")
         
+        source = r.get('Source', r.get('source', ''))
+        if source and "http" in str(source):
+            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+            
         st.divider()
-        
-        # 2. TEMPS (Recherche par mot-clé dans les clés)
-        t_prepa = "-"
-        t_cuisson = "-"
-        for k, v in r.items():
-            if "préparation" in k.lower(): t_prepa = v
-            if "cuisson" in k.lower(): t_cuisson = v
 
-        # Fonction de nettoyage ultime
-        def final_clean(val):
-            s = str(val).strip().lower()
-            if s in ["nan", "none", "", "-", "null"]: return "-"
-            # On ne garde que les chiffres
-            import re
-            nums = re.findall(r'\d+', s)
-            return nums[0] if nums else "-"
-
-        p = final_clean(t_prepa)
-        c = final_clean(t_cuisson)
-
-        c1, c2 = st.columns(2)
-        c1.metric("🕒 Prépa", f"{p} min" if p != "-" else "-")
-        c2.metric("🔥 Cuisson", f"{c} min" if c != "-" else "-")
+        # 3. AFFICHAGE DES MÉTRIQUES (Comme tes portions)
+        t1, t2, t3 = st.columns(3)
+        t1.metric("🕒 Prépa", f"{p}m" if p != "-" else "-")
+        t2.metric("🔥 Cuisson", f"{c}m" if c != "-" else "-")
+        t3.metric("🍽️ Portions", port)
 
         st.info("💡 Synchronisation Google Sheets active.")
         
@@ -1236,6 +1232,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
