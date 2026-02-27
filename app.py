@@ -422,26 +422,46 @@ elif st.session_state.page == "details":
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400", use_container_width=True)
         
-        # NOTATION (Le curseur stable dont on a parlé)
+        # NOTATION SÉCURISÉE (Anti-ValueError)
         st.write("**Note :**")
-        note_actuelle = int(float(r.get('Note', 0)))
+        try:
+            # On récupère la note, on gère le vide ou le texte inattendu
+            val_note = str(r.get('Note', '0')).strip()
+            if val_note in ["", "None", "nan", "-"]:
+                note_actuelle = 0
+            else:
+                note_actuelle = int(float(val_note))
+        except (ValueError, TypeError):
+            note_actuelle = 0
+
         nouvelle_note = st.select_slider("Évaluer", options=[0,1,2,3,4,5], value=note_actuelle, key=f"sl_{r['Titre']}")
+        
         if nouvelle_note != note_actuelle:
             if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note}):
+                st.toast(f"Note enregistrée : {nouvelle_note}/5 ⭐")
                 st.cache_data.clear()
+                # Mise à jour locale pour éviter le décalage
+                st.session_state.recipe_data['Note'] = nouvelle_note
                 st.rerun()
 
         st.divider()
 
-        # LES TEMPS (Voici le correctif pour afficher les chiffres sans le .0)
+        # LES TEMPS ET PORTIONS (Nettoyage des .0 et des None)
         t1, t2, t3 = st.columns(3)
-        # On transforme en texte et on coupe après le point (ex: 4.0 devient 4)
-        p = str(r.get('Temps_Prepa', r.get('temps_prepa', '-'))).split('.')[0]
-        c = str(r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))).split('.')[0]
-        port = str(r.get('Portions', r.get('portions', '-'))).split('.')[0]
+        
+        def clean_val(key_maj, key_min):
+            val = r.get(key_maj, r.get(key_min, '-'))
+            if val is None or str(val).strip() in ["", "None", "nan"]:
+                return "-"
+            # On prend la partie entière avant le point
+            return str(val).split('.')[0]
 
-        t1.metric("🕒 Prépa", f"{p}m")
-        t2.metric("🔥 Cuisson", f"{c}m")
+        p = clean_val('Temps_Prepa', 'temps_prepa')
+        c = clean_val('Temps_Cuisson', 'temps_cuisson')
+        port = clean_val('Portions', 'portions')
+
+        t1.metric("🕒 Prépa", f"{p}m" if p != "-" else "-")
+        t2.metric("🔥 Cuisson", f"{c}m" if c != "-" else "-")
         t3.metric("🍽️ Portions", port)
 
     with col_d:
@@ -449,13 +469,18 @@ elif st.session_state.page == "details":
         st.write(f"**Catégorie :** {r.get('Catégorie', 'N/A')}")
         
         st.subheader("🛒 Ingrédients")
-        st.write(r.get('Ingrédients', r.get('ingredients', 'Non renseignés')))
+        # On affiche le texte brut ou un message si vide
+        ing = r.get('Ingrédients', r.get('ingredients', 'Non renseignés'))
+        st.write(ing if ing else "Non renseignés")
         
         st.subheader("👨‍🍳 Préparation")
-        st.write(r.get('Préparation', r.get('preparation', 'Non renseignée')))
+        prep = r.get('Préparation', r.get('preparation', 'Non renseignée'))
+        st.write(prep if prep else "Non renseignée")
         
-        if r.get('Commentaires'):
-            st.info(f"**Notes :** {r['Commentaires']}")
+        # Commentaires (vérifie les deux orthographes possibles)
+        comm = r.get('Commentaires', r.get('commentaires'))
+        if comm and str(comm).strip() not in ["None", "nan", ""]:
+            st.info(f"**Notes du chef :** {comm}")
     
     # BARRE DE NAVIGATION
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
@@ -1181,6 +1206,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
