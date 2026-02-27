@@ -541,34 +541,51 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-        # --- CSS pour la page print ---
-        st.markdown("""
-        <style>
-        .stApp { background-color: white !important; color: black !important; }
-        [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
-        .paper-sheet {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            font-family: 'Segoe UI', sans-serif;
-            color: black !important;
-            background-color: white !important;
-        }
-        .section-box { 
-            background-color: white !important; 
-            border: 1px solid #dee2e6 !important; 
-            border-radius: 10px; padding: 15px 20px; margin-bottom: 25px;
-            page-break-inside: avoid; 
-        }
-        h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
-        h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; padding-bottom: 5px; }
-        @media print {
-            .no-print { display: none !important; }
-            .page-break { page-break-before: always; }
-            .section-box { background-color: white !important; border: 1px solid #ccc !important; }
-        }
-        </style>
-        """, unsafe_allow_html=True)
+       st.markdown("""
+<style>
+/* Fond blanc global pour l'impression */
+.stApp, .stApp > div, .stApp > div > div {
+    background-color: white !important;
+    color: black !important;
+}
+
+/* Cacher header, sidebar, footer et boutons */
+[data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton {
+    display: none !important;
+}
+
+/* Conteneur principal de la fiche */
+.paper-sheet {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: white !important;
+    color: black !important;
+}
+
+/* Sections ingrédients / préparation */
+.section-box {
+    background-color: white !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 10px; 
+    padding: 15px 20px; 
+    margin-bottom: 25px;
+    page-break-inside: avoid; 
+}
+
+/* Titres */
+h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
+h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; padding-bottom: 5px; }
+
+/* Impression */
+@media print {
+    .no-print { display: none !important; }
+    .page-break { page-break-before: always; }
+    .section-box { background-color: white !important; border: 1px solid #ccc !important; }
+}
+</style>
+""", unsafe_allow_html=True)
     # 2. Boutons de navigation (On sépare le bouton impression pour qu'il fonctionne)
     col1, col2 = st.columns([1, 1])
     with col1:
@@ -636,6 +653,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
