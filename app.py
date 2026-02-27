@@ -1,3 +1,102 @@
+import streamlit as st
+import pandas as pd
+import requests
+import time
+from datetime import datetime
+from bs4 import BeautifulSoup
+import urllib.parse
+
+# --- CONFIGURATION ---
+st.set_page_config(page_title="Mes Recettes Pro", layout="wide")
+
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
+
+# ==========================================
+# --- SECTION STYLE (ÉCRAN + IMPRESSION) ---
+# ==========================================
+st.markdown("""
+<style>
+/* --- MODE ÉCRAN --- */
+.only-print { display: none !important; }
+
+/* --- MODE IMPRESSION (Le correctif fond blanc) --- */
+@media print {
+    header, footer, .no-print, 
+    [data-testid="stSidebar"], [data-testid="stHeader"],
+    [data-testid="stDecoration"], .stButton, button {
+        display: none !important;
+    }
+
+    /* Force le fond blanc absolu */
+    html, body, .stApp, .main, .block-container, section {
+        background-color: white !important;
+        background-image: none !important;
+        color: black !important;
+    }
+
+    /* Force le texte noir partout */
+    h1, h2, h3, h4, p, span, li, div, label {
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .only-print {
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    .main .block-container {
+        max-width: 100% !important;
+        padding: 0.5cm !important;
+    }
+}
+
+/* --- CARTES BIBLIOTHÈQUE --- */
+.recipe-card {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    border: 1px solid #333;
+    margin-bottom: 25px;
+    height: 460px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.recipe-img-container { width: 100%; height: 280px; overflow: hidden; border-radius: 12px 12px 0 0; }
+.recipe-img-container img { width: 100%; height: 100%; object-fit: cover; }
+.recipe-content { padding: 10px; text-align: center; }
+.recipe-title-text {
+    color: #e0e0e0; font-size: 1.1rem; font-weight: 600;
+    height: 50px; display: flex; align-items: center; justify-content: center;
+}
+.help-box { background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22; margin-bottom:15px; }
+</style>
+""", unsafe_allow_html=True)
+
+# ======================
+# API & DONNÉES
+# ======================
+URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
+URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
+
+def send_action(payload):
+    with st.spinner("🚀 Action..."):
+        try:
+            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
+            if "Success" in r.text:
+                st.cache_data.clear()
+                return True
+        except: pass
+    return False
+
+@st.cache_data(ttl=5)
+def load_data():
+    try:
+        df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
+        df = df.fillna('')
+        return df
+    except: return pd.DataFrame()
 # ======================
 # SIDEBAR
 # ======================
@@ -281,4 +380,5 @@ elif st.session_state.page == "add":
             if t and ing:
                 if send_action({"action":"add","titre":t,"Catégorie":cat,"Ingrédients":ing,"Préparation":ins,"Image":img_url}):
                     st.success("Ajouté !"); time.sleep(1); st.session_state.page="home"; st.rerun()   
+
 
