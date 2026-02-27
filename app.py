@@ -364,7 +364,7 @@ if st.session_state.page == "home":
 
         # --- FONCTION COULEUR ---
         def get_cat_color(cat):
-    colors = {
+        colors = {
         # Vos catégories existantes
         "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
         "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
@@ -1137,6 +1137,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
