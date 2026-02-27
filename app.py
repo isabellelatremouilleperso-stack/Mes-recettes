@@ -87,6 +87,28 @@ if st.session_state.page != "print":
 
     </style>
     """, unsafe_allow_html=True)
+# ======================
+# SYSTÈME DE SÉCURITÉ
+# ======================
+# Vérifie si l'URL contient ?admin=oui
+url_admin = st.query_params.get("admin") == "oui"
+
+if 'admin_mode' not in st.session_state:
+    st.session_state.admin_mode = url_admin
+
+with st.sidebar:
+    st.divider()
+    if not st.session_state.admin_mode:
+        # Champ de mot de passe discret pour toi
+        pwd = st.text_input("🔑 Accès Admin", type="password", help="Tape ton code pour modifier")
+        if pwd == "1234":  # <--- CHOISIS TON MOT DE PASSE ICI
+            st.session_state.admin_mode = True
+            st.rerun()
+    else:
+        st.success("✅ Mode Chef Activé")
+        if st.button("🔒 Déconnexion"):
+            st.session_state.admin_mode = False
+            st.rerun()
 
 # ======================
 # CONSTANTES
@@ -171,11 +193,11 @@ with st.sidebar:
     
     # ... (le reste de tes boutons AJOUTER, PLAY STORE, etc.)
     
-    if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
-        # On s'assure de vider le mode édition si on clique sur AJOUTER
-        if 'recipe_to_edit' in st.session_state:
-            del st.session_state.recipe_to_edit
-        st.session_state.page="add"; st.rerun()
+   if st.session_state.admin_mode:
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
+            if 'recipe_to_edit' in st.session_state:
+                del st.session_state.recipe_to_edit
+            st.session_state.page="add"; st.rerun()
         
     if st.button("⭐ Play Store", use_container_width=True, key="side_play"):
         st.session_state.page="playstore"; st.rerun()
@@ -561,6 +583,8 @@ elif st.session_state.page == "planning":
             st.rerun()
     with col_clear:
         # Ce bouton vide le Sheets mais NE TOUCHE PAS au Calendrier Google
+        # MODIFICATION ICI
+    if st.session_state.admin_mode:
         if st.button("🗑️ Vider le planning", use_container_width=True, help="Efface uniquement la liste dans Google Sheets"):
             with st.spinner("Nettoyage..."):
                 if send_action({"action": "clear_planning"}):
@@ -568,6 +592,9 @@ elif st.session_state.page == "planning":
                     import time
                     time.sleep(1)
                     st.rerun()
+    else:
+        # On affiche le bouton mais il est désactivé (grisé) pour les visiteurs
+        st.button("🗑️ Vider (Admin uniquement)", use_container_width=True, disabled=True)
 
     st.divider()
 
@@ -928,6 +955,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
