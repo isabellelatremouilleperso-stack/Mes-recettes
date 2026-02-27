@@ -62,31 +62,49 @@ h1, h2, h3 { color: #e67e22 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-.stApp { background-color: #0e1117; color: #e0e0e0; }
-h1,h2,h3 { color: #e67e22 !important; }
+# --- SECTION STYLE (Correction de l'erreur 76) ---
+st.markdown("""
+<style>
+    /* DESIGN ÉCRAN */
+    .stApp { background-color: #0e1117; color: #e0e0e0; }
+    
+    /* Correction de la ligne 76 : Bien encapsulée dans le texte Markdown */
+    .stCheckbox label p { 
+        color: white !important; 
+        font-size: 1.1rem !important; 
+        font-weight: 500 !important; 
+    }
 
-/* Sidebar */
-[data-testid="stSidebar"] { background-color: #1e2129; color: white; }
-.stButton button { background-color: #e67e22; color: white; }
+    /* DESIGN IMPRESSION - FORCE LE BLANC ET SUPPRIME LA BARRE LATERALE */
+    @media print {
+        /* On cible les éléments structurels de Streamlit par leur ID test */
+        [data-testid="stSidebar"], 
+        [data-testid="stHeader"], 
+        .stButton, 
+        button,
+        header {
+            display: none !important;
+        }
 
-/* Inputs */
-input, select, textarea, div[data-baseweb="select"] { color: white !important; background-color: #1e2129 !important; }
+        /* On force le fond blanc sur TOUTE la page */
+        .stApp, .main, .block-container, [data-testid="stMainView"] {
+            background-color: white !important;
+            color: black !important;
+        }
 
-/* Checklist */
-.stCheckbox label p { color: white !important; font-size: 1.1rem !important; font-weight: 500 !important; }
+        /* On s'assure que le texte est noir pour l'encre */
+        h1, h2, h3, h4, p, span, li, label, div {
+            color: black !important;
+        }
 
-/* Recipe cards */
-.recipe-card { background-color:#1e2129;border:1px solid #3d4455;border-radius:12px;padding:10px;height:230px; display:flex;flex-direction:column; justify-content:space-between;}
-.recipe-img { width:100%; height:130px; object-fit:cover; border-radius:8px; }
-.recipe-title { color:white; margin-top:8px; font-size:0.95rem; font-weight:bold; text-align:center; display:flex; align-items:center; justify-content:center; height:2.5em; line-height:1.2; }
-
-/* Help boxes */
-.help-box { background-color:#1e2130; padding:15px; border-radius:15px; border-left:5px solid #e67e22; margin-bottom:20px; }
-.help-box h3 { color:#e67e22; margin-top:0; }
-
-/* Playstore */
-.playstore-container { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; width:100%; margin-bottom:20px; }
-.logo-rond-centre { width:120px !important; height:120px !important; border-radius:50% !important; object-fit:cover; border:4px solid #e67e22; margin-bottom:15px; }
+        /* On utilise 100% de la largeur du papier */
+        .main .block-container {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 1cm !important;
+            margin: 0 !important;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -647,6 +665,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
