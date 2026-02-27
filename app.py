@@ -165,9 +165,13 @@ def load_data():
 # SIDEBAR
 # ======================
 with st.sidebar:
-    # --- AJOUT DU LOGO ICI ---
-    st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", use_container_width=True)
-    st.markdown('<h2 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h2>', unsafe_allow_html=True)
+    # --- LOGO CENTRÉ ET PLUS PETIT ---
+    col_logo_1, col_logo_2, col_logo_3 = st.columns([1, 2, 1])
+    with col_logo_2:
+        st.image("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png", width=120)
+    
+    st.markdown('<h3 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h3>', unsafe_allow_html=True)
+    st.write("") # Petit espace sous le titre
     
     if st.button("🔄 Actualiser les données", use_container_width=True):
         st.cache_data.clear()
@@ -961,6 +965,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
