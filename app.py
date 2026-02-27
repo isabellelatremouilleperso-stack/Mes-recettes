@@ -24,36 +24,46 @@ st.markdown("""
 h1,h2,h3 { color: #e67e22 !important; }
 [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
 .stButton button { background-color: #e67e22; color: white; }
-input, select, textarea, div[data-baseweb="select"] { color: white !important; background-color: #1e2129 !important; }
 
-/* --- DESIGN IMPRESSION (SAUVETAGE D'ENCRE) --- */
+/* --- DESIGN IMPRESSION (LE SAUVETEUR D'ENCRE) --- */
 @media print {
-    /* 1. On force le blanc partout */
-    .stApp, body, html, [data-testid="stMainView"] {
+    /* 1. On force le fond blanc et le texte noir sur ABSOLUMENT TOUT */
+    html, body, .stApp, [data-testid="stMainView"], .main, .block-container {
         background-color: white !important;
         color: black !important;
     }
-    
-    /* 2. On cache tout ce qui ne se mange pas */
-    section[data-testid="stSidebar"], 
+
+    /* 2. On fait disparaître la barre latérale, le logo et les boutons */
+    [data-testid="stSidebar"], 
+    [data-testid="stSidebarNav"],
+    .stSidebar,
+    header, 
+    footer, 
     .stButton, 
     button,
-    header, 
-    footer,
-    .stSlider,
-    [data-testid="stHeader"] {
+    [data-testid="stHeader"],
+    .stSlider {
         display: none !important;
+        width: 0 !important;
     }
 
-    /* 3. On remet les textes en noir pour qu'ils sortent bien */
-    h1, h2, h3, h4, p, span, label, div {
+    /* 3. On force les titres et textes en noir (pas de gris, pas d'orange) */
+    h1, h2, h3, h4, h5, h6, p, span, label, div, li {
         color: black !important;
     }
 
-    /* 4. On s'assure que la recette prend toute la largeur */
+    /* 4. On utilise toute la largeur de la feuille */
     .main .block-container {
-        padding: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 1cm !important;
         margin: 0 !important;
+    }
+
+    /* 5. On s'assure que les images restent à une taille raisonnable */
+    img {
+        max-width: 8cm !important;
+        border-radius: 5px !important;
     }
 }
 </style>
@@ -643,6 +653,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
