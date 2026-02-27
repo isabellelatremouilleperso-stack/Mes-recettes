@@ -415,72 +415,88 @@ elif st.session_state.page == "planning":
     else:
         st.warning("La colonne de planning est introuvable ou vide.")
 
-# --- PAGE PLAY STORE (TON DESIGN EXACT) ---
+# ==========================================
+# --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
+# ==========================================
 elif st.session_state.page == "playstore":
-    # CSS spécifique pour le look Google Play - BIEN ENFERMÉ DANS LE MARKDOWN
+    # CSS pour le style Dark Store
     st.markdown("""
-    <style>
-    .play-title { 
-        font-size: 2.2rem; 
-        font-weight: 600; 
-        color: white; 
-        margin-bottom: 0px; 
-    }
-    .play-dev { 
-        color: #01875f; 
-        font-weight: 500; 
-        font-size: 1.1rem; 
-        margin-bottom: 20px; 
-    }
-    .play-stats { 
-        display: flex; 
-        justify-content: flex-start; 
-        gap: 40px; 
-        border-top: 1px solid #3c4043; 
-        border-bottom: 1px solid #3c4043; 
-        padding: 15px 0; 
-        margin-bottom: 25px; 
-    }
-    .stat-box { text-align: center; }
-    .stat-val { font-size: 1.1rem; font-weight: bold; color: white; display: block; }
-    .stat-label { font-size: 0.8rem; color: #bdc1c6; }
-    </style>
+        <style>
+        .play-title { font-size: 2.2rem; font-weight: 600; color: white; margin-bottom: 0px; }
+        .play-dev { color: #01875f; font-weight: 500; font-size: 1.1rem; margin-bottom: 20px; }
+        .play-stats { display: flex; justify-content: flex-start; gap: 40px; border-top: 1px solid #3c4043; border-bottom: 1px solid #3c4043; padding: 15px 0; margin-bottom: 25px; }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 1.1rem; font-weight: bold; color: white; display: block; }
+        .stat-label { font-size: 0.8rem; color: #bdc1c6; }
+        .screenshot-img { border-radius: 10px; border: 1px solid #3c4043; margin-right: 10px; }
+        </style>
     """, unsafe_allow_html=True)
 
+    # --- EN-TÊTE (Logo à droite) ---
     col_info, col_logo = st.columns([2, 1])
+    
     with col_info:
         st.markdown('<div class="play-title">Mes Recettes Pro</div>', unsafe_allow_html=True)
         st.markdown('<div class="play-dev">VosSoins Inc.</div>', unsafe_allow_html=True)
-        st.markdown('<div class="play-stats"><div class="stat-box"><span class="stat-val">4,9 ⭐</span><span class="stat-label">1,44 k avis</span></div><div class="stat-box"><span class="stat-val">100 k+</span><span class="stat-label">Téléchargements</span></div><div class="stat-box"><span class="stat-val">E</span><span class="stat-label">Tout le monde</span></div></div>', unsafe_allow_html=True)
-    
-    with col_logo:
-        st.markdown('<div style="display: flex; justify-content: flex-end;"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" style="width: 130px; height: 130px; border-radius: 20%; border: 1px solid #3c4043; object-fit: cover;"></div>', unsafe_allow_html=True)
+        
+        # Barre de statistiques officielle
+        st.markdown("""
+        <div class="play-stats">
+            <div class="stat-box"><span class="stat-val">4,9 ⭐</span><span class="stat-label">1,44 k avis</span></div>
+            <div class="stat-box"><span class="stat-val">100 k+</span><span class="stat-label">Téléchargements</span></div>
+            <div class="stat-box"><span class="stat-val">E</span><span class="stat-label">Tout le monde</span></div>
+        </div>
+        """, unsafe_allow_html=True)
 
-    # --- LOGIQUE DE TA BOMBE ---
+    with col_logo:
+        # Ton logo rond
+        st.markdown("""
+        <div style="display: flex; justify-content: flex-end;">
+            <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" 
+                 style="width: 130px; height: 130px; border-radius: 20%; border: 1px solid #3c4043; object-fit: cover;">
+        </div>
+        """, unsafe_allow_html=True)
+
+    # --- BOUTON INSTALLER ET EXPLOSION ---
     placeholder_action = st.empty()
-    if placeholder_action.button("Installer", key="play_install", use_container_width=True):
+    
+    if placeholder_action.button("Installer", key="play_install"):
         with placeholder_action:
+            # Ton image de bombe fournie
             st.image("https://i.postimg.cc/HnxJDBjf/cartoon-hand-bomb-vector-template-(2).jpg", width=250)
             time.sleep(2.5)
         placeholder_action.empty()
-        st.markdown("<h3 style='color:#01875f; text-align:center;'>✓ Installé</h3>", unsafe_allow_html=True)
+        st.markdown("<h3 style='color:#01875f;'>✓ Installé</h3>", unsafe_allow_html=True)
 
     st.write("✨ Cette appli est proposée pour tous vos appareils")
+    
+    # --- GALERIE DE PHOTOS (Tes liens fournis) ---
     st.write("")
-    
-    # Tes captures d'écran
     col_pic1, col_pic2, col_pic3 = st.columns(3)
-    col_pic1.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", use_container_width=True)
-    col_pic2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", use_container_width=True)
-    col_pic3.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", use_container_width=True)
-    
+    with col_pic1:
+        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", use_container_width=True)
+    with col_pic2:
+        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", use_container_width=True)
+    with col_pic3:
+        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", use_container_width=True)
+
     st.divider()
+
+    # --- À PROPOS (Texte authentique) ---
     st.markdown("### À propos de cette appli →", unsafe_allow_html=True)
-    st.write("**Mes Recettes Pro** combine un gestionnaire de recettes intelligent, une liste de courses dynamique et un planificateur. Ajoutez vos idées depuis n'importe quel site web en un clic.")
+    st.write("""
+    **Mes Recettes Pro** combine un gestionnaire de recettes, une liste de courses et un planificateur de repas en une seule application intuitive.
+    Ajoutez facilement des recettes depuis n'importe quel site web.
+    """)
+    
     st.markdown('<span style="background:#3c4043; padding:5px 15px; border-radius:15px; font-size:0.9rem;">Productivité</span>', unsafe_allow_html=True)
+
     st.divider()
+
+    # --- RETOUR ---
     if st.button("⬅ Retour", use_container_width=True):
-        st.session_state.page = "home"; st.rerun()
+        st.session_state.page = "home"
+        st.rerun()
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -492,6 +508,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
