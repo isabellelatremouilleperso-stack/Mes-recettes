@@ -363,6 +363,7 @@ if st.session_state.page == "home":
         rows = rows.reset_index(drop=True)
 
         # --- FONCTION COULEUR ---
+        # --- FONCTION COULEUR ---
         def get_cat_color(cat):
             colors = {
                 "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
@@ -1210,6 +1211,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
