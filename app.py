@@ -143,16 +143,8 @@ def load_data():
 # SIDEBAR
 # ======================
 with st.sidebar:
-    st.markdown("""
-    <div style="display: flex; justify-content: center; margin-bottom: 20px;">
-        <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" 
-             style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #e67e22; object-fit: cover;">
-    </div>
-    """, unsafe_allow_html=True)
+    # ... (ton code pour l'image et le titre reste le même)
     
-    st.title("🍳 Mes Recettes")
-
-    # --- BOUTON ACTUALISER (Placé ici pour plus de visibilité) ---
     if st.button("🔄 Actualiser les données", use_container_width=True):
         st.cache_data.clear()
         st.toast("Mise à jour réussie ! 📋")
@@ -161,21 +153,23 @@ with st.sidebar:
 
     st.divider()
 
+    # SECTION NAVIGATION (Une seule fois chaque bouton !)
     if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"):
         st.session_state.page="home"; st.rerun()
+        
     if st.button("📅 Planning Repas", use_container_width=True, key="side_plan"):
         st.session_state.page="planning"; st.rerun()
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
-        st.session_state.page="shop"; st.rerun()
-    # --- DANS TA SIDEBAR ---
+        
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
         st.session_state.page="shop"; st.rerun()
 
-    # AJOUTE CE BOUTON ICI :
-    if st.button("📏 Aide-Mémoire", use_container_width=True, key="side_conv"):
+    # BOUTON AIDE-MÉMOIRE (Clé unique : side_conv)
+    if st.button("⚖️ Aide-Mémoire", use_container_width=True, key="side_conv"):
         st.session_state.page="conversion"; st.rerun()
     
     st.divider()
+    
+    # ... (le reste de tes boutons AJOUTER, PLAY STORE, etc.)
     
     if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
         # On s'assure de vider le mode édition si on clique sur AJOUTER
@@ -934,6 +928,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
