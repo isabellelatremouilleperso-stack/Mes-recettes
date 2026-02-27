@@ -269,9 +269,9 @@ elif st.session_state.page=="details":
     with c_nav2:
         if st.button("✏️ Éditer", use_container_width=True): st.session_state.page="add"; st.rerun()
     with c_nav3:
-    if st.button("🖨️ Version imprimable", use_container_width=True):
-        st.session_state.page = "print"
-        st.rerun()
+        if st.button("🖨️ Version imprimable", use_container_width=True):
+            st.session_state.page = "print"
+            st.rerun()
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True): 
             if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
@@ -575,6 +575,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
