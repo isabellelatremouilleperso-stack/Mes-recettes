@@ -566,9 +566,19 @@ elif st.session_state.page == "planning":
                 </div>
                 """, unsafe_allow_html=True)
                 
-                if st.button(f"❌ Retirer", key=f"del_{index}"):
-                    if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                        st.cache_data.clear(); st.rerun()
+                if st.button(f"❌ Retirer", key=f"del_{index}", use_container_width=True):
+                    with st.spinner("Mise à jour du planning..."):
+                        # Envoi de la demande de suppression
+                        if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
+                            # 1. On vide le cache immédiatement
+                            st.cache_data.clear()
+                            # 2. On attend 1 seconde pour que Google Sheets finalise la suppression
+                            import time
+                            time.sleep(1)
+                            # 3. On recharge la page
+                            st.rerun()
+                        else:
+                            st.error("Erreur lors de la suppression.")
                         
     except Exception as e:
         st.error(f"Erreur de lecture du planning : {e}")
@@ -803,6 +813,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
