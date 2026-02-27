@@ -358,23 +358,28 @@ elif st.session_state.page=="details":
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
        st.subheader("🛒 Ingrédients")
-        raw_ings = str(r.get('Ingrédients',''))
-        ings = [l.strip() for l in raw_ings.split("\n") if l.strip()]
 
-        if ings:
-            # --- CETTE PARTIE S'AFFICHE SUR TON ÉCRAN (Cases à cocher) ---
-            # On utilise un "id" unique pour être sûr que le CSS le trouve
-            st.write('<div class="no-print">', unsafe_allow_html=True)
-            for i, l in enumerate(ings):
-                st.checkbox(l, key=f"chk_print_final_{i}")
-            st.write('</div>', unsafe_allow_html=True)
+raw_ings = r.get('Ingrédients', '')
 
-            # --- CETTE PARTIE S'AFFICHE SUR TON PAPIER (Texte simple) ---
-            # On force le style directement dans la balise pour ne pas dépendre du CSS en haut
-            st.write('<div class="only-print" style="color: black !important; font-weight: bold;">', unsafe_allow_html=True)
-            for l in ings:
-                st.write(f"• {l}")
-            st.write('</div>', unsafe_allow_html=True)
+if isinstance(raw_ings, str) and raw_ings.strip():
+    ings = [l.strip() for l in raw_ings.split("\n") if l.strip()]
+else:
+    ings = []
+
+if ings:
+    # Version écran (checkbox)
+    st.write('<div class="no-print">', unsafe_allow_html=True)
+    for i, l in enumerate(ings):
+        st.checkbox(l, key=f"chk_print_final_{i}")
+    st.write('</div>', unsafe_allow_html=True)
+
+    # Version impression
+    st.write('<div class="only-print" style="color: black !important; font-weight: bold;">', unsafe_allow_html=True)
+    for l in ings:
+        st.write(f"• {l}")
+    st.write('</div>', unsafe_allow_html=True)
+else:
+    st.info("Aucun ingrédient enregistré pour cette recette.")
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -659,6 +664,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
