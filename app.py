@@ -15,30 +15,50 @@ if 'page' not in st.session_state:
 # ======================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# ... après tes imports et st.set_page_config ...
-
 st.markdown("""
 <style>
-/* --- ÉCRAN (Garde ton style habituel) --- */
+/* --- DESIGN ÉCRAN (Dark Mode par défaut) --- */
 .only-print { display: none !important; }
 
 @media print {
-    /* 1. CACHE LE BOUTON ET LA SIDEBAR */
-    .no-print, [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button {
+    /* 1. ON CACHE LE SURFLU */
+    .no-print, [data-testid="stSidebar"], [data-testid="stHeader"], 
+    .stButton, button, header, footer, [data-testid="stDecoration"] {
         display: none !important;
+        height: 0px !important;
     }
 
-    /* 2. FORCE LE FOND BLANC PARTOUT */
-    .stApp, .main, .block-container, [data-testid="stMainView"] {
+    /* 2. FORCE LE FOND BLANC ET TEXTE NOIR */
+    html, body, .stApp, .main, .block-container {
         background-color: white !important;
         color: black !important;
     }
 
-    /* 3. FORCE LE TEXTE EN NOIR PUR (Crucial pour les ingrédients) */
-    .only-print, p, span, li, div, h1, h2, h3 {
-        color: black !important;
-        visibility: visible !important;
+    /* 3. UTILISE TOUTE LA LARGEUR DE LA PAGE */
+    .main .block-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0.5cm !important;
+        margin: 0 !important;
+    }
+
+    /* 4. REND LE TEXTE ET LES LISTES VISIBLES */
+    .only-print {
         display: block !important;
+        visibility: visible !important;
+        color: black !important;
+        font-size: 12pt !important;
+    }
+
+    /* Force absolument tout le texte en noir (pour contrer le mode sombre) */
+    h1, h2, h3, h4, p, span, li, div {
+        color: black !important;
+    }
+
+    /* 5. AJUSTE LES IMAGES POUR LE PAPIER */
+    img {
+        max-width: 8cm !important;
+        border-radius: 10px !important;
     }
 }
 </style>
@@ -651,6 +671,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
