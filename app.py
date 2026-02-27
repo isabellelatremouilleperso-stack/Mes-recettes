@@ -269,7 +269,9 @@ elif st.session_state.page=="details":
     with c_nav2:
         if st.button("✏️ Éditer", use_container_width=True): st.session_state.page="add"; st.rerun()
     with c_nav3:
-        st.markdown(f"""<a href="javascript:window.print()" target="_self" style="text-decoration: none;"><div style="background-color: #e67e22; color: white; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; font-weight: bold; border: 2px solid #d35400;">🖨️ Imprimer</div></a>""", unsafe_allow_html=True)
+    if st.button("🖨️ Version imprimable", use_container_width=True):
+        st.session_state.page = "print"
+        st.rerun()
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True): 
             if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
@@ -515,6 +517,53 @@ elif st.session_state.page == "playstore":
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
+ # --- PAGE IMPRIMABLE ---
+elif st.session_state.page == "print":
+
+    r = st.session_state.recipe_data
+
+    # Style blanc spécial impression
+    st.markdown("""
+        <style>
+        .stApp { background-color: white; color: black; }
+        header, footer, [data-testid="stSidebar"] { display: none; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.title(r.get("Titre", "Recette"))
+
+    st.write(f"Catégorie : {r.get('Catégorie','')}")
+    st.write(f"Portions : {r.get('Portions','')}")
+    st.write(f"Préparation : {r.get('Temps_Prepa','')} min")
+    st.write(f"Cuisson : {r.get('Temps_Cuisson','')} min")
+
+    st.divider()
+
+    st.subheader("Ingrédients")
+    for ing in str(r.get("Ingrédients","")).split("\n"):
+        if ing.strip():
+            st.write("• " + ing.strip())
+
+    st.divider()
+
+    st.subheader("Préparation")
+    st.write(r.get("Préparation",""))
+
+    st.divider()
+
+    st.caption("Imprimé depuis Mes Recettes Pro")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("⬅ Retour"):
+            st.session_state.page = "details"
+            st.rerun()
+    with col2:
+        st.markdown("""
+            <script>
+            window.print();
+            </script>
+        """, unsafe_allow_html=True)       
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -526,6 +575,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
