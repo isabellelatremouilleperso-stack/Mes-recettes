@@ -175,11 +175,11 @@ def load_data():
         df = df.fillna('')
         df.columns = [c.strip() for c in df.columns]
         
-        # --- NETTOYAGE ANTI-DOUBLONS GLOBAL ---
+        # --- NETTOYAGE ANTI-DOUBLONS ---
         if not df.empty and 'Titre' in df.columns:
-            # On enlève les espaces invisibles dans les titres
+            # On nettoie les noms de colonnes et les titres
             df['Titre'] = df['Titre'].astype(str).str.strip()
-            # On supprime les doublons sur le titre
+            # On supprime les doublons AVANT toute autre manipulation
             df = df.drop_duplicates(subset=['Titre'], keep='first')
         
         return df
@@ -1219,6 +1219,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
