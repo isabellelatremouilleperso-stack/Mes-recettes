@@ -541,16 +541,16 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-        # 1. CSS Anti-Noir et Anti-Vide
+        # 1. CSS Anti-Noir (Le plus simple possible)
         st.markdown("""
 <style>
-/* Force le blanc sur toutes les couches possibles */
+/* Force le blanc sur l'interface Streamlit */
 .stApp, [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
     background-color: white !important;
     color: black !important;
 }
 
-/* Cache tout le superflu de Streamlit */
+/* Cache l'interface */
 [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, iframe {
     display: none !important;
 }
@@ -558,7 +558,7 @@ elif st.session_state.page == "print":
 .paper-sheet {
     max-width: 800px;
     margin: 0 auto;
-    padding: 0px 20px;
+    padding: 10px 20px;
     background-color: white !important;
     color: black !important;
 }
@@ -575,25 +575,29 @@ h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margi
 h3 { color: #e67e22 !important; margin-top: 0; }
 
 @media print {
-    .stApp { background-color: white !important; }
+    @page { margin: 1cm; }
     .paper-sheet { position: absolute; top: 0; left: 0; width: 100%; margin: 0; }
-    .no-print { display: none !important; }
     .section-box { page-break-inside: avoid !important; background-color: white !important; }
 }
 </style>
 """, unsafe_allow_html=True)
 
-        # 2. Boutons de navigation (Simples)
+        # 2. Boutons de navigation
         col1, col2 = st.columns(2)
         with col1:
             if st.button("⬅ Retour", use_container_width=True):
                 st.session_state.page = "details"
                 st.rerun()
         with col2:
-            # Bouton d'impression en HTML simple pour éviter les erreurs
             st.markdown('<a href="javascript:window.print()" style="display:block; text-align:center; width:100%; height:38px; line-height:38px; background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;">🖨️ Lancer l\'impression</a>', unsafe_allow_html=True)
 
-        # 3. Préparation des données (Méthode simple)
+        # 3. Préparation des variables (Pour éviter les erreurs dans le HTML)
+        titre = r.get('Titre', 'Recette')
+        cat = r.get('Catégorie', '-')
+        port = r.get('Portions', '-')
+        t_pre = r.get('Temps_Prepa', '0')
+        t_cui = r.get('Temps_Cuisson', '0')
+        
         ing_txt = str(r.get('Ingrédients',''))
         html_ing = ""
         for line in ing_txt.split('\n'):
@@ -604,30 +608,34 @@ h3 { color: #e67e22 !important; margin-top: 0; }
             else:
                 html_ing += f"<p style='margin:2px 0;'>☐ {line}</p>"
         
-        prepa_txt = str(r.get('Préparation','')).replace('\n', '<br>')
+        prepa_html = str(r.get('Préparation','')).replace('\n', '<br>')
 
-        # 4. RENDU FINAL (Version incassable)
-        st.markdown(f"""
+        # 4. CONSTRUCTION DU HTML SANS F-STRING COMPLEXE
+        # On sépare le bloc en deux pour plus de sécurité
+        partie_1 = f"""
 <div class="paper-sheet">
     <div style="page-break-inside: avoid;">
-        <h1>{r.get('Titre','Recette')}</h1>
+        <h1>{titre}</h1>
         <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
-            <span>Catégorie : {r.get('Catégorie','-')}</span>
-            <span>Portions : {r.get('Portions','-')}</span>
-            <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+            <span>Catégorie : {cat}</span>
+            <span>Portions : {port}</span>
+            <span>Temps : {t_pre} + {t_cui} min</span>
         </div>
         <div class="section-box">
             <h3>🛒 Ingrédients</h3>
             {html_ing}
         </div>
-    </div>
+    </div>"""
+
+        partie_2 = f"""
     <div class="section-box">
         <h3>👨‍🍳 Préparation</h3>
-        <div style="line-height:1.6;">{prepa_txt}</div>
+        <div style="line-height:1.6;">{prepa_html}</div>
     </div>
     <p style="text-align:center; color:#888; font-size:0.8em;">Fiche générée par Mes Recettes Pro</p>
-</div>
-""", unsafe_allow_html=True)
+</div>"""
+
+        st.markdown(partie_1 + partie_2, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -639,6 +647,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
