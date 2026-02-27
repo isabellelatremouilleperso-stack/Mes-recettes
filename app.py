@@ -54,27 +54,31 @@ st.markdown("""
 # --- SECTION STYLE (Correction de l'erreur 76) ---
 st.markdown("""
 <style>
-/* --- DESIGN ÉCRAN (DARK) --- */
-.stApp { background-color: #0e1117; color: #e0e0e0; }
+<style>
+/* --- DESIGN ÉCRAN --- */
+.only-print { display: none !important; }
 
-/* --- DESIGN IMPRESSION (L'ULTIME) --- */
 @media print {
-    /* 1. ON CACHE LE SUPERFLU */
-    [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button, .no-print {
+    /* Cache tout ce qui gène */
+    .no-print, [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button {
         display: none !important;
     }
 
-    /* 2. ON FORCE L'AFFICHAGE DU CONTENU D'IMPRESSION */
+    /* Force l'apparition de la liste pour le papier */
     .only-print {
         display: block !important;
         visibility: visible !important;
         color: black !important;
+        font-size: 14pt !important;
     }
 
-    /* 3. FORCE LE BLANC ET NOIR */
-    .stApp { background-color: white !important; }
-    h1, h2, h3, p, li, span { color: black !important; }
+    /* Force le fond blanc pour économiser l'encre */
+    .stApp {
+        background-color: white !important;
+        color: black !important;
+    }
 }
+</style>
     /* 4. ON UTILISE TOUTE LA LARGEUR (Supprime le décalage de la sidebar) */
     .main .block-container {
         max-width: 100% !important;
@@ -353,30 +357,24 @@ elif st.session_state.page=="details":
         st.write(f"**👥 Portions :** {r.get('Portions','-')}")
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
-        st.subheader("🛒 Ingrédients")
-        # On récupère les ingrédients et on nettoie la liste
+       st.subheader("🛒 Ingrédients")
         raw_ings = str(r.get('Ingrédients',''))
         ings = [l.strip() for l in raw_ings.split("\n") if l.strip()]
 
         if ings:
-            # --- ZONE ÉCRAN (Tablette) ---
-            container_ecran = st.container()
-            with container_ecran:
-                st.markdown('<div class="no-print">', unsafe_allow_html=True)
-                for i, l in enumerate(ings):
-                    st.checkbox(l, key=f"chk_det_final_{i}")
-                st.markdown('</div>', unsafe_allow_html=True)
+            # --- CETTE PARTIE S'AFFICHE SUR TON ÉCRAN (Cases à cocher) ---
+            # On utilise un "id" unique pour être sûr que le CSS le trouve
+            st.write('<div class="no-print">', unsafe_allow_html=True)
+            for i, l in enumerate(ings):
+                st.checkbox(l, key=f"chk_print_final_{i}")
+            st.write('</div>', unsafe_allow_html=True)
 
-            # --- ZONE PAPIER (Impression) ---
-            container_papier = st.container()
-            with container_papier:
-                st.markdown('<div class="only-print" style="color: black !important; display: block;">', unsafe_allow_html=True)
-                # On écrit chaque ingrédient avec une puce noire
-                for ing in ings:
-                    st.markdown(f"<p style='color: black !important;'>• {ing}</p>", unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            st.write("Aucun ingrédient trouvé.")
+            # --- CETTE PARTIE S'AFFICHE SUR TON PAPIER (Texte simple) ---
+            # On force le style directement dans la balise pour ne pas dépendre du CSS en haut
+            st.write('<div class="only-print" style="color: black !important; font-weight: bold;">', unsafe_allow_html=True)
+            for l in ings:
+                st.write(f"• {l}")
+            st.write('</div>', unsafe_allow_html=True)
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -661,6 +659,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
