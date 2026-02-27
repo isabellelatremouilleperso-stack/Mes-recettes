@@ -561,38 +561,42 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # 1. CATÉGORIE
-        # On utilise le nom exact vu dans ton debug (index 7)
-        cat = r.get('Catégorie', 'Autre')
-        if not cat or str(cat).lower() == 'nan':
-            cat = "Autre"
-        st.write(f"**🍴 Catégorie :** {cat}")
+        # On transforme la ligne en liste pour accéder aux données par leur position (0, 1, 2...)
+        # Basé sur ton Excel : H=7, I=8, J=9, K=10
+        r_values = list(r.values()) if hasattr(r, 'values') else list(r)
+
+        def get_by_pos(idx):
+            try:
+                val = r_values[idx]
+                if val is None or str(val).lower() in ["nan", "none", "", "-"]:
+                    return "-"
+                # On nettoie pour n'avoir que le chiffre entier (ex: 15.0 -> 15)
+                return str(val).split('.')[0].strip()
+            except:
+                return "-"
+
+        # 1. RÉCUPÉRATION PAR POSITION (Méthode la plus fiable)
+        cat_final   = get_by_pos(7)  # Colonne H (Catégorie)
+        port_final  = get_by_pos(8)  # Colonne I (Portions)
+        prepa_final = get_by_pos(9)  # Colonne J (Temps de préparation)
+        cuis_final  = get_by_pos(10) # Colonne K (Temps de cuisson)
+
+        st.write(f"**🍴 Catégorie :** {cat_final if cat_final != '-' else 'Autre'}")
         
+        # Gestion de la source (on garde le .get car c'est un lien URL long)
+        source = r.get('Source', '')
+        if source and "http" in str(source):
+            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+            
         st.divider()
-        
-        # 2. RÉCUPÉRATION DES TEMPS (Noms exacts de ton Excel)
-        # On utilise exactement "Temps de préparation" et "Temps de cuisson"
-        t_prepa = r.get('Temps de préparation', '-')
-        t_cuisson = r.get('Temps de cuisson', '-')
-        port = r.get('Portions', '-')
 
-        # Fonction pour nettoyer l'affichage
-        def clean_txt(v):
-            val = str(v).strip().lower()
-            if val in ["nan", "none", "", "-"]: return "-"
-            return str(v).split('.')[0] # Enlève le .0 si présent
-
-        p_final = clean_txt(t_prepa)
-        c_final = clean_txt(t_cuisson)
-        port_final = clean_txt(port)
-
-        # 3. AFFICHAGE DES MÉTRIQUES
+        # 2. AFFICHAGE DES MÉTRIQUES (Identique à tes Portions)
         c1, c2, c3 = st.columns(3)
-        c1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
-        c2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
+        c1.metric("🕒 Prépa", f"{prepa_final} min" if prepa_final != "-" else "-")
+        c2.metric("🔥 Cuisson", f"{cuis_final} min" if cuis_final != "-" else "-")
         c3.metric("🍽️ Portions", port_final)
 
-        st.info("💡 Synchronisation Google Sheets active.")
+        st.info("💡 Synchronisation forcée par position de colonne.")
         
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
@@ -1234,6 +1238,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
