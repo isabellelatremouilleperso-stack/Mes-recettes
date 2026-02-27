@@ -526,7 +526,7 @@ import textwrap  # Ajoute cette ligne tout en haut de ton fichier si elle n'y es
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # 1. CSS
+    # 1. CSS (Injecté proprement)
     st.markdown("""
     <style>
     .stApp { background-color: white !important; color: black !important; }
@@ -548,7 +548,7 @@ elif st.session_state.page == "print":
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Boutons de contrôle (Visibles à l'écran seulement)
+    # 2. Boutons de navigation
     col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("⬅ Retour", use_container_width=True):
@@ -568,8 +568,7 @@ elif st.session_state.page == "print":
     
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # 4. CONSTRUCTION SANS INDENTATION (Pour éviter les boîtes noires)
-    # On colle les balises à gauche pour que Streamlit ne les prenne pas pour du code
+    # 4. CONSTRUCTION DU HTML (Important : les balises collent à gauche)
     fiche_complete = f"""
 <div class="paper-sheet">
 <h1>{r.get('Titre','Recette')}</h1>
@@ -602,6 +601,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
