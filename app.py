@@ -537,26 +537,49 @@ elif st.session_state.page == "details":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # 1. CSS (Injecté proprement)
+   # 1. CSS (Version "Zéro Noir" ultra-compatible)
     st.markdown("""
     <style>
-    .stApp { background-color: white !important; color: black !important; }
-    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
-    .paper-sheet { max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', sans-serif; color: black !important; }
+    /* Force le fond blanc partout, même dans les conteneurs profonds de Streamlit */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"] {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    /* Cache l'interface Streamlit inutile à l'impression */
+    [data-testid="stHeader"], [data-testid="stSidebar"], footer {
+        display: none !important;
+    }
+
+    .paper-sheet { 
+        max-width: 800px; 
+        margin: 0 auto; 
+        padding: 20px; 
+        font-family: 'Segoe UI', sans-serif; 
+        color: black !important; 
+        background-color: white !important;
+    }
+
     .section-box { 
         background-color: #f8f9fa !important; 
         border: 1px solid #dee2e6 !important; 
         border-radius: 10px; 
         padding: 15px 20px; 
         margin-bottom: 25px;
-        page-break-inside: avoid; 
     }
+
     h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
     h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; padding-bottom: 5px; }
+
     @media print {
         .no-print { display: none !important; }
-        .page-break { page-break-before: always; }
-        .section-box { background-color: white !important; border: 1px solid #ccc !important; }
+        .section-box { 
+            background-color: white !important; 
+            border: 1px solid #ccc !important; 
+            page-break-inside: avoid !important; 
+        }
+        /* Évite une première page noire/vide */
+        .stApp { background: white !important; }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -568,25 +591,22 @@ elif st.session_state.page == "print":
             st.session_state.page = "details"
             st.rerun()
     with col2:
-        # Cette méthode est la plus compatible pour forcer l'ouverture du menu d'impression
-        st.components.v1.html("""
-            <html>
-                <body>
-                    <button onclick="window.parent.print()" style="
-                        width: 100%; 
-                        height: 38px; 
-                        background-color: #e67e22; 
-                        color: white; 
-                        border: none; 
-                        border-radius: 5px; 
-                        cursor: pointer; 
-                        font-weight: bold;
-                        font-size: 14px;
-                        font-family: 'Segoe UI', sans-serif;
-                    ">🖨️ Lancer l'impression</button>
-                </body>
-            </html>
-        """, height=45)
+        # Version bouton "Lien" : beaucoup plus fiable contre les blocages navigateur
+        st.markdown("""
+            <a href="javascript:window.print()" style="
+                display: block;
+                text-decoration: none;
+                text-align: center;
+                width: 100%; 
+                height: 38px; 
+                line-height: 38px;
+                background-color: #e67e22; 
+                color: white !important; 
+                border-radius: 5px; 
+                font-weight: bold;
+                font-family: sans-serif;
+            ">🖨️ Lancer l'impression</a>
+        """, unsafe_allow_html=True)
 
     # 3. Préparation des données
     lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
@@ -599,27 +619,26 @@ elif st.session_state.page == "print":
     
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-   # 4. CONSTRUCTION DU HTML (Collé au bord gauche, sans espaces)
+    # 4. CONSTRUCTION DU HTML (Soudé pour éviter les pages fantômes)
     fiche_complete = f"""
 <div class="paper-sheet">
-<h1 style="page-break-after: avoid;">{r.get('Titre','Recette')}</h1>
-<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px; page-break-after: avoid;">
-<span>Catégorie : {r.get('Catégorie','-')}</span>
-<span>Portions : {r.get('Portions','-')}</span>
-<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-</div>
-<div class="section-box" style="page-break-before: avoid;">
-<h3>🛒 Ingrédients</h3>
-{html_ing_list}
-</div>
-<div class="section-box page-break">
-<h3>👨‍🍳 Préparation</h3>
-<div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
-</div>
-<p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
+    <h1 style="page-break-after: avoid; margin-top:0;">{r.get('Titre','Recette')}</h1>
+    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px; page-break-after: avoid;">
+        <span>Catégorie : {r.get('Catégorie','-')}</span>
+        <span>Portions : {r.get('Portions','-')}</span>
+        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+    </div>
+    <div class="section-box" style="page-break-before: avoid;">
+        <h3>🛒 Ingrédients</h3>
+        {html_ing_list}
+    </div>
+    <div class="section-box" style="page-break-before: auto;">
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
+    </div>
+    <p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
 </div>
 """
-
     st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
@@ -632,6 +651,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
