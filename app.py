@@ -385,29 +385,26 @@ elif st.session_state.page == "add":
         default_title = edit_data.get('Titre', st.session_state.get('scraped_title', ''))
         titre = col_t.text_input("🏷️ Nom de la recette", value=default_title)
         
-        # Gestion des catégories
-        current_cats = str(edit_data.get('Catégorie', 'Autre')).split(', ')
-        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=current_cats)
+       # --- Gestion sécurisée des catégories ---
+        # 1. On récupère la chaîne (ex: "Poulet, Dessert")
+        raw_cats = str(edit_data.get('Catégorie', 'Autre'))
         
-        st.markdown("#### ⏱️ Paramètres")
-        cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Prépa (min)", value=edit_data.get('Temps_Prepa', ''))
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=edit_data.get('Temps_Cuisson', ''))
-        port = cp3.text_input("🍽️ Portions", value=edit_data.get('Portions', ''))
+        # 2. On transforme en liste et on nettoie les espaces
+        input_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
         
-        st.divider()
+        # 3. CRUCIAL : On ne garde QUE les catégories qui existent dans CATEGORIES
+        # pour éviter l'erreur StreamlitAPIException
+        valid_default_cats = [c for c in input_cats if c in CATEGORIES]
         
-        ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", height=300, value=edit_data.get('Ingrédients', ''))
-        
-        default_prep = edit_data.get('Préparation', st.session_state.get('scraped_content', ''))
-        instructions = ce.text_area("👨‍🍳 Étapes", value=default_prep, height=300)
-        
-        img_url = st.text_input("🖼️ Lien de l'image (URL)", value=edit_data.get('Image', ''))
-        commentaires = st.text_area("📝 Mes Notes", height=100, value=edit_data.get('Commentaires', ''))
-        
-        st.divider()
-        
+        # 4. Si après filtrage c'est vide, on met "Autre" par défaut
+        if not valid_default_cats:
+            valid_default_cats = ["Autre"]
+
+        cat_choisies = col_c.multiselect(
+            "📁 Catégories", 
+            CATEGORIES, 
+            default=valid_default_cats
+        )
         # Bouton de sauvegarde
         label_bouton = "💾 METTRE À JOUR" if 'recipe_to_edit' in st.session_state else "💾 ENREGISTRER"
         if st.button(label_bouton, use_container_width=True):
@@ -664,6 +661,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
