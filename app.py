@@ -296,71 +296,75 @@ elif st.session_state.page == "planning":
         st.session_state.page = "home"
         st.rerun()
 
-# --- PAGE PLAYSTORE FUN ---
-# --- PAGE PLAYSTORE FUN ---
+# ==========================================
+# --- PAGE FICHE PRODUIT PLAY STORE ---
+# ==========================================
 elif st.session_state.page == "playstore":
-    st.markdown('<h1 style="color: #e67e22; text-align: center;">⭐ Play Store Fun</h1>', unsafe_allow_html=True)
-    st.write("<p style='text-align: center;'>Découvrez nos applications officielles pour votre cuisine.</p>", unsafe_allow_html=True)
+    # --- EN-TÊTE AVEC LOGO ROND ---
+    col_logo, col_titre = st.columns([1, 3])
     
-    apps = [
-        {"titre":"Mes Recettes Pro","image":"https://cdn-icons-png.flaticon.com/512/3565/3565407.png","note":"4.9 ★","desc":"L'appli que vous utilisez en ce moment !"},
-        {"titre":"Planner Pro","image":"https://cdn-icons-png.flaticon.com/512/2693/2693507.png","note":"4.7 ★","desc":"Planification et suivi nutritionnel."},
-        {"titre":"Kitchen Fun","image":"https://cdn-icons-png.flaticon.com/512/1830/1830605.png","note":"4.8 ★","desc":"Défis culinaires et mini-jeux."},
-        {"titre":"Smoothie Maker","image":"https://cdn-icons-png.flaticon.com/512/3059/3059411.png","note":"4.5 ★","desc":"Des smoothies frais en un clic."},
-        {"titre":"Dessert Mania","image":"https://cdn-icons-png.flaticon.com/512/992/992717.png","note":"4.6 ★","desc":"Le paradis des gourmands."},
-        {"titre":"Healthy Eats","image":"https://cdn-icons-png.flaticon.com/512/2424/2424444.png","note":"4.8 ★","desc":"Mangez mieux, vivez mieux."}
-    ]
+    with col_logo:
+        # Affichage du logo rond (style initial)
+        st.markdown("""
+        <div style="display: flex; justify-content: center; margin-top: 10px;">
+            <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" 
+                 style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #e67e22; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+        </div>
+        """, unsafe_allow_html=True)
     
-    # Style CSS amélioré
-    st.markdown("""
-    <style>
-    .play-card {
-        background-color: #f8f9fa;
-        border-radius: 20px;
-        padding: 20px;
-        text-align: center;
-        border: 1px solid #e0e0e0;
-        margin-bottom: 10px;
-        min-height: 280px;
-    }
-    .app-title { color: #202124; font-weight: bold; font-size: 1.1rem; margin-top: 10px; }
-    .app-note { color: #01875f; font-weight: bold; font-size: 0.9rem; }
-    .app-desc { color: #5f6368; font-size: 0.8rem; height: 40px; margin-bottom: 10px; }
-    </style>
-    """, unsafe_allow_html=True)
-
-    for i in range(0, len(apps), 3):
-        cols = st.columns(3)
-        for j in range(3):
-            if i+j < len(apps):
-                app = apps[i+j]
-                with cols[j]:
-                    # Début de la carte
-                    st.markdown(f"""
-                    <div class="play-card">
-                        <img src="{app['image']}" width="70" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-                        <div class="app-title">{app['titre']}</div>
-                        <div class="app-note">{app['note']}</div>
-                        <div class="app-desc">{app['desc']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # Zone d'interaction (Bouton + Bombe)
-                    placeholder = st.empty()
-                    
-                    # Le bouton est ici !
-                    if placeholder.button(f"Installer", key=f"btn_{i+j}", use_container_width=True):
-                        with placeholder:
-                            # La bombe apparaît ici à la place du bouton
-                            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=120)
-                            st.toast(f"Installation de {app['titre']}...")
-                            time.sleep(1.8)
-                        
-                        placeholder.empty()
-                        st.success(f"✅ Installé !")
-                        st.balloons()
+    with col_titre:
+        st.markdown('<h1 style="color: #e67e22; margin-bottom: 0;">Mes Recettes Pro</h1>', unsafe_allow_html=True)
+        st.markdown('<p style="color: #5f6368; font-size: 1.2rem; margin-top: 0;">Édition Cuisine Facile</p>', unsafe_allow_html=True)
+        st.write("⭐ 4.9 ★  |  développé par VosSoins Inc.")
 
     st.divider()
+
+    # --- ZONE D'ACTION (INSTALLER + BOMBE) ---
+    # Conteneur vide pour gérer l'alternance Bouton / Bombe
+    placeholder_action = st.empty()
+    
+    # Affichage initial du bouton
+    if placeholder_action.button("📥 Installer", key="install_main_app", use_container_width=True):
+        # CLIC DETECTÉ : On remplace le bouton par la bombe
+        with placeholder_action:
+            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=200)
+            st.toast("Téléchargement de Mes Recettes Pro...")
+            time.sleep(2) # Durée de l'animation
+        
+        # FIN ANIMATION : On vide la zone et on affiche le succès (SANS BALLONS)
+        placeholder_action.empty()
+        st.success("💥 Application simulée installée avec succès !")
+        st.info("C'était une blague, aucune bombe réelle n'est présente 😄")
+
+    st.divider()
+
+    # --- DESCRIPTIF DÉTAILLÉ (COMME UNE VRAIE PAGE) ---
+    st.subheader("À propos de cette application")
+    st.write("""
+    **Mes Recettes Pro** est l'outil ultime pour tous les passionnés de cuisine, du débutant au chef confirmé. 
+    Simplifiez votre quotidien et organisez votre univers culinaire en un seul endroit.
+    
+    **Fonctionnalités principales :**
+    * 📖 **Bibliothèque Personnelle :** Stockez toutes vos recettes préférées avec photos, ingrédients et étapes détaillées.
+    * 📅 **Planning de Repas :** Planifiez vos menus de la semaine en quelques clics pour gagner du temps.
+    * 🛒 **Liste d'Épicerie Automatique :** Générez votre liste de courses directement à partir de votre planning.
+    * 💻 **Synchronisation Cloud :** Retrouvez vos données sur tous vos appareils (PC, Tablette, Mobile).
+    """)
+    
+    st.divider()
+    
+    # --- INFORMATIONS COMPLÉMENTAIRES ---
+    col_info1, col_info2 = st.columns(2)
+    with col_info1:
+        st.write("**Version :** 2.1.0")
+        st.write("**Mise à jour :** 15 Octobre 2023")
+    with col_info2:
+        st.write("**Taille :** 25 Mo")
+        st.write("**Nouveautés :** Amélioration de la recherche.")
+
+    st.divider()
+    
+    # --- BOUTON RETOUR ---
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
@@ -397,6 +401,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
