@@ -320,21 +320,45 @@ if st.session_state.page == "home":
     
     df = load_data()
     if not df.empty:
-        col_search, col_cat = st.columns([2, 1])
+        # --- BARRE DE FILTRES ET TRI ---
+        col_search, col_cat, col_tri = st.columns([2, 1, 1]) # On ajoute une 3ème colonne pour le tri
+        
         with col_search:
-            search = st.text_input("🔍 Rechercher une recette...", placeholder="Ex: Sauce spaghetti...")
+            # Cette barre cherche maintenant dans le TITRE et les INGRÉDIENTS
+            search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
+            
         with col_cat:
             liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", liste_categories)
+
+        with col_tri:
+            # Nouveau : Menu de tri
+            ordre = st.selectbox("🔃 Trier par :", ["A ➡️ Z", "Z ➡️ A", "Les plus récentes"])
         
-        mask = df['Titre'].str.contains(search, case=False, na=False)
+        # --- LOGIQUE DE FILTRE (Titre OU Ingrédients) ---
+        mask = (df['Titre'].str.contains(search, case=False, na=False)) | \
+               (df['Ingrédients'].str.contains(search, case=False, na=False))
+        
         if cat_choisie != "Toutes":
             mask = mask & (df['Catégorie'] == cat_choisie)
         
+        rows = df[mask].copy() # On crée une copie pour le tri
+
+        # --- LOGIQUE DE TRI ---
+        if ordre == "A ➡️ Z":
+            rows = rows.sort_values(by="Titre", ascending=True)
+        elif ordre == "Z ➡️ A":
+            rows = rows.sort_values(by="Titre", ascending=False)
+        elif ordre == "Les plus récentes":
+            # On réinitialise l'index pour revenir à l'ordre d'ajout (le plus récent en haut)
+            rows = rows.iloc[::-1] 
+
+        rows = rows.reset_index(drop=True)
+
+        # --- FONCTION COULEUR (Inchangée) ---
         def get_cat_color(cat):
             colors = {"Poulet": "#FF5733", "Bœuf": "#C70039", "Dessert": "#FF33FF", "Légumes": "#28B463", "Poisson": "#3498DB", "Pâtes": "#F1C40F"}
             return colors.get(cat, "#e67e22")
-
         rows = df[mask].reset_index(drop=True)
         for i in range(0, len(rows), 2):
             grid_cols = st.columns(2) 
@@ -1055,6 +1079,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
