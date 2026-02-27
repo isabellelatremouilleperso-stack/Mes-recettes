@@ -561,34 +561,32 @@ elif st.session_state.page == "details":
     with col_d:
         st.subheader("📋 Informations")
         
-        # --- FONCTION DE RÉCUPÉRATION (Celle qui marche pour tes portions) ---
-        def get_val_robuste(keys):
-            for k in keys:
-                v = r.get(k)
-                if v and str(v).strip() not in ["None", "nan", "-", ""]:
-                    return str(v).split('.')[0]
-            return "-"
+        # 1. RÉCUPÉRATION ROBUSTE (Basée sur ton script Apps Script)
+        # On cherche les noms que ton script utilise (colonne 8, 9, 10, 11)
+        cat = r.get('Catégorie', r.get('categorie', 'Autre'))
+        port = r.get('Portions', r.get('portions', '-'))
+        t_prepa = r.get('Temps de préparation', r.get('temps_prepa', '-'))
+        t_cuisson = r.get('Temps de cuisson', r.get('temps_cuisson', '-'))
 
-        # 1. RÉCUPÉRATION DES DONNÉES
-        cat = get_val_robuste(['Catégorie', 'Categorie', 'categorie'])
-        p = get_val_robuste(['Temps de préparation', 'Temps_Prepa', 'prepa'])
-        c = get_val_robuste(['Temps de cuisson', 'Temps_Cuisson', 'cuisson'])
-        port = get_val_robuste(['Portions', 'portions', 'NB Portions'])
+        # Nettoyage pour l'affichage
+        def clean(v):
+            if v is None or str(v).lower() in ["nan", "none", "", "-"]: return "-"
+            return str(v).split('.')[0].replace('.0', '')
 
-        # 2. AFFICHAGE DES LIGNES
-        st.write(f"**🍴 Catégorie :** {cat if cat != '-' else 'Autre'}")
+        # 2. AFFICHAGE
+        st.write(f"**🍴 Catégorie :** {cat if str(cat).lower() != 'nan' else 'Autre'}")
         
         source = r.get('Source', r.get('source', ''))
         if source and "http" in str(source):
-            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+            st.link_button("🌐 Voir la source", str(source), use_container_width=True)
             
         st.divider()
 
-        # 3. AFFICHAGE DES MÉTRIQUES (Comme tes portions)
-        t1, t2, t3 = st.columns(3)
-        t1.metric("🕒 Prépa", f"{p}m" if p != "-" else "-")
-        t2.metric("🔥 Cuisson", f"{c}m" if c != "-" else "-")
-        t3.metric("🍽️ Portions", port)
+        # 3. LES MÉTRIQUES (Alignées sur ton script J et K)
+        c1, c2, c3 = st.columns(3)
+        c1.metric("🕒 Prépa", f"{clean(t_prepa)} min" if clean(t_prepa) != "-" else "-")
+        c2.metric("🔥 Cuisson", f"{clean(t_cuisson)} min" if clean(t_cuisson) != "-" else "-")
+        c3.metric("🍽️ Portions", clean(port))
 
         st.info("💡 Synchronisation Google Sheets active.")
         
@@ -1232,6 +1230,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
