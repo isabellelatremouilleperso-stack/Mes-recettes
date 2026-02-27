@@ -595,34 +595,40 @@ elif st.session_state.page == "print":
     # Échappement de la préparation
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # --- 4. CONSTRUCTION DU BLOC HTML FINAL ---
+  # --- 4. CONSTRUCTION DU BLOC HTML FINAL (SANS ESPACES AU DÉBUT) ---
+    # Note : Il est CRUCIAL que les balises HTML collent le bord gauche de ton éditeur
     fiche_complete = f"""
 <div class="paper-sheet">
-    <h1>{r.get('Titre','Recette')}</h1>
-    
-    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-    
-    <div class="section-box">
-        <h3>🛒 Ingrédients</h3>
-        {html_ing_list}
-    </div>
-    
-    <div class="section-box page-break">
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
-    </div>
-    
-    <p style="text-align:center; font-size:0.8em; color:#666; margin-top:30px;">
-        Fiche générée par Mes Recettes Pro - {r.get('Titre','')}
-    </p>
+<h1>{r.get('Titre','Recette')}</h1>
+<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
+<span>Catégorie : {r.get('Catégorie','-')}</span>
+<span>Portions : {r.get('Portions','-')}</span>
+<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+</div>
+<div class="section-box">
+<h3 style="color: #e67e22 !important;">🛒 Ingrédients</h3>
+{html_ing_list}
+</div>
+<div class="section-box page-break">
+<h3 style="color: #e67e22 !important;">👨‍🍳 Préparation</h3>
+<div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
+</div>
+<p style="text-align:center; font-size:0.8em; color:#666; margin-top:30px;">
+Fiche générée par Mes Recettes Pro - {r.get('Titre','')}
+</p>
 </div>
 """
-    # Affichage en un seul bloc pour éviter les bugs de rendu Markdown
-    st.markdown(fiche_complete, unsafe_allow_html=True)
+    # On force l'affichage HTML pur
+    st.components.v1.html(f"""
+        <style>
+            .paper-sheet {{ font-family: sans-serif; padding: 20px; }}
+            .section-box {{ background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; padding: 15px; margin-bottom: 20px; }}
+            h1 {{ border-bottom: 3px solid #e67e22; padding-bottom: 10px; }}
+            h3 {{ color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px; }}
+            p {{ margin: 5px 0; }}
+        </style>
+        {fiche_complete}
+    """, height=1000, scrolling=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -634,6 +640,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
