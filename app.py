@@ -318,13 +318,33 @@ elif st.session_state.page == "details":
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
         
         st.divider()
+       # --- SECTION PLANNING ---
         st.subheader("📅 Planifier ce repas")
         date_plan = st.date_input("Choisir une date", value=datetime.now())
-        if st.button("🗓️ Ajouter au planning", use_container_width=True):
-            # On envoie à l'onglet Planning
-            if send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)}):
-                st.success(f"Ajouté au calendrier pour le {date_plan}")
-        st.divider()
+        
+        if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
+            # 1. Ajout dans ton onglet Planning (pour l'app)
+            res1 = send_action({
+                "action": "plan", 
+                "titre": r['Titre'], 
+                "date": str(date_plan)
+            })
+            
+            # 2. Ajout dans le vrai Google Calendar
+            # On formate la date en JJ/MM/AAAA comme attendu par ton script GS
+            date_formatee = date_plan.strftime("%d/%m/%Y")
+            res2 = send_action({
+                "action": "calendar", 
+                "titre": r['Titre'], 
+                "date_prevue": date_formatee,
+                "ingredients": r.get('Ingrédients', '')
+            })
+            
+            if res1 and res2:
+                st.success(f"✅ Ajouté au planning et à Google Calendar !")
+                st.cache_data.clear()
+            else:
+                st.warning("Ajouté au planning, mais erreur avec Google Calendar.")
         
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
@@ -792,6 +812,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
