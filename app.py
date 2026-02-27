@@ -523,79 +523,68 @@ elif st.session_state.page == "playstore":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # Style CSS pour forcer le blanc et cacher le superflu
+    # Style CSS ultra-simplifié pour être compatible partout
     st.markdown("""
         <style>
-        /* Force le fond blanc absolu */
-        .stApp, [data-testid="stAppViewContainer"], .main, .block-container {
+        /* Force le fond blanc sur tout l'écran pour simuler le papier */
+        .stApp {
             background-color: white !important;
             color: black !important;
         }
-
-        /* Cache tout Streamlit */
-        [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stDeployButton {
+        
+        /* Cache les éléments inutiles de l'interface */
+        [data-testid="stHeader"], [data-testid="stSidebar"], footer {
             display: none !important;
         }
 
-        /* Texte en noir pour l'imprimante */
-        h1, h2, h3, h4, p, span, label, div {
-            color: black !important;
+        /* Cadre qui ressemble à une feuille A4 */
+        .paper-sheet {
+            background-color: white;
+            padding: 40px;
+            color: black;
+            font-family: serif;
         }
 
         @media print {
             .no-print { display: none !important; }
-            /* Cache les boutons Streamlit sur le papier */
-            .stButton button { display: none !important; }
+            .stButton { display: none !important; }
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- BARRE DE CONTRÔLE ---
-    col_nav1, col_nav2 = st.columns([1, 4])
-    
-    with col_nav1:
-        if st.button("⬅ Retour", key="btn_back_print"):
+    # --- BARRE D'INSTRUCTIONS ---
+    with st.container():
+        st.markdown("""
+            <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 10px; color: #856404; margin-bottom: 20px;" class="no-print">
+                <strong>💡 Comment imprimer :</strong><br>
+                1. Cliquez sur les <strong>trois petits points (⋮)</strong> de votre navigateur (en haut à droite).<br>
+                2. Choisissez <strong>'Imprimer'</strong> ou <strong>'Partager > Imprimer'</strong>.<br>
+                3. La page sortira parfaitement en noir et blanc.
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("⬅ Retourner à la recette", use_container_width=True):
             st.session_state.page = "details"
             st.rerun()
-            
-    with col_nav2:
-        # ÉTAPE 1 : Le bouton Streamlit déclenche un changement d'état
-        if st.button("🖨️ LANCER L'IMPRESSION", type="primary", use_container_width=True):
-            # ÉTAPE 2 : On injecte le JS d'impression seulement APRÈS le clic
-            st.markdown('<script>window.print();</script>', unsafe_allow_html=True)
 
     st.divider()
 
-    # --- CONTENU DE LA RECETTE ---
-    st.header(f"🍳 {r.get('Titre', 'Recette')}")
-    
-    c1, c2, c3 = st.columns(3)
-    c1.write(f"**🍴 Catégorie :** {r.get('Catégorie','')}")
-    c2.write(f"**👥 Portions :** {r.get('Portions','')}")
-    
-    # Calcul simple du temps total
-    try:
-        t_total = int(r.get('Temps_Prepa', 0)) + int(r.get('Temps_Cuisson', 0))
-    except:
-        t_total = 0
-    c3.write(f"**⏱ Temps Total :** {t_total} min")
+    # --- LE CORPS DE LA RECETTE (STYLE PAPIER) ---
+    st.markdown(f"""
+        <div class="paper-sheet">
+            <h1 style="color: black; border-bottom: 2px solid black; padding-bottom: 10px;">{r.get('Titre', 'Recette')}</h1>
+            <p><strong>Catégorie :</strong> {r.get('Catégorie', '-')}</p>
+            <p><strong>Portions :</strong> {r.get('Portions', '-')}</p>
+            <p><strong>Temps :</strong> {r.get('Temps_Prepa', '0')} min prépa / {r.get('Temps_Cuisson', '0')} min cuisson</p>
+            <hr>
+            <h3>Ingrédients</h3>
+            <p style="white-space: pre-wrap;">{r.get('Ingrédients', '').replace("\n", "<br>☐ ")}</p>
+            <hr>
+            <h3>Préparation</h3>
+            <p style="white-space: pre-wrap;">{r.get('Préparation', '')}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-    st.write("---")
-
-    col_ing, col_pre = st.columns([1, 1.5])
-    
-    with col_ing:
-        st.subheader("🛒 Ingrédients")
-        ings = str(r.get("Ingrédients","")).split("\n")
-        for ing in ings:
-            if ing.strip():
-                st.write(f"☐ {ing.strip()}")
-
-    with col_pre:
-        st.subheader("👨‍🍳 Préparation")
-        st.write(r.get("Préparation",""))
-
-    st.caption(f"Imprimé depuis Mes Recettes Pro - {datetime.now().strftime('%d/%m/%Y')}")
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -607,6 +596,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
