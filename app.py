@@ -15,76 +15,78 @@ if 'page' not in st.session_state:
 # ======================
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-st.markdown("""
-<style>
-/* --- DESIGN ÉCRAN (Ce que tu vois sur ton téléphone/PC) --- */
-.stApp { background-color: #0e1117; color: #e0e0e0; }
-h1,h2,h3 { color: #e67e22 !important; }
+if st.session_state.page != "print":
+    st.markdown("""
+    <style>
 
-/* Sidebar */
-[data-testid="stSidebar"] { background-color: #1e2129; color: white; }
-.stButton button { background-color: #e67e22; color: white; }
+    .stApp { background-color: #0e1117; color: #e0e0e0; }
+    h1,h2,h3 { color: #e67e22 !important; }
 
-/* Inputs */
-input, select, textarea, div[data-baseweb="select"] { 
-    color: white !important; background-color: #1e2129 !important; 
-}
+    /* Sidebar */
+    [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
+    .stButton button { background-color: #e67e22; color: white; }
 
-/* Checklist */
-.stCheckbox label p { color: white !important; font-size: 1.1rem !important; font-weight: 500 !important; }
-
-/* Recipe cards */
-.recipe-card { 
-    background-color:#1e2129; border:1px solid #3d4455; border-radius:12px; 
-    padding:10px; height:230px; display:flex; flex-direction:column; justify-content:space-between;
-}
-.recipe-img { width:100%; height:130px; object-fit:cover; border-radius:8px; }
-.recipe-title { 
-    color:white; margin-top:8px; font-size:0.95rem; font-weight:bold; 
-    text-align:center; display:flex; align-items:center; justify-content:center; 
-    height:2.5em; line-height:1.2; 
-}
-
-/* Help boxes */
-.help-box { background-color:#1e2130; padding:15px; border-radius:15px; border-left:5px solid #e67e22; margin-bottom:20px; }
-.help-box h3 { color:#e67e22; margin-top:0; }
-
-/* --- DESIGN IMPRESSION (Ce qui sortira sur papier) --- */
-@media print {
-    /* Cache la barre latérale, les boutons et l'en-tête Streamlit */
-    [data-testid="stSidebar"], 
-    [data-testid="stHeader"],
-    .stButton,
-    footer { 
-        display: none !important; 
+    /* Inputs */
+    input, select, textarea, div[data-baseweb="select"] { 
+        color: white !important; 
+        background-color: #1e2129 !important; 
     }
 
-    /* Force le fond blanc et le texte noir pour économiser l'encre */
-    .stApp, .main, .block-container {
-        background-color: white !important;
-        color: black !important;
+    /* Checklist */
+    .stCheckbox label p { 
+        color: white !important; 
+        font-size: 1.1rem !important; 
+        font-weight: 500 !important; 
     }
 
-    /* Rend tous les textes noirs */
-    h1, h2, h3, h4, p, span, label {
-        color: black !important;
+    /* Recipe cards */
+    .recipe-card { 
+        background-color:#1e2129; 
+        border:1px solid #3d4455; 
+        border-radius:12px; 
+        padding:10px; 
+        height:230px; 
+        display:flex; 
+        flex-direction:column; 
+        justify-content:space-between;
     }
 
-    /* Ajuste la taille des images pour l'impression */
-    img {
-        max-width: 100% !important;
-        height: auto !important;
-        border: 1px solid #ddd !important;
+    .recipe-img { 
+        width:100%; 
+        height:130px; 
+        object-fit:cover; 
+        border-radius:8px; 
     }
-    
-    /* Supprime les marges inutiles sur le papier */
-    .block-container {
-        padding: 0 !important;
-        margin: 0 !important;
+
+    .recipe-title { 
+        color:white; 
+        margin-top:8px; 
+        font-size:0.95rem; 
+        font-weight:bold; 
+        text-align:center; 
+        display:flex; 
+        align-items:center; 
+        justify-content:center; 
+        height:2.5em; 
+        line-height:1.2; 
     }
-}
-</style>
-""", unsafe_allow_html=True)
+
+    /* Help boxes */
+    .help-box { 
+        background-color:#1e2130; 
+        padding:15px; 
+        border-radius:15px; 
+        border-left:5px solid #e67e22; 
+        margin-bottom:20px; 
+    }
+
+    .help-box h3 { 
+        color:#e67e22; 
+        margin-top:0; 
+    }
+
+    </style>
+    """, unsafe_allow_html=True)
 
 # ======================
 # CONSTANTES
@@ -575,6 +577,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
