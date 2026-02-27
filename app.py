@@ -532,73 +532,58 @@ elif st.session_state.page == "shop":
 # PAGE PLANNING
 # ======================
 elif st.session_state.page == "planning":
-    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Repas</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning</h1>', unsafe_allow_html=True)
     
-    col_nav, col_clear = st.columns([1, 1])
-    with col_nav:
-        if st.button("⬅ Retour", use_container_width=True):
-            st.session_state.page = "home"; st.rerun()
-    with col_clear:
-        if st.button("🗑️ Vider le planning", use_container_width=True):
-            if send_action({"action": "clear_planning"}):
-                st.cache_data.clear(); st.success("Planning vidé !"); st.rerun()
-
-    st.divider()
+    if st.button("⬅ Retour"):
+        st.session_state.page = "home"
+        st.rerun()
 
     try:
-        # ON LIT LE CSV DÉDIÉ AU PLANNING
         df_plan = pd.read_csv(URL_CSV_PLAN)
         
         if df_plan.empty:
-            st.info("Le planning est vide sur Google Sheets.")
+            st.info("Le planning est vide.")
         else:
-           # --- NETTOYAGE ET TRI ---
+            # --- NETTOYAGE ---
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
-            df_plan = df_plan.dropna(subset=['Date', 'Titre']) # Supprime les lignes vides
+            df_plan = df_plan.dropna(subset=['Date', 'Titre'])
             df_plan = df_plan.sort_values(by='Date')
 
             # --- TRADUCTION ---
             jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
             mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
 
+            # ==========================================
+            # C'EST ICI QUE TU COLLES LE BLOC STYLISÉ :
+            # ==========================================
             for index, row in df_plan.iterrows():
-                # On prépare la date en français
                 jour_eng = row['Date'].strftime('%A')
                 mois_eng = row['Date'].strftime('%B')
                 date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {row['Date'].strftime('%d')} {mois_fr.get(mois_eng, mois_eng)}"
                 
-                st.markdown(f"""
-                <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 5px;">
-                    <b style="color: #e67e22;">{date_txt.upper()}</b><br>
-                    <span style="font-size: 1.2rem; color: white;">{row['Titre']}</span>
-                </div>
-                """, unsafe_allow_html=True)
+                col_txt, col_btn = st.columns([4, 1])
                 
-                # LA CLÉ UNIQUE ICI (index + titre) règle l'erreur rouge de ton image
-                if st.button(f"❌ Retirer {row['Titre']}", key=f"del_{index}_{row['Titre']}", use_container_width=True):
-                    with st.spinner("Mise à jour..."):
-                        if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                            import time
-                            st.cache_data.clear() # Vide la mémoire
-                            time.sleep(1.5)       # Attend que Google se mette à jour
-                            st.rerun()
+                with col_txt:
+                    st.markdown(f"""
+                    <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
+                        <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{date_txt}</div>
+                        <div style="color: white; font-size: 1.05rem; margin-top: 2px;">{row['Titre']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                 
-                if st.button(f"❌ Retirer", key=f"del_{index}", use_container_width=True):
-                    with st.spinner("Mise à jour du planning..."):
-                        # Envoi de la demande de suppression
-                        if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                            # 1. On vide le cache immédiatement
-                            st.cache_data.clear()
-                            # 2. On attend 1 seconde pour que Google Sheets finalise la suppression
-                            import time
-                            time.sleep(1)
-                            # 3. On recharge la page
-                            st.rerun()
-                        else:
-                            st.error("Erreur lors de la suppression.")
-                        
+                with col_btn:
+                    st.write("") 
+                    if st.button("🗑️", key=f"btn_del_{index}_{row['Titre'].replace(' ', '_')}"):
+                        with st.spinner():
+                            if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
+                                st.cache_data.clear()
+                                import time
+                                time.sleep(1.2)
+                                st.rerun()
+            # ==========================================
+
     except Exception as e:
-        st.error(f"Erreur de lecture du planning : {e}")
+        st.error(f"Erreur : {e}")
 # ==========================================
 # --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
 # ==========================================
@@ -830,6 +815,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
