@@ -128,83 +128,110 @@ if st.session_state.page == "home":
         
     st.divider()
     
-    # CSS mis à jour pour de GRANDES images
+    # CSS AVANCÉ POUR UN LOOK PRO ET ÉPURÉ
     st.markdown("""
         <style>
+        /* On crée une carte qui ressemble à celles de ta tablette */
         .recipe-card {
             background-color: #1e1e1e;
-            border-radius: 15px;
-            padding: 0px;
-            border: 1px solid #3c4043;
-            margin-bottom: 20px;
-            overflow: hidden;
-            transition: transform 0.3s ease;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-bottom: 25px;
+            overflow: hidden; /* Pour que l'image ne dépasse pas des coins arrondis */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            height: 480px; /* On fixe une hauteur totale pour que tout soit aligné */
         }
-        .recipe-card:hover {
-            transform: scale(1.03);
-            border-color: #e67e22;
-        }
-        .recipe-img {
+        
+        /* L'IMAGE : Elle prend tout l'espace et se cadre toute seule */
+        .recipe-img-container {
             width: 100%;
-            height: 300px; /* On augmente la hauteur ici */
-            object-fit: cover;
+            height: 320px; /* Hauteur de l'image */
+            overflow: hidden;
         }
-        .recipe-title {
-            color: white;
-            font-size: 1.4rem;
-            font-weight: bold;
+        
+        .recipe-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* MAGIE : cadre l'image parfaitement sans déformer */
+        }
+
+        .recipe-content {
+            padding: 15px;
             text-align: center;
-            padding: 15px 5px;
+        }
+
+        .recipe-title-text {
+            color: #e0e0e0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 10px 0;
+            line-height: 1.2;
+            height: 50px; /* Pour que les titres longs ne décalent pas tout */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         </style>
     """, unsafe_allow_html=True)
     
     df = load_data()
     if not df.empty:
+        # Barre de recherche plus fine
         col_search, col_cat = st.columns([2, 1])
         with col_search:
-            search = st.text_input("🔍 Rechercher...", placeholder="Ex: Lasagne...")
+            search = st.text_input("🔍 Rechercher une recette...", placeholder="Ex: Sauce spaghetti...")
         with col_cat:
             liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
-            cat_choisie = st.selectbox("📁 Catégorie", liste_categories)
+            cat_choisie = st.selectbox("📁 Filtrer par catégorie", liste_categories)
         
         mask = df['Titre'].str.contains(search, case=False, na=False)
         if cat_choisie != "Toutes":
             mask = mask & (df['Catégorie'] == cat_choisie)
         
         def get_cat_color(cat):
-            colors = {
-                "Poulet": "#FF5733", "Bœuf": "#C70039", "Dessert": "#FF33FF",
-                "Légumes": "#28B463", "Poisson": "#3498DB", "Pâtes": "#F1C40F"
-            }
+            colors = {"Poulet": "#FF5733", "Bœuf": "#C70039", "Dessert": "#FF33FF",
+                      "Légumes": "#28B463", "Poisson": "#3498DB", "Pâtes": "#F1C40F"}
             return colors.get(cat, "#e67e22")
 
         rows = df[mask].reset_index(drop=True)
         
-        # --- PASSAGE À 2 COLONNES POUR GROSSIR L'AFFICHAGE ---
+        # AFFICHAGE EN 2 COLONNES (PLUS GRAND ET PLUS BEAU)
         for i in range(0, len(rows), 2):
-            cols = st.columns(2) 
+            grid_cols = st.columns(2) 
             for j in range(2):
                 if i+j < len(rows):
                     row = rows.iloc[i+j]
-                    with cols[j]:
-                        img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/350"
-                        cat_label = row['Catégorie'] if row['Catégorie'] else "Autre"
-                        cat_color = get_cat_color(cat_label)
+                    with grid_cols[j]:
+                        img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
+                        cat_label = row['Catégorie'] if row['Catégorie'] else "Recette"
                         
+                        # Création de la carte HTML
                         st.markdown(f"""
                         <div class="recipe-card">
-                            <img src="{img}" class="recipe-img">
-                            <div style="text-align:center; margin-top:10px;">
-                                <span style="background-color:{cat_color}; color:white; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:bold; text-transform:uppercase;">
+                            <div class="recipe-img-container">
+                                <img src="{img_url}">
+                            </div>
+                            <div class="recipe-content">
+                                <span class="category-badge" style="background-color:{get_cat_color(cat_label)}; color:white;">
                                     {cat_label}
                                 </span>
+                                <div class="recipe-title-text">{row['Titre']}</div>
                             </div>
-                            <div class="recipe-title">{row['Titre']}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        if st.button("Voir la recette", key=f"v_{i+j}", use_container_width=True):
+                        # Le bouton est juste en dessous de la carte
+                        if st.button("📖 Ouvrir la recette", key=f"v_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict()
                             st.session_state.page = "details"
                             st.rerun()
@@ -446,6 +473,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
