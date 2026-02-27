@@ -34,27 +34,82 @@ if st.session_state.page == "home":
                         if st.button("📖 Ouvrir", key=f"open_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict(); st.session_state.page="details"; st.rerun()
 
-# --- DÉTAILS & IMPRESSION ---
+# --- DÉTAILS & IMPRESSION CORRIGÉ ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
+    
+    # --- CSS SPÉCIAL IMPRESSION (N'affecte pas l'écran) ---
+    st.markdown("""
+        <style>
+        @media print {
+            /* Masque tout sauf la recette */
+            [data-testid="stSidebar"], .no-print, .stButton, header, footer {
+                display: none !important;
+            }
+            /* Force le fond blanc et texte noir pour économiser l'encre */
+            .main, .stApp {
+                background-color: white !important;
+                color: black !important;
+            }
+            h1, h2, h3, p, span, div {
+                color: black !important;
+            }
+            /* Affiche les ingrédients masqués à l'écran */
+            .only-print {
+                display: block !important;
+            }
+        }
+        /* Cache la liste propre à l'impression quand on est sur l'écran */
+        .only-print { display: none; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Barre de navigation (masquée à l'impression via le CSS ci-dessus)
     c_back, c_edit, c_print, c_del = st.columns(4)
-    if c_back.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
+    
+    if c_back.button("⬅ Retour", use_container_width=True): 
+        st.session_state.page="home"; st.rerun()
+    
     with c_print:
-        st.markdown('<a href="javascript:window.print()" style="text-decoration:none;"><div style="background:#e67e22; color:white; padding:8px; border-radius:8px; text-align:center; font-weight:bold; border:1px solid #d35400;">🖨️ Imprimer</div></a>', unsafe_allow_html=True)
+        # Le bouton d'impression propre
+        st.markdown("""
+            <button onclick="window.print()" style="
+                width: 100%; background:#e67e22; color:white; padding:8px; 
+                border-radius:8px; text-align:center; font-weight:bold; 
+                border:1px solid #d35400; cursor:pointer;">
+                🖨️ Imprimer
+            </button>
+        """, unsafe_allow_html=True)
+
     if c_del.button("🗑️ Supprimer", use_container_width=True):
-        if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
+        if send_action({"action":"delete","titre":r['Titre']}): 
+            st.session_state.page="home"; st.rerun()
+
+    # --- CONTENU DE LA RECETTE ---
     st.header(f"📖 {r.get('Titre','Sans titre')}")
+    
     col_g, col_d = st.columns([1, 1.2])
-    with col_g: st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400", use_container_width=True)
+    
+    with col_g: 
+        img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
+        st.image(img_url, use_container_width=True)
+    
     with col_d:
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
+        
+        # VERSION ÉCRAN : Avec cases à cocher (masquée à l'impression)
         st.markdown('<div class="no-print">', unsafe_allow_html=True)
-        for i, l in enumerate(ings): st.checkbox(l, key=f"c_{i}")
+        for i, l in enumerate(ings): 
+            st.checkbox(l, key=f"c_print_{i}")
         st.markdown('</div>', unsafe_allow_html=True)
+        
+        # VERSION PAPIER : Liste à puces propre (masquée à l'écran)
         html_p = '<div class="only-print">'
-        for l in ings: html_p += f'<p style="color:black !important; margin:0; font-size:14pt;">• {l}</p>'
+        for l in ings: 
+            html_p += f'<p style="margin:0; font-size:14pt;">• {l}</p>'
         st.markdown(html_p + '</div>', unsafe_allow_html=True)
+
     st.subheader("👨‍🍳 Étapes")
     st.write(r.get('Préparation','-'))
 
@@ -226,3 +281,4 @@ elif st.session_state.page == "add":
             if t and ing:
                 if send_action({"action":"add","titre":t,"Catégorie":cat,"Ingrédients":ing,"Préparation":ins,"Image":img_url}):
                     st.success("Ajouté !"); time.sleep(1); st.session_state.page="home"; st.rerun()   
+
