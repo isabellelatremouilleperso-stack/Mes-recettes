@@ -27,45 +27,44 @@ h1,h2,h3 { color: #e67e22 !important; }
 
 /* --- DESIGN IMPRESSION (LE SAUVETEUR D'ENCRE) --- */
 @media print {
-    /* 1. On force le blanc sur TOUTE la page */
-    html, body, .stApp, [data-testid="stMainView"], .main, .block-container {
+    /* 1. On force le blanc sur ABSOLUMENT TOUT (Conteneurs Streamlit inclus) */
+    html, body, .stApp, [data-testid="stMainView"], .main, .block-container, [data-testid="stVerticalBlock"] {
         background-color: white !important;
         color: black !important;
     }
 
-    /* 2. On CACHE la barre latérale, les boutons et le logo */
+    /* 2. On fait disparaître la barre latérale et les éléments de navigation */
     [data-testid="stSidebar"], 
     [data-testid="stSidebarNav"],
+    section[data-testid="stSidebar"],
     .stSidebar,
     header, 
     footer, 
     .stButton, 
     button,
-    [data-testid="stHeader"],
-    .stSlider {
+    [data-testid="stHeader"] {
         display: none !important;
         width: 0 !important;
-        visibility: hidden !important;
+        height: 0 !important;
     }
 
-    /* 3. On force les textes en noir (titres, ingrédients, étapes) */
-    h1, h2, h3, h4, h5, h6, p, span, label, div, li {
+    /* 3. On force les titres et textes en noir profond */
+    h1, h2, h3, h4, h5, h6, p, span, label, div, li, small {
         color: black !important;
-        -webkit-print-color-adjust: exact; /* Force le rendu des couleurs sur certains navigateurs */
     }
 
-    /* 4. On utilise toute la largeur de la feuille (très important !) */
+    /* 4. On utilise toute la largeur de la feuille pour ne pas avoir de vide à gauche */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 1cm !important;
+        padding: 0.5cm !important;
         margin: 0 !important;
     }
 
-    /* 5. On cadre l'image de la recette proprement */
-    img {
-        max-width: 10cm !important;
-        border-radius: 8px !important;
+    /* 5. On retire les ombres et les bordures sombres */
+    div {
+        box-shadow: none !important;
+        border-color: #eee !important;
     }
 }
 </style>
@@ -655,6 +654,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
