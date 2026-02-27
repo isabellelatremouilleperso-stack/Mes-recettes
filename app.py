@@ -297,54 +297,73 @@ elif st.session_state.page == "planning":
         st.rerun()
 
 # --- PAGE PLAYSTORE FUN ---
+# --- PAGE PLAYSTORE FUN ---
 elif st.session_state.page == "playstore":
-    st.header("⭐ Play Store Fun")
-    st.write("Découvrez nos autres applications (simulées) pour booster votre cuisine !")
+    st.markdown('<h1 style="color: #e67e22; text-align: center;">⭐ Play Store Fun</h1>', unsafe_allow_html=True)
+    st.write("<p style='text-align: center;'>Découvrez nos applications officielles pour votre cuisine.</p>", unsafe_allow_html=True)
     
-    # Liste des applications avec leurs descriptifs
     apps = [
-        {"titre":"Mes Recettes Pro","image":"https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg","note":"4.9 ★","desc":"Gestion complète de vos recettes, planning et liste d'épicerie."},
-        {"titre":"Planner Pro","image":"https://i.postimg.cc/YCkg460C/shared-image-(5).jpg","note":"4.7 ★","desc":"Planification de repas et suivi nutritionnel."},
-        {"titre":"Kitchen Fun","image":"https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg","note":"4.8 ★","desc":"Recettes amusantes et défis culinaires."},
-        {"titre":"Smoothie Maker","image":"https://i.postimg.cc/6qRbWv0R/shared-image-(8).jpg","note":"4.5 ★","desc":"Des smoothies délicieux en quelques secondes."},
-        {"titre":"Dessert Mania","image":"https://i.postimg.cc/Zqv0RZ7x/shared-image-(9).jpg","note":"4.6 ★","desc":"Recettes de desserts faciles et rapides."},
-        {"titre":"Healthy Eats","image":"https://i.postimg.cc/9Xc8F6L4/shared-image-(10).jpg","note":"4.8 ★","desc":"Repas sains et équilibrés pour toute la famille."}
+        {"titre":"Mes Recettes Pro","image":"https://cdn-icons-png.flaticon.com/512/3565/3565407.png","note":"4.9 ★","desc":"L'appli que vous utilisez en ce moment !"},
+        {"titre":"Planner Pro","image":"https://cdn-icons-png.flaticon.com/512/2693/2693507.png","note":"4.7 ★","desc":"Planification et suivi nutritionnel."},
+        {"titre":"Kitchen Fun","image":"https://cdn-icons-png.flaticon.com/512/1830/1830605.png","note":"4.8 ★","desc":"Défis culinaires et mini-jeux."},
+        {"titre":"Smoothie Maker","image":"https://cdn-icons-png.flaticon.com/512/3059/3059411.png","note":"4.5 ★","desc":"Des smoothies frais en un clic."},
+        {"titre":"Dessert Mania","image":"https://cdn-icons-png.flaticon.com/512/992/992717.png","note":"4.6 ★","desc":"Le paradis des gourmands."},
+        {"titre":"Healthy Eats","image":"https://cdn-icons-png.flaticon.com/512/2424/2424444.png","note":"4.8 ★","desc":"Mangez mieux, vivez mieux."}
     ]
     
-    # Affichage en grille 3 colonnes
+    # Style CSS amélioré
+    st.markdown("""
+    <style>
+    .play-card {
+        background-color: #f8f9fa;
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #e0e0e0;
+        margin-bottom: 10px;
+        min-height: 280px;
+    }
+    .app-title { color: #202124; font-weight: bold; font-size: 1.1rem; margin-top: 10px; }
+    .app-note { color: #01875f; font-weight: bold; font-size: 0.9rem; }
+    .app-desc { color: #5f6368; font-size: 0.8rem; height: 40px; margin-bottom: 10px; }
+    </style>
+    """, unsafe_allow_html=True)
+
     for i in range(0, len(apps), 3):
         cols = st.columns(3)
         for j in range(3):
             if i+j < len(apps):
                 app = apps[i+j]
                 with cols[j]:
-                    # Titre et Image
-                    st.markdown(f"### {app['titre']}")
-                    st.image(app["image"], use_container_width=True)
+                    # Début de la carte
+                    st.markdown(f"""
+                    <div class="play-card">
+                        <img src="{app['image']}" width="70" style="border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <div class="app-title">{app['titre']}</div>
+                        <div class="app-note">{app['note']}</div>
+                        <div class="app-desc">{app['desc']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
                     
-                    # Note et Descriptif (le fameux !)
-                    st.write(f"**Note :** {app['note']}")
-                    st.caption(app["desc"])
-                    
-                    # Emplacement pour l'animation de la bombe
+                    # Zone d'interaction (Bouton + Bombe)
                     placeholder = st.empty()
                     
-                    if st.button(f"📥 Installer", key=f"install_{i+j}", use_container_width=True):
+                    # Le bouton est ici !
+                    if placeholder.button(f"Installer", key=f"btn_{i+j}", use_container_width=True):
                         with placeholder:
-                            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=150)
+                            # La bombe apparaît ici à la place du bouton
+                            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=120)
                             st.toast(f"Installation de {app['titre']}...")
-                            time.sleep(1.5)
+                            time.sleep(1.8)
                         
-                        # Nettoyage de l'animation
                         placeholder.empty()
-                        st.success(f"💥 {app['titre']} installé !")
+                        st.success(f"✅ Installé !")
                         st.balloons()
-    
+
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
-
 # --- PAGE AIDE (RESTAURÉE) ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -378,6 +397,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
