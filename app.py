@@ -541,7 +541,8 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-       st.markdown("""
+        # Correction de l'alignement ici
+        st.markdown("""
 <style>
 /* Fond blanc global pour l'impression */
 .stApp, .stApp > div, .stApp > div > div {
@@ -586,41 +587,41 @@ h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !im
 }
 </style>
 """, unsafe_allow_html=True)
-    # 2. Boutons de navigation (On sépare le bouton impression pour qu'il fonctionne)
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.button("⬅ Retour", use_container_width=True):
-            st.session_state.page = "details"; st.rerun()
-    with col2:
-        # Utilisation d'un composant HTML dédié pour forcer le bouton à fonctionner
-        st.components.v1.html("""
-            <button onclick="window.parent.print()" style="
-                width: 100%; 
-                height: 38px; 
-                background-color: #e67e22; 
-                color: white; 
-                border: none; 
-                border-radius: 5px; 
-                cursor: pointer; 
-                font-weight: bold;
-                font-family: sans-serif;
-            ">🖨️ Lancer l'impression</button>
-        """, height=45)
 
-    # 3. Préparation des données
-    lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
-    html_ing_list = ""
-    for l in lignes_ing:
-        if l.endswith(':'):
-            html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
-        else:
-            html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
-    
-    prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
+        # 2. Boutons de navigation (Alignement corrigé sous le else)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            if st.button("⬅ Retour", use_container_width=True):
+                st.session_state.page = "details"
+                st.rerun()
+        with col2:
+            st.components.v1.html("""
+                <button onclick="window.parent.print()" style="
+                    width: 100%; 
+                    height: 38px; 
+                    background-color: #e67e22; 
+                    color: white; 
+                    border: none; 
+                    border-radius: 5px; 
+                    cursor: pointer; 
+                    font-weight: bold;
+                    font-family: sans-serif;
+                ">🖨️ Lancer l'impression</button>
+            """, height=45)
 
-    # 4. CONSTRUCTION DU HTML (ATTENTION : Aucune tabulation avant les balises <div>)
-    # Copie ce bloc exactement tel quel, collé à gauche du bord
-    fiche_complete = f"""
+        # 3. Préparation des données
+        lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
+        html_ing_list = ""
+        for l in lignes_ing:
+            if l.endswith(':'):
+                html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
+            else:
+                html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
+        
+        prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
+
+        # 4. CONSTRUCTION DU HTML (Zéro tabulation au début des lignes HTML)
+        fiche_complete = f"""
 <div class="paper-sheet">
 <h1>{r.get('Titre','Recette')}</h1>
 <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
@@ -639,9 +640,7 @@ h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !im
 <p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
 </div>
 """
-
-    # Affichage final
-    st.markdown(fiche_complete, unsafe_allow_html=True)
+        st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -653,6 +652,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
