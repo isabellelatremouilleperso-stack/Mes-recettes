@@ -297,73 +297,65 @@ elif st.session_state.page == "planning":
         st.rerun()
 
 # ==========================================
-# --- PAGE FICHE PRODUIT PLAY STORE ---
+# --- PAGE FICHE PRODUIT PLAY STORE (DARK) ---
 # ==========================================
 elif st.session_state.page == "playstore":
-    # --- EN-TÊTE AVEC LOGO ROND ---
+    # On garde le style sombre de ton appli
+    st.markdown("""
+        <style>
+        h1, h2, h3, p, span, li { color: #ffffff !important; }
+        .stMarkdown { color: #ffffff; }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # --- EN-TÊTE ---
     col_logo, col_titre = st.columns([1, 3])
     
     with col_logo:
-        # Affichage du logo rond (style initial)
+        # Ton logo rond avec bordure orange
         st.markdown("""
         <div style="display: flex; justify-content: center; margin-top: 10px;">
             <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" 
-                 style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #e67e22; object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                 style="width: 110px; height: 110px; border-radius: 50%; border: 3px solid #e67e22; object-fit: cover; box-shadow: 0 4px 10px rgba(230,126,34,0.3);">
         </div>
         """, unsafe_allow_html=True)
     
     with col_titre:
-        st.markdown('<h1 style="color: #e67e22; margin-bottom: 0;">Mes Recettes Pro</h1>', unsafe_allow_html=True)
-        st.markdown('<p style="color: #5f6368; font-size: 1.2rem; margin-top: 0;">Édition Cuisine Facile</p>', unsafe_allow_html=True)
-        st.write("⭐ 4.9 ★  |  développé par VosSoins Inc.")
+        st.markdown('<h1 style="font-size: 2rem; margin-bottom: 0;">Mes Recettes Pro</h1>', unsafe_allow_html=True)
+        st.markdown('<p style="color: #e67e22 !important; font-weight: bold; margin-top: 0; font-size: 1.1rem;">VosSoins Inc.</p>', unsafe_allow_html=True)
+        st.write("⭐ 4,9  |  100 k+ Téléchargements")
 
-    st.divider()
-
-    # --- ZONE D'ACTION (INSTALLER + BOMBE) ---
-    # Conteneur vide pour gérer l'alternance Bouton / Bombe
+    # --- ZONE BOUTON / EXPLOSION ---
+    st.write("")
     placeholder_action = st.empty()
     
-    # Affichage initial du bouton
-    if placeholder_action.button("📥 Installer", key="install_main_app", use_container_width=True):
-        # CLIC DETECTÉ : On remplace le bouton par la bombe
+    # Bouton orange pour aller avec ton thème
+    if placeholder_action.button("📥 Installer", key="btn_install", use_container_width=True):
         with placeholder_action:
-            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=200)
-            st.toast("Téléchargement de Mes Recettes Pro...")
-            time.sleep(2) # Durée de l'animation
-        
-        # FIN ANIMATION : On vide la zone et on affiche le succès (SANS BALLONS)
+            # Le GIF d'explosion direct, sans texte
+            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=250)
+            time.sleep(2.2) 
         placeholder_action.empty()
-        st.success("💥 Application simulée installée avec succès !")
-        st.info("C'était une blague, aucune bombe réelle n'est présente 😄")
+        st.success("✅ Application installée")
 
     st.divider()
 
-    # --- DESCRIPTIF DÉTAILLÉ (COMME UNE VRAIE PAGE) ---
-    st.subheader("À propos de cette application")
+    # --- DESCRIPTIF ---
+    st.subheader("À propos de cette appli")
     st.write("""
-    **Mes Recettes Pro** est l'outil ultime pour tous les passionnés de cuisine, du débutant au chef confirmé. 
-    Simplifiez votre quotidien et organisez votre univers culinaire en un seul endroit.
-    
-    **Fonctionnalités principales :**
-    * 📖 **Bibliothèque Personnelle :** Stockez toutes vos recettes préférées avec photos, ingrédients et étapes détaillées.
-    * 📅 **Planning de Repas :** Planifiez vos menus de la semaine en quelques clics pour gagner du temps.
-    * 🛒 **Liste d'Épicerie Automatique :** Générez votre liste de courses directement à partir de votre planning.
-    * 💻 **Synchronisation Cloud :** Retrouvez vos données sur tous vos appareils (PC, Tablette, Mobile).
+    Ajoutez facilement des recettes depuis n'importe quel site web ou créez les vôtres. 
+    Synchronisez vos données sur tous vos appareils pour cuisiner où que vous soyez.
     """)
     
-    st.divider()
-    
-    # --- INFORMATIONS COMPLÉMENTAIRES ---
-    col_info1, col_info2 = st.columns(2)
-    with col_info1:
-        st.write("**Version :** 2.1.0")
-        st.write("**Mise à jour :** 15 Octobre 2023")
-    with col_info2:
-        st.write("**Taille :** 25 Mo")
-        st.write("**Nouveautés :** Amélioration de la recherche.")
+    st.markdown("""
+    **Ce que vous allez adorer :**
+    * 📱 Interface intuitive et rapide
+    * 🥗 Planificateur de repas hebdomadaire
+    * 🛒 Liste de courses intelligente
+    """)
 
     st.divider()
-    
+
     # --- BOUTON RETOUR ---
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
@@ -401,6 +393,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
