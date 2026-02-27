@@ -583,20 +583,20 @@ elif st.session_state.page == "planning":
         if st.button("⬅ Retour", use_container_width=True):
             st.session_state.page = "home"
             st.rerun()
+            
     with col_clear:
-        # Ce bouton vide le Sheets mais NE TOUCHE PAS au Calendrier Google
-        # MODIFICATION ICI
-    if st.session_state.admin_mode:
-        if st.button("🗑️ Vider le planning", use_container_width=True, help="Efface uniquement la liste dans Google Sheets"):
-            with st.spinner("Nettoyage..."):
-                if send_action({"action": "clear_planning"}):
-                    st.cache_data.clear()
-                    import time
-                    time.sleep(1)
-                    st.rerun()
-    else:
-        # On affiche le bouton mais il est désactivé (grisé) pour les visiteurs
-        st.button("🗑️ Vider (Admin uniquement)", use_container_width=True, disabled=True)
+        # On vérifie si on est admin pour afficher le bouton de vidage
+        if st.session_state.admin_mode:
+            if st.button("🗑️ Vider le planning", use_container_width=True, help="Efface uniquement la liste dans Google Sheets"):
+                with st.spinner("Nettoyage..."):
+                    if send_action({"action": "clear_planning"}):
+                        st.cache_data.clear()
+                        import time
+                        time.sleep(1)
+                        st.rerun()
+        else:
+            # Bouton grisé pour les visiteurs
+            st.button("🗑️ Vider (Admin uniquement)", use_container_width=True, disabled=True)
 
     st.divider()
 
@@ -619,10 +619,8 @@ elif st.session_state.page == "planning":
             derniere_semaine = -1
             
             for index, row in df_plan.iterrows():
-                # On récupère le numéro de semaine ISO
                 semaine_actuelle = row['Date'].isocalendar()[1]
                 
-                # Si on change de semaine, on affiche un bandeau visuel
                 if semaine_actuelle != derniere_semaine:
                     st.markdown(f"""
                         <div style="background-color: #2e313d; padding: 5px 15px; border-radius: 8px; margin: 20px 0 10px 0; border-left: 3px solid #95a5a6;">
@@ -647,15 +645,19 @@ elif st.session_state.page == "planning":
                     """, unsafe_allow_html=True)
                 
                 with col_btn:
-                    st.write("") # Calage vertical
-                    # Clé unique pour éviter les erreurs de doublons
-                    if st.button("🗑️", key=f"btn_plan_{index}_{semaine_actuelle}"):
-                        with st.spinner():
-                            if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                                st.cache_data.clear()
-                                import time
-                                time.sleep(1.2)
-                                st.rerun()
+                    st.write("") 
+                    # Sécurité : Seul l'admin peut supprimer une ligne du planning
+                    if st.session_state.admin_mode:
+                        if st.button("🗑️", key=f"btn_plan_{index}_{semaine_actuelle}"):
+                            with st.spinner():
+                                if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
+                                    st.cache_data.clear()
+                                    import time
+                                    time.sleep(1.2)
+                                    st.rerun()
+                    else:
+                        # Icône de cadenas pour les visiteurs
+                        st.button("🔒", key=f"lock_{index}", disabled=True)
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
@@ -957,6 +959,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
