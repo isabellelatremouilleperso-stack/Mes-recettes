@@ -21,42 +21,50 @@ st.markdown("""
 <style>
 /* --- DESIGN ÉCRAN (DARK MODE) --- */
 .stApp { background-color: #0e1117; color: #e0e0e0; }
-h1, h2, h3 { color: #e67e22 !important; }
-[data-testid="stSidebar"] { background-color: #1e2129; color: white; }
-.stButton button { background-color: #e67e22; color: white; }
 
-/* Correction de la ligne qui causait l'erreur */
-.stCheckbox label p { 
-    color: white !important; 
-    font-size: 1.1rem !important; 
-    font-weight: 500 !important; 
-}
-
-/* --- DESIGN IMPRESSION (LE SAUVETEUR D'ENCRE) --- */
+/* --- DESIGN IMPRESSION (L'ULTIME) --- */
 @media print {
-    /* On force le blanc sur TOUT et on cache la barre latérale */
-    html, body, .stApp, [data-testid="stMainView"], .main, .block-container, [data-testid="stSidebar"] {
-        background-color: white !important;
-        color: black !important;
-    }
-
-    /* On cache physiquement la sidebar et les boutons */
-    [data-testid="stSidebar"], section[data-testid="stSidebar"], .stButton, button, header, footer, [data-testid="stHeader"] {
+    /* 1. ON SUPPRIME TOUTE LA NAVIGATION ET LES BOUTONS */
+    [data-testid="stSidebar"], 
+    [data-testid="stSidebarNav"],
+    [data-testid="stHeader"],
+    .stButton, 
+    button,
+    header, 
+    footer {
         display: none !important;
         width: 0 !important;
+        height: 0 !important;
     }
 
-    /* On remet les textes en noir profond */
-    h1, h2, h3, h4, p, span, li, label, div {
-        color: black !important;
-    }
-
-    /* On utilise toute la largeur pour éviter le décalage à droite */
+    /* 2. ON FORCE LE CONTENU À PRENDRE 100% DE LA LARGEUR (Fini le vide à gauche) */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
         padding: 1cm !important;
         margin: 0 !important;
+    }
+
+    /* 3. ON FORCE LE BLANC ET LE NOIR PUR */
+    .stApp, body, html, [data-testid="stMainView"], [data-testid="stVerticalBlock"] {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    h1, h2, h3, h4, p, span, li, label, div {
+        color: black !important;
+    }
+
+    /* 4. ON REND LES LISTES D'INGRÉDIENTS PLUS PROPRES */
+    ul {
+        list-style-type: square !important;
+        margin-left: 20px !important;
+    }
+
+    /* 5. ON RÉDUIT LA TAILLE DE L'IMAGE POUR ÉVITER QU'ELLE PRENNE TOUTE LA PAGE */
+    img {
+        max-width: 8cm !important;
+        border-radius: 10px !important;
     }
 }
 </style>
@@ -668,6 +676,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
