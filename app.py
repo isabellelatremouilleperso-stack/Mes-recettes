@@ -298,6 +298,68 @@ elif st.session_state.page == "add":
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight
+# --- SUITE DE LA PAGE AJOUTER ---
+    st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
+    col_url, col_go = st.columns([4, 1])
+    url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...")
+    
+    if col_go.button("Extraire ✨", use_container_width=True):
+        if url_input:
+            t, c = scrape_url(url_input)
+            if t:
+                st.session_state.scraped_title = t
+                st.session_state.scraped_content = c
+                st.success("Extraction réussie !"); st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.divider()
+    
+    with st.container():
+        col_t, col_c = st.columns([2, 1])
+        titre = col_t.text_input("🏷️ Nom de la recette", value=st.session_state.get('scraped_title', ''), placeholder="Ex: Lasagne de maman")
+        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
+        
+        st.markdown("#### ⏱️ Paramètres de cuisson")
+        cp1, cp2, cp3 = st.columns(3)
+        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45")
+        port = cp3.text_input("🍽️ Portions", placeholder="4")
+        
+        st.divider()
+        
+        ci, ce = st.columns(2)
+        ingredients = ci.text_area("🍎 Ingrédients", height=300, placeholder="2 tasses de farine...")
+        val_p = st.session_state.get('scraped_content', '')
+        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=val_p, height=300)
+        
+        img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...")
+        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, placeholder="Ce champ m'aide à ajuster...")
+        
+        st.divider()
+        
+        if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
+            if titre and ingredients:
+                payload = {
+                    "action": "add", 
+                    "titre": titre, 
+                    "Catégorie": ", ".join(cat_choisies), 
+                    "Ingrédients": ingredients, 
+                    "Préparation": instructions, 
+                    "Image": img_url, 
+                    "Temps_Prepa": t_prep, 
+                    "Temps_Cuisson": t_cuis, 
+                    "Portions": port, 
+                    "Note": 0, 
+                    "Commentaires": commentaires
+                }
+                if send_action(payload):
+                    st.success(f"✅ '{titre}' ajouté !"); time.sleep(1)
+                    # Nettoyage après ajout
+                    if 'scraped_title' in st.session_state: del st.session_state.scraped_title
+                    if 'scraped_content' in st.session_state: del st.session_state.scraped_content
+                    st.session_state.page = "home"; st.rerun()
+            else:
+                st.error("Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -426,5 +488,6 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
