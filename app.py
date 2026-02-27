@@ -298,3 +298,115 @@ elif st.session_state.page == "add":
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight
+# --- PAGE ÉPICERIE ---
+elif st.session_state.page == "shop":
+    st.header("🛒 Ma Liste d'épicerie")
+    if st.button("⬅ Retour"):
+        st.session_state.page = "home"; st.rerun()
+    try:
+        df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
+        if not df_s.empty:
+            to_del = []
+            for idx, row in df_s.iterrows():
+                # Utilisation de ton style de checklist
+                if st.checkbox(str(row.iloc[0]), key=f"sh_{idx}"):
+                    to_del.append(str(row.iloc[0]))
+            
+            st.divider()
+            c1, c2 = st.columns(2)
+            if c1.button("🗑 Retirer les articles sélectionnés", use_container_width=True):
+                for it in to_del:
+                    send_action({"action": "remove_shop", "article": it})
+                st.rerun()
+            if c2.button("🧨 Vider toute la liste", use_container_width=True):
+                send_action({"action": "clear_shop"})
+                st.rerun()
+        else:
+            st.info("Votre liste est vide pour le moment.")
+    except:
+        st.error("Erreur de chargement de la liste.")
+
+# --- PAGE PLANNING ---
+elif st.session_state.page == "planning":
+    st.header("📅 Planning de la semaine")
+    if st.button("⬅ Retour"):
+        st.session_state.page = "home"; st.rerun()
+    st.divider()
+    df = load_data()
+    if not df.empty and 'Date_Prevue' in df.columns:
+        # On filtre les recettes qui ont une date prévue
+        plan = df[df['Date_Prevue'].astype(str).str.strip() != ""].sort_values(by='Date_Prevue')
+        if not plan.empty:
+            for _, row in plan.iterrows():
+                with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
+                    st.write(f"**Catégorie :** {row['Catégorie']}")
+                    if st.button("Voir la fiche complète", key=f"p_btn_{row['Titre']}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+        else:
+            st.info("Aucun repas planifié pour le moment.")
+    else:
+        st.warning("La colonne de planning est introuvable ou vide.")
+
+# --- PAGE PLAY STORE (TON DESIGN EXACT) ---
+elif st.session_state.page == "playstore":
+    # CSS spécifique pour le look Google Play
+    st.markdown("""
+    <style>
+    .play-title { font-size: 2.2rem; font-weight: 600; color: white; margin-bottom: 0px; }
+    .play-dev { color: #01875f; font-weight: 500; font-size: 1.1rem; margin-bottom: 20px; }
+    .play-stats { display: flex; justify-content: flex-start; gap: 40px; border-top: 1px solid #3c4043; border-bottom: 1px solid #3c4043; padding: 15px 0; margin-bottom: 25px; }
+    .stat-box { text-align: center; }
+    .stat-val { font-size: 1.1rem; font-weight: bold; color: white; display: block; }
+    .stat-label { font-size: 0.8rem; color: #bdc1c6; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col_info, col_logo = st.columns([2, 1])
+    with col_info:
+        st.markdown('<div class="play-title">Mes Recettes Pro</div>', unsafe_allow_html=True)
+        st.markdown('<div class="play-dev">VosSoins Inc.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="play-stats"><div class="stat-box"><span class="stat-val">4,9 ⭐</span><span class="stat-label">1,44 k avis</span></div><div class="stat-box"><span class="stat-val">100 k+</span><span class="stat-label">Téléchargements</span></div><div class="stat-box"><span class="stat-val">E</span><span class="stat-label">Tout le monde</span></div></div>', unsafe_allow_html=True)
+    
+    with col_logo:
+        st.markdown('<div style="display: flex; justify-content: flex-end;"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" style="width: 130px; height: 130px; border-radius: 20%; border: 1px solid #3c4043; object-fit: cover;"></div>', unsafe_allow_html=True)
+
+    # --- LOGIQUE DE TA BOMBE ---
+    placeholder_action = st.empty()
+    if placeholder_action.button("Installer", key="play_install", use_container_width=True):
+        with placeholder_action:
+            st.image("https://i.postimg.cc/HnxJDBjf/cartoon-hand-bomb-vector-template-(2).jpg", width=250)
+            time.sleep(2.5)
+        placeholder_action.empty()
+        st.markdown("<h3 style='color:#01875f; text-align:center;'>✓ Installé</h3>", unsafe_allow_html=True)
+
+    st.write("✨ Cette appli est proposée pour tous vos appareils")
+    st.write("")
+    
+    # Tes captures d'écran
+    col_pic1, col_pic2, col_pic3 = st.columns(3)
+    col_pic1.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", use_container_width=True)
+    col_pic2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", use_container_width=True)
+    col_pic3.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", use_container_width=True)
+    
+    st.divider()
+    st.markdown("### À propos de cette appli →", unsafe_allow_html=True)
+    st.write("**Mes Recettes Pro** combine un gestionnaire de recettes intelligent, une liste de courses dynamique et un planificateur. Ajoutez vos idées depuis n'importe quel site web en un clic.")
+    st.markdown('<span style="background:#3c4043; padding:5px 15px; border-radius:15px; font-size:0.9rem;">Productivité</span>', unsafe_allow_html=True)
+    st.divider()
+    if st.button("⬅ Retour", use_container_width=True):
+        st.session_state.page = "home"; st.rerun()
+
+# --- PAGE AIDE ---
+elif st.session_state.page=="help":
+    st.header("❓ Aide & Astuces")
+    ca, cb = st.columns(2)
+    ca.markdown('<div class="help-box"><h3>📝 Ajouter Recette</h3><p>Importez via URL (Ricardo, etc.) ou entrez vos propres créations manuellement.</p></div>', unsafe_allow_html=True)
+    ca.markdown('<div class="help-box"><h3>🔍 Recherche</h3><p>Utilisez la barre de recherche et les filtres par catégorie pour retrouver vos plats.</p></div>', unsafe_allow_html=True)
+    cb.markdown('<div class="help-box"><h3>🛒 Liste d\'Épicerie</h3><p>Cochez les ingrédients dans une recette pour les envoyer ici. Pratique pour les courses !</p></div>', unsafe_allow_html=True)
+    cb.markdown('<div class="help-box"><h3>📅 Planning</h3><p>Visualisez vos repas de la semaine directement depuis votre calendrier Google Sheets.</p></div>', unsafe_allow_html=True)
+    st.divider()
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page="home"; st.rerun()
+
