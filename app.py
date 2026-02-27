@@ -113,13 +113,16 @@ with st.sidebar:
 # LOGIQUE DES PAGES
 # ======================
 
+# --- PAGE ACCUEIL ---
 if st.session_state.page == "home":
-   c1, c2 = st.columns([4, 1])
-    c1.header("📚 Ma Bibliothèque")
-    if c2.button("🔄 Actualiser"): 
-        st.cache_data.clear()
-        st.rerun()
-    st.divider()
+    c1, c2 = st.columns([4, 1]) # 4 espaces ici
+    c1.header("📚 Ma Bibliothèque") # 4 espaces ici aussi !
+    
+    if c2.button("🔄 Actualiser"): # 4 espaces
+        st.cache_data.clear() # 8 espaces (car dans le IF du bouton)
+        st.rerun() # 8 espaces
+        
+    st.divider() # Retour à 4 espaces
     
     df = load_data()
     if not df.empty:
@@ -375,6 +378,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
