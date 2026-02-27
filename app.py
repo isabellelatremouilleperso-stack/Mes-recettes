@@ -278,79 +278,109 @@ elif st.session_state.page=="details":
     st.write(r.get('Préparation','Aucune étape.'))
 
 # ==========================================
-# --- PAGE : AJOUTER UNE RECETTE ---
+# --- PAGE : AJOUTER UNE RECETTE (SUPER STRUCTURE) ---
 # ==========================================
-elif st.session_state.page == "ajouter":
+elif st.session_state.page == "add":  # Attention, ton bouton sidebar utilise "add"
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
-    # --- SECTION URL (STRUCTURE POUR LE SCRAPING) ---
+    # --- NAVIGATION RAPIDE ---
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
+
+    # --- SECTION URL (MAGIE DE L'IMPORT) ---
     st.markdown("""
-        <div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #3c4043;">
-            <h3 style="margin-top:0;">🌐 Importer depuis un lien</h3>
+        <div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;">
+            <h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>
     """, unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
-    url_input = col_url.text_input("Collez l'URL (Ricardo, Marmiton, etc.)", placeholder="https://www.exemple.com/recette")
+    url_input = col_url.text_input("Collez l'URL ici (Ricardo, Marmiton, etc.)", placeholder="https://www.exemple.com/recette")
     
     if col_go.button("Extraire ✨", use_container_width=True):
-        st.info("Analyse du lien en cours...")
-        # Ici on placera la logique BeautifulSoup pour remplir les champs automatiquement
-    
+        if url_input:
+            t, c = scrape_url(url_input)
+            if t:
+                st.session_state.scraped_title = t
+                st.session_state.scraped_content = c
+                st.success("Données extraites ! Remplissez les détails ci-dessous.")
+            else:
+                st.error("Impossible d'extraire les données de ce site.")
     st.markdown("</div>", unsafe_allow_html=True)
+
     st.write("")
 
-    # --- FORMULAIRE PRINCIPAL ---
+    # --- FORMULAIRE AVEC LA SUPER STRUCTURE ---
     with st.container():
         # Ligne 1 : Titre et Catégorie
         col_t, col_c = st.columns([2, 1])
-        titre = col_t.text_input("🏷️ Nom de la recette", placeholder="Ex: Lasagne de maman")
-        categorie = col_c.selectbox("📁 Catégorie", ["Poulet", "Bœuf", "Poisson", "Légumes", "Pâtes", "Dessert", "Autre"])
+        titre = col_t.text_input("🏷️ Nom de la recette", 
+                                 value=st.session_state.get('scraped_title', ''),
+                                 placeholder="Ex: Lasagne de maman")
+        cat_index = CATEGORIES.index("Autre")
+        categorie = col_c.selectbox("📁 Catégorie", CATEGORIES, index=cat_index)
 
-        # Ligne 2 : LA SUPER STRUCTURE (Temps et Portions)
-        # On utilise des icônes pour que ce soit visuel
+        # Ligne 2 : STRUCTURE TEMPS & PORTIONS (Bien alignée)
+        st.markdown("#### ⏱️ Paramètres de cuisson")
         col_prep, col_cuis, col_port = st.columns(3)
         with col_prep:
-            t_prep = st.text_input("🕒 Prép. (min)", placeholder="15")
+            t_prep = st.text_input("🕒 Préparation (min)", placeholder="15")
         with col_cuis:
             t_cuis = st.text_input("🔥 Cuisson (min)", placeholder="45")
         with col_port:
-            portions = st.text_input("🍽️ Portions", placeholder="4")
+            port = st.text_input("🍽️ Portions", placeholder="4")
 
         st.divider()
 
-        # Ligne 3 : Ingrédients et Préparation (Côte à côte)
+        # Ligne 3 : INGRÉDIENTS & PRÉPARATION (CÔTE À CÔTE)
         col_ing, col_inst = st.columns(2)
         
         with col_ing:
             st.markdown("### 🍎 Ingrédients")
-            ingredients = st.text_area("Un ingrédient par ligne", height=300, help="Ex: 2 tasses de farine")
+            ingredients = st.text_area("Un ingrédient par ligne", 
+                                       height=350, 
+                                       placeholder="2 tasses de farine\n1 c. à soupe de sel...")
             
         with col_inst:
-            st.markdown("### 👨‍🍳 Préparation")
-            instructions = st.text_area("Décrivez les étapes", height=300, help="Ex: 1. Préchauffer le four...")
+            st.markdown("### 👨‍🍳 Étapes de préparation")
+            # Si on a extrait du contenu, on l'affiche ici
+            val_prep = st.session_state.get('scraped_content', '')
+            instructions = st.text_area("Décrivez les étapes", 
+                                        value=val_prep,
+                                        height=350, 
+                                        placeholder="1. Préchauffer le four à 350°F...")
 
         # Ligne 4 : Image
-        img_url = st.text_input("🖼️ Lien de l'image", placeholder="https://...")
+        st.markdown("#### 🖼️ Visuel")
+        img_url = st.text_input("Lien de l'image (URL)", placeholder="https://.../photo.jpg")
 
         st.divider()
 
-        # --- NAVIGATION ---
-        col_annuler, col_sauver = st.columns(2)
-        
-        if col_annuler.button("⬅ Annuler", use_container_width=True):
-            st.session_state.page = "home"
-            st.rerun()
-            
-        if col_sauver.button("💾 Enregistrer dans la Bibliothèque", use_container_width=True):
+        # --- BOUTON SAUVEGARDE ---
+        if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
-                # Ici on ajoute la logique de sauvegarde (DataFrame/CSV)
-                st.success(f"✅ '{titre}' a été ajouté !")
-                time.sleep(1.5)
-                st.session_state.page = "home"
-                st.rerun()
+                payload = {
+                    "action": "add",
+                    "titre": titre,
+                    "Catégorie": categorie,
+                    "Ingrédients": ingredients,
+                    "Préparation": instructions,
+                    "Image": img_url,
+                    "Temps_Prepa": t_prep,
+                    "Temps_Cuisson": t_cuis,
+                    "Portions": port,
+                    "Note": 0,
+                    "Commentaires": ""
+                }
+                if send_action(payload):
+                    st.success(f"✅ '{titre}' a été ajouté avec succès !")
+                    time.sleep(1)
+                    st.session_state.page = "home"
+                    st.rerun()
+                else:
+                    st.error("Erreur lors de l'enregistrement.")
             else:
-                st.error("Veuillez remplir au moins le titre et les ingrédients.")
-                
+                st.error("Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -512,6 +542,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
