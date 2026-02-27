@@ -266,7 +266,7 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # Barre de navigation
+    # Barre de navigation - Tous les 'with' doivent être alignés
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
     
     with c_nav1:
@@ -276,7 +276,7 @@ elif st.session_state.page == "details":
             
     with c_nav2:
         if st.button("✏️ Éditer", use_container_width=True):
-            # On prépare les données pour la page "add"
+            # On stocke les données pour les charger dans la page 'add'
             st.session_state.recipe_to_edit = r
             st.session_state.page = "add"
             st.rerun()
@@ -288,41 +288,54 @@ elif st.session_state.page == "details":
             
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True): 
-            if send_action({"action": "delete", "titre": r['Titre']}):
+            if send_action({"action": "delete", "titre": r.get('Titre', '')}):
                 st.session_state.page = "home"
                 st.rerun()
 
     st.divider()
-    # ... la suite du code (Titre, Image, Ingrédients, etc.) reste identique
     st.header(f"📖 {r.get('Titre','Sans titre')}")
+    
     col_g, col_d = st.columns([1, 1.2])
     with col_g:
-        img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
-        st.image(img_url,use_container_width=True)
+        img_url = r['Image'] if "http" in str(r.get('Image','')) else "https://via.placeholder.com/400"
+        st.image(img_url, use_container_width=True)
+        
         st.markdown("### ⭐ Ma Note & Avis")
-        note_actuelle = int(float(r.get('Note',0))) if r.get('Note') else 0
-        nouvelle_note = st.slider("Note",0,5,note_actuelle,key="val_note")
-        nouveau_comm = st.text_area("Commentaires / astuces",value=str(r.get('Commentaires',"")),height=100,key="val_comm")
-        if st.button("💾 Enregistrer ma note",use_container_width=True):
-            if send_action({"action":"edit","titre":r['Titre'],"Note":nouvelle_note,"Commentaires":nouveau_comm}):
-                st.success("Note enregistrée !"); st.session_state.recipe_data['Note']=nouvelle_note; st.session_state.recipe_data['Commentaires']=nouveau_comm; st.rerun()
+        note_actuelle = int(float(r.get('Note', 0))) if r.get('Note') else 0
+        nouvelle_note = st.slider("Note", 0, 5, note_actuelle, key="val_note")
+        nouveau_comm = st.text_area("Commentaires / astuces", value=str(r.get('Commentaires', "")), height=100, key="val_comm")
+        
+        if st.button("💾 Enregistrer ma note", use_container_width=True):
+            if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note, "Commentaires": nouveau_comm}):
+                st.success("Note enregistrée!")
+                st.session_state.recipe_data['Note'] = nouvelle_note
+                st.session_state.recipe_data['Commentaires'] = nouveau_comm
+                st.rerun()
+                
     with col_d:
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
         st.write(f"**👥 Portions :** {r.get('Portions','-')}")
         st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
+        
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
-        sel=[]
-        for i,l in enumerate(ings):
-            if st.checkbox(l,key=f"chk_det_final_{i}"): sel.append(l)
-        if st.button("📥 Ajouter au Panier",use_container_width=True):
-            for it in sel: send_action({"action":"add_shop","article":it})
-            st.toast("Ajouté !"); st.session_state.page="shop"; st.rerun()
+        sel = []
+        for i, l in enumerate(ings):
+            if st.checkbox(l, key=f"chk_det_final_{i}"):
+                sel.append(l)
+                
+        if st.button("📥 Ajouter au Panier", use_container_width=True):
+            for it in sel:
+                send_action({"action": "add_shop", "article": it})
+            st.toast("Ajouté!")
+            st.session_state.page = "shop"
+            st.rerun()
+            
     st.divider()
     st.subheader("📝 Préparation")
-    st.write(r.get('Préparation','Aucune étape.'))
+    st.write(r.get('Préparation', 'Aucune étape.'))
 
 # --- PAGE AJOUTER ---
 elif st.session_state.page == "add":
@@ -634,6 +647,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
