@@ -521,57 +521,96 @@ elif st.session_state.page == "playstore":
         st.rerun()
 # --- PAGE IMPRIMABLE ---
 elif st.session_state.page == "print":
-
     r = st.session_state.recipe_data
 
-    # Style spécial impression : fond blanc, texte noir, cacher sidebar/header/footer
+    # Style CSS ultra-précis
     st.markdown("""
         <style>
-        .stApp { background-color: white; color: black; }
-        header, footer, [data-testid="stSidebar"], .stButton { display: none !important; }
-        h1,h2,h3,h4,p,span,label { color: black !important; }
-        img { max-width: 100% !important; height: auto !important; border: 1px solid #ddd; }
-        .block-container { padding: 0 !important; margin: 0 !important; }
+        /* 1. Force le fond blanc pour l'écran ET l'imprimante */
+        .stApp, [data-testid="stAppViewContainer"] {
+            background-color: white !important;
+            color: black !important;
+        }
+
+        /* 2. Cache les éléments inutiles de Streamlit */
+        [data-testid="stHeader"], [data-testid="stSidebar"], footer {
+            display: none !important;
+        }
+
+        /* 3. Style des boutons de contrôle (visibles seulement à l'écran) */
+        .no-print-bar {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 2px solid #e67e22;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* 4. CACHER AUTOMATIQUEMENT TOUT LE SUPERFLU SUR LE PAPIER */
+        @media print {
+            .no-print, .stButton, button, .no-print-bar {
+                display: none !important;
+            }
+            .stApp {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
         </style>
     """, unsafe_allow_html=True)
 
-    # Contenu de la recette
-    st.title(r.get("Titre", "Recette"))
-    st.write(f"Catégorie : {r.get('Catégorie','')}")
-    st.write(f"Portions : {r.get('Portions','')}")
-    st.write(f"Préparation : {r.get('Temps_Prepa','')} min")
-    st.write(f"Cuisson : {r.get('Temps_Cuisson','')} min")
-
-    st.divider()
-
-    st.subheader("Ingrédients")
-    for ing in str(r.get("Ingrédients","")).split("\n"):
-        if ing.strip():
-            st.write("• " + ing.strip())
-
-    st.divider()
-
-    st.subheader("Préparation")
-    st.write(r.get("Préparation",""))
-
-    st.divider()
-    st.caption("Imprimé depuis Mes Recettes Pro")
-
-    # Script pour lancer automatiquement la boîte d'impression
-    st.markdown("""
-    <script>
-    window.onload = function() {
-        window.print();
-    };
-    </script>
-    """, unsafe_allow_html=True)
-
-    # Bouton retour
-    col1, col2 = st.columns(2)
-    with col1:
+    # --- BARRE D'OUTILS VISIBLE À L'ÉCRAN ---
+    col_p1, col_p2 = st.columns([1, 4])
+    with col_p1:
         if st.button("⬅ Retour"):
             st.session_state.page = "details"
             st.rerun()
+    with col_p2:
+        # Ce bouton déclenche la vraie boîte d'impression du navigateur
+        st.markdown("""
+            <button onclick="window.print()" style="
+                background-color: #e67e22;
+                color: white;
+                border: none;
+                padding: 8px 20px;
+                border-radius: 5px;
+                font-weight: bold;
+                cursor: pointer;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            ">🖨️ CLIQUEZ ICI POUR IMPRIMER</button>
+        """, unsafe_allow_html=True)
+
+    st.divider()
+
+    # --- CONTENU DE LA RECETTE (Ce qui sera sur le papier) ---
+    st.header(f"🍳 {r.get('Titre', 'Recette sans titre')}")
+    
+    # Infos rapides
+    info_cols = st.columns(3)
+    info_cols[0].write(f"**🍴 Catégorie :** {r.get('Catégorie','-')}")
+    info_cols[1].write(f"**👥 Portions :** {r.get('Portions','-')}")
+    info_cols[2].write(f"**⏱ Temps :** {r.get('Temps_Prepa','0')} min prépa + {r.get('Temps_Cuisson','0')} min cuisson")
+
+    st.write("---")
+
+    col_ing, col_pre = st.columns([1, 2])
+    
+    with col_ing:
+        st.subheader("🛒 Ingrédients")
+        ingredients = str(r.get("Ingrédients","")).split("\n")
+        for ing in ingredients:
+            if ing.strip():
+                st.write(f"☐ {ing.strip()}")
+
+    with col_pre:
+        st.subheader("👨‍🍳 Préparation")
+        st.write(r.get("Préparation",""))
+
+    if r.get("Commentaires"):
+        st.markdown(f"**Note personnelle :** *{r.get('Commentaires')}*")
+
+    st.caption(f"Imprimé le {datetime.now().strftime('%d/%m/%Y')} - Mes Recettes Pro")
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -583,6 +622,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
