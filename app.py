@@ -364,7 +364,7 @@ if st.session_state.page == "home":
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
     
-    # BARRE DE NAVIGATION (Boutons en haut)
+    # BARRE DE NAVIGATION
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
     with c_nav1:
         if st.button("⬅ Retour", use_container_width=True): 
@@ -385,19 +385,10 @@ elif st.session_state.page == "details":
 
     st.divider()
 
-    # --- EN-TÊTE (TITRE & ÉTOILES) ---
-    col_titre, col_note = st.columns([3, 1])
-    with col_titre:
-        st.header(f"📖 {r.get('Titre','Sans titre')}")
-    with col_note:
-        note_val = r.get('Note', 0)
-        try:
-            stars = "⭐" * int(float(note_val))
-            st.subheader(stars if stars else "☆☆☆☆☆")
-        except:
-            st.write("Pas encore notée")
+    # --- EN-TÊTE ---
+    st.header(f"📖 {r.get('Titre','Sans titre')}")
 
-    # --- CORPS DE LA PAGE (IMAGE + INFOS) ---
+    # --- CORPS DE LA PAGE ---
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
@@ -407,6 +398,23 @@ elif st.session_state.page == "details":
             st.image(img_url, use_container_width=True)
         else:
             st.image("https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
+            
+        # SYSTÈME D'ÉTOILES INTERACTIF
+        st.write("**Évaluer cette recette :**")
+        nouveau_choix = st.feedback("stars", key=f"star_det_{r['Titre']}")
+        if nouveau_choix is not None:
+            note_finale = nouveau_choix + 1
+            if send_action({"action": "edit", "titre": r['Titre'], "Note": note_finale}):
+                st.toast(f"Note enregistrée : {note_finale} ⭐")
+                st.cache_data.clear()
+        
+        st.divider()
+
+        # INFOS (Portions et Temps sous l'image)
+        t1, t2, t3 = st.columns(3)
+        t1.metric("🕒 Prépa", f"{r.get('Temps_Prepa', r.get('temps_prepa', '-'))}m")
+        t2.metric("🔥 Cuisson", f"{r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))}m")
+        t3.metric("🍽️ Portions", r.get('Portions', r.get('portions', '-')))
             
         # SECTION NOTES
         st.markdown("### 📝 Mes Notes")
@@ -418,16 +426,8 @@ elif st.session_state.page == "details":
 
     with col_d:
         st.subheader("📋 Informations")
-        
-        # AFFICHAGE DES TEMPS ET PORTIONS
-        t1, t2, t3 = st.columns(3)
-        t1.metric("🕒 Prépa", f"{r.get('Temps_Prepa', r.get('temps_prepa', '-'))} min")
-        t2.metric("🔥 Cuisson", f"{r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))} min")
-        t3.metric("🍽️ Portions", r.get('Portions', r.get('portions', '-')))
-        
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Autre')}")
         
-        # LIEN SOURCE
         source = r.get('Source', r.get('source', ''))
         if "http" in str(source):
             st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
@@ -436,7 +436,7 @@ elif st.session_state.page == "details":
         
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
-        date_plan = st.date_input("Choisir une date", value=datetime.now(), key="plan_date")
+        date_plan = st.date_input("Choisir une date", value=datetime.now(), key="plan_date_det")
         if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
             res1 = send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)})
             res2 = send_action({
@@ -451,7 +451,7 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # SECTION INGRÉDIENTS (avec cases à cocher)
+        # SECTION INGRÉDIENTS
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         ings = [l.strip() for l in str(ings_raw).split("\n") if l.strip()]
@@ -467,13 +467,18 @@ elif st.session_state.page == "details":
 
     st.divider()
 
-    # --- SECTION PRÉPARATION (IMPORTANT) ---
+    # --- SECTION PRÉPARATION ---
     st.subheader("👨‍🍳 Étapes de préparation")
     prep = r.get('Préparation', r.get('preparation', ''))
     if prep:
         st.write(prep)
     else:
         st.warning("Aucune étape de préparation enregistrée.")
+
+# --- FIN DE LA PAGE DÉTAILS ---
+
+elif st.session_state.page == "add":
+    # Ton code pour la page d'ajout continue ici...
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
@@ -1052,6 +1057,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
