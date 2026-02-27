@@ -537,74 +537,88 @@ elif st.session_state.page == "details":
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
- # --- PAGE IMPRIMABLE PRO ---
+# --- PAGE IMPRIMABLE PRO ---
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # 1. CSS (Version Simplifiée pour éviter les erreurs)
+    # 1. CSS (On garde ton style qui est superbe)
     st.markdown("""
     <style>
-    .stApp, [data-testid="stAppViewContainer"] { background-color: white !important; color: black !important; }
-    [data-testid="stHeader"], [data-testid="stSidebar"], footer { display: none !important; }
-    
-    .paper-sheet { max-width: 800px; margin: 0 auto; padding: 20px; font-family: sans-serif; color: black !important; }
+    .stApp { background-color: white !important; color: black !important; }
+    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
+    .paper-sheet { max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', sans-serif; color: black !important; }
     .section-box { 
-        background-color: #f8f9fa !important; border: 1px solid #dee2e6 !important; 
-        border-radius: 10px; padding: 15px; margin-bottom: 20px; 
+        background-color: #f8f9fa !important; 
+        border: 1px solid #dee2e6 !important; 
+        border-radius: 10px; padding: 15px 20px; margin-bottom: 25px;
+        page-break-inside: avoid; 
     }
-    h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; }
-    h3 { color: #e67e22 !important; }
-
+    h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
+    h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; padding-bottom: 5px; }
     @media print {
         .no-print { display: none !important; }
-        .section-box { background-color: white !important; page-break-inside: avoid !important; }
+        .page-break { page-break-before: always; }
+        .section-box { background-color: white !important; border: 1px solid #ccc !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. Boutons de navigation
-    col1, col2 = st.columns(2)
+    # 2. Boutons de navigation (On sépare le bouton impression pour qu'il fonctionne)
+    col1, col2 = st.columns([1, 1])
     with col1:
         if st.button("⬅ Retour", use_container_width=True):
-            st.session_state.page = "details"
-            st.rerun()
+            st.session_state.page = "details"; st.rerun()
     with col2:
-        # On utilise un lien simple car c'est le moins risqué
-        st.markdown('<a href="javascript:window.print()" style="display:block; text-align:center; width:100%; height:38px; line-height:38px; background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;">🖨️ Imprimer (CTRL+P)</a>', unsafe_allow_html=True)
+        # Utilisation d'un composant HTML dédié pour forcer le bouton à fonctionner
+        st.components.v1.html("""
+            <button onclick="window.parent.print()" style="
+                width: 100%; 
+                height: 38px; 
+                background-color: #e67e22; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer; 
+                font-weight: bold;
+                font-family: sans-serif;
+            ">🖨️ Lancer l'impression</button>
+        """, height=45)
 
     # 3. Préparation des données
-    ing_txt = str(r.get('Ingrédients',''))
-    lignes_ing = [l.strip() for l in ing_txt.split('\n') if l.strip()]
-    html_ing = ""
+    lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
+    html_ing_list = ""
     for l in lignes_ing:
         if l.endswith(':'):
-            html_ing += f"<p style='margin-top:10px;'><b>{l}</b></p>"
+            html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
         else:
-            html_ing += f"<p style='margin:2px 0;'>☐ {l}</p>"
+            html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
     
-    prepa_txt = str(r.get('Préparation','')).replace('\n', '<br>')
+    prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # 4. CONSTRUCTION DU HTML (Zéro indentation pour éviter les boîtes noires)
-    fiche = f"""
+    # 4. CONSTRUCTION DU HTML (ATTENTION : Aucune tabulation avant les balises <div>)
+    # Copie ce bloc exactement tel quel, collé à gauche du bord
+    fiche_complete = f"""
 <div class="paper-sheet">
-<h1 style="margin-top:0;">{r.get('Titre','Recette')}</h1>
-<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">
+<h1>{r.get('Titre','Recette')}</h1>
+<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
 <span>Catégorie : {r.get('Catégorie','-')}</span>
 <span>Portions : {r.get('Portions','-')}</span>
 <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
 </div>
 <div class="section-box">
 <h3>🛒 Ingrédients</h3>
-{html_ing}
+{html_ing_list}
 </div>
-<div class="section-box">
+<div class="section-box page-break">
 <h3>👨‍🍳 Préparation</h3>
-<div style="line-height:1.6;">{prepa_txt}</div>
+<div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
 </div>
-<p style="text-align:center; color:#888; font-size:0.8em;">Fiche générée par Mes Recettes Pro</p>
+<p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
 </div>
 """
-    st.markdown(fiche, unsafe_allow_html=True)
+
+    # Affichage final
+    st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -616,6 +630,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
