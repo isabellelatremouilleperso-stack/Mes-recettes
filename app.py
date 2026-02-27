@@ -463,6 +463,9 @@ elif st.session_state.page == "add":
         titre = col_t.text_input("🏷️ Nom de la recette", value=st.session_state.get('scraped_title', ''), placeholder="Ex: Lasagne de maman")
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
         
+        # --- TON AJOUT ICI ---
+        source_url = st.text_input("🔗 Lien source (URL de la recette)", value=url_input if url_input else "", placeholder="https://www.ricardocuisine.com/...")
+        
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
         t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15")
@@ -996,6 +999,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
