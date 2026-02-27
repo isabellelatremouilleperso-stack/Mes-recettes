@@ -292,18 +292,23 @@ elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"; st.rerun()
+        
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
+    
     c_search, c_btn = st.columns([3, 1])
     search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed")
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
-    c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight
-# Utilisation du code HTML &#127760; pour l'émoji globe afin d'éviter le SyntaxError
+    
+    # Correction de la ligne coupée ici :
+    c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Aller sur Google.ca</div></a>""", unsafe_allow_html=True)
+    
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">&#127760; Importer depuis le Web</h3>""", unsafe_allow_html=True)
+    
     col_url, col_go = st.columns([4, 1])
     url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...")
     
-    if col_go.button("Extraire ✨", use_container_width=True):
+    if col_go.button("Extraire &#10024;", use_container_width=True):
         if url_input:
             t, c = scrape_url(url_input)
             if t:
@@ -354,7 +359,6 @@ elif st.session_state.page == "add":
                 }
                 if send_action(payload):
                     st.success(f"✅ '{titre}' ajouté !"); time.sleep(1)
-                    # Nettoyage après ajout
                     if 'scraped_title' in st.session_state: del st.session_state.scraped_title
                     if 'scraped_content' in st.session_state: del st.session_state.scraped_content
                     st.session_state.page = "home"; st.rerun()
@@ -488,6 +492,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
