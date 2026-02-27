@@ -263,22 +263,37 @@ if st.session_state.page == "home":
         st.warning("Aucune donnée trouvée.")
 
 # --- PAGE DÉTAILS ---
-elif st.session_state.page=="details":
+elif st.session_state.page == "details":
     r = st.session_state.recipe_data
+    
+    # Barre de navigation
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
+    
     with c_nav1:
-        if st.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
+        if st.button("⬅ Retour", use_container_width=True):
+            st.session_state.page = "home"
+            st.rerun()
+            
     with c_nav2:
-        if st.button("✏️ Éditer", use_container_width=True): st.session_state.page="add"; st.rerun()
+        if st.button("✏️ Éditer", use_container_width=True):
+            # On prépare les données pour la page "add"
+            st.session_state.recipe_to_edit = r
+            st.session_state.page = "add"
+            st.rerun()
+            
     with c_nav3:
         if st.button("🖨️ Version imprimable", use_container_width=True):
             st.session_state.page = "print"
             st.rerun()
+            
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True): 
-            if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
+            if send_action({"action": "delete", "titre": r['Titre']}):
+                st.session_state.page = "home"
+                st.rerun()
 
     st.divider()
+    # ... la suite du code (Titre, Image, Ingrédients, etc.) reste identique
     st.header(f"📖 {r.get('Titre','Sans titre')}")
     col_g, col_d = st.columns([1, 1.2])
     with col_g:
@@ -619,6 +634,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
