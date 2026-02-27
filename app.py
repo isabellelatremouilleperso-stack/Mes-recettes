@@ -339,14 +339,16 @@ elif st.session_state.page == "details":
 
 # --- PAGE AJOUTER ---
 elif st.session_state.page == "add":
-    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
-  with c_nav2:
-        if st.button("✏️ Éditer", use_container_width=True): 
-            # On stocke la recette actuelle dans une variable spéciale "edit"
-            st.session_state.recipe_to_edit = st.session_state.recipe_data
-            st.session_state.page = "add"
+    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter ou Modifier une Recette</h1>', unsafe_allow_html=True)
+
+    # Si on est en mode édition, on affiche un message
+    if 'recipe_to_edit' in st.session_state:
+        st.info(f"Mode édition : Vous modifiez '{st.session_state.recipe_to_edit.get('Titre')}'")
+        if st.button("❌ Annuler l'édition"):
+            del st.session_state.recipe_to_edit
             st.rerun()
-        
+
+    # --- Section Recherche Google ---
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
@@ -354,9 +356,9 @@ elif st.session_state.page == "add":
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
-    # Correction de la ligne coupée ici :
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Aller sur Google.ca</div></a>""", unsafe_allow_html=True)
     
+    # --- Section Import Web ---
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">&#127760; Importer depuis le Web</h3>""", unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
@@ -368,38 +370,51 @@ elif st.session_state.page == "add":
             if t:
                 st.session_state.scraped_title = t
                 st.session_state.scraped_content = c
-                st.success("Extraction réussie !"); st.rerun()
+                st.success("Extraction réussie !")
+                st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.divider()
     
+    # --- Formulaire de saisie ---
+    # On récupère les données soit de l'édition, soit du scrapage, soit rien (vide)
+    edit_data = st.session_state.get('recipe_to_edit', {})
+    
     with st.container():
         col_t, col_c = st.columns([2, 1])
-        titre = col_t.text_input("🏷️ Nom de la recette", value=st.session_state.get('scraped_title', ''), placeholder="Ex: Lasagne de maman")
-        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
+        default_title = edit_data.get('Titre', st.session_state.get('scraped_title', ''))
+        titre = col_t.text_input("🏷️ Nom de la recette", value=default_title)
         
-        st.markdown("#### ⏱️ Paramètres de cuisson")
+        # Gestion des catégories
+        current_cats = str(edit_data.get('Catégorie', 'Autre')).split(', ')
+        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=current_cats)
+        
+        st.markdown("#### ⏱️ Paramètres")
         cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15")
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45")
-        port = cp3.text_input("🍽️ Portions", placeholder="4")
+        t_prep = cp1.text_input("🕒 Prépa (min)", value=edit_data.get('Temps_Prepa', ''))
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=edit_data.get('Temps_Cuisson', ''))
+        port = cp3.text_input("🍽️ Portions", value=edit_data.get('Portions', ''))
         
         st.divider()
         
         ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", height=300, placeholder="2 tasses de farine...")
-        val_p = st.session_state.get('scraped_content', '')
-        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=val_p, height=300)
+        ingredients = ci.text_area("🍎 Ingrédients", height=300, value=edit_data.get('Ingrédients', ''))
         
-        img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...")
-        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, placeholder="Ce champ m'aide à ajuster...")
+        default_prep = edit_data.get('Préparation', st.session_state.get('scraped_content', ''))
+        instructions = ce.text_area("👨‍🍳 Étapes", value=default_prep, height=300)
+        
+        img_url = st.text_input("🖼️ Lien de l'image (URL)", value=edit_data.get('Image', ''))
+        commentaires = st.text_area("📝 Mes Notes", height=100, value=edit_data.get('Commentaires', ''))
         
         st.divider()
         
-        if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
+        # Bouton de sauvegarde
+        label_bouton = "💾 METTRE À JOUR" if 'recipe_to_edit' in st.session_state else "💾 ENREGISTRER"
+        if st.button(label_bouton, use_container_width=True):
             if titre and ingredients:
+                action_type = "edit" if 'recipe_to_edit' in st.session_state else "add"
                 payload = {
-                    "action": "add", 
+                    "action": action_type, 
                     "titre": titre, 
                     "Catégorie": ", ".join(cat_choisies), 
                     "Ingrédients": ingredients, 
@@ -408,14 +423,16 @@ elif st.session_state.page == "add":
                     "Temps_Prepa": t_prep, 
                     "Temps_Cuisson": t_cuis, 
                     "Portions": port, 
-                    "Note": 0, 
+                    "Note": edit_data.get('Note', 0), 
                     "Commentaires": commentaires
                 }
                 if send_action(payload):
-                    st.success(f"✅ '{titre}' ajouté !"); time.sleep(1)
-                    if 'scraped_title' in st.session_state: del st.session_state.scraped_title
-                    if 'scraped_content' in st.session_state: del st.session_state.scraped_content
-                    st.session_state.page = "home"; st.rerun()
+                    st.success("C'est enregistré !")
+                    # Nettoyage
+                    for key in ['scraped_title', 'scraped_content', 'recipe_to_edit']:
+                        if key in st.session_state: del st.session_state[key]
+                    st.session_state.page = "home"
+                    st.rerun()
             else:
                 st.error("Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
@@ -647,6 +664,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
