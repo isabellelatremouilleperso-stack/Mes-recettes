@@ -459,25 +459,28 @@ elif st.session_state.page == "details":
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # SYSTÈME DE NOTATION
-        st.write("**Note de la recette :**")
-        try:
-            val_note = r.get('Note', r.get('note', 0))
-            note_actuelle = int(float(val_note)) if val_note and str(val_note).strip() not in ["None", "nan", "", "-"] else 0
-        except:
-            note_actuelle = 0
-
-        nouvelle_note = st.select_slider("Évaluer de 0 à 5", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_note_{r['Titre']}")
+        # --- SYSTÈME DE NOTATION ---
+        nouvelle_note = st.select_slider(
+            "Évaluer de 0 à 5",
+            options=[0, 1, 2, 3, 4, 5],
+            value=note_actuelle,
+            key=f"slider_note_{r['Titre']}"
+        )
         
-        if nouvelle_note > 0:
-            st.markdown(f"#### {'⭐' * nouvelle_note}")
-
         if nouvelle_note != note_actuelle:
-            if send_action({"action": "edit", "titre": r['Titre'], "Note": nouvelle_note}):
-                st.toast(f"Note mise à jour : {nouvelle_note}/5 ⭐")
-                st.cache_data.clear()
-                st.session_state.recipe_data['Note'] = nouvelle_note
-                st.rerun()
+            with st.spinner("Enregistrement..."):
+                # ON ENVOIE LES DEUX VARIANTES POUR ÊTRE SÛR
+                payload = {
+                    "action": "edit", 
+                    "titre": r['Titre'], 
+                    "Note": nouvelle_note,  # Version Majuscule
+                    "note": nouvelle_note   # Version minuscule
+                }
+                if send_action(payload):
+                    st.toast("Note enregistrée ! ⭐")
+                    st.cache_data.clear()
+                    st.session_state.recipe_data['Note'] = nouvelle_note
+                    st.rerun()
         
         st.divider()
 
@@ -1137,6 +1140,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
