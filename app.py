@@ -293,34 +293,54 @@ elif st.session_state.page == "planning":
         st.session_state.page = "home"
         st.rerun()
 
-# --- PAGE PLAYSTORE (RESTAURÉE) ---
-elif st.session_state.page=="playstore":
-    st.markdown("""
-    <div class="playstore-container">
-        <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" class="logo-rond-centre">
-        <h1>Mes Recettes Pro</h1>
-        <p>👩‍🍳 Isabelle Latrémouille</p>
-        <p>⭐ 4.9 ★ (128 avis) | 📥 1 000+ téléchargements</p>
-    </div>
-    """,unsafe_allow_html=True)
-    if st.button("📥 Installer l'application",use_container_width=True,type="primary"):
-        st.success("Application installée ! 🎉")
+# --- PAGE PLAYSTORE FUN ---
+elif st.session_state.page == "playstore":
+    st.header("⭐ Play Store Fun")
+    st.write("Découvrez nos autres applications (simulées) pour booster votre cuisine !")
+    
+    # Liste des applications avec leurs descriptifs
+    apps = [
+        {"titre":"Mes Recettes Pro","image":"https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg","note":"4.9 ★","desc":"Gestion complète de vos recettes, planning et liste d'épicerie."},
+        {"titre":"Planner Pro","image":"https://i.postimg.cc/YCkg460C/shared-image-(5).jpg","note":"4.7 ★","desc":"Planification de repas et suivi nutritionnel."},
+        {"titre":"Kitchen Fun","image":"https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg","note":"4.8 ★","desc":"Recettes amusantes et défis culinaires."},
+        {"titre":"Smoothie Maker","image":"https://i.postimg.cc/6qRbWv0R/shared-image-(8).jpg","note":"4.5 ★","desc":"Des smoothies délicieux en quelques secondes."},
+        {"titre":"Dessert Mania","image":"https://i.postimg.cc/Zqv0RZ7x/shared-image-(9).jpg","note":"4.6 ★","desc":"Recettes de desserts faciles et rapides."},
+        {"titre":"Healthy Eats","image":"https://i.postimg.cc/9Xc8F6L4/shared-image-(10).jpg","note":"4.8 ★","desc":"Repas sains et équilibrés pour toute la famille."}
+    ]
+    
+    # Affichage en grille 3 colonnes
+    for i in range(0, len(apps), 3):
+        cols = st.columns(3)
+        for j in range(3):
+            if i+j < len(apps):
+                app = apps[i+j]
+                with cols[j]:
+                    # Titre et Image
+                    st.markdown(f"### {app['titre']}")
+                    st.image(app["image"], use_container_width=True)
+                    
+                    # Note et Descriptif (le fameux !)
+                    st.write(f"**Note :** {app['note']}")
+                    st.caption(app["desc"])
+                    
+                    # Emplacement pour l'animation de la bombe
+                    placeholder = st.empty()
+                    
+                    if st.button(f"📥 Installer", key=f"install_{i+j}", use_container_width=True):
+                        with placeholder:
+                            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=150)
+                            st.toast(f"Installation de {app['titre']}...")
+                            time.sleep(1.5)
+                        
+                        # Nettoyage de l'animation
+                        placeholder.empty()
+                        st.success(f"💥 {app['titre']} installé !")
+                        st.balloons()
+    
     st.divider()
-    c1,c2,c3=st.columns(3)
-    c1.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg",caption="Ma Bibliothèque")
-    c2.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg",caption="Détails")
-    c3.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg",caption="Liste d'Épicerie")
-    st.divider()
-    col_desc,col_tech=st.columns(2)
-    with col_desc:
-        st.subheader("📝 À propos")
-        st.write("Mes Recettes Pro est votre compagnon culinaire ultime.\n✔ Gestion intuitive\n✔ Notes ⭐\n✔ Planning 📅\n✔ Liste d'épicerie 🛒\n✔ Synchronisation Cloud")
-    with col_tech:
-        st.subheader("ℹ️ Infos")
-        st.write("Version : 2.0 Premium\nMise à jour : Février 2026\nCatégorie : Cuisine\nDéveloppeur : Isabelle Latrémouille")
-    st.divider()
-    if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
-        st.session_state.page="home"; st.rerun()
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
 
 # --- PAGE AIDE (RESTAURÉE) ---
 elif st.session_state.page=="help":
@@ -355,5 +375,6 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
