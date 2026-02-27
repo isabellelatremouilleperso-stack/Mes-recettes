@@ -237,16 +237,40 @@ if st.session_state.page == "home":
                             st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
+# --- PAGE DÉTAILS (CONSULTATION) ---
 elif st.session_state.page=="details":
     r = st.session_state.recipe_data
-    c_nav1,c_nav2,c_nav3 = st.columns([1.5,1,1])
-    if c_nav1.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
-    if c_nav2.button("✏️ Éditer"): st.session_state.page="add"; st.rerun()
-    if c_nav3.button("🗑️ Supprimer"): 
-        if send_action({"action":"delete","titre":r['Titre']}):
+
+    # --- BARRE D'OUTILS : RETOUR, ÉDITER, IMPRIMER, SUPPRIMER ---
+    # On utilise 4 colonnes pour bien aligner les boutons en haut
+    c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
+    
+    with c_nav1:
+        if st.button("⬅ Retour", use_container_width=True): 
             st.session_state.page="home"; st.rerun()
+    
+    with c_nav2:
+        if st.button("✏️ Éditer", use_container_width=True): 
+            st.session_state.page="add"; st.rerun()
+    
+    with c_nav3:
+        # NOUVEAU : Bouton Imprimer placé ici
+        if st.button("🖨️ Imprimer", use_container_width=True):
+            st.markdown("<script>window.print();</script>", unsafe_allow_html=True)
+            
+    with c_nav4:
+        if st.button("🗑️ Supprimer", use_container_width=True): 
+            if send_action({"action":"delete","titre":r['Titre']}):
+                st.session_state.page="home"; st.rerun()
+
     st.divider()
+    
+    # --- TITRE DE LA RECETTE ---
     st.header(f"📖 {r.get('Titre','Sans titre')}")
+    
+    # ... (Le reste du code pour l'affichage des colonnes gauche/droite reste le même)
+    col_g, col_d = st.columns([1, 1.2])
+    # ... etc
     col_g,col_d = st.columns([1,1.2])
     with col_g:
         img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
@@ -277,24 +301,16 @@ elif st.session_state.page=="details":
     st.subheader("📝 Préparation")
     st.write(r.get('Préparation','Aucune étape.'))
 
-# ==========================================
-# --- PAGE : AJOUTER UNE RECETTE (MULTI-CATÉGORIES + IMPRESSION) ---
-# ==========================================
+# --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
-    # --- NAVIGATION ET IMPRESSION ---
-    c_nav, c_print = st.columns([3, 1])
-    if c_nav.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+    # --- NAVIGATION SIMPLE ---
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
-    
-    # Injection JavaScript pour l'impression
-    if c_print.button("🖨️ Imprimer cette fiche", use_container_width=True):
-        st.markdown("<script>window.print();</script>", unsafe_allow_html=True)
 
-    st.write("") 
-
+    st.write("")
     # --- BARRE DE RECHERCHE GOOGLE.CA (FIXÉE) ---
     st.markdown("""
         <div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;">
@@ -569,6 +585,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
