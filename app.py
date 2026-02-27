@@ -520,9 +520,20 @@ elif st.session_state.page == "playstore":
         st.session_state.page = "home"
         st.rerun()
         
-import textwrap  # Ajoute cette ligne tout en haut de ton fichier si elle n'y est pas
+import streamlit as st
+import textwrap  # Assure-toi que c'est en haut du fichier
 
-# --- PAGE IMPRIMABLE PRO ---
+# --- INITIALISATION DE LA PAGE ---
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
+
+# --- PAGES ---
+if st.session_state.page == "home":
+    st.write("Bienvenue sur Mes Recettes Pro")
+
+elif st.session_state.page == "details":
+    st.write("Détails de la recette")
+
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
@@ -535,7 +546,9 @@ elif st.session_state.page == "print":
     .section-box { 
         background-color: #f8f9fa !important; 
         border: 1px solid #dee2e6 !important; 
-        border-radius: 10px; padding: 15px 20px; margin-bottom: 25px;
+        border-radius: 10px; 
+        padding: 15px 20px; 
+        margin-bottom: 25px;
         page-break-inside: avoid; 
     }
     h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
@@ -555,7 +568,10 @@ elif st.session_state.page == "print":
             st.session_state.page = "details"
             st.rerun()
     with col2:
-        st.markdown('<button onclick="window.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression</button>', unsafe_allow_html=True)
+        st.markdown(
+            '<button onclick="window.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression</button>',
+            unsafe_allow_html=True
+        )
 
     # 3. Préparation des données
     lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
@@ -568,7 +584,7 @@ elif st.session_state.page == "print":
     
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # 4. CONSTRUCTION DU HTML (Important : les balises collent à gauche)
+    # 4. Construction du HTML
     fiche_complete = f"""
 <div class="paper-sheet">
 <h1>{r.get('Titre','Recette')}</h1>
@@ -601,6 +617,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
