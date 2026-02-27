@@ -561,9 +561,23 @@ h3 { color: #e67e22 !important; margin-top: 0; }
         with col1:
             if st.button("⬅ Retour", use_container_width=True):
                 st.session_state.page = "details"; st.rerun()
-        with col2:
-            st.components.v1.html('<button onclick="window.parent.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression</button>', height=45)
-
+       with col2:
+        # Un lien qui ressemble à un bouton, beaucoup plus stable
+        st.markdown("""
+            <a href="javascript:window.print()" class="no-print" style="
+                display: block;
+                text-decoration: none;
+                text-align: center;
+                width: 100%; 
+                height: 38px; 
+                line-height: 38px;
+                background-color: #e67e22; 
+                color: white !important; 
+                border-radius: 5px; 
+                font-weight: bold;
+                font-family: sans-serif;
+            ">🖨️ Lancer l'impression</a>
+        """, unsafe_allow_html=True)
         # 3. Traitement Ingrédients (Avec cases ☐)
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = ""
@@ -630,6 +644,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
