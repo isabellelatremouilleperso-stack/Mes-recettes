@@ -363,32 +363,117 @@ if st.session_state.page == "home":
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
     r = st.session_state.recipe_data
-    c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
     
+    # BARRE DE NAVIGATION
+    c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
     with c_nav1:
         if st.button("⬅ Retour", use_container_width=True): 
             st.session_state.page="home"; st.rerun()
     with c_nav2:
         if st.button("✏️ Éditer", use_container_width=True):
             st.session_state.recipe_to_edit = r.copy()
-            st.session_state.page = "edit"
-            st.rerun()
-
+            st.session_state.page = "edit"; st.rerun()
     with c_nav3:
         if st.button("🖨️ Imprimer", use_container_width=True):
-            st.session_state.page = "print"
-            st.rerun()
-
+            st.session_state.page = "print"; st.rerun()
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True):
             if send_action({"action": "delete", "titre": r['Titre']}):
                 st.cache_data.clear()
                 st.toast(f"Recette '{r['Titre']}' supprimée ! 🗑️")
-                st.session_state.page = "home"
-                st.rerun()
+                st.session_state.page = "home"; st.rerun()
 
     st.divider()
-    st.header(f"📖 {r.get('Titre','Sans titre')}")
+
+    # --- EN-TÊTE (TITRE & ÉTOILES) ---
+    col_titre, col_note = st.columns([3, 1])
+    with col_titre:
+        st.header(f"📖 {r.get('Titre','Sans titre')}")
+    with col_note:
+        note_val = r.get('Note', 0)
+        try:
+            stars = "⭐" * int(float(note_val))
+            st.subheader(stars if stars else "☆☆☆☆☆")
+        except:
+            st.write("Pas encore notée")
+
+    # --- CORPS DE LA PAGE ---
+    col_g, col_d = st.columns([1, 1.2])
+    
+    with col_g:
+        # IMAGE
+        img_url = r.get('Image', '')
+        if "http" in str(img_url):
+            st.image(img_url, use_container_width=True)
+        else:
+            st.image("https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
+            
+        # SECTION NOTES (COMMENTAIRES)
+        st.markdown("### 📝 Mes Notes")
+        notes = r.get('Commentaires', '')
+        if notes:
+            st.info(notes)
+        else:
+            st.write("*Aucune note pour le moment.*")
+
+    with col_d:
+        st.subheader("📋 Informations")
+        
+        # AFFICHAGE DES TEMPS ET PORTIONS
+        t1, t2, t3 = st.columns(3)
+        # On cherche les clés possibles (majuscules ou minuscules)
+        t1.metric("🕒 Prépa", f"{r.get('Temps_Prepa', r.get('temps_prepa', '-'))} min")
+        t2.metric("🔥 Cuisson", f"{r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))} min")
+        t3.metric("🍽️ Portions", r.get('Portions', r.get('portions', '-')))
+        
+        st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Autre')}")
+        
+        # LIEN SOURCE
+        source = r.get('Source', r.get('source', ''))
+        if "http" in str(source):
+            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+
+        st.divider()
+        
+        # SECTION PLANNING
+        st.subheader("📅 Planifier ce repas")
+        date_plan = st.date_input("Choisir une date", value=datetime.now(), key="plan_date")
+        if st.button("🗓️ Ajouter au planning", use_container_width=True):
+            send_action({"action": "plan", "titre": r['Titre'], "date": str(date_plan)})
+            # Envoi au calendrier Google
+            send_action({
+                "action": "calendar", 
+                "titre": r['Titre'], 
+                "date_prevue": date_plan.strftime("%d/%m/%Y"),
+                "ingredients": r.get('Ingrédients', '')
+            })
+            st.success("Ajouté au planning !")
+
+        st.divider()
+
+        # SECTION INGRÉDIENTS
+        st.subheader("🛒 Ingrédients")
+        ings_raw = r.get('Ingrédients', '')
+        ings = [l.strip() for l in str(ings_raw).split("\n") if l.strip()]
+        selected_ings = []
+        for i, line in enumerate(ings):
+            if st.checkbox(line, key=f"chk_{i}"):
+                selected_ings.append(line)
+        
+        if st.button("📥 Ajouter au Panier", use_container_width=True):
+            for item in selected_ings:
+                send_action({"action": "add_shop", "article": item})
+            st.toast("Ingrédients envoyés à la liste de courses !")
+
+    st.divider()
+
+    # --- SECTION PRÉPARATION (IMPORTANT) ---
+    st.subheader("👨‍🍳 Étapes de préparation")
+    prep = r.get('Préparation', r.get('preparation', ''))
+    if prep:
+        st.write(prep)
+    else:
+        st.warning("Aucune étape de préparation enregistrée pour cette recette.")
     
     # ... code précédent (header, etc.)
     col_g, col_d = st.columns([1, 1.2])
@@ -1021,6 +1106,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
