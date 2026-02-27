@@ -6,231 +6,116 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import urllib.parse
 
-# --- CONFIGURATION ---
-st.set_page_config(page_title="Mes Recettes Pro", layout="wide")
-
+# --- INITIALISATION DU SESSION STATE ---
 if 'page' not in st.session_state:
     st.session_state.page = "home"
 
-# ==========================================
-# --- SECTION STYLE (ÉCRAN + IMPRESSION) ---
-# ==========================================
+# ======================
+# CONFIGURATION & DESIGN
+# ======================
+st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
+
 st.markdown("""
 <style>
-/* --- MODE ÉCRAN --- */
-.only-print { display: none !important; }
+.stApp {
+background-color: #0e1117; color: #e0e0e0; }
+h1,h2,h3 {
+color: #e67e22 !important; }
 
-/* --- MODE IMPRESSION (Le correctif fond blanc) --- */
-@media print {
-    header, footer, .no-print, 
-    [data-testid="stSidebar"], [data-testid="stHeader"],
-    [data-testid="stDecoration"], .stButton, button {
-        display: none !important;
-    }
+/* Sidebar */
+[data-testid="stSidebar"]
+{ background-color: #1e2129; color: white; }
+.stButton
+button { background-color: #e67e22; color: white; }
 
-    /* Force le fond blanc absolu */
-    html, body, .stApp, .main, .block-container, section {
-        background-color: white !important;
-        background-image: none !important;
-        color: black !important;
-    }
+/* Inputs */
+input,
+select, textarea, div[data-baseweb="select"] { color: white
+!important; background-color: #1e2129 !important; }
 
-    /* Force le texte noir partout */
-    h1, h2, h3, h4, p, span, li, div, label {
-        color: black !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
+/* Checklist */
+.stCheckbox
+label p { color: white !important; font-size: 1.1rem !important; font-weight:
+500 !important; }
 
-    .only-print {
-        display: block !important;
-        visibility: visible !important;
-    }
+/* Recipe cards */
+.recipe-card
+{ background-color:#1e2129;border:1px solid
+#3d4455;border-radius:12px;padding:10px;height:230px;
+display:flex;flex-direction:column; justify-content:space-between;}
+.recipe-img
+{ width:100%; height:130px; object-fit:cover; border-radius:8px; }
+.recipe-title
+{ color:white; margin-top:8px; font-size:0.95rem; font-weight:bold;
+text-align:center; display:flex; align-items:center; justify-content:center;
+height:2.5em; line-height:1.2; }
 
-    .main .block-container {
-        max-width: 100% !important;
-        padding: 0.5cm !important;
-    }
-}
+/* Help boxes */
+.help-box {
+background-color:#1e2130; padding:15px; border-radius:15px; border-left:5px
+solid #e67e22; margin-bottom:20px; }
+.help-box
+h3 { color:#e67e22; margin-top:0; }
 
-/* --- CARTES BIBLIOTHÈQUE --- */
-.recipe-card {
-    background-color: #1e1e1e;
-    border-radius: 12px;
-    border: 1px solid #333;
-    margin-bottom: 25px;
-    height: 460px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-.recipe-img-container { width: 100%; height: 280px; overflow: hidden; border-radius: 12px 12px 0 0; }
-.recipe-img-container img { width: 100%; height: 100%; object-fit: cover; }
-.recipe-content { padding: 10px; text-align: center; }
-.recipe-title-text {
-    color: #e0e0e0; font-size: 1.1rem; font-weight: 600;
-    height: 50px; display: flex; align-items: center; justify-content: center;
-}
-.help-box { background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22; margin-bottom:15px; }
+/* Playstore */
+.playstore-container
+{ display:flex; flex-direction:column; align-items:center;
+justify-content:center; text-align:center; width:100%; margin-bottom:20px; }
+.logo-rond-centre
+{ width:120px !important; height:120px !important; border-radius:50%
+!important; object-fit:cover; border:4px solid #e67e22; margin-bottom:15px; }
 </style>
-""", unsafe_allow_html=True)
+""",
+unsafe_allow_html=True)
 
 # ======================
-# API & DONNÉES
+# CONSTANTES
 # ======================
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
+URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+
 CATEGORIES = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Autre"]
 
+# ======================
+# FONCTIONS
+# ======================
 def send_action(payload):
     with st.spinner("🚀 Action..."):
         try:
-            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
+            r = requests.post(URL_SCRIPT,json=payload,timeout=20)
             if "Success" in r.text:
                 st.cache_data.clear()
+                time.sleep(0.5)
                 return True
-        except: pass
+        except:
+            pass
     return False
+
+def scrape_url(url):
+    try:
+        headers={'User-Agent':'Mozilla/5.0'}
+        res = requests.get(url,headers=headers,timeout=10)
+        res.encoding=res.apparent_encoding
+        soup=BeautifulSoup(res.text,'html.parser')
+        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
+        elements = soup.find_all(['li','p'])
+        content = "\n".join(dict.fromkeys([el.text.strip() for el in elements if 10<len(el.text.strip())<500]))
+        return title, content
+    except:
+        return None,None
 
 @st.cache_data(ttl=5)
 def load_data():
     try:
         df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
         df = df.fillna('')
+        df.columns = [c.strip() for c in df.columns]
         return df
-    except: return pd.DataFrame()
+    except:
+        return pd.DataFrame()
+
 # ======================
-# SIDEBAR
-# ======================
-with st.sidebar:
-    st.markdown('<div style="text-align:center;"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" style="width:120px; border-radius:50%; border:4px solid #e67e22;"></div>', unsafe_allow_html=True)
-    st.title("🍳 Mes Recettes")
-    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page="home"; st.rerun()
-    if st.button("📅 Planning", use_container_width=True): st.session_state.page="planning"; st.rerun()
-    if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page="shop"; st.rerun()
-    st.divider()
-    if st.button("➕ AJOUTER RECETTE", use_container_width=True): st.session_state.page="add"; st.rerun()
-    if st.button("⭐ Play Store", use_container_width=True): st.session_state.page="playstore"; st.rerun()
-    if st.button("❓ Aide", use_container_width=True): st.session_state.page="help"; st.rerun()
-
-# --- ACCUEIL ---
-if st.session_state.page == "home":
-    st.header("📚 Ma Bibliothèque")
-    df = load_data()
-    if not df.empty:
-        c1, c2 = st.columns([2,1])
-        search = c1.text_input("🔍 Rechercher...")
-        cat_choisie = c2.selectbox("📁 Filtrer", ["Toutes"] + sorted(list(df['Catégorie'].unique())))
-        mask = df['Titre'].str.contains(search, case=False, na=False)
-        if cat_choisie != "Toutes": mask = mask & (df['Catégorie'] == cat_choisie)
-        rows = df[mask].reset_index(drop=True)
-        for i in range(0, len(rows), 2):
-            cols = st.columns(2)
-            for j in range(2):
-                if i+j < len(rows):
-                    row = rows.iloc[i+j]
-                    with cols[j]:
-                        img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/400"
-                        st.markdown(f'<div class="recipe-card"><div class="recipe-img-container"><img src="{img}"></div><div class="recipe-content"><div class="recipe-title-text">{row["Titre"]}</div></div></div>', unsafe_allow_html=True)
-                        if st.button("📖 Ouvrir", key=f"open_{i+j}", use_container_width=True):
-                            st.session_state.recipe_data = row.to_dict(); st.session_state.page="details"; st.rerun()
-
-# --- DÉTAILS & IMPRESSION CORRIGÉ ---
-elif st.session_state.page == "details":
-    r = st.session_state.recipe_data
-    
-    # Barre de navigation
-    c_back, c_edit, c_print, c_del = st.columns(4)
-    
-    if c_back.button("⬅ Retour", use_container_width=True): 
-        st.session_state.page="home"; st.rerun()
-    
-    with c_print:
-        # REMPLACÉ : Utilisation d'un bouton <button> au lieu du lien <a> pour une meilleure compatibilité
-        st.markdown("""
-            <button onclick="window.print()" style="
-                width: 100%; background:#e67e22; color:white; padding:8px; 
-                border-radius:8px; text-align:center; font-weight:bold; 
-                border:1px solid #d35400; cursor:pointer;">
-                🖨️ Imprimer
-            </button>
-        """, unsafe_allow_html=True)
-
-    if c_del.button("🗑️ Supprimer", use_container_width=True):
-        if send_action({"action":"delete","titre":r['Titre']}): 
-            st.session_state.page="home"; st.rerun()
-
-    # --- CONTENU DE LA RECETTE ---
-    st.header(f"📖 {r.get('Titre','Sans titre')}")
-    
-    col_g, col_d = st.columns([1, 1.2])
-    
-    with col_g: 
-        img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
-        st.image(img_url, use_container_width=True)
-    
-    with col_d:
-        st.subheader("🛒 Ingrédients")
-        ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
-        
-        # VERSION ÉCRAN : Masquée à l'impression par ton CSS global
-        st.markdown('<div class="no-print">', unsafe_allow_html=True)
-        for i, l in enumerate(ings): 
-            st.checkbox(l, key=f"c_print_{i}")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # VERSION PAPIER : Affichée uniquement à l'impression par ton CSS global
-        html_p = '<div class="only-print">'
-        for l in ings: 
-            html_p += f'<p style="margin:0; font-size:14pt; color:black;">• {l}</p>'
-        st.markdown(html_p + '</div>', unsafe_allow_html=True)
-
-    st.subheader("👨‍🍳 Étapes")
-    st.write(r.get('Préparation','-'))
-
-# --- PLAY STORE ---
-elif st.session_state.page == "playstore":
-    st.markdown('<h1 style="color:white;">Mes Recettes Pro</h1><p style="color:#01875f; font-weight:bold;">VosSoins Inc.</p>', unsafe_allow_html=True)
-    if st.button("Installer", use_container_width=True):
-        st.image("https://i.postimg.cc/HnxJDBjf/cartoon-hand-bomb-vector-template-(2).jpg", width=250)
-        time.sleep(2); st.success("✓ Installé")
-    st.image(["https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg","https://i.postimg.cc/YCkg460C/shared-image-(5).jpg","https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg"], width=200)
-    if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
-
-# --- AIDE (RESTAURÉE) ---
-elif st.session_state.page == "help":
-    st.header("❓ Aide & Astuces")
-    ca, cb = st.columns(2)
-    with ca:
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22; margin-bottom:10px;"><h3>📝 Ajouter Recette</h3><p>🌐 Site Web, 🎬 Vidéo ou 📝 Vrac pour ajouter vos recettes.</p></div>', unsafe_allow_html=True)
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22;"><h3>🔍 Rechercher</h3><p>Recherchez par titre ou filtre par catégorie.</p></div>', unsafe_allow_html=True)
-    with cb:
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22; margin-bottom:10px;"><h3>🛒 Liste d’Épicerie</h3><p>Cochez les ingrédients pour les ajouter. Retirez ou videz à tout moment.</p></div>', unsafe_allow_html=True)
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22;"><h3>📅 Planning</h3><p>Planifiez vos repas et accédez aux fiches.</p></div>', unsafe_allow_html=True)
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True): st.session_state.page="home"; st.rerun()
-
-# --- AJOUTER ---
-elif st.session_state.page == "add":
-    st.header("📥 Ajouter")
-    if st.button("⬅ Annuler"): st.session_state.page="home"; st.rerun()
-    with st.form("add_f"):
-        t = st.text_input("Titre")
-        cat = st.selectbox("Catégorie", CATEGORIES)
-        ing = st.text_area("Ingrédients")
-        ins = st.text_area("Instructions")
-        if st.form_submit_button("💾 Sauvegarder"):
-            if t and ing:
-                if send_action({"action":"add","titre":t,"Catégorie":cat,"Ingrédients":ing,"Préparation":ins}):
-                    st.session_state.page="home"; st.rerun()
-
-# --- ÉPICERIE & PLANNING (SIMPLIFIÉS) ---
-elif st.session_state.page == "shop":
-    st.header("🛒 Liste d'épicerie")
-    if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
-    st.info("Consultez votre Google Sheet pour gérer la liste complète.")
-elif st.session_state.page == "planning":
-    st.header("📅 Planning")
-    if st.button("⬅ Retour"): st.session_state.page="home"; st.rerun()
-    st.info("Planifiez vos repas dans l'onglet Planning de votre fichier.")
- # ======================
 # SIDEBAR
 # ======================
 with st.sidebar:
@@ -240,120 +125,176 @@ with st.sidebar:
              style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid #e67e22; object-fit: cover;">
     </div>
     """, unsafe_allow_html=True)
+    
     st.title("🍳 Mes Recettes")
-    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page="home"; st.rerun()
-    if st.button("📅 Planning", use_container_width=True): st.session_state.page="planning"; st.rerun()
-    if st.button("🛒 Épicerie", use_container_width=True): st.session_state.page="shop"; st.rerun()
+    if st.button("📚 Bibliothèque",use_container_width=True,key="side_home"):
+        st.session_state.page="home"; st.rerun()
+    if st.button("📅 Planning Repas",use_container_width=True,key="side_plan"):
+        st.session_state.page="planning"; st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie",use_container_width=True,key="side_shop"):
+        st.session_state.page="shop"; st.rerun()
     st.divider()
-    if st.button("➕ AJOUTER RECETTE", use_container_width=True): st.session_state.page="add"; st.rerun()
-    if st.button("⭐ Play Store", use_container_width=True): st.session_state.page="playstore"; st.rerun()
-    if st.button("❓ Aide", use_container_width=True): st.session_state.page="help"; st.rerun()
+    if st.button("➕ AJOUTER RECETTE",use_container_width=True,key="side_add"):
+        st.session_state.page="add"; st.rerun()
+    if st.button("⭐ Play Store",use_container_width=True,key="side_play"):
+        st.session_state.page="playstore"; st.rerun()
+    if st.button("❓ Aide",use_container_width=True,key="side_help"):
+        st.session_state.page="help"; st.rerun()
+# ======================
+# LOGIQUE DES PAGES
+# ======================
 
-# --- ACCUEIL ---
+# --- PAGE ACCUEIL ---
 if st.session_state.page == "home":
-    st.header("📚 Ma Bibliothèque")
+    c1, c2 = st.columns([4, 1])
+    c1.header("📚 Ma Bibliothèque")
+    if c2.button("🔄 Actualiser"):
+        st.cache_data.clear()
+        st.rerun()
+    st.divider()
+    st.markdown("""
+        <style>
+        .recipe-card {
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            border: 1px solid #333;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            height: 480px;
+        }
+        .recipe-img-container {
+            width: 100%;
+            height: 320px;
+            overflow: hidden;
+        }
+        .recipe-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .recipe-content {
+            padding: 15px;
+            text-align: center;
+        }
+        .recipe-title-text {
+            color: #e0e0e0;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 10px 0;
+            line-height: 1.2;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
     df = load_data()
     if not df.empty:
-        c1, c2 = st.columns([2,1])
-        search = c1.text_input("🔍 Rechercher...", placeholder="Ex: Lasagne...")
-        cat_choisie = c2.selectbox("📁 Filtrer", ["Toutes"] + sorted(list(df['Catégorie'].unique())))
+        col_search, col_cat = st.columns([2, 1])
+        with col_search:
+            search = st.text_input("🔍 Rechercher une recette...", placeholder="Ex: Sauce spaghetti...")
+        with col_cat:
+            liste_categories = ["Toutes"] + sorted([str(c) for c in df['Catégorie'].unique() if c])
+            cat_choisie = st.selectbox("📁 Filtrer par catégorie", liste_categories)
+        
         mask = df['Titre'].str.contains(search, case=False, na=False)
-        if cat_choisie != "Toutes": mask = mask & (df['Catégorie'] == cat_choisie)
+        if cat_choisie != "Toutes":
+            mask = mask & (df['Catégorie'] == cat_choisie)
+        
+        def get_cat_color(cat):
+            colors = {"Poulet": "#FF5733", "Bœuf": "#C70039", "Dessert": "#FF33FF", "Légumes": "#28B463", "Poisson": "#3498DB", "Pâtes": "#F1C40F"}
+            return colors.get(cat, "#e67e22")
+
         rows = df[mask].reset_index(drop=True)
         for i in range(0, len(rows), 2):
-            cols = st.columns(2)
+            grid_cols = st.columns(2) 
             for j in range(2):
                 if i+j < len(rows):
                     row = rows.iloc[i+j]
-                    with cols[j]:
-                        img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/400"
-                        st.markdown(f'<div class="recipe-card"><div class="recipe-img-container"><img src="{img}"></div><div class="recipe-content"><div class="recipe-title-text">{row["Titre"]}</div></div></div>', unsafe_allow_html=True)
-                        if st.button("📖 Ouvrir", key=f"open_{i+j}", use_container_width=True):
-                            st.session_state.recipe_data = row.to_dict(); st.session_state.page="details"; st.rerun()
+                    with grid_cols[j]:
+                        img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
+                        cat_label = row['Catégorie'] if row['Catégorie'] else "Recette"
+                        st.markdown(f"""
+                            <div class="recipe-card">
+                                <div class="recipe-img-container"><img src="{img_url}"></div>
+                                <div class="recipe-content">
+                                    <span class="category-badge" style="background-color:{get_cat_color(cat_label)}; color:white;">{cat_label}</span>
+                                    <div class="recipe-title-text">{row['Titre']}</div>
+                                </div>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        if st.button("📖 Ouvrir la recette", key=f"v_{i+j}", use_container_width=True):
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
+    else:
+        st.warning("Aucune donnée trouvée.")
 
-# --- DÉTAILS & IMPRESSION (FOND BLANC CORRIGÉ) ---
-elif st.session_state.page == "details":
+# --- PAGE DÉTAILS ---
+elif st.session_state.page=="details":
     r = st.session_state.recipe_data
-    c_back, c_edit, c_print, c_del = st.columns(4)
-    if c_back.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
-    with c_print:
-        st.markdown('<a href="javascript:window.print()" style="text-decoration:none;"><div style="background:#e67e22; color:white; padding:8px; border-radius:8px; text-align:center; font-weight:bold; border:1px solid #d35400;">🖨️ Imprimer</div></a>', unsafe_allow_html=True)
-    if c_del.button("🗑️ Supprimer", use_container_width=True):
-        if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
+    c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
+    with c_nav1:
+        if st.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
+    with c_nav2:
+        if st.button("✏️ Éditer", use_container_width=True): st.session_state.page="add"; st.rerun()
+    with c_nav3:
+        st.markdown(f"""<a href="javascript:window.print()" target="_self" style="text-decoration: none;"><div style="background-color: #e67e22; color: white; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; font-weight: bold; border: 2px solid #d35400;">🖨️ Imprimer</div></a>""", unsafe_allow_html=True)
+    with c_nav4:
+        if st.button("🗑️ Supprimer", use_container_width=True): 
+            if send_action({"action":"delete","titre":r['Titre']}): st.session_state.page="home"; st.rerun()
+
+    st.divider()
     st.header(f"📖 {r.get('Titre','Sans titre')}")
     col_g, col_d = st.columns([1, 1.2])
-    with col_g: st.image(r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400", use_container_width=True)
+    with col_g:
+        img_url = r['Image'] if "http" in str(r['Image']) else "https://via.placeholder.com/400"
+        st.image(img_url,use_container_width=True)
+        st.markdown("### ⭐ Ma Note & Avis")
+        note_actuelle = int(float(r.get('Note',0))) if r.get('Note') else 0
+        nouvelle_note = st.slider("Note",0,5,note_actuelle,key="val_note")
+        nouveau_comm = st.text_area("Commentaires / astuces",value=str(r.get('Commentaires',"")),height=100,key="val_comm")
+        if st.button("💾 Enregistrer ma note",use_container_width=True):
+            if send_action({"action":"edit","titre":r['Titre'],"Note":nouvelle_note,"Commentaires":nouveau_comm}):
+                st.success("Note enregistrée !"); st.session_state.recipe_data['Note']=nouvelle_note; st.session_state.recipe_data['Commentaires']=nouveau_comm; st.rerun()
     with col_d:
+        st.subheader("📋 Informations")
+        st.write(f"**🍴 Catégorie :** {r.get('Catégorie','Non classé')}")
+        st.write(f"**👥 Portions :** {r.get('Portions','-')}")
+        st.write(f"**⏱ Préparation :** {r.get('Temps_Prepa','-')} min")
+        st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
         st.subheader("🛒 Ingrédients")
         ings = [l.strip() for l in str(r.get('Ingrédients','')).split("\n") if l.strip()]
-        st.markdown('<div class="no-print">', unsafe_allow_html=True)
-        for i, l in enumerate(ings): st.checkbox(l, key=f"c_{i}")
-        st.markdown('</div>', unsafe_allow_html=True)
-        html_p = '<div class="only-print">'
-        for l in ings: html_p += f'<p style="color:black !important; margin:0; font-size:14pt;">• {l}</p>'
-        st.markdown(html_p + '</div>', unsafe_allow_html=True)
-    st.subheader("👨‍🍳 Étapes")
-    st.write(r.get('Préparation','-'))
+        sel=[]
+        for i,l in enumerate(ings):
+            if st.checkbox(l,key=f"chk_det_final_{i}"): sel.append(l)
+        if st.button("📥 Ajouter au Panier",use_container_width=True):
+            for it in sel: send_action({"action":"add_shop","article":it})
+            st.toast("Ajouté !"); st.session_state.page="shop"; st.rerun()
+    st.divider()
+    st.subheader("📝 Préparation")
+    st.write(r.get('Préparation','Aucune étape.'))
 
-# --- PAGE PLAY STORE (VERSION COMPLÈTE AVEC LA BOMBE) ---
-elif st.session_state.page == "playstore":
-    st.markdown("""
-        <style>
-        .play-title { font-size: 2.2rem; font-weight: 600; color: white; margin-bottom: 0px; }
-        .play-dev { color: #01875f; font-weight: 500; font-size: 1.1rem; margin-bottom: 20px; }
-        .play-stats { display: flex; justify-content: flex-start; gap: 40px; border-top: 1px solid #3c4043; border-bottom: 1px solid #3c4043; padding: 15px 0; margin-bottom: 25px; }
-        .stat-box { text-align: center; }
-        .stat-val { font-size: 1.1rem; font-weight: bold; color: white; display: block; }
-        .stat-label { font-size: 0.8rem; color: #bdc1c6; }
-        </style>
-    """, unsafe_allow_html=True)
-
-    c_info, c_logo = st.columns([2, 1])
-    with c_info:
-        st.markdown('<div class="play-title">Mes Recettes Pro</div>', unsafe_allow_html=True)
-        st.markdown('<div class="play-dev">VosSoins Inc.</div>', unsafe_allow_html=True)
-        st.markdown('<div class="play-stats"><div class="stat-box"><span class="stat-val">4,9 ⭐</span><span class="stat-label">1,44 k avis</span></div><div class="stat-box"><span class="stat-val">100 k+</span><span class="stat-label">Téléchargements</span></div><div class="stat-box"><span class="stat-val">E</span><span class="stat-label">Tout le monde</span></div></div>', unsafe_allow_html=True)
-    with c_logo:
-        st.markdown('<div style="text-align:right;"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" style="width:130px; border-radius:20%; border:1px solid #3c4043;"></div>', unsafe_allow_html=True)
-
-    # --- L'ANIMATION DE LA BOMBE ---
-    btn_place = st.empty()
-    if btn_place.button("Installer", key="install_play", use_container_width=True):
-        btn_place.empty()
-        st.image("https://i.postimg.cc/HnxJDBjf/cartoon-hand-bomb-vector-template-(2).jpg", width=300)
-        time.sleep(2.5)
-        st.markdown("<h3 style='color:#01875f;'>✓ Installé avec succès</h3>", unsafe_allow_html=True)
-
-    st.write("✨ Cette appli est proposée pour tous vos appareils")
-    st.image(["https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg","https://i.postimg.cc/YCkg460C/shared-image-(5).jpg","https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg"], width=230)
-    if st.button("⬅ Retour", use_container_width=True): st.session_state.page="home"; st.rerun()
-
-# --- PAGE AIDE (RESTAURÉE) ---
-elif st.session_state.page == "help":
-    st.header("❓ Aide & Astuces")
-    ca, cb = st.columns(2)
-    with ca:
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22; margin-bottom:15px;"><h3>📝 Ajouter Recette</h3><p>🌐 Site Web, 🎬 Vidéo ou 📝 Vrac pour ajouter vos recettes facilement.</p></div>', unsafe_allow_html=True)
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22;"><h3>🔍 Rechercher</h3><p>Utilisez la barre de recherche par titre ou filtrez par catégorie.</p></div>', unsafe_allow_html=True)
-    with cb:
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22; margin-bottom:15px;"><h3>🛒 Épicerie</h3><p>Cochez les ingrédients pour les envoyer dans votre liste de courses.</p></div>', unsafe_allow_html=True)
-        st.markdown('<div style="background:#1e1e1e; padding:15px; border-radius:10px; border-left:5px solid #e67e22;"><h3>📅 Planning</h3><p>Organisez vos repas de la semaine en un clic.</p></div>', unsafe_allow_html=True)
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True): st.session_state.page="home"; st.rerun()
-
-# --- AJOUTER RECETTE ---
+# --- PAGE AJOUTER ---
 elif st.session_state.page == "add":
-    st.header("📥 Ajouter une Recette")
-    if st.button("⬅ Annuler"): st.session_state.page="home"; st.rerun()
-    with st.form("add_form_final"):
-        t = st.text_input("Nom de la recette")
-        cat = st.selectbox("Catégorie", CATEGORIES)
-        ing = st.text_area("Ingrédients (un par ligne)")
-        ins = st.text_area("Instructions / Étapes")
-        img_url = st.text_input("Lien de l'image (URL)")
-        if st.form_submit_button("💾 ENREGISTRER"):
-            if t and ing:
-                if send_action({"action":"add","titre":t,"Catégorie":cat,"Ingrédients":ing,"Préparation":ins,"Image":img_url}):
-                    st.success("Ajouté !"); time.sleep(1); st.session_state.page="home"; st.rerun()   
-
-
-
+    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"; st.rerun()
+    st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
+    c_search, c_btn = st.columns([3, 1])
+    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed")
+    query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
+    target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
+    c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight
