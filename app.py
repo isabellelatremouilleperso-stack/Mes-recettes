@@ -19,52 +19,42 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 
 st.markdown("""
 <style>
-/* --- DESIGN ÉCRAN (DARK MODE) --- */
+/* --- LOOK ÉCRAN --- */
 .stApp { background-color: #0e1117; color: #e0e0e0; }
 
-/* --- DESIGN IMPRESSION (L'ULTIME) --- */
+/* --- LOOK IMPRESSION --- */
 @media print {
-    /* 1. ON SUPPRIME TOUTE LA NAVIGATION ET LES BOUTONS */
-    [data-testid="stSidebar"], 
-    [data-testid="stSidebarNav"],
-    [data-testid="stHeader"],
-    .stButton, 
-    button,
-    header, 
-    footer {
+    /* 1. CACHER LE SUPERFLU */
+    [data-testid="stSidebar"], [data-testid="stHeader"], .stButton, button, header, footer {
         display: none !important;
-        width: 0 !important;
-        height: 0 !important;
     }
 
-    /* 2. ON FORCE LE CONTENU À PRENDRE 100% DE LA LARGEUR (Fini le vide à gauche) */
-    .main .block-container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 1cm !important;
-        margin: 0 !important;
-    }
-
-    /* 3. ON FORCE LE BLANC ET LE NOIR PUR */
-    .stApp, body, html, [data-testid="stMainView"], [data-testid="stVerticalBlock"] {
+    /* 2. FORCE LE BLANC TOTAL */
+    .stApp, .main, .block-container, [data-testid="stMainView"], [data-testid="stVerticalBlock"] {
         background-color: white !important;
         color: black !important;
     }
 
-    h1, h2, h3, h4, p, span, li, label, div {
+    /* 3. FORCE TOUT LE TEXTE EN NOIR (Correction pour les ingrédients) */
+    /* On cible spécifiquement les paragraphes, les listes et les labels */
+    h1, h2, h3, h4, p, span, li, label, div, b, i {
+        color: black !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
+
+    /* 4. CAS PARTICULIER : LES CHECKBOXES D'INGRÉDIENTS */
+    /* Si tes ingrédients sont des cases à cocher, Streamlit les protège. On force le noir ici. */
+    .stCheckbox label p {
         color: black !important;
     }
-
-    /* 4. ON REND LES LISTES D'INGRÉDIENTS PLUS PROPRES */
-    ul {
-        list-style-type: square !important;
-        margin-left: 20px !important;
-    }
-
-    /* 5. ON RÉDUIT LA TAILLE DE L'IMAGE POUR ÉVITER QU'ELLE PRENNE TOUTE LA PAGE */
-    img {
-        max-width: 8cm !important;
-        border-radius: 10px !important;
+    
+    /* 5. UTILISER TOUTE LA LARGEUR */
+    .main .block-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0px !important;
+        margin: 0px !important;
     }
 }
 </style>
@@ -676,6 +666,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
