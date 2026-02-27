@@ -417,38 +417,59 @@ elif st.session_state.page == "details":
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
-        # IMAGE
+        # 1. IMAGE
         img_url = r.get('Image', '')
         if "http" in str(img_url):
             st.image(img_url, use_container_width=True)
         else:
             st.image("https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # SYSTÈME D'ÉTOILES INTERACTIF
+        # 2. SYSTÈME D'ÉTOILES (Correction pour que ça reste)
         st.write("**Évaluer cette recette :**")
-        nouveau_choix = st.feedback("stars", key=f"star_det_{r['Titre']}")
+        
+        # On récupère la note actuelle pour l'afficher par défaut
+        # Streamlit feedback utilise 0 pour 1 étoile, 1 pour 2 étoiles... donc on fait -1
+        try:
+            valeur_actuelle = int(float(r.get('Note', r.get('note', 0)))) - 1
+            if valeur_actuelle < 0: valeur_actuelle = None
+        except:
+            valeur_actuelle = None
+
+        nouveau_choix = st.feedback("stars", key=f"star_det_{r['Titre']}", value=valeur_actuelle)
+        
         if nouveau_choix is not None:
             note_finale = nouveau_choix + 1
-            if send_action({"action": "edit", "titre": r['Titre'], "Note": note_finale}):
-                st.toast(f"Note enregistrée : {note_finale} ⭐")
-                st.cache_data.clear()
+            # On vérifie si la note est différente de l'ancienne avant d'envoyer
+            if note_finale != (valeur_actuelle + 1 if valeur_actuelle is not None else 0):
+                if send_action({"action": "edit", "titre": r['Titre'], "Note": note_finale}):
+                    st.toast(f"Note enregistrée : {note_finale} ⭐")
+                    st.cache_data.clear()
+                    # Mise à jour immédiate pour l'affichage sans recharger
+                    st.session_state.recipe_data['Note'] = note_finale
+                    st.rerun()
         
         st.divider()
 
-        # INFOS (Portions et Temps sous l'image)
+        # 3. INFOS (Portions et Temps - Correction des clés)
         t1, t2, t3 = st.columns(3)
-        t1.metric("🕒 Prépa", f"{r.get('Temps_Prepa', r.get('temps_prepa', '-'))}m")
-        t2.metric("🔥 Cuisson", f"{r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))}m")
-        t3.metric("🍽️ Portions", r.get('Portions', r.get('portions', '-')))
+        
+        # On cherche les deux versions (Majuscule et minuscule) pour être certain
+        prepa = r.get('Temps_Prepa', r.get('temps_prepa', '-'))
+        cuisson = r.get('Temps_Cuisson', r.get('temps_cuisson', '-'))
+        portions = r.get('Portions', r.get('portions', '-'))
+        
+        t1.metric("🕒 Prépa", f"{prepa}m")
+        t2.metric("🔥 Cuisson", f"{cuisson}m")
+        t3.metric("🍽️ Portions", portions)
             
-        # SECTION NOTES
+        # 4. SECTION NOTES
         st.markdown("### 📝 Mes Notes")
-        notes = r.get('Commentaires', '')
-        if notes:
-            st.info(notes)
+        # On cherche 'Commentaires' ou 'commentaires'
+        notes_texte = r.get('Commentaires', r.get('commentaires', ''))
+        if notes_texte:
+            st.info(notes_texte)
         else:
             st.write("*Aucune note pour le moment.*")
-
     with col_d:
         st.subheader("📋 Informations")
         st.write(f"**🍴 Catégorie :** {r.get('Catégorie', 'Autre')}")
@@ -1080,6 +1101,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
