@@ -359,7 +359,7 @@ elif st.session_state.page=="details":
         st.write(f"**🔥 Cuisson :** {r.get('Temps_Cuisson','-')} min")
         st.subheader("🛒 Ingrédients")
 
-# 1. Recherche de la colonne (Ton code actuel)
+# Ton code de recherche de colonne
 col_ing = None
 for k in r.keys():
     if "ing" in k.lower():
@@ -371,22 +371,20 @@ if col_ing:
     ings = [l.strip() for l in str(raw_ings).split("\n") if l.strip()]
 
     if ings:
-        # --- ZONE TABLETTE (Invisible à l'impression) ---
-        st.markdown('<div class="no-print">', unsafe_allow_html=True)
+        # TEST ULTIME : On affiche le texte directement, deux fois.
+        # Une fois pour l'écran, une fois pour l'imprimante (sans fioritures)
+        
+        st.write("--- Début de liste ---") # Pour vérifier que le code passe ici
+        
         for i, l in enumerate(ings):
-            st.checkbox(l, key=f"chk_tablet_{i}")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # --- ZONE PAPIER (Invisible sur la tablette) ---
-        st.markdown('<div class="only-print">', unsafe_allow_html=True)
-        for l in ings:
-            # On force le texte en noir avec du HTML simple
-            st.markdown(f"<p style='color: black !important; margin: 0;'>• {l}</p>", unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            # On affiche la case ET le texte brut à côté
+            st.markdown(f"**• {l}**") 
+            
+        st.write("--- Fin de liste ---")
     else:
-        st.info("Aucun ingrédient trouvé.")
+        st.info("La liste 'ings' est vide.")
 else:
-    st.error("Colonne des ingrédients introuvable.")
+    st.error("Colonne introuvable.")
 # --- PAGE : AJOUTER UNE RECETTE (ÉPURÉE) ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -671,6 +669,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
