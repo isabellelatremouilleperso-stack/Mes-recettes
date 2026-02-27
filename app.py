@@ -174,6 +174,14 @@ def load_data():
         df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
         df = df.fillna('')
         df.columns = [c.strip() for c in df.columns]
+        
+        # --- NETTOYAGE ANTI-DOUBLONS GLOBAL ---
+        if not df.empty and 'Titre' in df.columns:
+            # On enlève les espaces invisibles dans les titres
+            df['Titre'] = df['Titre'].astype(str).str.strip()
+            # On supprime les doublons sur le titre
+            df = df.drop_duplicates(subset=['Titre'], keep='first')
+        
         return df
     except:
         return pd.DataFrame()
@@ -1211,6 +1219,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
