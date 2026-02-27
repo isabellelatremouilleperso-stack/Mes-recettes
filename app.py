@@ -508,28 +508,58 @@ elif st.session_state.page == "shop":
     except:
         st.error("Erreur de chargement de la liste.")
 
-# --- PAGE PLANNING ---
+# --- PAGE PLANNING AMÉLIORÉE ---
 elif st.session_state.page == "planning":
-    st.header("📅 Planning de la semaine")
-    if st.button("⬅ Retour"):
-        st.session_state.page = "home"; st.rerun()
+    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Repas</h1>', unsafe_allow_html=True)
+    
+    c_nav1, c_nav2 = st.columns([1, 3])
+    with c_nav1:
+        if st.button("⬅ Retour"):
+            st.session_state.page = "home"; st.rerun()
+    with c_nav2:
+        if st.button("🗑️ Vider tout le planning", use_container_width=False):
+             if send_action({"action": "clear_plan"}):
+                 st.cache_data.clear(); st.rerun()
+
     st.divider()
+    
     df = load_data()
+    
     if not df.empty and 'Date_Prevue' in df.columns:
-        # On filtre les recettes qui ont une date prévue
-        plan = df[df['Date_Prevue'].astype(str).str.strip() != ""].sort_values(by='Date_Prevue')
+        # Nettoyage et conversion des dates
+        df['Date_Prevue'] = pd.to_datetime(df['Date_Prevue'], errors='coerce')
+        
+        # On filtre pour afficher à partir d'aujourd'hui
+        aujourdhui = pd.Timestamp(datetime.now().date())
+        plan = df[df['Date_Prevue'] >= aujourdhui].sort_values(by='Date_Prevue')
+
         if not plan.empty:
+            # Affichage sous forme de "Timeline" stylisée
             for _, row in plan.iterrows():
-                with st.expander(f"📌 {row['Date_Prevue']} : {row['Titre']}"):
-                    st.write(f"**Catégorie :** {row['Catégorie']}")
-                    if st.button("Voir la fiche complète", key=f"p_btn_{row['Titre']}"):
+                date_str = row['Date_Prevue'].strftime('%A %d %B') # Ex: Lundi 25 Octobre
+                
+                with st.container():
+                    # Design de la carte de planning
+                    st.markdown(f"""
+                    <div style="background-color: #1e2129; padding: 15px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
+                        <span style="color: #e67e22; font-weight: bold; font-size: 0.9rem;">{date_str.upper()}</span>
+                        <h3 style="margin: 5px 0; color: white;">{row['Titre']}</h3>
+                        <p style="margin: 0; color: #888; font-size: 0.8rem;">📂 {row['Catégorie']}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    c1, c2, c3 = st.columns([2, 1, 1])
+                    if c1.button("📖 Voir la recette", key=f"plan_v_{row['Titre']}"):
                         st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
+                        st.session_state.page = "details"; st.rerun()
+                    if c2.button("❌ Retirer", key=f"plan_del_{row['Titre']}"):
+                        if send_action({"action": "unplan", "titre": row['Titre']}):
+                            st.cache_data.clear(); st.rerun()
+                    st.write("") # Espace
         else:
-            st.info("Aucun repas planifié pour le moment.")
+            st.info("Aucun repas n'est prévu pour les jours à venir. Allez dans la fiche d'une recette pour l'ajouter ici !")
     else:
-        st.warning("La colonne de planning est introuvable ou vide.")
+        st.warning("La colonne de planning est introuvable. Vérifiez votre Google Sheet.")
 
 # ==========================================
 # --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
@@ -762,6 +792,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
