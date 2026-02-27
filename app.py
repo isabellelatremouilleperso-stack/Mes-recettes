@@ -254,27 +254,26 @@ elif st.session_state.page=="details":
             st.session_state.page="add"; st.rerun()
     
     with c_nav3:
-        # On remplace le bouton Streamlit par un bouton HTML "cliquable" directement
-        st.markdown("""
-            <style>
-            .print-btn {
-                background-color: #e67e22;
-                color: white;
-                border: none;
-                padding: 0.5rem 1rem;
-                border-radius: 0.5rem;
-                width: 100%;
-                font-weight: 400;
-                cursor: pointer;
-                text-align: center;
-                height: 38px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .print-btn:hover { background-color: #d35400; }
-            </style>
-            <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+        # Un bouton HTML "propre" qui utilise un lien pour déclencher l'impression
+        st.write(f"""
+            <a href="javascript:window.print()" style="text-decoration: none;">
+                <div style="
+                    background-color: #e67e22;
+                    color: white;
+                    height: 38px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    border: none;
+                    margin: 0;
+                ">
+                    🖨️ Imprimer
+                </div>
+            </a>
         """, unsafe_allow_html=True)
             
     with c_nav4:
@@ -604,6 +603,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
