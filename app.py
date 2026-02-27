@@ -361,20 +361,21 @@ elif st.session_state.page == "details":
     with c_nav2:
         if st.button("✏️ Éditer", use_container_width=True):
             st.session_state.recipe_to_edit = r.copy()
-            st.session_state.page="edit"; st.rerun()
+            st.session_state.page = "edit"
+            st.rerun()
+
     with c_nav3:
         if st.button("🖨️ Imprimer", use_container_width=True):
-            st.session_state.page = "print"; st.rerun()
-   with c_nav4:
-    if st.button("🗑️ Supprimer", use_container_width=True): 
-        # On envoie l'action au script Google
-        if send_action({"action": "delete", "titre": r['Titre']}):
-            # --- ÉTAPE CRUCIALE ---
-            st.cache_data.clear() # On force l'appli à recharger la liste sans la recette supprimée
-            
-            st.toast(f"Recette '{r['Titre']}' supprimée ! 🗑️")
-            st.session_state.page = "home"
+            st.session_state.page = "print"
             st.rerun()
+
+    with c_nav4:
+        if st.button("🗑️ Supprimer", use_container_width=True):
+            if send_action({"action": "delete", "titre": r['Titre']}):
+                st.cache_data.clear()
+                st.toast(f"Recette '{r['Titre']}' supprimée ! 🗑️")
+                st.session_state.page = "home"
+                st.rerun()
 
     st.divider()
     st.header(f"📖 {r.get('Titre','Sans titre')}")
@@ -1005,6 +1006,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
