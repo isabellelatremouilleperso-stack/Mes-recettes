@@ -278,7 +278,7 @@ elif st.session_state.page=="details":
     st.write(r.get('Préparation','Aucune étape.'))
 
 # ==========================================
-# --- PAGE : AJOUTER UNE RECETTE (RETOUR À LA NORMALE) ---
+# --- PAGE : AJOUTER UNE RECETTE (STRUCTURE ORIGINALE + NOTES) ---
 # ==========================================
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -288,9 +288,9 @@ elif st.session_state.page == "add":
         st.session_state.page = "home"
         st.rerun()
 
-    st.write("") # Espace pour respirer
+    st.write("") 
 
-    # --- BARRE DE RECHERCHE GOOGLE.CA ---
+    # --- BARRE DE RECHERCHE GOOGLE.CA (FIXÉE) ---
     st.markdown("""
         <div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;">
             <h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4>
@@ -302,7 +302,6 @@ elif st.session_state.page == "add":
     
     import urllib.parse
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
-    # On utilise l'URL spécifique pour forcer le .ca
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
     # Bouton HTML Direct
@@ -335,9 +334,9 @@ elif st.session_state.page == "add":
 
     st.divider()
 
-    # --- FORMULAIRE (LA STRUCTURE QUE TU VOIS SUR TA PHOTO) ---
+    # --- FORMULAIRE (LA STRUCTURE DE TA PHOTO) ---
     with st.container():
-        # Titre et Catégorie
+        # Ligne 1 : Titre et Catégorie
         col_t, col_c = st.columns([2, 1])
         titre = col_t.text_input("🏷️ Nom de la recette", 
                                  value=st.session_state.get('scraped_title', ''),
@@ -346,7 +345,7 @@ elif st.session_state.page == "add":
         cat_index = CATEGORIES.index("Autre") if "Autre" in CATEGORIES else 0
         categorie = col_c.selectbox("📁 Catégorie", CATEGORIES, index=cat_index)
 
-        # Paramètres de cuisson
+        # Ligne 2 : Paramètres de cuisson
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
         t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15")
@@ -355,7 +354,7 @@ elif st.session_state.page == "add":
 
         st.divider()
 
-        # Ingrédients et Préparation côte à côte
+        # Ligne 3 : Ingrédients & Étapes (Côte à côte)
         ci, ce = st.columns(2)
         with ci:
             st.markdown("### 🍎 Ingrédients")
@@ -365,22 +364,36 @@ elif st.session_state.page == "add":
             val_p = st.session_state.get('scraped_content', '')
             instructions = st.text_area("Décrivez les étapes", value=val_p, height=300)
 
-        # Image
-        img_url = st.text_input("🖼️ Visuel (Lien URL de l'image)")
+        # Ligne 4 : Image
+        st.markdown("#### 🖼️ Visuel")
+        img_url = st.text_input("Lien de l'image (URL)", placeholder="https://...")
+
+        # --- NOUVELLE SECTION : COMMENTAIRES / NOTES ---
+        st.markdown("#### 📝 Mes Notes & Astuces")
+        commentaires = st.text_area("Ajoutez vos conseils (ex: Moins de sucre, temps de repos...)", 
+                                    height=100,
+                                    placeholder="Ce champ m'aide à ajuster la recette la prochaine fois...")
 
         st.divider()
 
-        # Bouton Enregistrer
+        # --- BOUTON SAUVEGARDE ---
         if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
                 payload = {
-                    "action": "add", "titre": titre, "Catégorie": categorie,
-                    "Ingrédients": ingredients, "Préparation": instructions,
-                    "Image": img_url, "Temps_Prepa": t_prep, "Temps_Cuisson": t_cuis,
-                    "Portions": port, "Note": 0, "Commentaires": ""
+                    "action": "add",
+                    "titre": titre,
+                    "Catégorie": categorie,
+                    "Ingrédients": ingredients,
+                    "Préparation": instructions,
+                    "Image": img_url,
+                    "Temps_Prepa": t_prep,
+                    "Temps_Cuisson": t_cuis,
+                    "Portions": port,
+                    "Note": 0,
+                    "Commentaires": commentaires  # Enregistre tes notes ici
                 }
                 if send_action(payload):
-                    st.success(f"✅ '{titre}' ajouté !")
+                    st.success(f"✅ '{titre}' ajouté avec succès !")
                     if 'scraped_title' in st.session_state: del st.session_state.scraped_title
                     if 'scraped_content' in st.session_state: del st.session_state.scraped_content
                     time.sleep(1)
@@ -549,6 +562,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
