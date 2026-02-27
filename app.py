@@ -278,7 +278,7 @@ elif st.session_state.page=="details":
     st.write(r.get('Préparation','Aucune étape.'))
 
 # ==========================================
-# --- PAGE : AJOUTER UNE RECETTE (ACCÈS DIRECT GOOGLE) ---
+# --- PAGE : AJOUTER UNE RECETTE (GOOGLE.CA DIRECT) ---
 # ==========================================
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -288,30 +288,99 @@ elif st.session_state.page == "add":
         st.session_state.page = "home"
         st.rerun()
 
-   # --- BARRE DE RECHERCHE DIRECTE GOOGLE CANADA ---
+    # --- BARRE DE RECHERCHE DIRECTE GOOGLE.CA ---
     st.markdown("""
         <div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-top: 10px; margin-bottom: 10px;">
-            <h4 style="margin:0; color:white;">🔍 Trouver une idée sur Google.ca</h4>
+            <h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4>
         </div>
     """, unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
-    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Poulet au beurre facile", label_visibility="collapsed")
+    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâté chinois traditionnel", label_visibility="collapsed")
     
     # Préparation du lien direct vers GOOGLE.CA
     import urllib.parse
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
-    # CHANGEMENT ICI : .com devient .ca
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
-    # Le bouton HTML (Lien direct)
+    # Le bouton "Lien Direct" (Un seul clic = Ouverture immédiate)
     c_btn.markdown(f"""
         <a href="{target_url}" target="_blank" style="text-decoration: none;">
-            <div style="background-color: #4285F4; color: white; padding: 9px; border-radius: 5px; text-align: center; font-weight: bold; border: none; cursor: pointer;">
+            <div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer; border: none;">
                 🌐 Aller sur Google.ca
             </div>
         </a>
     """, unsafe_allow_html=True)
+
+    # --- SECTION URL (IMPORTATION) ---
+    st.markdown("""
+        <div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 20px;">
+            <h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>
+    """, unsafe_allow_html=True)
+    
+    col_url, col_go = st.columns([4, 1])
+    url_input = col_url.text_input("Collez l'URL ici (Ricardo, etc.)", placeholder="https://www.ricardocuisine.com/...")
+    
+    if col_go.button("Extraire ✨", use_container_width=True):
+        if url_input:
+            t, c = scrape_url(url_input)
+            if t:
+                st.session_state.scraped_title = t
+                st.session_state.scraped_content = c
+                st.success("C'est fait ! Remplissez les derniers détails.")
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.write("")
+
+    # --- FORMULAIRE (TA SUPER STRUCTURE) ---
+    with st.container():
+        # Ligne 1 : Titre et Catégorie
+        col_t, col_c = st.columns([2, 1])
+        titre = col_t.text_input("🏷️ Nom de la recette", 
+                                 value=st.session_state.get('scraped_title', ''),
+                                 placeholder="Le nom de ton plat")
+        categorie = col_c.selectbox("📁 Catégorie", CATEGORIES, index=CATEGORIES.index("Autre") if "Autre" in CATEGORIES else 0)
+
+        # Ligne 2 : Temps & Portions (Alignement parfait)
+        st.markdown("#### ⏱️ Paramètres de cuisson")
+        cp1, cp2, cp3 = st.columns(3)
+        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45")
+        port = cp3.text_input("🍽️ Portions", placeholder="4")
+
+        st.divider()
+
+        # Ligne 3 : INGRÉDIENTS & PRÉPARATION
+        ci, ce = st.columns(2)
+        with ci:
+            st.markdown("### 🍎 Ingrédients")
+            ingredients = st.text_area("Un par ligne", height=350)
+        with ce:
+            st.markdown("### 👨‍🍳 Préparation")
+            val_p = st.session_state.get('scraped_content', '')
+            instructions = st.text_area("Les étapes", value=val_p, height=350)
+
+        # Ligne 4 : Image
+        img_url = st.text_input("🖼️ Lien de l'image (URL)")
+
+        st.divider()
+        
+        # --- BOUTON SAUVEGARDE ---
+        if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
+            if titre and ingredients:
+                payload = {
+                    "action": "add", "titre": titre, "Catégorie": categorie,
+                    "Ingrédients": ingredients, "Préparation": instructions,
+                    "Image": img_url, "Temps_Prepa": t_prep, "Temps_Cuisson": t_cuis,
+                    "Portions": port, "Note": 0, "Commentaires": ""
+                }
+                if send_action(payload):
+                    st.success(f"✅ '{titre}' a été ajouté !")
+                    if 'scraped_title' in st.session_state: del st.session_state.scraped_title
+                    if 'scraped_content' in st.session_state: del st.session_state.scraped_content
+                    time.sleep(1)
+                    st.session_state.page = "home"
+                    st.rerun()
 
     # --- SECTION URL (IMPORTATION) ---
     st.markdown("""
@@ -556,6 +625,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
