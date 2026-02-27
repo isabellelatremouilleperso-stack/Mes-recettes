@@ -351,12 +351,30 @@ elif st.session_state.page == "planning":
 
 # --- PAGE PLAY STORE (TON DESIGN EXACT) ---
 elif st.session_state.page == "playstore":
-    # CSS spécifique pour le look Google Play
+    # CSS spécifique pour le look Google Play - BIEN ENFERMÉ DANS LE MARKDOWN
     st.markdown("""
     <style>
-    .play-title { font-size: 2.2rem; font-weight: 600; color: white; margin-bottom: 0px; }
-    .play-dev { color: #01875f; font-weight: 500; font-size: 1.1rem; margin-bottom: 20px; }
-    .play-stats { display: flex; justify-content: flex-start; gap: 40px; border-top: 1px solid #3c4043; border-bottom: 1px solid #3c4043; padding: 15px 0; margin-bottom: 25px; }
+    .play-title { 
+        font-size: 2.2rem; 
+        font-weight: 600; 
+        color: white; 
+        margin-bottom: 0px; 
+    }
+    .play-dev { 
+        color: #01875f; 
+        font-weight: 500; 
+        font-size: 1.1rem; 
+        margin-bottom: 20px; 
+    }
+    .play-stats { 
+        display: flex; 
+        justify-content: flex-start; 
+        gap: 40px; 
+        border-top: 1px solid #3c4043; 
+        border-bottom: 1px solid #3c4043; 
+        padding: 15px 0; 
+        margin-bottom: 25px; 
+    }
     .stat-box { text-align: center; }
     .stat-val { font-size: 1.1rem; font-weight: bold; color: white; display: block; }
     .stat-label { font-size: 0.8rem; color: #bdc1c6; }
@@ -397,7 +415,6 @@ elif st.session_state.page == "playstore":
     st.divider()
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"; st.rerun()
-
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.header("❓ Aide & Astuces")
@@ -409,4 +426,5 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
