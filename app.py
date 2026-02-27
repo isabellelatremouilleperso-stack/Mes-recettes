@@ -506,51 +506,50 @@ elif st.session_state.page == "shop":
 
 # --- PAGE PLANNING AMÉLIORÉE ---
 elif st.session_state.page == "planning":
-    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Repas</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning Hebdomadaire</h1>', unsafe_allow_html=True)
     
-    c_nav1, c_nav2 = st.columns([1, 3])
-    with c_nav1:
-        if st.button("⬅ Retour"):
+    # Boutons de contrôle
+    col_btn1, col_btn2 = st.columns([1, 1])
+    with col_btn1:
+        if st.button("⬅ Retour", use_container_width=True):
             st.session_state.page = "home"; st.rerun()
-    with c_nav2:
-        if st.button("🗑️ Vider tout le planning", use_container_width=False):
-             if send_action({"action": "clear_plan"}):
-                 st.cache_data.clear(); st.rerun()
+    with col_btn2:
+        if st.button("🗑️ Vider le planning", use_container_width=True):
+            if send_action({"action": "clear_planning"}):
+                st.cache_data.clear(); st.rerun()
 
     st.divider()
-    
-    df = load_data()
-    
-    if not df.empty and 'Date_Prevue' in df.columns:
-        # Nettoyage et conversion des dates
-        df['Date_Prevue'] = pd.to_datetime(df['Date_Prevue'], errors='coerce')
-        
-        # On filtre pour afficher à partir d'aujourd'hui
-        aujourdhui = pd.Timestamp(datetime.now().date())
-        plan = df[df['Date_Prevue'] >= aujourdhui].sort_values(by='Date_Prevue')
 
-        if not plan.empty:
-            # Affichage sous forme de "Timeline" stylisée
-            for _, row in plan.iterrows():
-                date_str = row['Date_Prevue'].strftime('%A %d %B') # Ex: Lundi 25 Octobre
+    # On charge les données de l'onglet Planning
+    # Note: Assure-toi que ta fonction load_data() peut lire l'onglet "Planning"
+    df_plan = load_data(sheet_name="Planning") 
+
+    if df_plan.empty:
+        st.info("Votre planning est vide. Ajoutez des recettes depuis leur fiche descriptive !")
+    else:
+        # Conversion des dates pour trier
+        df_plan['Date'] = pd.to_datetime(df_plan['Date'])
+        df_plan = df_plan.sort_values(by='Date')
+
+        # Affichage visuel
+        for _, row in df_plan.iterrows():
+            date_formatee = row['Date'].strftime('%A %d %b')
+            
+            with st.container():
+                st.markdown(f"""
+                <div style="background-color: #1e2129; padding: 15px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
+                    <small style="color: #e67e22; font-weight: bold;">{date_formatee.upper()}</small>
+                    <h3 style="margin: 0;">{row['Titre']}</h3>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                with st.container():
-                    # Design de la carte de planning
-                    st.markdown(f"""
-                    <div style="background-color: #1e2129; padding: 15px; border-radius: 10px; border-left: 5px solid #e67e22; margin-bottom: 10px;">
-                        <span style="color: #e67e22; font-weight: bold; font-size: 0.9rem;">{date_str.upper()}</span>
-                        <h3 style="margin: 5px 0; color: white;">{row['Titre']}</h3>
-                        <p style="margin: 0; color: #888; font-size: 0.8rem;">📂 {row['Catégorie']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    c1, c2, c3 = st.columns([2, 1, 1])
-                    if c1.button("📖 Voir la recette", key=f"plan_v_{row['Titre']}"):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"; st.rerun()
-                    if c2.button("❌ Retirer", key=f"plan_del_{row['Titre']}"):
-                        if send_action({"action": "unplan", "titre": row['Titre']}):
-                            st.cache_data.clear(); st.rerun()
+                c1, c2 = st.columns([3, 1])
+                if c1.button(f"Voir la recette", key=f"btn_{row['Titre']}_{row['Date']}"):
+                    # Logique pour retrouver la recette et l'afficher
+                    pass
+                if c2.button("❌", key=f"del_{row['Titre']}_{row['Date']}"):
+                    send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'])})
+                    st.cache_data.clear(); st.rerun()
                     st.write("") # Espace
         else:
             st.info("Aucun repas n'est prévu pour les jours à venir. Allez dans la fiche d'une recette pour l'ajouter ici !")
@@ -788,6 +787,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
