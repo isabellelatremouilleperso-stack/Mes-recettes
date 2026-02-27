@@ -301,7 +301,7 @@ elif st.session_state.page == "planning":
         st.rerun()
 
 # ==========================================
-# --- PAGE FICHE PRODUIT PLAY STORE (STYLE OFFICIEL) ---
+# --- PAGE FICHE PRODUIT PLAY STORE ---
 # ==========================================
 elif st.session_state.page == "playstore":
     # CSS pour le style Dark Store
@@ -316,14 +316,14 @@ elif st.session_state.page == "playstore":
         </style>
     """, unsafe_allow_html=True)
 
-    # --- EN-TÊTE ---
+    # --- EN-TÊTE (Disposition de ta capture) ---
     col_info, col_logo = st.columns([2, 1])
     
     with col_info:
         st.markdown('<div class="play-title">Mes Recettes Pro</div>', unsafe_allow_html=True)
         st.markdown('<div class="play-dev">VosSoins Inc.</div>', unsafe_allow_html=True)
         
-        # Barre de statistiques (Note, Téléchargements, Âge)
+        # Barre de statistiques officielle
         st.markdown("""
         <div class="play-stats">
             <div class="stat-box"><span class="stat-val">4,9 ⭐</span><span class="stat-label">1,44 k avis</span></div>
@@ -344,19 +344,22 @@ elif st.session_state.page == "playstore":
     # --- BOUTON INSTALLER ET EXPLOSION ---
     placeholder_action = st.empty()
     
-    # On utilise le bouton vert officiel du Play Store
-    if placeholder_action.button("Installer", key="play_install", use_container_width=False):
+    # Bouton d'installation visible initialement
+    if placeholder_action.button("Installer", key="play_install"):
+        # CLIC DETECTÉ : On remplace le bouton par l'explosion directe
         with placeholder_action:
-            # L'explosion directe
-            st.image("https://i.postimg.cc/k5j4jJ7G/cartoon-bomb.gif", width=250)
-            time.sleep(2.5)
+            # L'image de la bombe que tu as fournie est affichée ici pendant 2.5 secondes
+            st.image("https://i.postimg.cc/HnxJDBjf/cartoon-hand-bomb-vector-template-(2).jpg", width=250)
+            time.sleep(2.5) # Durée de l'animation de l'explosion
+        
+        # FIN ANIMATION : On vide la zone et on affiche le succès (ZÉRO TEXTE SUPERFLU)
         placeholder_action.empty()
         st.markdown("<h3 style='color:#01875f;'>✓ Installé</h3>", unsafe_allow_html=True)
 
     st.write("✨ Cette appli est proposée pour tous vos appareils")
     st.divider()
 
-    # --- À PROPOS ---
+    # --- À PROPOS (Texte de ta capture) ---
     st.markdown("### À propos de cette appli →", unsafe_allow_html=True)
     st.write("""
     **Mes Recettes Pro** combine un gestionnaire de recettes, une liste de courses et un planificateur de repas en une seule application intuitive.
@@ -370,7 +373,7 @@ elif st.session_state.page == "playstore":
 
     st.divider()
 
-    # --- RETOUR ---
+    # --- RETOUR (Zéro texte superflu ici aussi) ---
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
@@ -407,6 +410,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
