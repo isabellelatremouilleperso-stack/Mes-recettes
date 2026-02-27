@@ -301,7 +301,7 @@ elif st.session_state.page == "planning":
         st.rerun()
 
 # ==========================================
-# --- PAGE FICHE PRODUIT PLAY STORE ---
+# --- PAGE FICHE PRODUIT PLAY STORE (STYLE RÉEL) ---
 # ==========================================
 elif st.session_state.page == "playstore":
     # CSS pour le style Dark Store
@@ -313,10 +313,11 @@ elif st.session_state.page == "playstore":
         .stat-box { text-align: center; }
         .stat-val { font-size: 1.1rem; font-weight: bold; color: white; display: block; }
         .stat-label { font-size: 0.8rem; color: #bdc1c6; }
+        .screenshot-img { border-radius: 10px; border: 1px solid #3c4043; margin-right: 10px; }
         </style>
     """, unsafe_allow_html=True)
 
-    # --- EN-TÊTE (Disposition de ta capture) ---
+    # --- EN-TÊTE (Logo à droite) ---
     col_info, col_logo = st.columns([2, 1])
     
     with col_info:
@@ -333,47 +334,51 @@ elif st.session_state.page == "playstore":
         """, unsafe_allow_html=True)
 
     with col_logo:
-        # Ton logo rond à droite
+        # Ton logo rond
         st.markdown("""
         <div style="display: flex; justify-content: flex-end;">
             <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png" 
-                 style="width: 130px; height: 130px; border-radius: 20%; border: 2px solid #3c4043; object-fit: cover; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+                 style="width: 130px; height: 130px; border-radius: 20%; border: 1px solid #3c4043; object-fit: cover;">
         </div>
         """, unsafe_allow_html=True)
 
     # --- BOUTON INSTALLER ET EXPLOSION ---
     placeholder_action = st.empty()
     
-    # Bouton d'installation visible initialement
     if placeholder_action.button("Installer", key="play_install"):
-        # CLIC DETECTÉ : On remplace le bouton par l'explosion directe
         with placeholder_action:
-            # L'image de la bombe que tu as fournie est affichée ici pendant 2.5 secondes
+            # Ton image de bombe fournie
             st.image("https://i.postimg.cc/HnxJDBjf/cartoon-hand-bomb-vector-template-(2).jpg", width=250)
-            time.sleep(2.5) # Durée de l'animation de l'explosion
-        
-        # FIN ANIMATION : On vide la zone et on affiche le succès (ZÉRO TEXTE SUPERFLU)
+            time.sleep(2.5)
         placeholder_action.empty()
         st.markdown("<h3 style='color:#01875f;'>✓ Installé</h3>", unsafe_allow_html=True)
 
     st.write("✨ Cette appli est proposée pour tous vos appareils")
+    
+    # --- GALERIE DE PHOTOS (Tes liens fournis) ---
+    st.write("")
+    col_pic1, col_pic2, col_pic3 = st.columns(3)
+    with col_pic1:
+        st.image("https://i.postimg.cc/CxYDZG5M/shared-image-(6).jpg", use_container_width=True)
+    with col_pic2:
+        st.image("https://i.postimg.cc/YCkg460C/shared-image-(5).jpg", use_container_width=True)
+    with col_pic3:
+        st.image("https://i.postimg.cc/NjYTy6F5/shared-image-(7).jpg", use_container_width=True)
+
     st.divider()
 
-    # --- À PROPOS (Texte de ta capture) ---
+    # --- À PROPOS (Texte authentique) ---
     st.markdown("### À propos de cette appli →", unsafe_allow_html=True)
     st.write("""
     **Mes Recettes Pro** combine un gestionnaire de recettes, une liste de courses et un planificateur de repas en une seule application intuitive.
-    
-    Ajoutez facilement des recettes depuis n'importe quel site web. Vous disposez ainsi de votre propre copie de chaque recette complète. 
-    L'application se synchronise avec tous vos appareils pour un accès en ligne où que vous soyez.
+    Ajoutez facilement des recettes depuis n'importe quel site web.
     """)
     
-    # Badge de catégorie
     st.markdown('<span style="background:#3c4043; padding:5px 15px; border-radius:15px; font-size:0.9rem;">Productivité</span>', unsafe_allow_html=True)
 
     st.divider()
 
-    # --- RETOUR (Zéro texte superflu ici aussi) ---
+    # --- RETOUR ---
     if st.button("⬅ Retour", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
@@ -410,6 +415,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
