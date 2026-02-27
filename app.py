@@ -19,52 +19,44 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 
 st.markdown("""
 <style>
-/* --- DESIGN ÉCRAN (DARK MODE) --- */
+/* --- LOOK ÉCRAN (DARK) --- */
 .stApp { background-color: #0e1117; color: #e0e0e0; }
-h1,h2,h3 { color: #e67e22 !important; }
-[data-testid="stSidebar"] { background-color: #1e2129; color: white; }
-.stButton button { background-color: #e67e22; color: white; }
 
-/* --- DESIGN IMPRESSION (LE SAUVETEUR D'ENCRE) --- */
+/* --- LOOK IMPRESSION (PRO & ÉCO) --- */
 @media print {
-    /* 1. On force le blanc sur ABSOLUMENT TOUT (Conteneurs Streamlit inclus) */
-    html, body, .stApp, [data-testid="stMainView"], .main, .block-container, [data-testid="stVerticalBlock"] {
+    /* 1. On cache TOUT sauf la zone de texte de la recette */
+    [data-testid="stSidebar"], 
+    [data-testid="stHeader"], 
+    .stButton, 
+    header, 
+    footer,
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+
+    /* 2. On force le fond blanc et le texte noir sur toute la page */
+    .stApp, .main, .block-container, [data-testid="stMainView"] {
         background-color: white !important;
         color: black !important;
+        padding: 0 !important;
     }
 
-    /* 2. On fait disparaître la barre latérale et les éléments de navigation */
-    [data-testid="stSidebar"], 
-    [data-testid="stSidebarNav"],
-    section[data-testid="stSidebar"],
-    .stSidebar,
-    header, 
-    footer, 
-    .stButton, 
-    button,
-    [data-testid="stHeader"] {
-        display: none !important;
-        width: 0 !important;
-        height: 0 !important;
-    }
-
-    /* 3. On force les titres et textes en noir profond */
-    h1, h2, h3, h4, h5, h6, p, span, label, div, li, small {
+    /* 3. On s'assure que les titres et textes sont bien noirs */
+    h1, h2, h3, h4, p, span, li, label, div {
         color: black !important;
     }
 
-    /* 4. On utilise toute la largeur de la feuille pour ne pas avoir de vide à gauche */
+    /* 4. On force la recette à utiliser toute la largeur du papier */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 0.5cm !important;
         margin: 0 !important;
+        padding: 20px !important;
     }
 
-    /* 5. On retire les ombres et les bordures sombres */
-    div {
-        box-shadow: none !important;
-        border-color: #eee !important;
+    /* 5. On évite de couper la photo ou les ingrédients en deux pages */
+    img, .stMarkdown {
+        page-break-inside: avoid;
     }
 }
 </style>
@@ -654,6 +646,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
