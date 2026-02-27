@@ -254,9 +254,28 @@ elif st.session_state.page=="details":
             st.session_state.page="add"; st.rerun()
     
     with c_nav3:
-        # NOUVEAU : Bouton Imprimer placé ici
-        if st.button("🖨️ Imprimer", use_container_width=True):
-            st.markdown("<script>window.print();</script>", unsafe_allow_html=True)
+        # On remplace le bouton Streamlit par un bouton HTML "cliquable" directement
+        st.markdown("""
+            <style>
+            .print-btn {
+                background-color: #e67e22;
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 0.5rem;
+                width: 100%;
+                font-weight: 400;
+                cursor: pointer;
+                text-align: center;
+                height: 38px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .print-btn:hover { background-color: #d35400; }
+            </style>
+            <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+        """, unsafe_allow_html=True)
             
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True): 
@@ -585,6 +604,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
