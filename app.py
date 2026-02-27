@@ -165,7 +165,7 @@ def load_data():
 # SIDEBAR
 # ======================
 with st.sidebar:
-    # ... (ton code pour l'image et le titre reste le même)
+    # (Note : Assure-toi que ton code pour l'image et le titre est bien ici)
     
     if st.button("🔄 Actualiser les données", use_container_width=True):
         st.cache_data.clear()
@@ -175,7 +175,7 @@ with st.sidebar:
 
     st.divider()
 
-    # SECTION NAVIGATION (Une seule fois chaque bouton !)
+    # SECTION NAVIGATION
     if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"):
         st.session_state.page="home"; st.rerun()
         
@@ -185,22 +185,24 @@ with st.sidebar:
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
         st.session_state.page="shop"; st.rerun()
 
-    # BOUTON AIDE-MÉMOIRE (Clé unique : side_conv)
     if st.button("⚖️ Aide-Mémoire", use_container_width=True, key="side_conv"):
         st.session_state.page="conversion"; st.rerun()
     
     st.divider()
     
-    # ... (le reste de tes boutons AJOUTER, PLAY STORE, etc.)
-    
-   if st.session_state.admin_mode:
+    # SECTION ADMIN (Bouton Ajouter)
+    if st.session_state.admin_mode:
         if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
             if 'recipe_to_edit' in st.session_state:
                 del st.session_state.recipe_to_edit
             st.session_state.page="add"; st.rerun()
-        
+    else:
+        st.info("📖 Mode Consultation")
+
+    # BOUTONS DU BAS
     if st.button("⭐ Play Store", use_container_width=True, key="side_play"):
         st.session_state.page="playstore"; st.rerun()
+
     if st.button("❓ Aide", use_container_width=True, key="side_help"):
         st.session_state.page="help"; st.rerun()
 # ======================
@@ -955,6 +957,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
