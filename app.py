@@ -523,9 +523,6 @@ elif st.session_state.page == "playstore":
 import streamlit as st
 import textwrap  # Assure-toi que c'est en haut du fichier
 
-# --- INITIALISATION DE LA PAGE ---
-if 'page' not in st.session_state:
-    st.session_state.page = "home"
 
 # --- PAGES ---
 if st.session_state.page == "home":
@@ -533,9 +530,6 @@ if st.session_state.page == "home":
 
 elif st.session_state.page == "details":
     st.write("Détails de la recette")
-
-elif st.session_state.page == "print":
-    r = st.session_state.recipe_data
 
 # --- PAGE IMPRIMABLE PRO ---
 elif st.session_state.page == "print":
@@ -630,6 +624,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
