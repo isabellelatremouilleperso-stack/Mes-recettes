@@ -65,54 +65,52 @@ h1, h2, h3 { color: #e67e22 !important; }
 # --- SECTION STYLE (Correction de l'erreur 76) ---
 st.markdown("""
 <style>
-/* --- LOOK ÉCRAN --- */
+/* --- DESIGN ÉCRAN (DARK) --- */
 .stApp { background-color: #0e1117; color: #e0e0e0; }
 
-/* --- LOOK IMPRESSION (FINITION PRO) --- */
+/* --- DESIGN IMPRESSION (L'ULTIME) --- */
 @media print {
-    /* 1. ON CACHE TOUT LE SUPERFLU (Sidebar, boutons, en-têtes) */
+    /* 1. ON CACHE ABSOLUMENT TOUT LE SUPERFLU */
     [data-testid="stSidebar"], 
     [data-testid="stHeader"], 
     .stButton, 
     button, 
     header, 
     footer,
-    .stDownloadButton {
+    .stDownloadButton,
+    [data-testid="stDecoration"] {
         display: none !important;
+        height: 0px !important;
     }
 
-    /* 2. FORCE LE BLANC ET REND LE TEXTE BIEN NOIR */
-    .stApp, .main, .block-container, [data-testid="stMainView"] {
+    /* 2. FORCE LE BLANC TOTAL */
+    .stApp, .main, .block-container, [data-testid="stMainView"], [data-testid="stVerticalBlock"] {
         background-color: white !important;
         color: black !important;
     }
 
+    /* 3. FORCE LE TEXTE EN NOIR PUR */
     h1, h2, h3, h4, p, span, li, label, div {
         color: black !important;
     }
 
-    /* 3. ON UTILISE TOUTE LA LARGEUR DE LA FEUILLE */
+    /* 4. ON UTILISE TOUTE LA LARGEUR (Supprime le décalage de la sidebar) */
     .main .block-container {
         max-width: 100% !important;
         width: 100% !important;
-        padding: 0 !important;
+        padding: 0.5cm !important;
         margin: 0 !important;
     }
 
-    /* 4. ON CORRIGE LES COLONNES (Pour que Ingrédients soit à côté de l'image) */
-    [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 auto !important;
-    }
-
-    /* 5. ON AGRANDIT UN PEU LE TEXTE POUR LA LECTURE EN CUISINE */
-    p, li {
-        font-size: 12pt !important;
+    /* 5. ON REND LES IMAGES PLUS NETTES */
+    img {
+        max-width: 10cm !important;
+        border-radius: 10px !important;
+        margin-bottom: 10px !important;
     }
 }
 </style>
 """, unsafe_allow_html=True)
-
 # ======================
 # CONSTANTES
 # ======================
@@ -670,6 +668,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
