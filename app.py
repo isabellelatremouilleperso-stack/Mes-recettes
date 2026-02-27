@@ -534,110 +534,104 @@ elif st.session_state.page == "details":
 # --- PAGE IMPRIMABLE PRO ---
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
-        st.warning("Aucune recette sélectionnée pour l'impression.")
+        st.warning("Aucune recette sélectionnée.")
         if st.button("⬅ Retour"):
-            st.session_state.page = "home"
-            st.rerun()
+            st.session_state.page = "home"; st.rerun()
     else:
         r = st.session_state.recipe_data
 
-        # Correction de l'alignement ici
+        # 1. CSS Anti-Noir et Anti-Espace vide
         st.markdown("""
 <style>
-/* Fond blanc global pour l'impression */
-.stApp, .stApp > div, .stApp > div > div {
+/* Force le blanc partout pour supprimer le fond noir */
+.stApp, .stApp > div, [data-testid="stAppViewContainer"] {
     background-color: white !important;
     color: black !important;
 }
 
-/* Cacher header, sidebar, footer et boutons */
+/* Cache tout le superflu */
 [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton {
     display: none !important;
 }
 
-/* Conteneur principal de la fiche */
 .paper-sheet {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
-    font-family: 'Segoe UI', sans-serif;
+    padding: 10px;
     background-color: white !important;
-    color: black !important;
 }
 
-/* Sections ingrédients / préparation */
 .section-box {
-    background-color: white !important;
+    background-color: #f8f9fa !important;
     border: 1px solid #dee2e6 !important;
     border-radius: 10px; 
     padding: 15px 20px; 
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     page-break-inside: avoid; 
 }
 
-/* Titres */
-h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
-h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; padding-bottom: 5px; }
+h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin-bottom: 10px; }
+h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; }
 
-/* Impression */
 @media print {
     .no-print { display: none !important; }
-    .page-break { page-break-before: always; }
+    /* On cache le bouton d'impression Streamlit pour gagner de la place en haut */
+    iframe { display: none !important; }
     .section-box { background-color: white !important; border: 1px solid #ccc !important; }
 }
 </style>
 """, unsafe_allow_html=True)
 
-        # 2. Boutons de navigation (Alignement corrigé sous le else)
+        # 2. Boutons
         col1, col2 = st.columns([1, 1])
         with col1:
             if st.button("⬅ Retour", use_container_width=True):
-                st.session_state.page = "details"
-                st.rerun()
+                st.session_state.page = "details"; st.rerun()
         with col2:
             st.components.v1.html("""
                 <button onclick="window.parent.print()" style="
-                    width: 100%; 
-                    height: 38px; 
-                    background-color: #e67e22; 
-                    color: white; 
-                    border: none; 
-                    border-radius: 5px; 
-                    cursor: pointer; 
-                    font-weight: bold;
-                    font-family: sans-serif;
+                    width: 100%; height: 38px; background-color: #e67e22; 
+                    color: white; border: none; border-radius: 5px; 
+                    cursor: pointer; font-weight: bold; font-family: sans-serif;
                 ">🖨️ Lancer l'impression</button>
             """, height=45)
 
-        # 3. Préparation des données
-        lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
-        html_ing_list = ""
-        for l in lignes_ing:
+        # 3. Traitement des Ingrédients (Avec cases ☐)
+        ing_raw = str(r.get('Ingrédients','')).split('\n')
+        html_ing = ""
+        for l in ing_raw:
+            l = l.strip()
+            if not l: continue
             if l.endswith(':'):
-                html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
+                html_ing += f"<p style='margin:10px 0 5px 0;'><b>{l}</b></p>"
             else:
-                html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
+                html_ing += f"<p style='margin:2px 0;'>☐ {l}</p>"
         
+        # 4. Traitement de la Préparation (SANS cases ☐)
         prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-        # 4. CONSTRUCTION DU HTML (Zéro tabulation au début des lignes HTML)
+        # 5. RENDU (Le titre et les ingrédients sont dans le même bloc pour ne pas être séparés)
         fiche_complete = f"""
 <div class="paper-sheet">
-<h1>{r.get('Titre','Recette')}</h1>
-<div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
-<span>Catégorie : {r.get('Catégorie','-')}</span>
-<span>Portions : {r.get('Portions','-')}</span>
-<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-</div>
-<div class="section-box">
-<h3>🛒 Ingrédients</h3>
-{html_ing_list}
-</div>
-<div class="section-box page-break">
-<h3>👨‍🍳 Préparation</h3>
-<div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
-</div>
-<p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
+    <div style="page-break-inside: avoid;">
+        <h1>{r.get('Titre','Recette')}</h1>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom: 1px solid #eee; padding-bottom:5px;">
+            <span>Catégorie : {r.get('Catégorie','-')}</span>
+            <span>Portions : {r.get('Portions','-')}</span>
+            <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+        </div>
+        <div class="section-box">
+            <h3>🛒 Ingrédients</h3>
+            {html_ing}
+        </div>
+    </div>
+    
+    <div class="section-box">
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
+    </div>
+    
+    <p style="text-align:center; color:#888; font-size:0.8em; margin-top:20px;">Fiche générée par Mes Recettes Pro</p>
 </div>
 """
         st.markdown(fiche_complete, unsafe_allow_html=True)
@@ -652,6 +646,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
