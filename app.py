@@ -65,46 +65,51 @@ h1, h2, h3 { color: #e67e22 !important; }
 # --- SECTION STYLE (Correction de l'erreur 76) ---
 st.markdown("""
 <style>
-    /* DESIGN ÉCRAN */
-    .stApp { background-color: #0e1117; color: #e0e0e0; }
-    
-    /* Correction de la ligne 76 : Bien encapsulée dans le texte Markdown */
-    .stCheckbox label p { 
-        color: white !important; 
-        font-size: 1.1rem !important; 
-        font-weight: 500 !important; 
+/* --- LOOK ÉCRAN --- */
+.stApp { background-color: #0e1117; color: #e0e0e0; }
+
+/* --- LOOK IMPRESSION (FINITION PRO) --- */
+@media print {
+    /* 1. ON CACHE TOUT LE SUPERFLU (Sidebar, boutons, en-têtes) */
+    [data-testid="stSidebar"], 
+    [data-testid="stHeader"], 
+    .stButton, 
+    button, 
+    header, 
+    footer,
+    .stDownloadButton {
+        display: none !important;
     }
 
-    /* DESIGN IMPRESSION - FORCE LE BLANC ET SUPPRIME LA BARRE LATERALE */
-    @media print {
-        /* On cible les éléments structurels de Streamlit par leur ID test */
-        [data-testid="stSidebar"], 
-        [data-testid="stHeader"], 
-        .stButton, 
-        button,
-        header {
-            display: none !important;
-        }
-
-        /* On force le fond blanc sur TOUTE la page */
-        .stApp, .main, .block-container, [data-testid="stMainView"] {
-            background-color: white !important;
-            color: black !important;
-        }
-
-        /* On s'assure que le texte est noir pour l'encre */
-        h1, h2, h3, h4, p, span, li, label, div {
-            color: black !important;
-        }
-
-        /* On utilise 100% de la largeur du papier */
-        .main .block-container {
-            max-width: 100% !important;
-            width: 100% !important;
-            padding: 1cm !important;
-            margin: 0 !important;
-        }
+    /* 2. FORCE LE BLANC ET REND LE TEXTE BIEN NOIR */
+    .stApp, .main, .block-container, [data-testid="stMainView"] {
+        background-color: white !important;
+        color: black !important;
     }
+
+    h1, h2, h3, h4, p, span, li, label, div {
+        color: black !important;
+    }
+
+    /* 3. ON UTILISE TOUTE LA LARGEUR DE LA FEUILLE */
+    .main .block-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* 4. ON CORRIGE LES COLONNES (Pour que Ingrédients soit à côté de l'image) */
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+
+    /* 5. ON AGRANDIT UN PEU LE TEXTE POUR LA LECTURE EN CUISINE */
+    p, li {
+        font-size: 12pt !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -665,6 +670,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
