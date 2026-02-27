@@ -101,7 +101,7 @@ with st.sidebar:
     if not st.session_state.admin_mode:
         # Champ de mot de passe discret pour toi
         pwd = st.text_input("🔑 Accès Admin", type="password", help="Tape ton code pour modifier")
-        if pwd == "1234":  # <--- CHOISIS TON MOT DE PASSE ICI
+        if pwd == "142203":  # <--- CHOISIS TON MOT DE PASSE ICI
             st.session_state.admin_mode = True
             st.rerun()
     else:
@@ -959,6 +959,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
