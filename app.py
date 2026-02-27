@@ -520,96 +520,69 @@ elif st.session_state.page == "playstore":
         st.session_state.page = "home"
         st.rerun()
         
+import textwrap  # Ajoute cette ligne tout en haut de ton fichier si elle n'y est pas
+
 # --- PAGE IMPRIMABLE PRO ---
 elif st.session_state.page == "print":
     r = st.session_state.recipe_data
 
-    # 1. CSS INJECTÉ DIRECTEMENT (Plus de components.html)
+    # 1. CSS
     st.markdown("""
     <style>
-    /* Force le blanc et masque l'interface */
     .stApp { background-color: white !important; color: black !important; }
     [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton { display: none !important; }
-
-    .paper-sheet {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 20px;
-        font-family: 'Segoe UI', sans-serif;
-        color: black !important;
-    }
-
-    .section-box {
-        background-color: #f8f9fa !important;
-        border: 1px solid #dee2e6 !important;
-        border-radius: 10px;
-        padding: 15px 20px;
-        margin-bottom: 25px;
-        /* Empêche de couper une boîte en plein milieu entre deux pages */
+    .paper-sheet { max-width: 800px; margin: 0 auto; padding: 20px; font-family: 'Segoe UI', sans-serif; color: black !important; }
+    .section-box { 
+        background-color: #f8f9fa !important; 
+        border: 1px solid #dee2e6 !important; 
+        border-radius: 10px; padding: 15px 20px; margin-bottom: 25px;
         page-break-inside: avoid; 
     }
-
     h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; padding-bottom: 10px; margin-top:0; }
     h3 { color: #e67e22 !important; margin-top: 0; border-bottom: 1px solid #eee !important; padding-bottom: 5px; }
-
     @media print {
         .no-print { display: none !important; }
-        /* C'est ici que la magie opère pour les pages multiples */
         .page-break { page-break-before: always; }
         .section-box { background-color: white !important; border: 1px solid #ccc !important; }
-        body { font-size: 12pt; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # 2. NAVIGATION ET COMMANDE (Uniquement à l'écran)
+    # 2. Boutons de contrôle
     col1, col2 = st.columns([1, 1])
     with col1:
-        if st.button("⬅ Retourner à la recette", use_container_width=True):
-            st.session_state.page = "details"
-            st.rerun()
+        if st.button("⬅ Retour", use_container_width=True):
+            st.session_state.page = "details"; st.rerun()
     with col2:
-        # Bouton qui lance l'impression proprement
-        st.markdown('<button onclick="window.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression (CTRL+P)</button>', unsafe_allow_html=True)
+        st.markdown('<button onclick="window.print()" style="width:100%; height:38px; background-color:#e67e22; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🖨️ Lancer l\'impression</button>', unsafe_allow_html=True)
 
-    # 3. PRÉPARATION DES DONNÉES
+    # 3. Données
     lignes_ing = [l.replace('<','&lt;').replace('>','&gt;').strip() for l in str(r.get('Ingrédients','')).split('\n') if l.strip()]
-    html_ing_list = ""
-    for l in lignes_ing:
-        if l.endswith(':'):
-            html_ing_list += f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>"
-        else:
-            html_ing_list += f"<p style='margin:3px 0;'>☐ {l}</p>"
-
+    html_ing_list = "".join([f"<p style='margin:12px 0 5px 0;'><b>{l}</b></p>" if l.endswith(':') else f"<p style='margin:3px 0;'>☐ {l}</p>" for l in lignes_ing])
+    
     prepa_txt = str(r.get('Préparation','')).replace('<','&lt;').replace('>','&gt;')
 
-    # 4. BLOC HTML FINAL (Envoyé via st.markdown)
-    fiche_complete = f"""
-<div class="paper-sheet">
-    <h1>{r.get('Titre','Recette')}</h1>
-
-    <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
+    # 4. LA VARIABLE SÉCURISÉE (Utilisation de textwrap.dedent pour tuer les boîtes noires)
+    fiche_complete = textwrap.dedent(f"""
+        <div class="paper-sheet">
+        <h1>{r.get('Titre','Recette')}</h1>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:20px; border-bottom: 1px solid #eee; padding-bottom:10px;">
         <span>Catégorie : {r.get('Catégorie','-')}</span>
         <span>Portions : {r.get('Portions','-')}</span>
         <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-
-    <div class="section-box">
+        </div>
+        <div class="section-box">
         <h3>🛒 Ingrédients</h3>
         {html_ing_list}
-    </div>
-
-    <div class="section-box page-break">
+        </div>
+        <div class="section-box page-break">
         <h3>👨‍🍳 Préparation</h3>
         <div style="white-space: pre-wrap; line-height:1.6;">{prepa_txt}</div>
-    </div>
+        </div>
+        <p style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;">Fiche générée par Mes Recettes Pro</p>
+        </div>
+    """).strip()
 
-    <div style="text-align:center; color:#888; font-size:0.8em; margin-top:30px;" class="no-print">
-        Fiche générée par Mes Recettes Pro
-    </div>
-</div>
-"""
-    # ON UTILISE MARKDOWN POUR QUE LE NAVIGATEUR GÈRE LES PAGES
     st.markdown(fiche_complete, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
@@ -622,6 +595,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
