@@ -455,30 +455,51 @@ elif st.session_state.page == "details":
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
-        # IMAGE
+        # 1. AFFICHAGE DE L'IMAGE
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # --- SYSTÈME DE NOTATION ---
+        # 2. CALCUL DE LA NOTE ACTUELLE (Indispensable pour éviter l'erreur NameError)
+        try:
+            # On vérifie toutes les clés possibles (Note ou note)
+            val_note = r.get('Note', r.get('note', 0))
+            # On nettoie la valeur pour s'assurer que c'est un chiffre utilisable
+            if val_note is None or str(val_note).strip() in ["", "None", "nan", "-"]:
+                note_actuelle = 0
+            else:
+                note_actuelle = int(float(val_note))
+        except (ValueError, TypeError):
+            note_actuelle = 0
+
+        # 3. LE CURSEUR DE NOTATION
+        st.write("**Note de la recette :**")
         nouvelle_note = st.select_slider(
-            "Évaluer de 0 à 5",
-            options=[0, 1, 2, 3, 4, 5],
-            value=note_actuelle,
-            key=f"slider_note_{r['Titre']}"
+            "Évaluer de 0 à 5", 
+            options=[0, 1, 2, 3, 4, 5], 
+            value=note_actuelle, 
+            key=f"slider_note_{r.get('Titre', 'unique')}"
         )
         
+        # Affichage visuel des étoiles
+        if nouvelle_note > 0:
+            st.markdown(f"#### {'⭐' * nouvelle_note}")
+
+        # 4. ENREGISTREMENT SÉCURISÉ (Envoie toutes les infos pour ne rien perdre)
         if nouvelle_note != note_actuelle:
-            with st.spinner("Enregistrement..."):
-                # ON ENVOIE LES DEUX VARIANTES POUR ÊTRE SÛR
+            with st.spinner("Enregistrement de la note..."):
                 payload = {
                     "action": "edit", 
-                    "titre": r['Titre'], 
-                    "Note": nouvelle_note,  # Version Majuscule
-                    "note": nouvelle_note   # Version minuscule
+                    "titre": r.get('Titre'), 
+                    "Note": nouvelle_note,
+                    "Catégorie": r.get('Catégorie'),     # On renvoie la catégorie pour la garder
+                    "Temps_Prepa": r.get('Temps_Prepa'), # On renvoie le temps pour le garder
+                    "Temps_Cuisson": r.get('Temps_Cuisson'),
+                    "Portions": r.get('Portions')
                 }
+                
                 if send_action(payload):
                     st.toast("Note enregistrée ! ⭐")
-                    st.cache_data.clear()
+                    st.cache_data.clear() # Force l'app à relire le Google Sheets
                     st.session_state.recipe_data['Note'] = nouvelle_note
                     st.rerun()
         
@@ -1140,6 +1161,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
