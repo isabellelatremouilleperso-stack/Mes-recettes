@@ -119,14 +119,45 @@ with st.sidebar:
 
 # --- PAGE ACCUEIL ---
 if st.session_state.page == "home":
-    c1, c2 = st.columns([4, 1]) # 4 espaces ici
-    c1.header("📚 Ma Bibliothèque") # 4 espaces ici aussi !
+    c1, c2 = st.columns([4, 1])
+    c1.header("📚 Ma Bibliothèque")
     
-    if c2.button("🔄 Actualiser"): # 4 espaces
-        st.cache_data.clear() # 8 espaces (car dans le IF du bouton)
-        st.rerun() # 8 espaces
+    if c2.button("🔄 Actualiser"):
+        st.cache_data.clear()
+        st.rerun()
         
-    st.divider() # Retour à 4 espaces
+    st.divider()
+    
+    # CSS mis à jour pour de GRANDES images
+    st.markdown("""
+        <style>
+        .recipe-card {
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            padding: 0px;
+            border: 1px solid #3c4043;
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .recipe-card:hover {
+            transform: scale(1.03);
+            border-color: #e67e22;
+        }
+        .recipe-img {
+            width: 100%;
+            height: 300px; /* On augmente la hauteur ici */
+            object-fit: cover;
+        }
+        .recipe-title {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 15px 5px;
+        }
+        </style>
+    """, unsafe_allow_html=True)
     
     df = load_data()
     if not df.empty:
@@ -141,7 +172,6 @@ if st.session_state.page == "home":
         if cat_choisie != "Toutes":
             mask = mask & (df['Catégorie'] == cat_choisie)
         
-        # --- LOGIQUE D'AFFICHAGE AVEC BADGES ---
         def get_cat_color(cat):
             colors = {
                 "Poulet": "#FF5733", "Bœuf": "#C70039", "Dessert": "#FF33FF",
@@ -150,21 +180,23 @@ if st.session_state.page == "home":
             return colors.get(cat, "#e67e22")
 
         rows = df[mask].reset_index(drop=True)
-        for i in range(0, len(rows), 3):
-            cols = st.columns(3)
-            for j in range(3):
+        
+        # --- PASSAGE À 2 COLONNES POUR GROSSIR L'AFFICHAGE ---
+        for i in range(0, len(rows), 2):
+            cols = st.columns(2) 
+            for j in range(2):
                 if i+j < len(rows):
                     row = rows.iloc[i+j]
                     with cols[j]:
-                        img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/150"
+                        img = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/350"
                         cat_label = row['Catégorie'] if row['Catégorie'] else "Autre"
                         cat_color = get_cat_color(cat_label)
                         
                         st.markdown(f"""
                         <div class="recipe-card">
                             <img src="{img}" class="recipe-img">
-                            <div style="text-align:center; margin-top:5px;">
-                                <span style="background-color:{cat_color}; color:white; padding:2px 8px; border-radius:10px; font-size:0.7rem; font-weight:bold; text-transform:uppercase;">
+                            <div style="text-align:center; margin-top:10px;">
+                                <span style="background-color:{cat_color}; color:white; padding:4px 12px; border-radius:12px; font-size:0.8rem; font-weight:bold; text-transform:uppercase;">
                                     {cat_label}
                                 </span>
                             </div>
@@ -178,7 +210,6 @@ if st.session_state.page == "home":
                             st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
-
 elif st.session_state.page=="details":
     r = st.session_state.recipe_data
     c_nav1,c_nav2,c_nav3 = st.columns([1.5,1,1])
@@ -415,6 +446,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque",use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
