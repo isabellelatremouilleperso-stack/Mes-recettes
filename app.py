@@ -535,11 +535,111 @@ elif st.session_state.page == "details":
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
         st.warning("Aucune recette sélectionnée.")
-        if st.button("⬅ Retour"):
+        if st.button("⬅ Retour à l'accueil", key="print_no_recipe_back"):
             st.session_state.page = "home"
             st.rerun()
     else:
         r = st.session_state.recipe_data
+
+        # 1. CSS pour fond blanc complet et sections imprimables
+        st.markdown("""
+<style>
+/* Forcer fond blanc partout */
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stMainViewContainer"], .css-1v3fvcr {
+    background-color: white !important;
+    color: black !important;
+}
+
+/* Cacher éléments superflus */
+[data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, iframe {
+    display: none !important;
+}
+
+/* Conteneur principal */
+.paper-sheet {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white !important;
+    color: black !important;
+}
+
+/* Sections Ingrédients / Préparation */
+.section-box {
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    border-radius: 10px; 
+    padding: 15px; 
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+}
+
+h1 { color: black !important; border-bottom: 3px solid #e67e22 !important; margin-top:0; padding-bottom:10px; }
+h3 { color: #e67e22 !important; margin-top:0; }
+
+@media print {
+    body { background-color: white !important; }
+    .stApp, .paper-sheet { background-color: white !important; color: black !important; }
+    .section-box { background-color: white !important; page-break-inside: avoid !important; }
+    .no-print { display: none !important; }
+}
+</style>
+        """, unsafe_allow_html=True)
+
+        # 2. Boutons navigation et impression
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("⬅ Retour aux détails", key="print_back_details", use_container_width=True):
+                st.session_state.page = "details"
+                st.rerun()
+        with col2:
+            st.markdown(
+                '<a href="javascript:window.print()" style="display:block; text-align:center; width:100%; height:38px; line-height:38px; '
+                'background-color:#e67e22; color:white !important; border-radius:5px; text-decoration:none; font-weight:bold;" '
+                'key="print_btn_html">🖨️ Lancer l\'impression</a>',
+                unsafe_allow_html=True
+            )
+
+        # 3. Préparation des données pour affichage
+        ing_txt = str(r.get('Ingrédients',''))
+        html_ing = ""
+        for idx, line in enumerate(ing_txt.split('\n')):
+            line = line.strip()
+            if not line:
+                continue
+            if line.endswith(':'):
+                html_ing += f"<p style='margin:10px 0 5px 0;'><b>{line}</b></p>"
+            else:
+                html_ing += f"<p style='margin:2px 0;'>☐ {line}</p>"
+
+        prepa_txt = str(r.get('Préparation','')).replace('\n','<br>')
+
+        # 4. Rendu final HTML
+        st.markdown(f"""
+<div class="paper-sheet">
+    <!-- Première page : Titre + infos -->
+    <div style="page-break-after:always;">
+        <h1>{r.get('Titre','Recette')}</h1>
+        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:5px;">
+            <span>Catégorie : {r.get('Catégorie','-')}</span>
+            <span>Portions : {r.get('Portions','-')}</span>
+            <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+        </div>
+    </div>
+
+    <!-- Deuxième page : Ingrédients + Préparation -->
+    <div class="section-box">
+        <h3>🛒 Ingrédients</h3>
+        {html_ing}
+    </div>
+    <div class="section-box">
+        <h3>👨‍🍳 Préparation</h3>
+        <div style="line-height:1.6;">{prepa_txt}</div>
+    </div>
+
+    <p style="text-align:center; color:#888; font-size:0.8em; margin-top:20px;">Fiche générée par Mes Recettes Pro</p>
+</div>
+        """, unsafe_allow_html=True)
 
         # --- CSS global pour impression propre ---
         st.markdown("""
@@ -732,6 +832,7 @@ elif st.session_state.page=="help":
     st.divider()
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"; st.rerun()
+
 
 
 
