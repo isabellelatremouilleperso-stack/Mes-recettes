@@ -539,15 +539,23 @@ elif st.session_state.page == "details":
             st.info(notes_texte)
         else:
             st.write("*Aucune note pour le moment.*")
-    st.write("DEBUG - Données reçues pour cette recette :", r.to_dict()) # Ajoute ça temporairement
+            
+    # Correction du DEBUG (on enlève .to_dict() car r est déjà un dictionnaire ou une Series)
+st.write("DEBUG - Clés disponibles :", list(r.keys()) if hasattr(r, 'keys') else "Pas de clés")
+st.write("DEBUG - Contenu de r :", r)
+
+with col_d:
+    st.subheader("📋 Informations")
     
-    
-    with col_d:
-        st.subheader("📋 Informations")
-        
-        # On cherche la catégorie dans toutes les variantes de nom
-        cat = r.get('Catégorie', r.get('categorie', r.get('catégorie', 'Autre')))
-        st.write(f"**🍴 Catégorie :** {cat}")
+    # On récupère la valeur avec une sécurité totale
+    # On cherche 'Catégorie' ou 'Categorie' ou 'categorie'
+    cat = "Non classé"
+    for k in ['Catégorie', 'Categorie', 'categorie', 'catégorie']:
+        if k in r and str(r[k]).lower() != 'nan':
+            cat = r[k]
+            break
+            
+    st.write(f"**🍴 Catégorie :** {cat}")
         
         source = r.get('Source', r.get('source', ''))
         if source and "http" in str(source):
@@ -1195,6 +1203,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
