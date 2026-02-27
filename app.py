@@ -532,22 +532,7 @@ elif st.session_state.page == "details":
         
         st.divider()
 
-        # 4. TEMPS ET PORTIONS (Lecture robuste)
-        t1, t2, t3 = st.columns(3)
-        def get_val(keys):
-            for k in keys:
-                v = r.get(k)
-                if v and str(v).strip() not in ["None", "nan", "-", ""]:
-                    return str(v).split('.')[0]
-            return "-"
-
-        p = get_val(['Temps_Prepa', 'temps_prepa'])
-        c = get_val(['Temps_Cuisson', 'temps_cuisson'])
-        port = get_val(['Portions', 'portions'])
-
-        t1.metric("🕒 Prépa", f"{p}m" if p != "-" else "-")
-        t2.metric("🔥 Cuisson", f"{c}m" if c != "-" else "-")
-        t3.metric("🍽️ Portions", port)
+       
             
         # NOTES DU CHEF
         st.markdown("### 📝 Mes Notes")
@@ -562,37 +547,36 @@ elif st.session_state.page == "details":
         st.subheader("📋 Informations")
         
         # 1. CATÉGORIE
-        # On utilise le nom exact vu dans ton debug (index 7)
         cat = r.get('Catégorie', 'Autre')
         if not cat or str(cat).lower() == 'nan':
             cat = "Autre"
         st.write(f"**🍴 Catégorie :** {cat}")
         
+        # 2. SOURCE
+        source = r.get('Source', '')
+        if source and "http" in str(source):
+            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+        
         st.divider()
         
-        # 2. RÉCUPÉRATION DES TEMPS (Noms exacts de ton Excel)
-        # On utilise exactement "Temps de préparation" et "Temps de cuisson"
-        t_prepa = r.get('Temps de préparation', '-')
-        t_cuisson = r.get('Temps de cuisson', '-')
-        port = r.get('Portions', '-')
-
-        # Fonction pour nettoyer l'affichage
+        # 3. RÉCUPÉRATION ET NETTOYAGE
         def clean_txt(v):
             val = str(v).strip().lower()
             if val in ["nan", "none", "", "-"]: return "-"
-            return str(v).split('.')[0] # Enlève le .0 si présent
+            return str(v).split('.')[0]
 
-        p_final = clean_txt(t_prepa)
-        c_final = clean_txt(t_cuisson)
-        port_final = clean_txt(port)
+        # On récupère les valeurs depuis l'objet r
+        p_final = clean_txt(r.get('Temps de préparation', '-'))
+        c_final = clean_txt(r.get('Temps de cuisson', '-'))
+        port_final = clean_txt(r.get('Portions', '-'))
 
-        # 3. AFFICHAGE DES MÉTRIQUES
+        # 4. AFFICHAGE DES MÉTRIQUES (Sans doublons sous la photo)
         c1, c2, c3 = st.columns(3)
         c1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
         c2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         c3.metric("🍽️ Portions", port_final)
 
-        st.info("💡 Synchronisation Google Sheets active.")
+        
         
         # SECTION PLANNING
         st.subheader("📅 Planifier ce repas")
@@ -1234,6 +1218,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
