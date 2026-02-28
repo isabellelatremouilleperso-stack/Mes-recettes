@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import requests
@@ -736,56 +737,38 @@ elif st.session_state.page == "add":
         
         st.divider()
         
-        st.divider()
-        
-        # --- CRÉATION DE LA LIGNE À 2 COLONNES ---
+        # --- BOUTONS FINAUX ---
         c_save, c_cancel = st.columns(2)
         
         with c_save:
-            # On ajoute une key unique pour forcer l'affichage
-            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="btn_save_final"):
+            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
                 if titre and ingredients:
                     import datetime
-                    def clean_text(input_val):
-                        return str(input_val).strip()
-
                     payload = {
                         "action": "add",
                         "date": datetime.date.today().strftime("%d/%m/%Y"),
-                        "titre": clean_text(titre),
-                        "source": clean_text(source_url),
-                        # Correction cruciale pour les retours à la ligne
-                        "ingredients": clean_text(ingredients).replace('\n', '  \n'),
-                        "preparation": clean_text(instructions),
-                        "image": clean_text(img_url),
+                        "titre": titre.strip(),
+                        "source": source_url.strip(),
+                        "ingredients": ingredients.strip().replace('\n', '  \n'),
+                        "preparation": instructions.strip(),
+                        "image": img_url.strip(),
                         "categorie": ", ".join(cat_choisies),
-                        "portions": clean_text(port),
-                        "temps_prepa": clean_text(t_prep),
-                        "temps_cuisson": clean_text(t_cuis),
-                        "commentaires": clean_text(commentaires),
-                        "lien_video": clean_text(video_url)
+                        "portions": port.strip(),
+                        "temps_prepa": t_prep.strip(),
+                        "temps_cuisson": t_cuis.strip(),
+                        "commentaires": commentaires.strip(),
+                        "lien_video": video_url.strip()
                     }
-
                     if send_action(payload):
-                        st.success(f"✅ '{titre}' a été ajoutée !")
+                        st.success("✅ Enregistré !")
                         st.cache_data.clear()
-                        for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                            if key in st.session_state:
-                                st.session_state[key] = ""
-                        time.sleep(1)
                         st.session_state.page = "home"
                         st.rerun()
-                    else:
-                        st.error("❌ Erreur lors de l'envoi.")
                 else:
-                    st.error("🚨 Le titre et les ingrédients sont obligatoires !")
+                    st.error("🚨 Titre et Ingrédients requis !")
 
         with c_cancel:
-            # Le bouton qui deviendra rouge grâce à ton CSS
-            if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="btn_cancel_final"):
-                for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                    if key in st.session_state:
-                        st.session_state[key] = ""
+            if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
                 st.session_state.page = "home"
                 st.rerun()
  # --- PAGE ÉDITION (DÉDIÉE) ---
@@ -1313,6 +1296,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
