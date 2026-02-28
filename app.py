@@ -35,37 +35,42 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : HEADER NOIR & FLÈCHE BLANCHE ---
+# --- DESIGN CSS : ZÉRO GITHUB + FLÈCHE BLANCHE ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. L'ENTÊTE (HEADER) TOTALEMENT NOIR */
-    header[data-testid="stHeader"] {
-        background-color: #0e1117 !important; /* Noir comme le fond de l'app */
-        color: white !important;
-    }
-
-    /* 2. MASQUER GITHUB ET LE RESTE (Cachés dans le noir) */
+    /* 1. SUPPRESSION RADICALE DU "FORK", GITHUB ET DEPLOY */
+    /* On cible TOUS les éléments du header à droite */
     header [data-testid="stHeaderActionElements"], 
     .stAppDeployButton, 
-    #MainMenu {
+    #MainMenu,
+    header a { /* Supprime spécifiquement le lien 'Fork' */
         display: none !important;
+        visibility: hidden !important;
     }
 
-    /* 3. LA FLÈCHE DE MENU EN BLANC ÉCLATANT */
+    /* 2. RENDRE L'ENTÊTE TOTALEMENT NOIR (Plus de gris pâle) */
+    header[data-testid="stHeader"], [data-testid="stHeader"] {
+        background-color: #0e1117 !important; /* Noir profond */
+        border-bottom: none !important;
+    }
+
+    /* 3. LA FLÈCHE DE MENU (SIDEBAR) EN BLANC ÉCLATANT */
+    /* On force l'icône SVG de la flèche en blanc */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important; /* Flèche blanche */
+        fill: white !important;
+        color: white !important;
         width: 35px !important;
         height: 35px !important;
     }
     
-    /* Petit ajustement du bouton de la flèche */
+    /* On s'assure que le bouton de la flèche est bien positionné */
     [data-testid="stSidebarCollapsedControl"] {
         background-color: transparent !important;
-        border: none !important;
+        left: 10px !important;
     }
 
-    /* 4. GARDE TES BOUTONS ET TITRES EN ORANGE (Le reste de ton style) */
+    /* 4. GARDE TES BOUTONS ET TITRES EN ORANGE */
     h1, h2, h3 { color: #e67e22 !important; }
     
     div.stButton > button {
@@ -76,16 +81,9 @@ if st.session_state.page != "print":
         border-radius: 8px !important;
     }
 
-    /* Nettoyage du bas */
+    /* Nettoyage du bas et du fond */
     footer { visibility: hidden !important; }
     .stApp { background-color: #0e1117; }
-    
-    /* Champs de saisie */
-    input, textarea, select {
-        background-color: #1e2129 !important;
-        color: white !important;
-        border: 1px solid #3d4455 !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1304,6 +1302,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
