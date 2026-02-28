@@ -782,13 +782,11 @@ elif st.session_state.page == "edit":
         if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
             if titre_edit.strip() != "" and ingredients.strip() != "":
                 
-                # Fonction de sécurité interne pour l'envoi JSON
                 def safe_json(val):
                     v = str(val)
                     if v.lower() in ["nan", "none", "null"]: return ""
                     return v
 
-                # On prépare le payload en nettoyant CHAQUE valeur
                 payload = {
                     "action": "edit", 
                     "titre": titre_edit, 
@@ -800,7 +798,7 @@ elif st.session_state.page == "edit":
                     "Temps_Prepa": safe_json(t_prep), 
                     "Temps_Cuisson": safe_json(t_cuis), 
                     "Portions": safe_json(port), 
-                    "Note": safe_json(r_edit.get('Note', 0)), # C'est souvent lui le coupable !
+                    "Note": safe_json(r_edit.get('Note', 0)), 
                     "Commentaires": commentaires,
                     "video": video_url 
                 }
@@ -808,12 +806,10 @@ elif st.session_state.page == "edit":
                 with st.spinner("Enregistrement en cours..."):
                     import requests
                     try:
-                        # Utilise bien le nom de ta variable URL (URL_APP ou URL_SCRIPT)
-                        response = requests.post(URL_APP, json=payload, timeout=10)
+                        # /!\ ATTENTION : J'ai utilisé URL_SCRIPT ici pour correspondre à ton code précédent
+                        # Si ta variable s'appelle vraiment URL_APP, change URL_SCRIPT en URL_APP
+                        response = requests.post(URL_SCRIPT, json=payload, timeout=15)
                         
-                        st.write(f"DEBUG - Code : {response.status_code}")
-                        st.write(f"DEBUG - Réponse : {response.text}")
-
                         if response.status_code == 200 and "Success" in response.text:
                             st.success("✅ Recette mise à jour !")
                             st.cache_data.clear()
@@ -1270,6 +1266,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
