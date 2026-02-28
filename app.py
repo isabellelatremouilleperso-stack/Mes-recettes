@@ -35,58 +35,41 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS ---
-# --- DESIGN CSS ---
+# --- DESIGN CSS ULTIME ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. On ne cache plus tout le 'header', on cible précisément les icônes de déploiement */
-    .stAppDeployButton { display:none !important; }
-    [data-testid="stHeaderActionElements"] { visibility: hidden !important; }
-    
-    /* 2. On s'assure que le bouton du Menu (Sidebar) reste visible */
-    [data-testid="stHeader"] {
-        background-color: rgba(0,0,0,0) !important;
-        color: #e67e22 !important;
+    /* 1. SUPPRIMER GITHUB, DEPLOY ET LE MENU (COIN DROIT) */
+    header [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    #MainMenu {
+        display: none !important;
     }
-    
-    /* 3. Masquer le menu Streamlit classique et le footer */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
 
-    /* --- LE RESTE DE TON DESIGN --- */
+    /* 2. RENDRE LA FLÈCHE (MENU GAUCHE) TRÈS VISIBLE ET ORANGE */
+    /* On cible le bouton de la sidebar spécifiquement */
+    [data-testid="stSidebarCollapsedControl"] {
+        background-color: rgba(230, 126, 34, 0.2) !important; /* Fond léger orange */
+        border-radius: 0 10px 10px 0 !important;
+        left: 0 !important;
+    }
+
+    /* On force la couleur de l'icône de la flèche (SVG) */
+    [data-testid="stSidebarCollapsedControl"] svg {
+        fill: #e67e22 !important;
+        width: 35px !important;
+        height: 35px !important;
+    }
+
+    /* 3. NETTOYAGE DU RESTE */
+    footer { visibility: hidden !important; }
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
-    [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
-    .stButton button { background-color: #e67e22; color: white; border-radius: 8px; }
-    
-    /* Input et Textarea */
-    input, select, textarea, div[data-baseweb="select"] { 
+
+    /* Tes champs de texte */
+    input, select, textarea { 
         color: white !important; 
         background-color: #1e2129 !important; 
-    }
-    
-    .stCheckbox label p { 
-        color: white !important; 
-        font-size: 1.1rem !important; 
-        font-weight: 500 !important;
-    }
-    
-    .recipe-card { 
-        background-color: #1e2129; 
-        border: 1px solid #3d4455; 
-        border-radius: 12px; 
-        padding: 10px; 
-        height: 230px; 
-        display: flex; 
-        flex-direction: column; 
-        justify-content: space-between;
-    }
-    .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
-    .recipe-title { 
-        color: white; margin-top: 8px; font-size: 0.95rem; font-weight: bold; 
-        text-align: center; display: flex; align-items: center; justify-content: center; 
-        height: 2.5em; line-height: 1.2; 
     }
     </style>
     """, unsafe_allow_html=True)
@@ -1306,6 +1289,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
