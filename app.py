@@ -35,60 +35,57 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : ADIEU LE GRIS ---
+# --- DESIGN CSS : SÉPARATION GAUCHE/DROITE ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON TUE LE GRIS DU HEADER (GitHub, Deploy, etc.) */
-    [data-testid="stHeaderActionElements"], 
-    .stAppDeployButton, 
+    /* 1. ON FAIT DISPARAÎTRE LE BLOC DE DROITE (GitHub, Fork, Deploy) */
+    /* On cible le conteneur de droite par sa position pour être sûr */
+    header [data-testid="stHeaderActionElements"], 
+    header .stAppDeployButton, 
     header a, 
     #MainMenu {
         display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
         width: 0 !important;
     }
 
-    /* 2. LE FOND ET L'ENTÊTE EN NOIR PUR */
-    .stApp, header[data-testid="stHeader"] {
+    /* 2. ON FORCE LE HEADER EN NOIR (Pour noyer les restes de gris) */
+    header[data-testid="stHeader"] {
         background-color: #0e1117 !important;
+        border-bottom: none !important;
     }
 
-    /* 3. LA FLÈCHE : ON LA VEUT BLANCHE ÉCLATANTE */
-    /* On cible le bouton ET l'icône à l'intérieur */
-    [data-testid="stSidebarCollapsedControl"], 
-    [data-testid="stSidebarCollapsedControl"] * {
-        color: white !important;
-        fill: white !important;
-        opacity: 1 !important; /* Force le 100% blanc au lieu du gris */
-    }
-    
+    /* 3. LA FLÈCHE (À GAUCHE) EN BLANC ÉCLATANT */
+    /* On cible spécifiquement le bouton de la sidebar */
     [data-testid="stSidebarCollapsedControl"] svg {
+        fill: white !important; /* On la veut blanche pour le contraste */
+        color: white !important;
+        opacity: 1 !important;
         width: 40px !important;
         height: 40px !important;
     }
-
-    /* 4. LES TITRES ET BOUTONS : ON LES VEUT ORANGE */
-    h1, h2, h3, label, span, p {
-        color: #e67e22 !important;
-    }
     
-    /* On s'assure que le texte dans les boutons est bien blanc sur fond orange */
+    [data-testid="stSidebarCollapsedControl"] {
+        opacity: 1 !important;
+        background-color: transparent !important;
+    }
+
+    /* 4. TES MENUS ET BOUTONS EN ORANGE */
+    h1, h2, h3, label { color: #e67e22 !important; }
+    
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
         border: none !important;
         font-weight: bold !important;
-        opacity: 1 !important;
+        border-radius: 8px !important;
     }
 
-    /* 5. LES BOÎTES DE SAISIE (Pas de gris ici non plus) */
-    input, textarea, select {
-        background-color: #1e2129 !important;
-        color: white !important;
-        border: 2px solid #3d4455 !important;
-    }
-
+    /* Nettoyage du fond */
     footer { visibility: hidden !important; }
+    .stApp { background-color: #0e1117; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1307,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
