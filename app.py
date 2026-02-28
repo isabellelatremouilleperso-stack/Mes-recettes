@@ -641,7 +641,18 @@ elif st.session_state.page == "details":
         st.write(prep)
     else:
         st.warning("Aucune étape de préparation enregistrée.")
-
+        
+def clear_add_recipe_form():
+    """Vide toutes les variables de session liées au formulaire d'ajout"""
+    keys_to_clear = [
+        'scraped_title', 'scraped_ingredients', 'scraped_content', 
+        'url_main', 'p_time', 'c_time', 'portions', 'ing_area', 
+        'prep_area', 'img_url', 'notes_area'
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            st.session_state[key] = ""
+            
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1280,6 +1291,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
