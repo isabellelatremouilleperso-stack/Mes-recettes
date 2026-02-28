@@ -760,6 +760,12 @@ elif st.session_state.page == "edit":
         instructions = ce.text_area("👨‍🍳 Étapes de préparation", height=300, value=r_edit.get('Préparation', ''))
         
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''))
+
+        # --- AJOUT DU CHAMP VIDÉO (RÉCUPÉRATION) ---
+        r_list_vals = list(r_edit.values())
+        old_v = r_list_vals[13] if len(r_list_vals) > 13 else ""
+        video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=str(old_v) if str(old_v) != "nan" else "")
+        
         commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, value=r_edit.get('Commentaires', ''))
         
         st.divider()
@@ -777,7 +783,8 @@ elif st.session_state.page == "edit":
                     "Temps_Cuisson": t_cuis, 
                     "Portions": port, 
                     "Note": r_edit.get('Note', 0), 
-                    "Commentaires": commentaires
+                    "Commentaires": commentaires,
+                    "video": video_url  # <-- AJOUT AU PAYLOAD
                 }
                 if send_action(payload):
                     st.success("✅ Recette mise à jour !")
@@ -1231,6 +1238,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
