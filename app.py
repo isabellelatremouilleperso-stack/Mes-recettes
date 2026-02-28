@@ -723,17 +723,7 @@ elif st.session_state.page == "add":
                     st.rerun()
             else:
                 st.error("🚨 Le titre et les ingrédients sont obligatoires !")
-# --- PAGE ÉDITION (DÉDIÉE) ---
-elif st.session_state.page == "edit":
-    r_edit = st.session_state.get('recipe_to_edit', {})
-    
-    st.markdown('<h1 style="color: #e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
-    
-    if st.button("⬅ Annuler et Retour", use_container_width=True):
-        st.session_state.page = "details"
-        st.rerun()
-    
-    st.divider()
+
 
     # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1319,6 +1309,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
