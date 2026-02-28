@@ -117,7 +117,7 @@ CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie"
 @st.cache_data(ttl=600)
 def load_data(url):
     try:
-        # On ajoute un timestamp à l'URL pour forcer Google à rafraîchir le fichier
+        # On force le rafraîchissement avec un paramètre temporel
         timestamp_url = f"{url}&t={int(time.time())}"
         df = pd.read_csv(timestamp_url)
         df.columns = df.columns.str.strip()
@@ -1271,6 +1271,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
