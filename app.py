@@ -109,22 +109,25 @@ if st.session_state.page != "print":
 
     /* Recipe cards */
     .recipe-card { 
-        background-color:#1e2129; 
-        border:1px solid #3d4455; 
-        border-radius:12px; 
-        padding:10px; 
-        height:230px; 
-        display:flex; 
-        flex-direction:column; 
-        justify-content:space-between;
+        background-color: #1e2129; 
+        border: 1px solid #3d4455; 
+        border-radius: 12px; 
+        padding: 10px; 
+        height: 230px; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between;
     }
 
     .recipe-img { 
-        width:100%; 
-        height:130px; 
-        object-fit:cover; 
-        border-radius:8px; 
+        width: 100%; 
+        height: 130px; 
+        object-fit: cover; 
+        border-radius: 8px; 
     }
+
+    </style>
+    """, unsafe_allow_html=True)
 
     .recipe-title { 
         color:white; 
@@ -1314,6 +1317,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
