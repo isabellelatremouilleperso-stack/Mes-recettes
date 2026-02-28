@@ -32,77 +32,72 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* --- Masquer Menu Streamlit, GitHub et Footer --- */
+    /* 1. Masquer les éléments de structure Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stAppDeployButton {display:none;}
 
-    /* --- Ton Style Existant --- */
+    /* 2. Style de fond et titres */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
-    h1,h2,h3 { color: #e67e22 !important; }
+    h1, h2, h3 { color: #e67e22 !important; }
 
-    /* Sidebar */
+    /* 3. Barre latérale (Sidebar) */
     [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
-    .stButton button { background-color: #e67e22; color: white; }
+    .stButton button { background-color: #e67e22; color: white; border-radius: 8px; }
 
-    /* Inputs */
+    /* 4. Zones de saisie (Inputs) */
     input, select, textarea, div[data-baseweb="select"] { 
         color: white !important; 
         background-color: #1e2129 !important; 
     }
 
-    /* Checklist */
+    /* 5. Cases à cocher (Checklist) */
     .stCheckbox label p { 
         color: white !important; 
         font-size: 1.1rem !important; 
         font-weight: 500 !important; 
     }
 
-    /* Recipe cards */
+    /* 6. Cartes de recettes */
     .recipe-card { 
-        background-color:#1e2129; 
-        border:1px solid #3d4455; 
-        border-radius:12px; 
-        padding:10px; 
-        height:230px; 
-        display:flex; 
-        flex-direction:column; 
-        justify-content:space-between;
+        background-color: #1e2129; 
+        border: 1px solid #3d4455; 
+        border-radius: 12px; 
+        padding: 10px; 
+        height: 230px; 
+        display: flex; 
+        flex-direction: column; 
+        justify-content: space-between;
     }
 
     .recipe-img { 
-        width:100%; 
-        height:130px; 
-        object-fit:cover; 
-        border-radius:8px; 
+        width: 100%; 
+        height: 130px; 
+        object-fit: cover; 
+        border-radius: 8px; 
     }
 
     .recipe-title { 
-        color:white; 
-        margin-top:8px; 
-        font-size:0.95rem; 
-        font-weight:bold; 
-        text-align:center; 
-        display:flex; 
-        align-items:center; 
-        justify-content:center; 
-        height:2.5em; 
-        line-height:1.2; 
+        color: white; 
+        margin-top: 8px; 
+        font-size: 0.95rem; 
+        font-weight: bold; 
+        text-align: center; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        height: 2.5em; 
+        line-height: 1.2; 
     }
 
-    /* Help boxes */
+    /* 7. Boîtes d'aide */
     .help-box { 
-        background-color:#1e2130; 
-        padding:15px; 
-        border-radius:15px; 
-        border-left:5px solid #e67e22; 
-        margin-bottom:20px; 
-    }
-
-    .help-box h3 { 
-        color:#e67e22; 
-        margin-top:0; 
+        background-color: #1e2130; 
+        padding: 15px; 
+        border-radius: 15px; 
+        border-left: 5px solid #e67e22; 
+        margin-bottom: 20px; 
     }
     </style>
     """, unsafe_allow_html=True)
@@ -1320,6 +1315,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
