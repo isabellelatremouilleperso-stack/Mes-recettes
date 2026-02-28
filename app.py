@@ -651,14 +651,18 @@ elif st.session_state.page == "details":
 
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
+    
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
-        st.session_state.page = "home"; st.rerun()
+        st.session_state.page = "home"
+        st.rerun()
         
     # --- SECTION RECHERCHE GOOGLE CANADA ---
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
-    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed")
+    # Ajout d'une limite de caractères pour la sécurité
+    search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed", max_chars=100)
+    
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     
@@ -689,14 +693,14 @@ elif st.session_state.page == "add":
     with st.container():
         col_t, col_c = st.columns([2, 1])
         titre_val = st.session_state.get('scraped_title', '')
-        titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman")
+        titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
         
+        # On suppose que CATEGORIES est défini plus haut dans ton code
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
         
         # --- SECTION LIENS (DOUBLE ENTRÉE) ---
         col_link1, col_link2 = st.columns(2)
         source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
-        # TA NOUVELLE COLONNE N
         video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
         
         st.markdown("#### ⏱️ Paramètres de cuisson")
@@ -721,34 +725,41 @@ elif st.session_state.page == "add":
         if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
                 import datetime
+                
+                # Petite fonction interne pour nettoyer les entrées (Protection Injection)
+                def clean_text(input_val):
+                    return str(input_val).strip()
+
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
-                    "titre": titre,
-                    "source": source_url,
-                    "ingredients": ingredients,
-                    "preparation": instructions,
-                    "image": img_url,
+                    "titre": clean_text(titre),
+                    "source": clean_text(source_url),
+                    "ingredients": clean_text(ingredients),
+                    "preparation": clean_text(instructions),
+                    "image": clean_text(img_url),
                     "categorie": ", ".join(cat_choisies),
-                    "portions": port,
-                    "temps_prepa": t_prep,
-                    "temps_cuisson": t_cuis,
-                    "commentaires": commentaires,
-                    "lien_video": video_url  # ✅ BIEN PRÉSENT ICI
+                    "portions": clean_text(port),
+                    "temps_prepa": clean_text(t_prep),
+                    "temps_cuisson": clean_text(t_cuis),
+                    "commentaires": clean_text(commentaires),
+                    "lien_video": clean_text(video_url)
                 }
 
                 if send_action(payload):
                     st.success(f"✅ '{titre}' a été ajoutée !")
                     st.cache_data.clear()
+                    # Nettoyage des variables de session après ajout
                     for key in ['scraped_title', 'scraped_content']:
                         if key in st.session_state:
                             st.session_state[key] = ""
                     time.sleep(1)
                     st.session_state.page = "home"
                     st.rerun()
+                else:
+                    st.error("❌ Erreur lors de l'envoi vers Google Sheets.")
             else:
                 st.error("🚨 Le titre et les ingrédients sont obligatoires !")
-
 
  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1275,6 +1286,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
