@@ -597,36 +597,33 @@ elif st.session_state.page == "details":
                 st.markdown(f"""<a href="{video_link}" target="_blank" style="text-decoration:none;"><div style="background-color:{color};color:white;padding:12px;border-radius:8px;text-align:center;font-weight:bold;">{label}</div></a>""", unsafe_allow_html=True)
             st.divider()
 
-      # --- SECTION INGRÉDIENTS (RÉPARATION AUTOMATIQUE) ---
+      # --- SECTION INGRÉDIENTS (HARMONISÉE) ---
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', r.get('ingredients', ''))
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            # On récupère le texte brut de Google Sheets
             text_ing = str(ings_raw)
             
-            # MAGIE : On transforme les carrés ❑ en vrais retours à la ligne
-            # Cela rend les nouvelles recettes identiques aux anciennes
+            # On remplace le carré ❑ par un retour à la ligne pour le découpage
             text_ing = text_ing.replace("❑", "\n")
             
-            # On découpe ensuite par ligne pour créer les cases à cocher
-            ings = [line.strip() for line in text_ing.split("\n") if line.strip()]
+            # On découpe par ligne
+            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
 
             selected_ings = []
             for i, line in enumerate(ings):
-                # Chaque ingrédient aura sa case, même s'il y avait des carrés avant
+                # Maintenant, chaque ingrédient (même après un carré) a sa case !
                 if st.checkbox(line, key=f"chk_det_{i}"):
                     selected_ings.append(line)
             
             st.write("") 
             if st.button("📥 Ajouter au Panier", use_container_width=True):
                 if selected_ings:
-                    # Rappel : Ton URL s'appelle URL_SCRIPT (ligne 136 de ton image)
                     for item in selected_ings:
                         send_action({"action": "add_shop", "article": item})
                     st.toast(f"✅ {len(selected_ings)} articles ajoutés !")
                 else:
-                    st.warning("Cochez des ingrédients d'abord.")
+                    st.warning("Veuillez cocher au moins un ingrédient.")
         else:
             st.write("*Aucun ingrédient listé.*")
     # PRÉPARATION
@@ -1263,6 +1260,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
