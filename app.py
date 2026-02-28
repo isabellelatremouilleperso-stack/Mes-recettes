@@ -35,57 +35,67 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : BOUCLIER ANTI-GITHUB ---
+# --- DESIGN CSS : L'EXCLUSION RADICALE ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON SUPPRIME LE CONTENU DU HEADER (Gris, Logo, Fork) */
+    /* 1. ON POUSSE LE HEADER HORS DE L'ÉCRAN (Vers le haut) */
     header[data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-        pointer-events: none !important; /* REND TOUT LE HEADER INCLIQUABLE */
-    }
-
-    /* 2. ON CACHE VISUELLEMENT LES BOUTONS DE DROITE */
-    [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
-        visibility: hidden !important;
+        transform: translateY(-100%) !important;
+        height: 0px !important;
         display: none !important;
     }
 
-    /* 3. ON RÉACTIVE UNIQUEMENT LA FLÈCHE (À GAUCHE) */
-    /* On la rend cliquable car elle est en dehors du bouclier */
+    /* 2. ON DÉCALE TOUTE L'APPLI VERS LE HAUT POUR BOUCHER LE TROU */
+    .main .block-container {
+        padding-top: 2rem !important;
+    }
+
+    /* 3. ON CRÉE NOTRE PROPRE BOUTON DE MENU (ROND ET ORANGE) */
+    /* Ce bouton va "récupérer" la fonction d'ouverture du menu */
     [data-testid="stSidebarCollapsedControl"] {
-        pointer-events: auto !important; /* ELLE REVIENT CLIQUABLE */
-        background-color: #1e2129 !important;
-        border: 2px solid #e67e22 !important;
-        border-radius: 10px !important;
         display: flex !important;
         visibility: visible !important;
         position: fixed !important;
-        top: 8px !important;
-        left: 8px !important;
-        z-index: 1000000 !important;
+        top: 20px !important;
+        left: 20px !important;
+        z-index: 9999999 !important;
+        background-color: #e67e22 !important; /* ORANGE VIF */
+        width: 55px !important;
+        height: 55px !important;
+        border-radius: 50% !important; /* TOUT ROND */
+        box-shadow: 0px 4px 15px rgba(0,0,0,0.6) !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border: 2px solid white !important;
     }
 
-    /* Icône de la flèche en ORANGE ÉCLATANT */
+    /* La flèche à l'intérieur du rond en BLANC */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: #e67e22 !important;
-        color: #e67e22 !important;
-        width: 38px !important;
-        height: 38px !important;
+        fill: white !important;
+        color: white !important;
+        width: 30px !important;
+        height: 30px !important;
         opacity: 1 !important;
     }
 
-    /* 4. TES BOUTONS ET TITRES EN ORANGE */
+    /* 4. TES BOUTONS ET TITRES (Look Pro) */
     h1, h2, h3, label { color: #e67e22 !important; }
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
-        border-radius: 10px !important;
+        border-radius: 12px !important;
         font-weight: bold !important;
+        height: 3em !important;
+        width: 100% !important;
     }
 
+    /* Fond noir profond */
     .stApp { background-color: #0e1117; }
     footer { visibility: hidden !important; }
+    
+    /* On cache aussi le bouton "Deploy" s'il dépasse */
+    .stAppDeployButton { display: none !important; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1304,6 +1314,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
