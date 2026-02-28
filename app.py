@@ -115,14 +115,18 @@ with st.sidebar:
 CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poutine", "Poulet", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Végétarien"]
 
 @st.cache_data(ttl=600)
-def load_data(url):
+def load_data(url_csv): # J'ai renommé 'url' en 'url_csv' pour plus de clarté
     try:
-        df = pd.read_csv(url)
+        # On ajoute un paramètre bidon à l'URL pour forcer Google à donner le fichier frais
+        timestamp_url = f"{url_csv}&t={int(time.time())}"
+        df = pd.read_csv(timestamp_url)
         df.columns = df.columns.str.strip()
         return df.fillna("")
-    except:
+    except Exception as e:
+        # Afficher l'erreur réelle aide énormément à diagnostiquer
+        st.error(f"Erreur de lecture CSV : {e}")
         return pd.DataFrame()
-
+        
 def scrape_url(url):
     """Fonction indispensable pour ton bouton Extraire ✨"""
     try:
@@ -1268,6 +1272,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
