@@ -3,15 +3,21 @@ import pandas as pd
 import requests
 import time
 from datetime import datetime
+import hashlib
 from bs4 import BeautifulSoup
 import urllib.parse
-import hashlib
 
 # ======================
 # CONFIGURATION & LIAISON GOOGLE
 # ======================
 
-URL_APPS_SCRIPT = "TA_NOUVELLE_URL_ICI" 
+# 1. Ton URL de déploiement Google Apps Script (pour AJOUTER/MODIFIER)
+URL_APPS_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
+
+# 2. Tes URLs CSV pour LIRE les données
+URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
+URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
+URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=536412190&single=true&output=csv"
 
 def send_action(data):
     """Envoie les données au script Google Sheets."""
@@ -28,37 +34,27 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
+# --- DESIGN CSS ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. Masquer les éléments Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stAppDeployButton {display:none;}
-
-    /* 2. Style Global */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
-
-    /* 3. Barre latérale */
     [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
     .stButton button { background-color: #e67e22; color: white; border-radius: 8px; }
-
-    /* 4. Zones de saisie */
     input, select, textarea, div[data-baseweb="select"] { 
         color: white !important; 
         background-color: #1e2129 !important; 
     }
-
-    /* 5. Checkbox */
     .stCheckbox label p { 
         color: white !important; 
         font-size: 1.1rem !important; 
-        font-weight: 500 !important; 
+        font-weight: 500 !important;
     }
-
-    /* 6. Cartes de recettes */
     .recipe-card { 
         background-color: #1e2129; 
         border: 1px solid #3d4455; 
@@ -69,65 +65,36 @@ if st.session_state.page != "print":
         flex-direction: column; 
         justify-content: space-between;
     }
-
-    .recipe-img { 
-        width: 100%; 
-        height: 130px; 
-        object-fit: cover; 
-        border-radius: 8px; 
-    }
-
+    .recipe-img { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; }
     .recipe-title { 
-        color: white; 
-        margin-top: 8px; 
-        font-size: 0.95rem; 
-        font-weight: bold; 
-        text-align: center; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        height: 2.5em; 
-        line-height: 1.2; 
+        color: white; margin-top: 8px; font-size: 0.95rem; font-weight: bold; 
+        text-align: center; display: flex; align-items: center; justify-content: center; 
+        height: 2.5em; line-height: 1.2; 
     }
-
-    /* 7. Boîtes d'aide */
     .help-box { 
-        background-color: #1e2130; 
-        padding: 15px; 
-        border-radius: 15px; 
-        border-left: 5px solid #e67e22; 
-        margin-bottom: 20px; 
+        background-color: #1e2130; padding: 15px; border-radius: 15px; 
+        border-left: 5px solid #e67e22; margin-bottom: 20px; 
     }
     .help-box h3 { color: #e67e22; margin-top: 0; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- LE CODE PYTHON DOIT REPRENDRE ICI SANS RIEN D'AUTRE ---
 # ======================
 # SYSTÈME DE SÉCURITÉ (Hashé)
 # ======================
-import hashlib
-
-
 PASS_HASH = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
 
-# Vérifie si l'URL contient ?admin=oui
 url_admin = st.query_params.get("admin") == "oui"
-
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = url_admin
 
 with st.sidebar:
     st.divider()
     if not st.session_state.admin_mode:
-        # Champ de mot de passe discret
         pwd = st.text_input("🔑 Accès Admin", type="password", help="Tape ton code pour modifier")
-        
         if pwd:
-            # On transforme le texte saisi par l'utilisateur en hash
-            input_hash = hashlib.sha256(pwd.encode()).hexdigest()
-            
-            # On compare les deux empreintes numériques
+            # .strip() est CRUCIAL pour éviter l'erreur "Code incorrect" à cause d'un espace
+            input_hash = hashlib.sha256(pwd.strip().encode()).hexdigest()
             if input_hash == PASS_HASH:
                 st.session_state.admin_mode = True
                 st.rerun()
@@ -138,6 +105,37 @@ with st.sidebar:
         if st.button("🔒 Déconnexion"):
             st.session_state.admin_mode = False
             st.rerun()
+
+# ======================
+# CONSTANTES & FONCTIONS TECHNIQUES
+# ======================
+CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poutine", "Poulet", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Végétarien"]
+
+@st.cache_data(ttl=600)
+def load_data(url):
+    try:
+        df = pd.read_csv(url)
+        df.columns = df.columns.str.strip()
+        return df.fillna("")
+    except:
+        return pd.DataFrame()
+
+def scrape_url(url):
+    """Fonction indispensable pour ton bouton Extraire ✨"""
+    try:
+        headers = {"User-Agent": "Mozilla/5.0"}
+        res = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(res.text, 'html.parser')
+        title = soup.find('h1').text.strip() if soup.find('h1') else ""
+        # Extraction basique du contenu
+        paras = soup.find_all(['p', 'li'])
+        content = "\n".join([p.text.strip() for p in paras if len(p.text) > 20])
+        return title, content
+    except:
+        return None, None
+
+# Chargement du dataframe global
+df = load_data(URL_CSV)
 
 # ======================
 # CONSTANTES
@@ -1286,6 +1284,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
