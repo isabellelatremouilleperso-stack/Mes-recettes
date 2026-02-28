@@ -778,20 +778,29 @@ elif st.session_state.page == "edit":
         
         st.divider()
         
+        # --- BOUTON ENREGISTRER ---
         if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
             if titre_edit.strip() != "" and ingredients.strip() != "":
+                
+                # Fonction de sécurité interne pour l'envoi JSON
+                def safe_json(val):
+                    v = str(val)
+                    if v.lower() in ["nan", "none", "null"]: return ""
+                    return v
+
+                # On prépare le payload en nettoyant CHAQUE valeur
                 payload = {
                     "action": "edit", 
                     "titre": titre_edit, 
-                    "old_titre": r_edit.get('Titre', titre_edit),
+                    "old_titre": safe_json(r_edit.get('Titre', titre_edit)),
                     "Catégorie": ", ".join(cat_choisies), 
                     "Ingrédients": ingredients, 
                     "Préparation": instructions, 
                     "Image": img_url, 
-                    "Temps_Prepa": t_prep, 
-                    "Temps_Cuisson": t_cuis, 
-                    "Portions": port, 
-                    "Note": r_edit.get('Note', 0), 
+                    "Temps_Prepa": safe_json(t_prep), 
+                    "Temps_Cuisson": safe_json(t_cuis), 
+                    "Portions": safe_json(port), 
+                    "Note": safe_json(r_edit.get('Note', 0)), # C'est souvent lui le coupable !
                     "Commentaires": commentaires,
                     "video": video_url 
                 }
@@ -799,17 +808,21 @@ elif st.session_state.page == "edit":
                 with st.spinner("Enregistrement en cours..."):
                     import requests
                     try:
-                        # Utilisation de URL_SCRIPT comme vu sur ta photo
-                        response = requests.post(URL_SCRIPT, json=payload, timeout=15)
+                        # Utilise bien le nom de ta variable URL (URL_APP ou URL_SCRIPT)
+                        response = requests.post(URL_APP, json=payload, timeout=10)
                         
+                        st.write(f"DEBUG - Code : {response.status_code}")
+                        st.write(f"DEBUG - Réponse : {response.text}")
+
                         if response.status_code == 200 and "Success" in response.text:
                             st.success("✅ Recette mise à jour !")
                             st.cache_data.clear()
-                            if 'recipe_to_edit' in st.session_state: del st.session_state.recipe_to_edit
+                            if 'recipe_to_edit' in st.session_state: 
+                                del st.session_state.recipe_to_edit
                             st.session_state.page = "home"
                             st.rerun()
                         else:
-                            st.error(f"❌ Google Sheets a répondu : {response.text}")
+                            st.error(f"❌ Google a répondu : {response.text}")
                     except Exception as e:
                         st.error(f"❌ Erreur de connexion : {e}")
             else:
@@ -1257,6 +1270,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
