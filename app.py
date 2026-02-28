@@ -35,43 +35,39 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS RÉPARÉ (FLÈCHE VISIBLE + NO GITHUB) ---
+# --- DESIGN CSS : HEADER NOIR & FLÈCHE BLANCHE ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON CACHE LE CONTENU DU COIN DROIT UNIQUEMENT */
+    /* 1. L'ENTÊTE (HEADER) TOTALEMENT NOIR */
+    header[data-testid="stHeader"] {
+        background-color: #0e1117 !important; /* Noir comme le fond de l'app */
+        color: white !important;
+    }
+
+    /* 2. MASQUER GITHUB ET LE RESTE (Cachés dans le noir) */
     header [data-testid="stHeaderActionElements"], 
     .stAppDeployButton, 
     #MainMenu {
         display: none !important;
     }
 
-    /* 2. ON REND LE HEADER TRANSPARENT (pour ne pas voir la barre grise) */
-    header {
-        background-color: rgba(0,0,0,0) !important;
-    }
-
-    /* 3. ON FORCE LA FLÈCHE À ÊTRE VISIBLE, GROSSE ET ORANGE */
-    /* Ce sélecteur cible le bouton qui contient la flèche */
-    [data-testid="stSidebarCollapsedControl"] {
-        background-color: #1e2129 !important; /* Petit carré sombre derrière la flèche */
-        border: 2px solid #e67e22 !important; /* Bordure orange pour bien la voir */
-        border-radius: 10px !important;
-        padding: 5px !important;
-        margin-left: 10px !important;
-        margin-top: 10px !important;
-        z-index: 100000 !important;
-    }
-
-    /* On colore l'icône à l'intérieur */
+    /* 3. LA FLÈCHE DE MENU EN BLANC ÉCLATANT */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: #e67e22 !important;
-        width: 30px !important;
-        height: 30px !important;
+        fill: white !important; /* Flèche blanche */
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    /* Petit ajustement du bouton de la flèche */
+    [data-testid="stSidebarCollapsedControl"] {
+        background-color: transparent !important;
+        border: none !important;
     }
 
-    /* 4. LES MENUS ET BOUTONS ORANGE (Pour garder ton look) */
+    /* 4. GARDE TES BOUTONS ET TITRES EN ORANGE (Le reste de ton style) */
     h1, h2, h3 { color: #e67e22 !important; }
+    
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
@@ -80,8 +76,16 @@ if st.session_state.page != "print":
         border-radius: 8px !important;
     }
 
+    /* Nettoyage du bas */
     footer { visibility: hidden !important; }
     .stApp { background-color: #0e1117; }
+    
+    /* Champs de saisie */
+    input, textarea, select {
+        background-color: #1e2129 !important;
+        color: white !important;
+        border: 1px solid #3d4455 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1300,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
