@@ -597,25 +597,44 @@ elif st.session_state.page == "details":
                 st.markdown(f"""<a href="{video_link}" target="_blank" style="text-decoration:none;"><div style="background-color:{color};color:white;padding:12px;border-radius:8px;text-align:center;font-weight:bold;">{label}</div></a>""", unsafe_allow_html=True)
             st.divider()
 
-        # INGRÉDIENTS
+       # --- SECTION INGRÉDIENTS (VERSION DÉCOUPÉE) ---
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', r.get('ingredients', ''))
-        if ings_raw:
-            ings = [l.strip() for l in str(ings_raw).split("\n") if l.strip()]
+        
+        if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            # On tente de découper selon plusieurs séparateurs possibles
+            text_ing = str(ings_raw)
+            
+            if "\n" in text_ing:
+                ings = text_ing.split("\n")
+            elif ";" in text_ing:
+                ings = text_ing.split(";")
+            elif "," in text_ing:
+                ings = text_ing.split(",")
+            else:
+                ings = [text_ing]
+
+            # On nettoie chaque ligne (retrait des espaces et des symboles comme ❑)
+            ings = [l.replace("❑", "").strip() for l in ings if l.strip()]
+
             selected_ings = []
             for i, line in enumerate(ings):
+                # Affiche chaque ingrédient avec sa propre case à cocher
                 if st.checkbox(line, key=f"chk_det_{i}"):
                     selected_ings.append(line)
             
+            st.write("") # Petit espace
             if st.button("📥 Ajouter au Panier", use_container_width=True):
-                for item in selected_ings:
-                    send_action({"action": "add_shop", "article": item})
-                st.toast("Ingrédients envoyés !")
+                if selected_ings:
+                    for item in selected_ings:
+                        send_action({"action": "add_shop", "article": item})
+                    st.toast(f"✅ {len(selected_ings)} articles ajoutés au panier !")
+                else:
+                    st.warning("Veuillez cocher au moins un ingrédient.")
         else:
-            st.write("Aucun ingrédient listé.")
+            st.write("*Aucun ingrédient listé.*")
 
     st.divider()
-
     # PRÉPARATION
     st.subheader("👨‍🍳 Étapes de préparation")
     prep = r.get('Préparation', r.get('preparation', ''))
@@ -1266,6 +1285,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
