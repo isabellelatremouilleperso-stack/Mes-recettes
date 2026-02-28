@@ -653,7 +653,6 @@ elif st.session_state.page == "add":
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
-    # Ajout d'une limite de caractères pour la sécurité
     search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed", max_chars=100)
     
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
@@ -669,11 +668,13 @@ elif st.session_state.page == "add":
     
     if col_go.button("Extraire ✨", use_container_width=True):
         if url_input:
-            with st.spinner("Analyse du site en cours..."):
-                t, c = scrape_url(url_input)
+            with st.spinner("Analyse et tri de la recette..."):
+                # --- CORRECTION ICI : ON REÇOIT 3 VALEURS ---
+                t, ing, prep = scrape_url(url_input)
                 if t:
                     st.session_state.scraped_title = t
-                    st.session_state.scraped_content = c
+                    st.session_state.scraped_ingredients = ing # On stocke les ingrédients triés
+                    st.session_state.scraped_content = prep     # On stocke la préparation triée
                     st.success("Extraction réussie ! ✨")
                     st.rerun()
                 else:
@@ -685,13 +686,16 @@ elif st.session_state.page == "add":
     # --- FORMULAIRE PRINCIPAL ---
     with st.container():
         col_t, col_c = st.columns([2, 1])
-        titre_val = st.session_state.get('scraped_title', '')
-        titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
         
-        # On suppose que CATEGORIES est défini plus haut dans ton code
+        # --- RÉCUPÉRATION DES VALEURS EXTRAITES ---
+        titre_val = st.session_state.get('scraped_title', '')
+        ing_val = st.session_state.get('scraped_ingredients', '') # On récupère les ingrédients
+        prep_val = st.session_state.get('scraped_content', '')
+
+        titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
         
-        # --- SECTION LIENS (DOUBLE ENTRÉE) ---
+        # --- SECTION LIENS ---
         col_link1, col_link2 = st.columns(2)
         source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
         video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
@@ -705,9 +709,8 @@ elif st.session_state.page == "add":
         st.divider()
         
         ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", height=300, placeholder="2 tasses de farine...", key="ing_area")
-        
-        prep_val = st.session_state.get('scraped_content', '')
+        # --- CORRECTION ICI : AJOUT DE VALUE=ING_VAL ---
+        ingredients = ci.text_area("🍎 Ingrédients", value=ing_val, height=300, placeholder="2 tasses de farine...", key="ing_area")
         instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=prep_val, height=300, key="prep_area")
         
         img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...", key="img_url")
@@ -719,7 +722,6 @@ elif st.session_state.page == "add":
             if titre and ingredients:
                 import datetime
                 
-                # Petite fonction interne pour nettoyer les entrées (Protection Injection)
                 def clean_text(input_val):
                     return str(input_val).strip()
 
@@ -743,7 +745,7 @@ elif st.session_state.page == "add":
                     st.success(f"✅ '{titre}' a été ajoutée !")
                     st.cache_data.clear()
                     # Nettoyage des variables de session après ajout
-                    for key in ['scraped_title', 'scraped_content']:
+                    for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                         if key in st.session_state:
                             st.session_state[key] = ""
                     time.sleep(1)
@@ -753,7 +755,6 @@ elif st.session_state.page == "add":
                     st.error("❌ Erreur lors de l'envoi vers Google Sheets.")
             else:
                 st.error("🚨 Le titre et les ingrédients sont obligatoires !")
-
  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
@@ -1279,6 +1280,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
