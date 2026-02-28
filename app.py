@@ -10,13 +10,11 @@ import urllib.parse
 # CONFIGURATION & LIAISON GOOGLE
 # ======================
 
-# REMPLACE CETTE URL par ton URL de déploiement Google Script si elle est différente
 URL_APPS_SCRIPT = "TA_NOUVELLE_URL_ICI" 
 
 def send_action(data):
     """Envoie les données au script Google Sheets."""
     try:
-        # L'argument json= est crucial pour que Google reçoive bien les listes (épicerie)
         response = requests.post(URL_APPS_SCRIPT, json=data, timeout=10)
         return response.status_code == 200
     except Exception as e:
@@ -32,27 +30,27 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. Masquer les éléments de structure Streamlit */
+    /* 1. Masquer les éléments Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     .stAppDeployButton {display:none;}
 
-    /* 2. Style de fond et titres */
+    /* 2. Style Global */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
 
-    /* 3. Barre latérale (Sidebar) */
+    /* 3. Barre latérale */
     [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
     .stButton button { background-color: #e67e22; color: white; border-radius: 8px; }
 
-    /* 4. Zones de saisie (Inputs) */
+    /* 4. Zones de saisie */
     input, select, textarea, div[data-baseweb="select"] { 
         color: white !important; 
         background-color: #1e2129 !important; 
     }
 
-    /* 5. Cases à cocher (Checklist) */
+    /* 5. Checkbox */
     .stCheckbox label p { 
         color: white !important; 
         font-size: 1.1rem !important; 
@@ -91,8 +89,6 @@ if st.session_state.page != "print":
         line-height: 1.2; 
     }
 
-    # ... tout ton style précédent ...
-
     /* 7. Boîtes d'aide */
     .help-box { 
         background-color: #1e2130; 
@@ -101,63 +97,11 @@ if st.session_state.page != "print":
         border-left: 5px solid #e67e22; 
         margin-bottom: 20px; 
     }
-
+    .help-box h3 { color: #e67e22; margin-top: 0; }
     </style>
     """, unsafe_allow_html=True)
 
-
-
-    /* Recipe cards */
-    .recipe-card { 
-        background-color: #1e2129; 
-        border: 1px solid #3d4455; 
-        border-radius: 12px; 
-        padding: 10px; 
-        height: 230px; 
-        display: flex; 
-        flex-direction: column; 
-        justify-content: space-between;
-    }
-
-    .recipe-img { 
-        width: 100%; 
-        height: 130px; 
-        object-fit: cover; 
-        border-radius: 8px; 
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
-
-    .recipe-title { 
-        color:white; 
-        margin-top:8px; 
-        font-size:0.95rem; 
-        font-weight:bold; 
-        text-align:center; 
-        display:flex; 
-        align-items:center; 
-        justify-content:center; 
-        height:2.5em; 
-        line-height:1.2; 
-    }
-
-    /* Help boxes */
-    .help-box { 
-        background-color:#1e2130; 
-        padding:15px; 
-        border-radius:15px; 
-        border-left:5px solid #e67e22; 
-        margin-bottom:20px; 
-    }
-
-    .help-box h3 { 
-        color:#e67e22; 
-        margin-top:0; 
-    }
-
-    </style>
-    """, unsafe_allow_html=True)
+# --- LE CODE PYTHON DOIT REPRENDRE ICI SANS RIEN D'AUTRE ---
 # ======================
 # SYSTÈME DE SÉCURITÉ
 # ======================
@@ -1317,6 +1261,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
