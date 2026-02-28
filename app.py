@@ -137,25 +137,7 @@ def scrape_url(url):
 # Chargement du dataframe global
 df = load_data(URL_CSV)
 
-# ======================
-# CONSTANTES
-# ======================
-URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
-URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 
-# Voici l'URL générée avec ton GID 536412190
-URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=536412190&single=true&output=csv"
-
-URL_SCRIPT = "https://script.google.com/macros/s/AKfycbzE-RJTsmY5q9kKfS6TRAshgCbCGrk9H1e7YOmwfCsnBlR2lzrl35oEbHc0zITw--_z/exec"
-
-CATEGORIES = [
-    "Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", 
-    "Bœuf", "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", 
-    "Fumoir", "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", 
-    "Pains", "Pâtes", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", 
-    "Poisson", "Porc", "Poutine", "Poulet", "Riz", "Salade", "Sauce", 
-    "Slow Cooker", "Soupe", "Sushi", "Tartare", "Végétarien"
-]
 
 # ======================
 # FONCTIONS
@@ -1284,6 +1266,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
