@@ -618,6 +618,7 @@ elif st.session_state.page == "add":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"; st.rerun()
         
+    # --- SECTION RECHERCHE GOOGLE CANADA ---
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
@@ -627,6 +628,7 @@ elif st.session_state.page == "add":
     
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Aller sur Google.ca</div></a>""", unsafe_allow_html=True)
     
+    # --- SECTION IMPORTATION WEB / SCRAPING ---
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
@@ -647,16 +649,19 @@ elif st.session_state.page == "add":
     st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
     
+    # --- FORMULAIRE PRINCIPAL ---
     with st.container():
         col_t, col_c = st.columns([2, 1])
-        # On utilise une variable intermédiaire pour plus de sûreté
         titre_val = st.session_state.get('scraped_title', '')
         titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman")
         
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
         
-        # SOURCE : On s'assure que si l'URL est extraite, elle va ici
-        source_url = st.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
+        # --- SECTION LIENS (DOUBLE ENTRÉE) ---
+        col_link1, col_link2 = st.columns(2)
+        source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
+        # TA NOUVELLE COLONNE N
+        video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
         
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
@@ -667,10 +672,8 @@ elif st.session_state.page == "add":
         st.divider()
         
         ci, ce = st.columns(2)
-        # On s'assure que les ingrédients ne sont pas écrasés par l'extraction si on a déjà écrit
         ingredients = ci.text_area("🍎 Ingrédients", height=300, placeholder="2 tasses de farine...", key="ing_area")
         
-        # ÉTAPES : On force la valeur extraite si elle existe
         prep_val = st.session_state.get('scraped_content', '')
         instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=prep_val, height=300, key="prep_area")
         
@@ -682,7 +685,6 @@ elif st.session_state.page == "add":
         if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
             if titre and ingredients:
                 import datetime
-                # On prépare l'envoi
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
@@ -695,13 +697,13 @@ elif st.session_state.page == "add":
                     "portions": port,
                     "temps_prepa": t_prep,
                     "temps_cuisson": t_cuis,
-                    "commentaires": commentaires
+                    "commentaires": commentaires,
+                    "lien_video": video_url  # ✅ BIEN PRÉSENT ICI
                 }
 
                 if send_action(payload):
                     st.success(f"✅ '{titre}' a été ajoutée !")
                     st.cache_data.clear()
-                    # On vide proprement les états d'extraction
                     for key in ['scraped_title', 'scraped_content']:
                         if key in st.session_state:
                             st.session_state[key] = ""
@@ -1218,6 +1220,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
