@@ -89,25 +89,28 @@ if 'admin_mode' not in st.session_state:
 
 with st.sidebar:
     st.divider()
-    if not st.session_state.admin_mode:
-        pwd = st.text_input("🔑 Accès Admin", type="password")
+    if not st.session_state.get('admin_mode', False):
+        # On ajoute une 'key' pour bien isoler le champ sur mobile
+        pwd = st.text_input("🔑 Accès Admin", type="password", key="password_input")
         
-        if pwd:
-            # TEST 1 : Vérification directe sans hash (pour être sûr)
-            # TEST 2 : Vérification avec hash (sécurité)
-            input_hash = hashlib.sha256(pwd.strip().encode()).hexdigest()
-            target_hash = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
+        # AJOUT DU BOUTON : Indispensable sur téléphone
+        if st.button("Se connecter 🔓", use_container_width=True):
+            if pwd:
+                # Nettoyage des espaces au cas où le téléphone en ajoute un après le code
+                clean_pwd = pwd.strip()
+                input_hash = hashlib.sha256(clean_pwd.encode()).hexdigest()
+                target_hash = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
 
-            if pwd.strip() == "142203" or input_hash == target_hash:
-                st.session_state.admin_mode = True
-                st.rerun()
+                if clean_pwd == "142203" or input_hash == target_hash:
+                    st.session_state.admin_mode = True
+                    st.rerun()
+                else:
+                    st.error("Code incorrect ❌")
             else:
-                st.error("Code toujours incorrect")
-                # Ligne de secours pour comprendre :
-                # st.write(f"Tu as tapé : '{pwd}'") 
+                st.warning("Veuillez entrer un code")
     else:
         st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion"):
+        if st.button("🔒 Déconnexion", use_container_width=True):
             st.session_state.admin_mode = False
             st.rerun()
 # ======================
@@ -1293,6 +1296,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
