@@ -35,42 +35,41 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : ZÉRO GITHUB + FLÈCHE BLANCHE ---
+# --- DESIGN CSS : ZÉRO GITHUB + NOIR TOTAL + FLÈCHE BLANCHE ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. SUPPRESSION RADICALE DU "FORK", GITHUB ET DEPLOY */
-    /* On cible TOUS les éléments du header à droite */
-    header [data-testid="stHeaderActionElements"], 
-    .stAppDeployButton, 
-    #MainMenu,
-    header a { /* Supprime spécifiquement le lien 'Fork' */
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* 2. RENDRE L'ENTÊTE TOTALEMENT NOIR (Plus de gris pâle) */
-    header[data-testid="stHeader"], [data-testid="stHeader"] {
-        background-color: #0e1117 !important; /* Noir profond */
+    /* 1. ON PEINT TOUT LE HEADER EN NOIR (Cache GitHub et Fork) */
+    header[data-testid="stHeader"] {
+        background-color: #0e1117 !important;
+        color: #0e1117 !important; /* Rend le texte 'Fork' invisible car même couleur que le fond */
         border-bottom: none !important;
     }
 
+    /* 2. ON SUPPRIME LES BOUTONS DE DROITE (GitHub/Deploy) */
+    header [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    #MainMenu {
+        display: none !important;
+    }
+
     /* 3. LA FLÈCHE DE MENU (SIDEBAR) EN BLANC ÉCLATANT */
-    /* On force l'icône SVG de la flèche en blanc */
+    /* On force la couleur du bouton de la sidebar */
+    [data-testid="stSidebarCollapsedControl"] {
+        color: white !important;
+        background-color: transparent !important;
+    }
+
+    /* On force l'icône SVG à être blanche et opaque */
     [data-testid="stSidebarCollapsedControl"] svg {
         fill: white !important;
         color: white !important;
+        opacity: 1 !important;
         width: 35px !important;
         height: 35px !important;
     }
-    
-    /* On s'assure que le bouton de la flèche est bien positionné */
-    [data-testid="stSidebarCollapsedControl"] {
-        background-color: transparent !important;
-        left: 10px !important;
-    }
 
-    /* 4. GARDE TES BOUTONS ET TITRES EN ORANGE */
+    /* 4. TES MENUS ET BOUTONS ORANGE */
     h1, h2, h3 { color: #e67e22 !important; }
     
     div.stButton > button {
@@ -1302,6 +1301,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
