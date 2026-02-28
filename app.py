@@ -761,8 +761,9 @@ elif st.session_state.page == "edit":
         
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''))
 
-        # --- AJOUT DU CHAMP VIDÉO (RÉCUPÉRATION) ---
+        # --- AJOUT DU CHAMP VIDÉO (RÉCUPÉRATION DEPUIS COLONNE N) ---
         r_list_vals = list(r_edit.values())
+        # Index 13 correspond à la 14ème colonne (N)
         old_v = r_list_vals[13] if len(r_list_vals) > 13 else ""
         video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=str(old_v) if str(old_v) != "nan" else "")
         
@@ -784,7 +785,7 @@ elif st.session_state.page == "edit":
                     "Portions": port, 
                     "Note": r_edit.get('Note', 0), 
                     "Commentaires": commentaires,
-                    "video": video_url  # <-- AJOUT AU PAYLOAD
+                    "video": video_url  # <-- ENVOI DU LIEN VERS GOOGLE SCRIPT
                 }
                 if send_action(payload):
                     st.success("✅ Recette mise à jour !")
@@ -1238,6 +1239,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
