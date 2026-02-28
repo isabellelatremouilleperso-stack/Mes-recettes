@@ -35,55 +35,55 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : FLÈCHE BLANCHE & CACHE GITHUB ---
+# --- DESIGN CSS : BOUTON MENU PERSONNALISÉ ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON REND LE BLOC DE DROITE (GITHUB/FORK) TOTALEMENT INVISIBLE */
-    /* On cible la zone de droite du header */
-    [data-testid="stHeaderActionElements"] {
-        opacity: 0 !important;
-        pointer-events: none !important; /* On ne peut plus cliquer dessus */
+    /* 1. ON SUPPRIME COMPLÈTEMENT LE BANDEAU DU HAUT (ADIEU GITHUB ET GRIS PÂLE) */
+    header[data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* 2. ON NETTOIE LE HEADER (Fini le gris pâle) */
-    header[data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-        border-bottom: none !important;
-    }
-
-    /* 3. LA FLÈCHE : ON LA FORCE EN BLANC PUR ET OPAQUE */
-    /* On cible le bouton de gauche spécifiquement */
+    /* 2. ON CRÉE UN BOUTON FLOTTANT POUR LA SIDEBAR */
+    /* Ce bouton apparaîtra en haut à gauche, sur le fond noir */
     [data-testid="stSidebarCollapsedControl"] {
-        opacity: 1 !important;
-        visibility: visible !important;
         display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 999999 !important;
+        background-color: #e67e22 !important; /* FOND ORANGE */
+        border-radius: 50% !important;        /* BOUTON ROND */
+        width: 50px !important;
+        height: 50px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
     }
 
-    /* Couleur de l'icône de la flèche en BLANC */
+    /* 3. LA FLÈCHE À L'INTÉRIEUR DU ROND (EN BLANC) */
     [data-testid="stSidebarCollapsedControl"] svg {
         fill: white !important;
         color: white !important;
+        width: 30px !important;
+        height: 30px !important;
         opacity: 1 !important;
-        width: 38px !important;
-        height: 38px !important;
     }
 
-    /* 4. TES BOUTONS ET TITRES EN ORANGE */
+    /* 4. DESIGN GÉNÉRAL (ORANGE ET NOIR) */
+    .stApp { background-color: #0e1117; }
     h1, h2, h3, label { color: #e67e22 !important; }
     
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
-        border: none !important;
+        border-radius: 10px !important;
         font-weight: bold !important;
-        border-radius: 8px !important;
     }
 
-    /* Nettoyage du bas et fond de l'app */
+    /* Nettoyage du bas */
     footer { visibility: hidden !important; }
-    .stApp { background-color: #0e1117; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1302,6 +1302,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
