@@ -742,11 +742,10 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
 
-    # Fonction pour nettoyer les valeurs vides/nan venant du Excel
+    # Fonction de nettoyage pour éviter les erreurs d'affichage et d'envoi
     def clean_val(x):
         val = str(x)
-        if val.lower() in ["nan", "none", "", "null"]:
-            return ""
+        if val.lower() in ["nan", "none", "", "null"]: return ""
         return val
 
     st.markdown('<h1 style="color: #e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
@@ -765,8 +764,7 @@ elif st.session_state.page == "edit":
         raw_cats = clean_val(r_edit.get('Catégorie', 'Autre'))
         current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
         valid_cats = [c for c in current_cats if c in CATEGORIES]
-        if not valid_cats: valid_cats = ["Autre"]
-        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=valid_cats, key="edit_cat")
+        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=valid_cats if valid_cats else ["Autre"])
         
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
@@ -782,7 +780,7 @@ elif st.session_state.page == "edit":
         
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=clean_val(r_edit.get('Image', '')), key="edit_img")
 
-        # Récupération vidéo (Colonne N / Index 13)
+        # Vidéo (Nouveau champ)
         r_list_vals = list(r_edit.values())
         old_v = r_list_vals[13] if len(r_list_vals) > 13 else ""
         video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=clean_val(old_v), key="edit_vid")
@@ -791,49 +789,35 @@ elif st.session_state.page == "edit":
         
         st.divider()
         
-        # --- BOUTON ENREGISTRER ---
         if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
             if titre_edit.strip() != "" and ingredients.strip() != "":
                 
-                def safe_json(val):
-                    v = str(val)
-                    if v.lower() in ["nan", "none", "null"]: return ""
-                    return v
-
                 payload = {
                     "action": "edit", 
                     "titre": titre_edit, 
-                    "old_titre": safe_json(r_edit.get('Titre', titre_edit)),
+                    "old_titre": clean_val(r_edit.get('Titre', titre_edit)),
                     "Catégorie": ", ".join(cat_choisies), 
                     "Ingrédients": ingredients, 
                     "Préparation": instructions, 
                     "Image": img_url, 
-                    "Temps_Prepa": safe_json(t_prep), 
-                    "Temps_Cuisson": safe_json(t_cuis), 
-                    "Portions": safe_json(port), 
-                    "Note": safe_json(r_edit.get('Note', 0)), 
+                    "Temps_Prepa": clean_val(t_prep), 
+                    "Temps_Cuisson": clean_val(t_cuis), 
+                    "Portions": clean_val(port), 
+                    "Note": clean_val(r_edit.get('Note', 0)), 
                     "Commentaires": commentaires,
                     "video": video_url 
                 }
                 
                 with st.spinner("Enregistrement en cours..."):
-                    import requests
-                    try:
-                        # /!\ ATTENTION : J'ai utilisé URL_SCRIPT ici pour correspondre à ton code précédent
-                        # Si ta variable s'appelle vraiment URL_APP, change URL_SCRIPT en URL_APP
-                        response = requests.post(URL_SCRIPT, json=payload, timeout=15)
-                        
-                        if response.status_code == 200 and "Success" in response.text:
-                            st.success("✅ Recette mise à jour !")
-                            st.cache_data.clear()
-                            if 'recipe_to_edit' in st.session_state: 
-                                del st.session_state.recipe_to_edit
-                            st.session_state.page = "home"
-                            st.rerun()
-                        else:
-                            st.error(f"❌ Google a répondu : {response.text}")
-                    except Exception as e:
-                        st.error(f"❌ Erreur de connexion : {e}")
+                    # Utilisation de la fonction send_action que tu as déjà définie
+                    if send_action(payload):
+                        st.success("✅ Recette mise à jour !")
+                        st.cache_data.clear()
+                        if 'recipe_to_edit' in st.session_state: del st.session_state.recipe_to_edit
+                        st.session_state.page = "home"
+                        st.rerun()
+                    else:
+                        st.error("❌ Erreur lors de l'envoi à Google.")
             else:
                 st.error("⚠️ Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
@@ -1279,6 +1263,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
