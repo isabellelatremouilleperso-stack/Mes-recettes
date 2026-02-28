@@ -35,46 +35,48 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : BOUTON MENU PERSONNALISÉ ---
+# --- DESIGN CSS : FORCE L'AFFICHAGE DU MENU ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON SUPPRIME COMPLÈTEMENT LE BANDEAU DU HAUT (ADIEU GITHUB ET GRIS PÂLE) */
+    /* 1. ON COUVRE LE GRIS PAR DU NOIR (Plus de GitHub, plus de Fork) */
     header[data-testid="stHeader"] {
-        display: none !important;
+        background-color: #0e1117 !important;
+        color: #0e1117 !important;
     }
 
-    /* 2. ON CRÉE UN BOUTON FLOTTANT POUR LA SIDEBAR */
-    /* Ce bouton apparaîtra en haut à gauche, sur le fond noir */
+    /* 2. ON CACHE LES ÉLÉMENTS DE DROITE (GitHub/Deploy) */
+    [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* 3. ON FAIT RESSORTIR LA FLÈCHE (MENU) EN ORANGE VIF */
+    /* On la force à apparaître même si le header est "caché" */
     [data-testid="stSidebarCollapsedControl"] {
+        background-color: #1e2129 !important; /* Petit carré sombre */
+        border: 2px solid #e67e22 !important; /* Contour Orange */
+        border-radius: 8px !important;
         display: flex !important;
         visibility: visible !important;
         position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 999999 !important;
-        background-color: #e67e22 !important; /* FOND ORANGE */
-        border-radius: 50% !important;        /* BOUTON ROND */
-        width: 50px !important;
-        height: 50px !important;
-        justify-content: center !important;
-        align-items: center !important;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.5) !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 100000 !important;
+        padding: 5px !important;
     }
 
-    /* 3. LA FLÈCHE À L'INTÉRIEUR DU ROND (EN BLANC) */
+    /* On force la couleur de la flèche en Orange */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important;
-        color: white !important;
-        width: 30px !important;
-        height: 30px !important;
+        fill: #e67e22 !important;
+        color: #e67e22 !important;
+        width: 35px !important;
+        height: 35px !important;
         opacity: 1 !important;
     }
 
-    /* 4. DESIGN GÉNÉRAL (ORANGE ET NOIR) */
-    .stApp { background-color: #0e1117; }
-    h1, h2, h3, label { color: #e67e22 !important; }
-    
+    /* 4. TES BOUTONS ET TITRES (Look Pro) */
+    h1, h2, h3 { color: #e67e22 !important; }
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
@@ -82,7 +84,8 @@ if st.session_state.page != "print":
         font-weight: bold !important;
     }
 
-    /* Nettoyage du bas */
+    /* Fond de l'app */
+    .stApp { background-color: #0e1117; }
     footer { visibility: hidden !important; }
     </style>
     """, unsafe_allow_html=True)
@@ -1302,6 +1305,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
