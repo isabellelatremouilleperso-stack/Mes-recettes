@@ -739,9 +739,6 @@ elif st.session_state.page == "add":
         # --- COLONNES POUR LES BOUTONS FINAUX ---
         c_save, c_cancel = st.columns(2)
         
-        # --- ON DÉFINIT LES 2 COLONNES POUR LES BOUTONS ---
-        c_save, c_cancel = st.columns(2)
-        
         with c_save:
             if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
                 if titre and ingredients:
@@ -754,7 +751,7 @@ elif st.session_state.page == "add":
                         "date": datetime.date.today().strftime("%d/%m/%Y"),
                         "titre": clean_text(titre),
                         "source": clean_text(source_url),
-                        # ICI LA CORRECTION POUR LES LIGNES 👇
+                        # La correction pour les lignes est ici (double espace + \n)
                         "ingredients": clean_text(ingredients).replace('\n', '  \n'),
                         "preparation": clean_text(instructions),
                         "image": clean_text(img_url),
@@ -780,7 +777,6 @@ elif st.session_state.page == "add":
                 else:
                     st.error("🚨 Le titre et les ingrédients sont obligatoires !")
 
-        # CE BLOC DOIT ÊTRE BIEN ALIGNÉ AVEC 'with c_save' 👇
         with c_cancel:
             if st.button("❌ ANNULER L'AJOUT", use_container_width=True):
                 for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
@@ -1313,6 +1309,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
