@@ -307,7 +307,6 @@ if st.session_state.page == "home":
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             height: 480px;
         }
-        /* ... la suite de ton CSS reste identique ... */
         .recipe-img-container {
             width: 100%;
             height: 320px;
@@ -345,7 +344,7 @@ if st.session_state.page == "home":
         </style>
     """, unsafe_allow_html=True)
     
-    df = load_data()
+    df = load_data(URL_CSV)
     if not df.empty:
         # --- BARRE DE FILTRES ET TRI ---
         col_search, col_cat, col_tri = st.columns([2, 1, 1])
@@ -407,8 +406,8 @@ if st.session_state.page == "home":
             return colors.get(cat, "#e67e22")
 
         # --- NETTOYAGE ANTI-DOUBLONS ---
-        rows = rows.drop_duplicates(subset=['Titre'])  # <-- AJOUTE CETTE LIGNE
-        rows = rows.reset_index(drop=True)             # <-- AJOUTE CETTE LIGNE
+        rows = rows.drop_duplicates(subset=['Titre'])
+        rows = rows.reset_index(drop=True)
 
         # --- AFFICHAGE DES RÉSULTATS ---
         for i in range(0, len(rows), 2):
@@ -1269,6 +1268,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
