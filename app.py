@@ -22,12 +22,13 @@ URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6W
 def send_action(data):
     """Envoie les données au script Google Sheets."""
     try:
+        # ICI : On utilise bien URL_SCRIPT (comme à la ligne 15)
         response = requests.post(URL_SCRIPT, json=data, timeout=10)
         return response.status_code == 200
     except Exception as e:
         st.error(f"Erreur de connexion Google : {e}")
         return False
-
+        
 # --- INITIALISATION DU SESSION STATE ---
 if 'page' not in st.session_state:
     st.session_state.page = "home"
@@ -1292,6 +1293,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
