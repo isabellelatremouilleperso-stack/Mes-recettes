@@ -173,25 +173,16 @@ def scrape_url(url):
         
         title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
         
-        # On nettoie les balises inutiles
         for junk in soup(["script", "style", "nav", "footer", "header", "aside"]):
             junk.extract()
 
-        # On parcourt les éléments textuels et on met TOUT dans une seule liste
-        full_text_list = []
-        elements = soup.find_all(['li', 'p'])
-        
-        for el in elements:
-            text = el.get_text().strip()
-            # On ne prend que le texte qui a un peu de substance (> 10 caractères)
-            # pour éviter les menus ou les boutons "Partager"
-            if len(text) > 10:
-                full_text_list.append(text)
+        # On sépare : les 'li' (souvent ingrédients) et les 'p' (souvent étapes)
+        ing_list = [el.get_text().strip() for el in soup.find_all('li') if len(el.get_text().strip()) > 3]
+        prep_list = [el.get_text().strip() for el in soup.find_all('p') if len(el.get_text().strip()) > 15]
 
-        # On nettoie les doublons tout en gardant l'ordre
-        # On met TOUT dans prep_final, et on laisse ing_final vide
-        ing_final = "" 
-        prep_final = "\n\n".join(list(dict.fromkeys(full_text_list)))
+        # On nettoie les doublons
+        ing_final = "\n".join(list(dict.fromkeys(ing_list)))
+        prep_final = "\n\n".join(list(dict.fromkeys(prep_list)))
         
         return title, ing_final, prep_final
 
@@ -1295,6 +1286,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
