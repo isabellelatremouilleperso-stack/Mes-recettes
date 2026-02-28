@@ -80,10 +80,8 @@ if st.session_state.page != "print":
     """, unsafe_allow_html=True)
 
 # ======================
-# SYSTÈME DE SÉCURITÉ (Hashé)
+# SYSTÈME DE SÉCURITÉ (TEST DIRECT)
 # ======================
-PASS_HASH = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
-
 url_admin = st.query_params.get("admin") == "oui"
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = url_admin
@@ -91,21 +89,26 @@ if 'admin_mode' not in st.session_state:
 with st.sidebar:
     st.divider()
     if not st.session_state.admin_mode:
-        pwd = st.text_input("🔑 Accès Admin", type="password", help="Tape ton code pour modifier")
+        pwd = st.text_input("🔑 Accès Admin", type="password")
+        
         if pwd:
-            # .strip() est CRUCIAL pour éviter l'erreur "Code incorrect" à cause d'un espace
+            # TEST 1 : Vérification directe sans hash (pour être sûr)
+            # TEST 2 : Vérification avec hash (sécurité)
             input_hash = hashlib.sha256(pwd.strip().encode()).hexdigest()
-            if input_hash == PASS_HASH:
+            target_hash = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
+
+            if pwd.strip() == "142203" or input_hash == target_hash:
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
-                st.error("Code incorrect")
+                st.error("Code toujours incorrect")
+                # Ligne de secours pour comprendre :
+                # st.write(f"Tu as tapé : '{pwd}'") 
     else:
         st.success("✅ Mode Chef Activé")
         if st.button("🔒 Déconnexion"):
             st.session_state.admin_mode = False
             st.rerun()
-
 # ======================
 # CONSTANTES & FONCTIONS TECHNIQUES
 # ======================
@@ -1266,6 +1269,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
