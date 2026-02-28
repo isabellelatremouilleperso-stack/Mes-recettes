@@ -35,59 +35,55 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS FINAL (ANTI-GITHUB) ---
+# --- DESIGN CSS : FLÈCHE BLANCHE & NO GITHUB ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON SUPPRIME COMPLÈTEMENT LE HEADER ET SON CONTENU (Fork, GitHub, etc.) */
-    header[data-testid="stHeader"], 
-    [data-testid="stHeaderActionElements"],
-    .stAppDeployButton,
-    header a {
+    /* 1. ON REND LE CONTENU DE DROITE INVISIBLE (GitHub, Fork, Deploy) */
+    [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    header a, 
+    #MainMenu {
         display: none !important;
         visibility: hidden !important;
-        height: 0 !important;
     }
 
-    /* 2. ON RE-POSITIONNE ET ON ALLUME LA FLÈCHE EN BLANC */
-    /* Comme on a supprimé le header, on fixe la flèche sur le fond noir */
+    /* 2. ON FORCE LE HEADER EN NOIR PUR (Fini le gris !) */
+    header[data-testid="stHeader"] {
+        background-color: #0e1117 !important;
+        background: #0e1117 !important;
+        border-bottom: none !important;
+    }
+
+    /* 3. RÉCUPÉRATION DE LA FLÈCHE : BLANCHE ET TRÈS VISIBLE */
+    /* On cible le bouton de la sidebar pour qu'il reste là */
     [data-testid="stSidebarCollapsedControl"] {
-        position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
-        z-index: 1000001 !important;
-        background-color: rgba(14, 17, 23, 0.8) !important; /* Fond noir transparent */
-        border-radius: 5px !important;
+        display: flex !important;
+        visibility: visible !important;
+        z-index: 999999 !important;
     }
 
+    /* On force l'icône de la flèche en BLANC PUR */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important; /* FLÈCHE BLANCHE */
+        fill: white !important;
         color: white !important;
-        width: 32px !important;
-        height: 32px !important;
-        opacity: 1 !important;
+        width: 35px !important;
+        height: 35px !important;
+        opacity: 1 !important; /* Pour enlever le côté gris pâle */
     }
 
-    /* 3. DESIGN DES BOUTONS ET TITRES (Orange comme sur ta photo) */
-    h1, h2, h3, .stMarkdown p {
-        color: #e67e22 !important;
-    }
-
+    /* 4. TES MENUS ET BOUTONS EN ORANGE */
+    h1, h2, h3, label { color: #e67e22 !important; }
+    
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
         border: none !important;
         font-weight: bold !important;
-        border-radius: 10px !important;
+        border-radius: 8px !important;
     }
 
-    /* 4. LES CHAMPS DE TEXTE (Fini le blanc/gris, on reste sombre) */
-    input, textarea, [data-baseweb="select"] {
-        background-color: #1e2129 !important;
-        color: white !important;
-        border: 1px solid #e67e22 !important;
-    }
-
+    /* Nettoyage du fond de l'app */
     footer { visibility: hidden !important; }
     .stApp { background-color: #0e1117; }
     </style>
@@ -1308,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
