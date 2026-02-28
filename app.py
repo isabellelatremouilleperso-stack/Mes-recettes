@@ -35,42 +35,43 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : ZÉRO GITHUB + NOIR TOTAL + FLÈCHE BLANCHE ---
+# --- DESIGN CSS : ZÉRO GITHUB + FLÈCHE BLANCHE FLACHY ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON PEINT TOUT LE HEADER EN NOIR (Cache GitHub et Fork) */
+    /* 1. SUPPRESSION TOTALE DU BLOC DROIT (Logo GitHub, Deploy, etc.) */
+    [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    header a, 
+    #MainMenu {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+    }
+
+    /* 2. RENDRE LE HEADER NOIR ET SANS BORDURE */
     header[data-testid="stHeader"] {
         background-color: #0e1117 !important;
-        color: #0e1117 !important; /* Rend le texte 'Fork' invisible car même couleur que le fond */
         border-bottom: none !important;
     }
 
-    /* 2. ON SUPPRIME LES BOUTONS DE DROITE (GitHub/Deploy) */
-    header [data-testid="stHeaderActionElements"], 
-    .stAppDeployButton, 
-    #MainMenu {
-        display: none !important;
-    }
-
-    /* 3. LA FLÈCHE DE MENU (SIDEBAR) EN BLANC ÉCLATANT */
-    /* On force la couleur du bouton de la sidebar */
-    [data-testid="stSidebarCollapsedControl"] {
+    /* 3. FORCER LA FLÈCHE À ÊTRE BLANCHE ET OPAQUE (Pas de gris) */
+    [data-testid="stSidebarCollapsedControl"] svg {
+        fill: white !important; /* Couleur Blanche */
         color: white !important;
+        opacity: 1 !important;   /* Supprime le côté "gris pâle" */
+        width: 38px !important;  /* Un peu plus grande pour le pouce */
+        height: 38px !important;
+    }
+    
+    /* On s'assure que le bouton lui-même est bien visible */
+    [data-testid="stSidebarCollapsedControl"] {
+        opacity: 1 !important;
         background-color: transparent !important;
     }
 
-    /* On force l'icône SVG à être blanche et opaque */
-    [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important;
-        color: white !important;
-        opacity: 1 !important;
-        width: 35px !important;
-        height: 35px !important;
-    }
-
     /* 4. TES MENUS ET BOUTONS ORANGE */
-    h1, h2, h3 { color: #e67e22 !important; }
+    h1, h2, h3, label { color: #e67e22 !important; }
     
     div.stButton > button {
         background-color: #e67e22 !important;
@@ -80,7 +81,6 @@ if st.session_state.page != "print":
         border-radius: 8px !important;
     }
 
-    /* Nettoyage du bas et du fond */
     footer { visibility: hidden !important; }
     .stApp { background-color: #0e1117; }
     </style>
@@ -1301,6 +1301,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
