@@ -149,48 +149,50 @@ def load_data(url):
         return pd.DataFrame()
 
 def scrape_url(url):
-    """Version boostée pour capturer les ingrédients et la préparation ✨"""
     try:
-        # Simulation d'un vrai navigateur plus complète
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
-            'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
-        }
-        
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'}
         res = requests.get(url, headers=headers, timeout=12)
         res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, 'html.parser')
         
-        # 1. Extraction du Titre
-        title = "Recette Importée"
-        h1 = soup.find('h1')
-        if h1:
-            title = h1.get_text().strip()
+        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
+        
+        # Listes de mots-clés pour détecter les ingrédients (unités de mesure)
+        keywords_ing = ['g ', 'ml', 'tasse', 'cuillère', 'c. à', 'lb', 'kg', 'oz', 'pincée', 'gousse', 'conserve', 'paquet']
+        
+        ingredients_list = []
+        instructions_list = []
 
-        # 2. Nettoyage du "bruit" (on enlève les menus, scripts et pubs)
+        # On nettoie les balises inutiles
         for junk in soup(["script", "style", "nav", "footer", "header", "aside"]):
             junk.extract()
 
-        # 3. Extraction intelligente du texte
-        # On cible les zones souvent utilisées pour les ingrédients et étapes
-        lines = []
-        # On cherche dans les listes et les div de contenu
-        for el in soup.find_all(['li', 'p', 'div']):
+        # On parcourt les éléments textuels
+        elements = soup.find_all(['li', 'p'])
+        for el in elements:
             text = el.get_text().strip()
-            # On ne garde que les lignes significatives (ni trop courtes, ni trop longues)
-            if 3 < len(text) < 1000:
-                lines.append(text)
+            if 5 < len(text) < 1200:
+                # Logique de tri simple : 
+                # Si la ligne contient un chiffre + un mot-clé d'ingrédient -> Ingrédients
+                # Sinon -> Préparation
+                is_ing = any(key in text.lower() for key in keywords_ing)
+                has_digit = any(char.isdigit() for char in text)
+                
+                if is_ing and has_digit:
+                    ingredients_list.append(f"- {text}")
+                else:
+                    # On évite les phrases trop courtes comme "Imprimer" ou "Partager"
+                    if len(text) > 30: 
+                        instructions_list.append(text)
+
+        # Nettoyage des doublons
+        ing_final = "\n".join(list(dict.fromkeys(ingredients_list)))
+        prep_final = "\n".join(list(dict.fromkeys(instructions_list)))
         
-        # Suppression des doublons tout en gardant l'ordre
-        content = "\n".join(list(dict.fromkeys(lines)))
-        
-        if len(content) < 50:
-            return title, "⚠️ Contenu protégé ou vide. Copiez-collez manuellement."
-            
-        return title, content
+        return title, ing_final, prep_final
 
     except Exception as e:
-        return None, f"Erreur de connexion : {str(e)}"
+        return None, "", f"Erreur : {e}"
 
 def send_action(payload):
     """Envoie les données vers Google Apps Script"""
@@ -1277,6 +1279,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
