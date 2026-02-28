@@ -110,41 +110,67 @@ with st.sidebar:
             st.session_state.admin_mode = False
             st.rerun()
 # ======================
-# CONSTANTES & FONCTIONS TECHNIQUES
+# CONSTANTES & CONFIGURATION
 # ======================
-CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poutine", "Poulet", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Végétarien"]
+CATEGORIES = [
+    "Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", 
+    "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", "Fumoir", 
+    "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", 
+    "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", 
+    "Poutine", "Poulet", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
+    "Sushi", "Tartare", "Végétarien"
+]
 
-@st.cache_data(ttl=600)
+# ======================
+# FONCTIONS TECHNIQUES (VERSION UNIQUE)
+# ======================
+
+@st.cache_data(ttl=300) # Mise à jour toutes les 5 minutes
 def load_data(url):
     try:
-        # On force le rafraîchissement avec un paramètre temporel
+        # On force le rafraîchissement avec un paramètre temporel pour Google
         timestamp_url = f"{url}&t={int(time.time())}"
         df = pd.read_csv(timestamp_url)
-        df.columns = df.columns.str.strip()
-        return df.fillna("")
+        
+        # Nettoie les espaces dans les noms de colonnes
+        df.columns = [c.strip() for c in df.columns] 
+        df = df.fillna("")
+        
+        # --- NETTOYAGE ANTI-DOUBLONS ---
+        if not df.empty and 'Titre' in df.columns:
+            df['Titre'] = df['Titre'].astype(str).str.strip()
+            df = df.drop_duplicates(subset=['Titre'], keep='first')
+            
+        return df
     except Exception as e:
         st.error(f"Erreur lors du chargement des données : {e}")
         return pd.DataFrame()
-        
+
 def scrape_url(url):
-    """Fonction indispensable pour ton bouton Extraire ✨"""
+    """Extrait le contenu d'un site de cuisine ✨"""
     try:
-        headers = {"User-Agent": "Mozilla/5.0"}
+        headers = {'User-Agent': 'Mozilla/5.0'}
         res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, 'html.parser')
-        title = soup.find('h1').text.strip() if soup.find('h1') else ""
-        # Extraction basique du contenu
-        paras = soup.find_all(['p', 'li'])
-        content = "\n".join([p.text.strip() for p in paras if len(p.text) > 20])
+        
+        # On cherche le titre principal
+        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
+        
+        # Récupération intelligente du texte (ingrédients et étapes)
+        elements = soup.find_all(['li', 'p']) 
+        raw_list = [el.text.strip() for el in elements if 5 < len(el.text.strip()) < 1500]
+        
+        # Supprime les doublons de texte (menus, pubs...) tout en gardant l'ordre
+        content = "\n".join(list(dict.fromkeys(raw_list)))
         return title, content
-    except:
+    except Exception as e:
+        st.error(f"Erreur lors de l'extraction : {e}")
         return None, None
 
-# Chargement du dataframe global
+# --- CHARGEMENT INITIAL DU DATAFRAME ---
+# Cet appel se fait une seule fois au lancement de l'app
 df = load_data(URL_CSV)
-
-
-
 # ======================
 # FONCTIONS
 # ======================
@@ -1271,6 +1297,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
