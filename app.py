@@ -35,57 +35,63 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : SÉPARATION GAUCHE/DROITE ---
+# --- DESIGN CSS : FORCE BRUTE ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON FAIT DISPARAÎTRE LE BLOC DE DROITE (GitHub, Fork, Deploy) */
-    /* On cible le conteneur de droite par sa position pour être sûr */
-    header [data-testid="stHeaderActionElements"], 
-    header .stAppDeployButton, 
-    header a, 
-    #MainMenu {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        width: 0 !important;
+    /* 1. ON FORCE LES COULEURS À LA RACINE */
+    :root {
+        --primary-color: #e67e22;
+        --background-color: #0e1117;
+        --secondary-background-color: #1e2129;
+        --text-color: #e0e0e0;
     }
 
-    /* 2. ON FORCE LE HEADER EN NOIR (Pour noyer les restes de gris) */
-    header[data-testid="stHeader"] {
+    /* 2. ON TUE LE HEADER (GitHub, Fork, etc.) */
+    [data-testid="stHeader"], header {
         background-color: #0e1117 !important;
-        border-bottom: none !important;
+        color: #0e1117 !important; /* Cache le texte en le mettant en noir */
+    }
+    
+    /* On cache spécifiquement les éléments de droite */
+    [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
+        display: none !important;
     }
 
-    /* 3. LA FLÈCHE (À GAUCHE) EN BLANC ÉCLATANT */
-    /* On cible spécifiquement le bouton de la sidebar */
+    /* 3. LA FLÈCHE : BLANCHE ET OPAQUE */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important; /* On la veut blanche pour le contraste */
+        fill: white !important;
         color: white !important;
         opacity: 1 !important;
-        width: 40px !important;
-        height: 40px !important;
-    }
-    
-    [data-testid="stSidebarCollapsedControl"] {
-        opacity: 1 !important;
-        background-color: transparent !important;
+        width: 45px !important; /* Grosse pour mobile */
+        height: 45px !important;
     }
 
-    /* 4. TES MENUS ET BOUTONS EN ORANGE */
-    h1, h2, h3, label { color: #e67e22 !important; }
-    
+    /* 4. LES TITRES ET BOUTONS : ORANGE VIF */
+    h1, h2, h3, label, p, span {
+        color: #e67e22 !important;
+        opacity: 1 !important;
+    }
+
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
         border: none !important;
         font-weight: bold !important;
-        border-radius: 8px !important;
+        opacity: 1 !important;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
     }
 
-    /* Nettoyage du fond */
+    /* 5. LES BOÎTES DE SAISIE (Pas de gris pâle !) */
+    input, textarea, select {
+        background-color: #1e2129 !important;
+        color: white !important;
+        border: 2px solid #e67e22 !important; /* Bordure orange pour flasher */
+    }
+
+    /* Nettoyage final */
     footer { visibility: hidden !important; }
-    .stApp { background-color: #0e1117; }
+    .stApp { background-color: #0e1117 !important; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1304,6 +1310,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
