@@ -36,26 +36,42 @@ if 'page' not in st.session_state:
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 # --- DESIGN CSS ---
+# --- DESIGN CSS ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
+    /* 1. On ne cache plus tout le 'header', on cible précisément les icônes de déploiement */
+    .stAppDeployButton { display:none !important; }
+    [data-testid="stHeaderActionElements"] { visibility: hidden !important; }
+    
+    /* 2. On s'assure que le bouton du Menu (Sidebar) reste visible */
+    [data-testid="stHeader"] {
+        background-color: rgba(0,0,0,0) !important;
+        color: #e67e22 !important;
+    }
+    
+    /* 3. Masquer le menu Streamlit classique et le footer */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
-    header {visibility: hidden;}
-    .stAppDeployButton {display:none;}
+
+    /* --- LE RESTE DE TON DESIGN --- */
     .stApp { background-color: #0e1117; color: #e0e0e0; }
     h1, h2, h3 { color: #e67e22 !important; }
     [data-testid="stSidebar"] { background-color: #1e2129; color: white; }
     .stButton button { background-color: #e67e22; color: white; border-radius: 8px; }
+    
+    /* Input et Textarea */
     input, select, textarea, div[data-baseweb="select"] { 
         color: white !important; 
         background-color: #1e2129 !important; 
     }
+    
     .stCheckbox label p { 
         color: white !important; 
         font-size: 1.1rem !important; 
         font-weight: 500 !important;
     }
+    
     .recipe-card { 
         background-color: #1e2129; 
         border: 1px solid #3d4455; 
@@ -72,14 +88,8 @@ if st.session_state.page != "print":
         text-align: center; display: flex; align-items: center; justify-content: center; 
         height: 2.5em; line-height: 1.2; 
     }
-    .help-box { 
-        background-color: #1e2130; padding: 15px; border-radius: 15px; 
-        border-left: 5px solid #e67e22; margin-bottom: 20px; 
-    }
-    .help-box h3 { color: #e67e22; margin-top: 0; }
     </style>
     """, unsafe_allow_html=True)
-
 # ======================
 # SYSTÈME DE SÉCURITÉ (TEST DIRECT)
 # ======================
@@ -1296,6 +1306,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
