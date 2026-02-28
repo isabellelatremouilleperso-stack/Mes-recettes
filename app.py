@@ -725,7 +725,7 @@ elif st.session_state.page == "add":
                 st.error("🚨 Le titre et les ingrédients sont obligatoires !")
 
 
-  # --- PAGE ÉDITION (DÉDIÉE) ---
+ # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
 
@@ -748,18 +748,17 @@ elif st.session_state.page == "edit":
         col_t, col_c = st.columns([2, 1])
         titre_edit = col_t.text_input("🏷️ Nom de la recette", value=clean_val(r_edit.get('Titre', '')), key="edit_titre")
         
-        # Sécurité pour le multiselect
+        # Sécurité Catégories
         raw_cats = clean_val(r_edit.get('Catégorie', 'Autre'))
         current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
         valid_cats = [c for c in current_cats if c in CATEGORIES]
         if not valid_cats: valid_cats = ["Autre"]
-        
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=valid_cats, key="edit_cat")
         
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_val(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', ''))), key="edit_prep")
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_val(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', ''))), key="edit_cuis")
+        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_val(r_edit.get('Temps_Prepa', '')), key="edit_prep")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_val(r_edit.get('Temps_Cuisson', '')), key="edit_cuis")
         port = cp3.text_input("🍽️ Portions", value=clean_val(r_edit.get('Portions', '')), key="edit_port")
         
         st.divider()
@@ -770,9 +769,8 @@ elif st.session_state.page == "edit":
         
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=clean_val(r_edit.get('Image', '')), key="edit_img")
 
-        # --- RÉCUPÉRATION VIDÉO ---
+        # Récupération vidéo (Colonne N / Index 13)
         r_list_vals = list(r_edit.values())
-        # On récupère la colonne N (index 13)
         old_v = r_list_vals[13] if len(r_list_vals) > 13 else ""
         video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=clean_val(old_v), key="edit_vid")
         
@@ -780,7 +778,6 @@ elif st.session_state.page == "edit":
         
         st.divider()
         
-        # --- BOUTON ENREGISTRER ---
         if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
             if titre_edit.strip() != "" and ingredients.strip() != "":
                 payload = {
@@ -800,28 +797,21 @@ elif st.session_state.page == "edit":
                 }
                 
                 with st.spinner("Enregistrement en cours..."):
-                    # --- DEBUT DU BLOC DE TEST (REMPLACE l'ancien if send_action) ---
                     import requests
                     try:
-                        # On force l'envoi ici pour lire la réponse exacte
-                        response = requests.post(URL_APP, json=payload, timeout=10)
+                        # Utilisation de URL_SCRIPT comme vu sur ta photo
+                        response = requests.post(URL_SCRIPT, json=payload, timeout=15)
                         
-                        # On affiche ce que Google répond vraiment
-                        st.write(f"DEBUG - Code : {response.status_code}")
-                        st.write(f"DEBUG - Réponse : {response.text}")
-
                         if response.status_code == 200 and "Success" in response.text:
                             st.success("✅ Recette mise à jour !")
                             st.cache_data.clear()
-                            if 'recipe_to_edit' in st.session_state: 
-                                del st.session_state.recipe_to_edit
+                            if 'recipe_to_edit' in st.session_state: del st.session_state.recipe_to_edit
                             st.session_state.page = "home"
                             st.rerun()
                         else:
-                            st.error(f"❌ Google a répondu : {response.text}")
+                            st.error(f"❌ Google Sheets a répondu : {response.text}")
                     except Exception as e:
-                        st.error(f"❌ Erreur de connexion physique : {e}")
-                    # --- FIN DU BLOC DE TEST ---
+                        st.error(f"❌ Erreur de connexion : {e}")
             else:
                 st.error("⚠️ Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
@@ -1267,6 +1257,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
