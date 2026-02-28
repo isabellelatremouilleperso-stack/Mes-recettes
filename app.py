@@ -739,12 +739,13 @@ elif st.session_state.page == "add":
         # --- COLONNES POUR LES BOUTONS FINAUX ---
         c_save, c_cancel = st.columns(2)
         
+        # --- ON DÉFINIT LES 2 COLONNES POUR LES BOUTONS ---
+        c_save, c_cancel = st.columns(2)
+        
         with c_save:
             if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
                 if titre and ingredients:
                     import datetime
-                    
-                    # Fonction interne pour nettoyer tout en gardant les sauts de ligne
                     def clean_text(input_val):
                         return str(input_val).strip()
 
@@ -753,7 +754,8 @@ elif st.session_state.page == "add":
                         "date": datetime.date.today().strftime("%d/%m/%Y"),
                         "titre": clean_text(titre),
                         "source": clean_text(source_url),
-                        "ingredients": clean_text(ingredients), # Garde les lignes séparées
+                        # ICI LA CORRECTION POUR LES LIGNES 👇
+                        "ingredients": clean_text(ingredients).replace('\n', '  \n'),
                         "preparation": clean_text(instructions),
                         "image": clean_text(img_url),
                         "categorie": ", ".join(cat_choisies),
@@ -767,7 +769,6 @@ elif st.session_state.page == "add":
                     if send_action(payload):
                         st.success(f"✅ '{titre}' a été ajoutée !")
                         st.cache_data.clear()
-                        # Nettoyage des variables
                         for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                             if key in st.session_state:
                                 st.session_state[key] = ""
@@ -779,9 +780,9 @@ elif st.session_state.page == "add":
                 else:
                     st.error("🚨 Le titre et les ingrédients sont obligatoires !")
 
+        # CE BLOC DOIT ÊTRE BIEN ALIGNÉ AVEC 'with c_save' 👇
         with c_cancel:
             if st.button("❌ ANNULER L'AJOUT", use_container_width=True):
-                # Nettoyage des données temporaires avant de quitter
                 for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                     if key in st.session_state:
                         st.session_state[key] = ""
@@ -1312,6 +1313,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
