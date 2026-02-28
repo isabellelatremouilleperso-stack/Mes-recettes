@@ -35,44 +35,58 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : NOIR ET ORANGE (FINI LE BLANC) ---
 if st.session_state.page != "print":
     st.markdown("""
-<style>
-    /* FORCE LE NOIR SUR TOUT LE CORPS ET LA SIDEBAR */
-    html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
+    <style>
+    /* 1. FORCE LE NOIR PARTOUT (App + Header + Sidebar) */
+    .stApp, header[data-testid="stHeader"], [data-testid="stHeader"] {
         background-color: #0e1117 !important;
-        color: #ffffff !important;
     }
 
-    /* NETTOIE L'ENTÊTE BLANCHE */
-    header[data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-        color: #ffffff !important;
-        border-bottom: none !important;
-    }
-
-    /* FORCE LE FOND DE LA SIDEBAR */
-    [data-testid="stSidebarContent"] {
+    /* 2. SIDEBAR NOIRE (Plus de blanc !) */
+    [data-testid="stSidebar"], [data-testid="stSidebarContent"] {
         background-color: #1e2129 !important;
     }
 
-    /* LA FLÈCHE (ROND ORANGE FIXE) */
-    [data-testid="stSidebarCollapsedControl"] {
-        background-color: #e67e22 !important;
-        border-radius: 50% !important;
-        width: 50px !important;
-        height: 50px !important;
-        top: 10px !important;
-        left: 10px !important;
-    }
-
-    /* CACHE LES ÉLÉMENTS GRIS DE GITHUB */
-    [data-testid="stHeaderActionElements"] {
+    /* 3. CACHE LES TRUCS GRIS EN HAUT À DROITE */
+    [data-testid="stHeaderActionElements"], .stAppDeployButton {
         display: none !important;
     }
-</style>
-""", unsafe_allow_html=True)
+
+    /* 4. TES STYLES EXISTANTS (Gardés et optimisés) */
+    h1, h2, h3 { color: #e67e22 !important; }
+    .stButton button { background-color: #e67e22 !important; color: white !important; border-radius: 10px; }
+
+    /* Inputs et Checkbox */
+    input, select, textarea, div[data-baseweb="select"] { 
+        color: white !important; 
+        background-color: #1e2129 !important; 
+    }
+    .stCheckbox label p { color: white !important; font-size: 1.1rem !important; }
+
+    /* Tes cartes de recettes */
+    .recipe-card { 
+        background-color:#1e2129; 
+        border:1px solid #3d4455; 
+        border-radius:12px; 
+        padding:10px; 
+        height:230px; 
+        display:flex; 
+        flex-direction:column; 
+        justify-content:space-between;
+    }
+
+    .recipe-img { width:100%; height:130px; object-fit:cover; border-radius:8px; }
+    .recipe-title { color:white; font-weight:bold; text-align:center; }
+
+    /* La flèche du menu (pour qu'on la voie sur le noir) */
+    [data-testid="stSidebarCollapsedControl"] svg {
+        fill: #e67e22 !important;
+        width: 35px !important;
+        height: 35px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 # ======================
 # SYSTÈME DE SÉCURITÉ (TEST DIRECT)
 # ======================
@@ -1282,6 +1296,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
