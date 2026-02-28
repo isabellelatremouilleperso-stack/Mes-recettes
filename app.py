@@ -328,13 +328,6 @@ if st.session_state.page == "home":
     
     st.write("") # Petit espace esthétique
 
-    # --- BLOC DE CONNEXION TEMPORAIRE ---
-    if not st.session_state.get('admin_mode', False):
-        with st.expander("🔑 Activer le mode Admin pour voir la Sidebar"):
-            code_input = st.text_input("Entrez votre code", type="password")
-            if code_input == "TON_CODE_ICI": # Mets ton vrai code ici
-                st.session_state.admin_mode = True
-                st.rerun()
 
     # --- STYLE CSS (Inchangé) ---
     st.markdown("""
@@ -1311,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
