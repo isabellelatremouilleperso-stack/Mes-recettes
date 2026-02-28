@@ -91,6 +91,8 @@ if st.session_state.page != "print":
         line-height: 1.2; 
     }
 
+    # ... tout ton style précédent ...
+
     /* 7. Boîtes d'aide */
     .help-box { 
         background-color: #1e2130; 
@@ -99,14 +101,11 @@ if st.session_state.page != "print":
         border-left: 5px solid #e67e22; 
         margin-bottom: 20px; 
     }
+
     </style>
     """, unsafe_allow_html=True)
-    /* Checklist */
-    .stCheckbox label p { 
-        color: white !important; 
-        font-size: 1.1rem !important; 
-        font-weight: 500 !important; 
-    }
+
+
 
     /* Recipe cards */
     .recipe-card { 
@@ -1315,6 +1314,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
