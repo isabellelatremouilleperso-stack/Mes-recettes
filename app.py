@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from bs4 import BeautifulSoup
 import urllib.parse
+import hashlib
 
 # ======================
 # CONFIGURATION & LIAISON GOOGLE
@@ -103,8 +104,13 @@ if st.session_state.page != "print":
 
 # --- LE CODE PYTHON DOIT REPRENDRE ICI SANS RIEN D'AUTRE ---
 # ======================
-# SYSTÈME DE SÉCURITÉ
+# SYSTÈME DE SÉCURITÉ (Hashé)
 # ======================
+import hashlib
+
+# Ceci est l'empreinte (le hash) de ton code "142203"
+PASS_HASH = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
+
 # Vérifie si l'URL contient ?admin=oui
 url_admin = st.query_params.get("admin") == "oui"
 
@@ -114,11 +120,19 @@ if 'admin_mode' not in st.session_state:
 with st.sidebar:
     st.divider()
     if not st.session_state.admin_mode:
-        # Champ de mot de passe discret pour toi
+        # Champ de mot de passe discret
         pwd = st.text_input("🔑 Accès Admin", type="password", help="Tape ton code pour modifier")
-        if pwd == "142203":  # <--- CHOISIS TON MOT DE PASSE ICI
-            st.session_state.admin_mode = True
-            st.rerun()
+        
+        if pwd:
+            # On transforme le texte saisi par l'utilisateur en hash
+            input_hash = hashlib.sha256(pwd.encode()).hexdigest()
+            
+            # On compare les deux empreintes numériques
+            if input_hash == PASS_HASH:
+                st.session_state.admin_mode = True
+                st.rerun()
+            else:
+                st.error("Code incorrect")
     else:
         st.success("✅ Mode Chef Activé")
         if st.button("🔒 Déconnexion"):
@@ -1261,6 +1275,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
