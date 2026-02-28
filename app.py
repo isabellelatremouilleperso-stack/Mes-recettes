@@ -35,67 +35,64 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : L'EXCLUSION RADICALE ---
+# --- DESIGN CSS : FLÈCHE FIXE & ZERO GRIS ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON POUSSE LE HEADER HORS DE L'ÉCRAN (Vers le haut) */
+    /* 1. ON REND LE HEADER TRANSPARENT (Le gris disparaît) */
     header[data-testid="stHeader"] {
-        transform: translateY(-100%) !important;
-        height: 0px !important;
+        background-color: rgba(0,0,0,0) !important;
+        border: none !important;
+    }
+
+    /* 2. ON CACHE ABSOLUMENT TOUT CE QUI EST À DROITE (GitHub, Fork, Deploy) */
+    [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    header a, 
+    #MainMenu {
         display: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
     }
 
-    /* 2. ON DÉCALE TOUTE L'APPLI VERS LE HAUT POUR BOUCHER LE TROU */
-    .main .block-container {
-        padding-top: 2rem !important;
-    }
-
-    /* 3. ON CRÉE NOTRE PROPRE BOUTON DE MENU (ROND ET ORANGE) */
-    /* Ce bouton va "récupérer" la fonction d'ouverture du menu */
+    /* 3. ON FORCE LA FLÈCHE À REVENIR (EN BLANC ÉCLATANT) */
+    /* On la détache du flux pour qu'elle ne disparaisse pas avec le reste */
     [data-testid="stSidebarCollapsedControl"] {
         display: flex !important;
         visibility: visible !important;
         position: fixed !important;
-        top: 20px !important;
-        left: 20px !important;
+        top: 15px !important;
+        left: 15px !important;
         z-index: 9999999 !important;
-        background-color: #e67e22 !important; /* ORANGE VIF */
-        width: 55px !important;
-        height: 55px !important;
-        border-radius: 50% !important; /* TOUT ROND */
-        box-shadow: 0px 4px 15px rgba(0,0,0,0.6) !important;
+        background-color: #e67e22 !important; /* On lui met un fond Orange pour la voir ! */
+        border-radius: 50% !important;
+        width: 45px !important;
+        height: 45px !important;
         justify-content: center !important;
         align-items: center !important;
-        border: 2px solid white !important;
     }
 
-    /* La flèche à l'intérieur du rond en BLANC */
+    /* L'icône de la flèche en BLANC */
     [data-testid="stSidebarCollapsedControl"] svg {
         fill: white !important;
         color: white !important;
-        width: 30px !important;
-        height: 30px !important;
+        width: 28px !important;
+        height: 28px !important;
         opacity: 1 !important;
     }
 
-    /* 4. TES BOUTONS ET TITRES (Look Pro) */
+    /* 4. DESIGN GÉNÉRAL (ORANGE ET NOIR) */
+    .stApp { background-color: #0e1117; }
     h1, h2, h3, label { color: #e67e22 !important; }
+    
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         font-weight: bold !important;
-        height: 3em !important;
-        width: 100% !important;
     }
 
-    /* Fond noir profond */
-    .stApp { background-color: #0e1117; }
     footer { visibility: hidden !important; }
-    
-    /* On cache aussi le bouton "Deploy" s'il dépasse */
-    .stAppDeployButton { display: none !important; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1314,6 +1311,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
