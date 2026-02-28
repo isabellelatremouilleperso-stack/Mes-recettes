@@ -157,37 +157,25 @@ def scrape_url(url):
         
         title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
         
-        # Listes de mots-clés pour détecter les ingrédients (unités de mesure)
-        keywords_ing = ['g ', 'ml', 'tasse', 'cuillère', 'c. à', 'lb', 'kg', 'oz', 'pincée', 'gousse', 'conserve', 'paquet']
-        
-        ingredients_list = []
-        instructions_list = []
-
         # On nettoie les balises inutiles
         for junk in soup(["script", "style", "nav", "footer", "header", "aside"]):
             junk.extract()
 
-        # On parcourt les éléments textuels
+        # On parcourt les éléments textuels et on met TOUT dans une seule liste
+        full_text_list = []
         elements = soup.find_all(['li', 'p'])
+        
         for el in elements:
             text = el.get_text().strip()
-            if 5 < len(text) < 1200:
-                # Logique de tri simple : 
-                # Si la ligne contient un chiffre + un mot-clé d'ingrédient -> Ingrédients
-                # Sinon -> Préparation
-                is_ing = any(key in text.lower() for key in keywords_ing)
-                has_digit = any(char.isdigit() for char in text)
-                
-                if is_ing and has_digit:
-                    ingredients_list.append(f"- {text}")
-                else:
-                    # On évite les phrases trop courtes comme "Imprimer" ou "Partager"
-                    if len(text) > 30: 
-                        instructions_list.append(text)
+            # On ne prend que le texte qui a un peu de substance (> 10 caractères)
+            # pour éviter les menus ou les boutons "Partager"
+            if len(text) > 10:
+                full_text_list.append(text)
 
-        # Nettoyage des doublons
-        ing_final = "\n".join(list(dict.fromkeys(ingredients_list)))
-        prep_final = "\n".join(list(dict.fromkeys(instructions_list)))
+        # On nettoie les doublons tout en gardant l'ordre
+        # On met TOUT dans prep_final, et on laisse ing_final vide
+        ing_final = "" 
+        prep_final = "\n\n".join(list(dict.fromkeys(full_text_list)))
         
         return title, ing_final, prep_final
 
@@ -1296,6 +1284,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
