@@ -736,11 +736,14 @@ elif st.session_state.page == "add":
         
         st.divider()
         
-        # --- COLONNES POUR LES BOUTONS FINAUX ---
+        st.divider()
+        
+        # --- CRÉATION DE LA LIGNE À 2 COLONNES ---
         c_save, c_cancel = st.columns(2)
         
         with c_save:
-            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
+            # On ajoute une key unique pour forcer l'affichage
+            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="btn_save_final"):
                 if titre and ingredients:
                     import datetime
                     def clean_text(input_val):
@@ -751,7 +754,7 @@ elif st.session_state.page == "add":
                         "date": datetime.date.today().strftime("%d/%m/%Y"),
                         "titre": clean_text(titre),
                         "source": clean_text(source_url),
-                        # La correction pour les lignes est ici (double espace + \n)
+                        # Correction cruciale pour les retours à la ligne
                         "ingredients": clean_text(ingredients).replace('\n', '  \n'),
                         "preparation": clean_text(instructions),
                         "image": clean_text(img_url),
@@ -778,7 +781,8 @@ elif st.session_state.page == "add":
                     st.error("🚨 Le titre et les ingrédients sont obligatoires !")
 
         with c_cancel:
-            if st.button("❌ ANNULER L'AJOUT", use_container_width=True):
+            # Le bouton qui deviendra rouge grâce à ton CSS
+            if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="btn_cancel_final"):
                 for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                     if key in st.session_state:
                         st.session_state[key] = ""
@@ -1309,6 +1313,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
