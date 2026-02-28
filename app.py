@@ -108,7 +108,7 @@ if st.session_state.page != "print":
 # ======================
 import hashlib
 
-# Ceci est l'empreinte (le hash) de ton code "142203"
+
 PASS_HASH = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
 
 # Vérifie si l'URL contient ?admin=oui
@@ -1286,6 +1286,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
