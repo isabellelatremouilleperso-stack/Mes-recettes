@@ -782,12 +782,11 @@ elif st.session_state.page == "edit":
         
         # --- BOUTON ENREGISTRER ---
         if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
-            # On vérifie les champs obligatoires
             if titre_edit.strip() != "" and ingredients.strip() != "":
                 payload = {
                     "action": "edit", 
                     "titre": titre_edit, 
-                    "old_titre": r_edit.get('Titre', titre_edit), # Important pour le Script Google
+                    "old_titre": r_edit.get('Titre', titre_edit),
                     "Catégorie": ", ".join(cat_choisies), 
                     "Ingrédients": ingredients, 
                     "Préparation": instructions, 
@@ -801,16 +800,28 @@ elif st.session_state.page == "edit":
                 }
                 
                 with st.spinner("Enregistrement en cours..."):
-                    if send_action(payload):
-                        st.success("✅ Recette mise à jour !")
-                        st.cache_data.clear()
-                        # Nettoyage de la mémoire après succès
-                        if 'recipe_to_edit' in st.session_state: 
-                            del st.session_state.recipe_to_edit
-                        st.session_state.page = "home"
-                        st.rerun()
-                    else:
-                        st.error("❌ Erreur de communication avec Google Sheets.")
+                    # --- DEBUT DU BLOC DE TEST (REMPLACE l'ancien if send_action) ---
+                    import requests
+                    try:
+                        # On force l'envoi ici pour lire la réponse exacte
+                        response = requests.post(URL_APP, json=payload, timeout=10)
+                        
+                        # On affiche ce que Google répond vraiment
+                        st.write(f"DEBUG - Code : {response.status_code}")
+                        st.write(f"DEBUG - Réponse : {response.text}")
+
+                        if response.status_code == 200 and "Success" in response.text:
+                            st.success("✅ Recette mise à jour !")
+                            st.cache_data.clear()
+                            if 'recipe_to_edit' in st.session_state: 
+                                del st.session_state.recipe_to_edit
+                            st.session_state.page = "home"
+                            st.rerun()
+                        else:
+                            st.error(f"❌ Google a répondu : {response.text}")
+                    except Exception as e:
+                        st.error(f"❌ Erreur de connexion physique : {e}")
+                    # --- FIN DU BLOC DE TEST ---
             else:
                 st.error("⚠️ Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
@@ -1256,6 +1267,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
