@@ -36,47 +36,49 @@ if 'page' not in st.session_state:
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
 # --- DESIGN CSS : FORCE L'AFFICHAGE DU MENU ---
+# --- DESIGN CSS : ÉCRAN TOTAL ANTI-GRIS ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON COUVRE LE GRIS PAR DU NOIR (Plus de GitHub, plus de Fork) */
-    header[data-testid="stHeader"] {
+    /* 1. ON FORCE LE HEADER EN NOIR ABSOLU (Cache GitHub & Fork) */
+    [data-testid="stHeader"], header {
         background-color: #0e1117 !important;
-        color: #0e1117 !important;
+        background: #0e1117 !important;
+        height: 3.5rem !important;
     }
 
-    /* 2. ON CACHE LES ÉLÉMENTS DE DROITE (GitHub/Deploy) */
+    /* 2. ON CACHE LES BOUTONS DE DROITE (GitHub/Deploy) */
     [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
         display: none !important;
         visibility: hidden !important;
     }
 
-    /* 3. ON FAIT RESSORTIR LA FLÈCHE (MENU) EN ORANGE VIF */
-    /* On la force à apparaître même si le header est "caché" */
+    /* 3. ON FORCE LA FLÈCHE (MENU) EN ORANGE VIF */
+    /* On cible le bouton de la sidebar pour qu'il "sorte" du gris */
     [data-testid="stSidebarCollapsedControl"] {
-        background-color: #1e2129 !important; /* Petit carré sombre */
-        border: 2px solid #e67e22 !important; /* Contour Orange */
-        border-radius: 8px !important;
+        background-color: #1e2129 !important; /* Petit fond sombre */
+        border: 2px solid #e67e22 !important; /* Contour Orange Net */
+        border-radius: 10px !important;
         display: flex !important;
         visibility: visible !important;
         position: fixed !important;
-        top: 10px !important;
-        left: 10px !important;
-        z-index: 100000 !important;
-        padding: 5px !important;
+        top: 8px !important;
+        left: 8px !important;
+        z-index: 1000000 !important;
+        padding: 4px !important;
     }
 
-    /* On force la couleur de la flèche en Orange */
+    /* Couleur de l'icône de la flèche : ORANGE ÉCLATANT */
     [data-testid="stSidebarCollapsedControl"] svg {
         fill: #e67e22 !important;
         color: #e67e22 !important;
-        width: 35px !important;
-        height: 35px !important;
-        opacity: 1 !important;
+        width: 38px !important;
+        height: 38px !important;
+        opacity: 1 !important; /* Supprime le côté gris/transparent */
     }
 
-    /* 4. TES BOUTONS ET TITRES (Look Pro) */
-    h1, h2, h3 { color: #e67e22 !important; }
+    /* 4. TES BOUTONS ET TITRES EN ORANGE */
+    h1, h2, h3, label { color: #e67e22 !important; }
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
@@ -84,7 +86,7 @@ if st.session_state.page != "print":
         font-weight: bold !important;
     }
 
-    /* Fond de l'app */
+    /* Fond de l'app et masquage du footer */
     .stApp { background-color: #0e1117; }
     footer { visibility: hidden !important; }
     </style>
@@ -1305,6 +1307,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
