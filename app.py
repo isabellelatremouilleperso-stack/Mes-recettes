@@ -35,42 +35,42 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS : FORCE BRUTE ---
+# --- DESIGN CSS FINAL (ANTI-GITHUB) ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. ON FORCE LES COULEURS À LA RACINE */
-    :root {
-        --primary-color: #e67e22;
-        --background-color: #0e1117;
-        --secondary-background-color: #1e2129;
-        --text-color: #e0e0e0;
-    }
-
-    /* 2. ON TUE LE HEADER (GitHub, Fork, etc.) */
-    [data-testid="stHeader"], header {
-        background-color: #0e1117 !important;
-        color: #0e1117 !important; /* Cache le texte en le mettant en noir */
-    }
-    
-    /* On cache spécifiquement les éléments de droite */
-    [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
+    /* 1. ON SUPPRIME COMPLÈTEMENT LE HEADER ET SON CONTENU (Fork, GitHub, etc.) */
+    header[data-testid="stHeader"], 
+    [data-testid="stHeaderActionElements"],
+    .stAppDeployButton,
+    header a {
         display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
     }
 
-    /* 3. LA FLÈCHE : BLANCHE ET OPAQUE */
+    /* 2. ON RE-POSITIONNE ET ON ALLUME LA FLÈCHE EN BLANC */
+    /* Comme on a supprimé le header, on fixe la flèche sur le fond noir */
+    [data-testid="stSidebarCollapsedControl"] {
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 1000001 !important;
+        background-color: rgba(14, 17, 23, 0.8) !important; /* Fond noir transparent */
+        border-radius: 5px !important;
+    }
+
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important;
+        fill: white !important; /* FLÈCHE BLANCHE */
         color: white !important;
+        width: 32px !important;
+        height: 32px !important;
         opacity: 1 !important;
-        width: 45px !important; /* Grosse pour mobile */
-        height: 45px !important;
     }
 
-    /* 4. LES TITRES ET BOUTONS : ORANGE VIF */
-    h1, h2, h3, label, p, span {
+    /* 3. DESIGN DES BOUTONS ET TITRES (Orange comme sur ta photo) */
+    h1, h2, h3, .stMarkdown p {
         color: #e67e22 !important;
-        opacity: 1 !important;
     }
 
     div.stButton > button {
@@ -78,20 +78,18 @@ if st.session_state.page != "print":
         color: white !important;
         border: none !important;
         font-weight: bold !important;
-        opacity: 1 !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3) !important;
+        border-radius: 10px !important;
     }
 
-    /* 5. LES BOÎTES DE SAISIE (Pas de gris pâle !) */
-    input, textarea, select {
+    /* 4. LES CHAMPS DE TEXTE (Fini le blanc/gris, on reste sombre) */
+    input, textarea, [data-baseweb="select"] {
         background-color: #1e2129 !important;
         color: white !important;
-        border: 2px solid #e67e22 !important; /* Bordure orange pour flasher */
+        border: 1px solid #e67e22 !important;
     }
 
-    /* Nettoyage final */
     footer { visibility: hidden !important; }
-    .stApp { background-color: #0e1117 !important; }
+    .stApp { background-color: #0e1117; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1310,6 +1308,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
