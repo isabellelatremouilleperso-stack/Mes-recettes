@@ -38,63 +38,41 @@ st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳
 # --- DESIGN CSS : NOIR ET ORANGE (FINI LE BLANC) ---
 if st.session_state.page != "print":
     st.markdown("""
-    <style>
-    /* 1. FOND DE L'APPLI ET DU HEADER EN NOIR */
-    .stApp, header[data-testid="stHeader"] {
+<style>
+    /* FORCE LE NOIR SUR TOUT LE CORPS ET LA SIDEBAR */
+    html, body, [data-testid="stAppViewContainer"], [data-testid="stSidebar"] {
         background-color: #0e1117 !important;
+        color: #ffffff !important;
     }
 
-    /* 2. FORCE LA SIDEBAR EN NOIR FONCÉ */
-    [data-testid="stSidebar"] {
+    /* NETTOIE L'ENTÊTE BLANCHE */
+    header[data-testid="stHeader"] {
+        background-color: #0e1117 !important;
+        color: #ffffff !important;
+        border-bottom: none !important;
+    }
+
+    /* FORCE LE FOND DE LA SIDEBAR */
+    [data-testid="stSidebarContent"] {
         background-color: #1e2129 !important;
-        border-right: 1px solid #e67e22 !important; /* Petit liseré orange pour séparer */
     }
 
-    /* 3. CACHE TOUT LE GRIS À DROITE (GitHub, Fork, etc.) */
-    [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* 4. LA FLÈCHE (BLANCHE SUR ROND ORANGE) */
+    /* LA FLÈCHE (ROND ORANGE FIXE) */
     [data-testid="stSidebarCollapsedControl"] {
-        display: flex !important;
-        visibility: visible !important;
-        position: fixed !important;
-        top: 15px !important;
-        left: 15px !important;
-        z-index: 9999999 !important;
         background-color: #e67e22 !important;
         border-radius: 50% !important;
-        width: 45px !important;
-        height: 45px !important;
-        justify-content: center !important;
-        align-items: center !important;
+        width: 50px !important;
+        height: 50px !important;
+        top: 10px !important;
+        left: 10px !important;
     }
 
-    [data-testid="stSidebarCollapsedControl"] svg {
-        fill: white !important;
-        color: white !important;
-        width: 28px !important;
-        height: 28px !important;
+    /* CACHE LES ÉLÉMENTS GRIS DE GITHUB */
+    [data-testid="stHeaderActionElements"] {
+        display: none !important;
     }
-
-    /* 5. TEXTES ET BOUTONS */
-    h1, h2, h3, label, [data-testid="stSidebar"] p { 
-        color: #e67e22 !important; 
-    }
-    
-    div.stButton > button {
-        background-color: #e67e22 !important;
-        color: white !important;
-        border-radius: 10px !important;
-        font-weight: bold !important;
-    }
-
-    /* Cache le message "Made with Streamlit" */
-    footer { visibility: hidden !important; }
-    </style>
-    """, unsafe_allow_html=True)
+</style>
+""", unsafe_allow_html=True)
 # ======================
 # SYSTÈME DE SÉCURITÉ (TEST DIRECT)
 # ======================
@@ -1304,6 +1282,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
