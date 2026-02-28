@@ -35,56 +35,66 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-st.markdown("""
-<style>
-    /* 1. FORCE LE FOND DE TOUTE L'APPLICATION EN NOIR */
-    .stApp {
+# --- DESIGN CSS : NOIR ET ORANGE (FINI LE BLANC) ---
+if st.session_state.page != "print":
+    st.markdown("""
+    <style>
+    /* 1. FOND DE L'APPLI ET DU HEADER EN NOIR */
+    .stApp, header[data-testid="stHeader"] {
         background-color: #0e1117 !important;
     }
 
-    /* 2. FORCE L'ENTÊTE (HEADER) EN NOIR ET CACHE LE GRIS */
-    header[data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-        border-bottom: none !important;
-    }
-
-    /* 3. FORCE LA SIDEBAR EN NOIR/GRIS FONCÉ */
+    /* 2. FORCE LA SIDEBAR EN NOIR FONCÉ */
     [data-testid="stSidebar"] {
-        background-color: #1e2129 !important; /* Un noir légèrement plus doux pour la sidebar */
+        background-color: #1e2129 !important;
+        border-right: 1px solid #e67e22 !important; /* Petit liseré orange pour séparer */
     }
 
-    /* 4. TOUT LE TEXTE DE LA SIDEBAR EN ORANGE */
-    [data-testid="stSidebar"] h1, 
-    [data-testid="stSidebar"] h2, 
-    [data-testid="stSidebar"] h3, 
-    [data-testid="stSidebar"] label, 
-    [data-testid="stSidebar"] p {
-        color: #e67e22 !important;
+    /* 3. CACHE TOUT LE GRIS À DROITE (GitHub, Fork, etc.) */
+    [data-testid="stHeaderActionElements"], .stAppDeployButton, header a {
+        display: none !important;
+        visibility: hidden !important;
     }
 
-    /* 5. LES BOUTONS DE LA SIDEBAR (Orange et texte blanc) */
-    [data-testid="stSidebar"] button {
+    /* 4. LA FLÈCHE (BLANCHE SUR ROND ORANGE) */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 15px !important;
+        left: 15px !important;
+        z-index: 9999999 !important;
         background-color: #e67e22 !important;
-        color: white !important;
-        border-radius: 10px !important;
+        border-radius: 50% !important;
+        width: 45px !important;
+        height: 45px !important;
+        justify-content: center !important;
+        align-items: center !important;
     }
 
-    /* 6. LA FLÈCHE DE MENU (EN BLANC) */
-    /* Pour qu'elle ressorte bien sur le fond noir */
     [data-testid="stSidebarCollapsedControl"] svg {
         fill: white !important;
         color: white !important;
-        width: 35px !important;
-        height: 35px !important;
-        opacity: 1 !important;
+        width: 28px !important;
+        height: 28px !important;
     }
 
-    /* On cache GitHub et le menu Streamlit à droite */
-    [data-testid="stHeaderActionElements"] {
-        display: none !important;
+    /* 5. TEXTES ET BOUTONS */
+    h1, h2, h3, label, [data-testid="stSidebar"] p { 
+        color: #e67e22 !important; 
     }
-</style>
-""", unsafe_allow_html=True)
+    
+    div.stButton > button {
+        background-color: #e67e22 !important;
+        color: white !important;
+        border-radius: 10px !important;
+        font-weight: bold !important;
+    }
+
+    /* Cache le message "Made with Streamlit" */
+    footer { visibility: hidden !important; }
+    </style>
+    """, unsafe_allow_html=True)
 # ======================
 # SYSTÈME DE SÉCURITÉ (TEST DIRECT)
 # ======================
@@ -1294,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
