@@ -149,27 +149,48 @@ def load_data(url):
         return pd.DataFrame()
 
 def scrape_url(url):
-    """Extrait proprement le titre et le texte d'un site de cuisine ✨"""
+    """Version boostée pour capturer les ingrédients et la préparation ✨"""
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        res = requests.get(url, headers=headers, timeout=10)
+        # Simulation d'un vrai navigateur plus complète
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
+            'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
+        }
+        
+        res = requests.get(url, headers=headers, timeout=12)
         res.encoding = res.apparent_encoding
         soup = BeautifulSoup(res.text, 'html.parser')
         
-        # Récupération du titre
-        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
+        # 1. Extraction du Titre
+        title = "Recette Importée"
+        h1 = soup.find('h1')
+        if h1:
+            title = h1.get_text().strip()
+
+        # 2. Nettoyage du "bruit" (on enlève les menus, scripts et pubs)
+        for junk in soup(["script", "style", "nav", "footer", "header", "aside"]):
+            junk.extract()
+
+        # 3. Extraction intelligente du texte
+        # On cible les zones souvent utilisées pour les ingrédients et étapes
+        lines = []
+        # On cherche dans les listes et les div de contenu
+        for el in soup.find_all(['li', 'p', 'div']):
+            text = el.get_text().strip()
+            # On ne garde que les lignes significatives (ni trop courtes, ni trop longues)
+            if 3 < len(text) < 1000:
+                lines.append(text)
         
-        # Récupération large (liens, paragraphes, spans)
-        elements = soup.find_all(['li', 'p', 'span']) 
-        raw_list = [el.text.strip() for el in elements if 5 < len(el.text.strip()) < 2000]
+        # Suppression des doublons tout en gardant l'ordre
+        content = "\n".join(list(dict.fromkeys(lines)))
         
-        # Nettoyage des doublons de texte tout en gardant l'ordre
-        content = "\n".join(list(dict.fromkeys(raw_list)))
-        
+        if len(content) < 50:
+            return title, "⚠️ Contenu protégé ou vide. Copiez-collez manuellement."
+            
         return title, content
+
     except Exception as e:
-        st.warning(f"L'extraction automatique a échoué : {e}")
-        return None, None
+        return None, f"Erreur de connexion : {str(e)}"
 
 def send_action(payload):
     """Envoie les données vers Google Apps Script"""
@@ -1256,6 +1277,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
