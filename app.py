@@ -725,10 +725,17 @@ elif st.session_state.page == "add":
                 st.error("🚨 Le titre et les ingrédients sont obligatoires !")
 
 
-   # --- PAGE ÉDITION (DÉDIÉE) ---
+  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
-    
+
+    # Fonction pour nettoyer les valeurs vides/nan venant du Excel
+    def clean_val(x):
+        val = str(x)
+        if val.lower() in ["nan", "none", "", "null"]:
+            return ""
+        return val
+
     st.markdown('<h1 style="color: #e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
     
     if st.button("⬅ Annuler et Retour", use_container_width=True):
@@ -737,14 +744,12 @@ elif st.session_state.page == "edit":
     
     st.divider()
     
-    # On utilise un seul container et des clés (key) uniques pour éviter les doublons
     with st.container():
         col_t, col_c = st.columns([2, 1])
-        # L'ajout de key="edit_titre" règle l'erreur StreamlitDuplicateElementId
-        titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''), key="edit_titre")
+        titre_edit = col_t.text_input("🏷️ Nom de la recette", value=clean_val(r_edit.get('Titre', '')), key="edit_titre")
         
         # Sécurité pour le multiselect
-        raw_cats = str(r_edit.get('Catégorie', 'Autre'))
+        raw_cats = clean_val(r_edit.get('Catégorie', 'Autre'))
         current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
         valid_cats = [c for c in current_cats if c in CATEGORIES]
         if not valid_cats: valid_cats = ["Autre"]
@@ -753,33 +758,36 @@ elif st.session_state.page == "edit":
         
         st.markdown("#### ⏱️ Paramètres de cuisson")
         cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", value=str(r_edit.get('Temps_Prepa', '')), key="edit_prep")
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=str(r_edit.get('Temps_Cuisson', '')), key="edit_cuis")
-        port = cp3.text_input("🍽️ Portions", value=str(r_edit.get('Portions', '')), key="edit_port")
+        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_val(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', ''))), key="edit_prep")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_val(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', ''))), key="edit_cuis")
+        port = cp3.text_input("🍽️ Portions", value=clean_val(r_edit.get('Portions', '')), key="edit_port")
         
         st.divider()
         
         ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", height=300, value=r_edit.get('Ingrédients', ''), key="edit_ing")
-        instructions = ce.text_area("👨‍🍳 Étapes de préparation", height=300, value=r_edit.get('Préparation', ''), key="edit_ins")
+        ingredients = ci.text_area("🍎 Ingrédients", height=300, value=clean_val(r_edit.get('Ingrédients', '')), key="edit_ing")
+        instructions = ce.text_area("👨‍🍳 Étapes de préparation", height=300, value=clean_val(r_edit.get('Préparation', '')), key="edit_ins")
         
-        img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''), key="edit_img")
+        img_url = st.text_input("🖼️ Lien de l'image (URL)", value=clean_val(r_edit.get('Image', '')), key="edit_img")
 
         # --- RÉCUPÉRATION VIDÉO ---
         r_list_vals = list(r_edit.values())
+        # On récupère la colonne N (index 13)
         old_v = r_list_vals[13] if len(r_list_vals) > 13 else ""
-        video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=str(old_v) if str(old_v) != "nan" else "", key="edit_vid")
+        video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=clean_val(old_v), key="edit_vid")
         
-        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, value=r_edit.get('Commentaires', ''), key="edit_comm")
+        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, value=clean_val(r_edit.get('Commentaires', '')), key="edit_comm")
         
         st.divider()
         
-        # --- BOUTON ENREGISTRER (Unique) ---
+        # --- BOUTON ENREGISTRER ---
         if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
+            # On vérifie les champs obligatoires
             if titre_edit.strip() != "" and ingredients.strip() != "":
                 payload = {
                     "action": "edit", 
                     "titre": titre_edit, 
+                    "old_titre": r_edit.get('Titre', titre_edit), # Important pour le Script Google
                     "Catégorie": ", ".join(cat_choisies), 
                     "Ingrédients": ingredients, 
                     "Préparation": instructions, 
@@ -792,15 +800,17 @@ elif st.session_state.page == "edit":
                     "video": video_url 
                 }
                 
-                if send_action(payload):
-                    st.success("✅ Recette mise à jour !")
-                    st.cache_data.clear()
-                    if 'recipe_to_edit' in st.session_state: 
-                        del st.session_state.recipe_to_edit
-                    st.session_state.page = "home"
-                    st.rerun()
-                else:
-                    st.error("❌ Erreur de communication avec Google Sheets.")
+                with st.spinner("Enregistrement en cours..."):
+                    if send_action(payload):
+                        st.success("✅ Recette mise à jour !")
+                        st.cache_data.clear()
+                        # Nettoyage de la mémoire après succès
+                        if 'recipe_to_edit' in st.session_state: 
+                            del st.session_state.recipe_to_edit
+                        st.session_state.page = "home"
+                        st.rerun()
+                    else:
+                        st.error("❌ Erreur de communication avec Google Sheets.")
             else:
                 st.error("⚠️ Le titre et les ingrédients sont obligatoires !")
 # --- PAGE ÉPICERIE ---
@@ -1246,6 +1256,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
