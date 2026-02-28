@@ -35,69 +35,61 @@ if 'page' not in st.session_state:
 
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# --- DESIGN CSS ORANGE PRO ---
+# --- DESIGN CSS SÉCURISÉ ---
 if st.session_state.page != "print":
     st.markdown("""
     <style>
-    /* 1. NETTOYAGE DU HAUT (Supprime GitHub & Co) */
-    header [data-testid="stHeaderActionElements"], .stAppDeployButton, #MainMenu {
+    /* 1. SUPPRESSION TOTALE DU COIN DROIT (GitHub, Deploy, Menu) */
+    [data-testid="stHeaderActionElements"], 
+    .stAppDeployButton, 
+    #MainMenu, 
+    header {
         display: none !important;
     }
 
-    /* 2. LA FLÈCHE DE MENU (En haut à gauche) */
+    /* 2. RÉCUPÉRATION DU BOUTON MENU (FLÈCHE) */
+    /* On le sort du header pour qu'il ne soit pas supprimé avec lui */
+    [data-testid="stSidebarCollapsedControl"] {
+        display: flex !important;
+        visibility: visible !important;
+        position: fixed !important;
+        top: 10px !important;
+        left: 10px !important;
+        z-index: 99999 !important; /* Passe au-dessus de tout */
+        background-color: rgba(30, 33, 41, 0.8) !important;
+        border-radius: 8px !important;
+        padding: 5px !important;
+        border: 1px solid #e67e22 !important;
+    }
+
+    /* Icône de la flèche en orange vif */
     [data-testid="stSidebarCollapsedControl"] svg {
-        fill: #e67e22 !important; /* Orange vif */
-        width: 40px !important;
-        height: 40px !important;
+        fill: #e67e22 !important;
+        width: 35px !important;
+        height: 35px !important;
     }
 
-    /* 3. LES TITRES ET SOUS-TITRES */
-    h1, h2, h3, label, .stMarkdown p {
-        color: #e67e22 !important;
-    }
-
-    /* 4. LES BOUTONS (Tous en Orange) */
+    /* 3. LES MENUS ET BOUTONS ORANGE */
+    h1, h2, h3, label { color: #e67e22 !important; }
+    
     div.stButton > button {
         background-color: #e67e22 !important;
         color: white !important;
         border: none !important;
         font-weight: bold !important;
-        width: 100% !important; /* Pour que ce soit beau sur mobile */
         border-radius: 10px !important;
-        padding: 10px !important;
-    }
-    
-    div.stButton > button:hover {
-        background-color: #d35400 !important; /* Orange plus foncé au survol */
-        border: none !important;
     }
 
-    /* 5. LES CASES DE TEXTE (Fond sombre, bordure orange quand on clique) */
+    /* 4. NETTOYAGE FINAL */
+    footer { visibility: hidden !important; }
+    .stApp { background-color: #0e1117; }
+    
+    /* Inputs et zones de texte */
     input, textarea, select {
         background-color: #1e2129 !important;
         color: white !important;
         border: 1px solid #3d4455 !important;
     }
-    
-    input:focus, textarea:focus {
-        border-color: #e67e22 !important;
-        box-shadow: 0 0 5px #e67e22 !important;
-    }
-
-    /* 6. LA SIDEBAR (Menu de gauche) */
-    [data-testid="stSidebar"] {
-        background-color: #1e2129 !important;
-    }
-    
-    /* Le texte "Mode Chef Activé" ou "Consultation" */
-    [data-testid="stNotification"] {
-        background-color: #2c3e50 !important;
-        color: #e67e22 !important;
-        border: 1px solid #e67e22 !important;
-    }
-
-    footer { visibility: hidden !important; }
-    .stApp { background-color: #0e1117; }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -1316,6 +1308,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
