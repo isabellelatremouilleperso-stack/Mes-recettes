@@ -122,23 +122,25 @@ CATEGORIES = [
 ]
 
 # ======================
-# FONCTIONS TECHNIQUES (VERSION UNIQUE)
+# FONCTIONS TECHNIQUES (VERSION FINALE ET UNIQUE)
 # ======================
 
-@st.cache_data(ttl=300) # Mise à jour toutes les 5 minutes
+@st.cache_data(ttl=300) 
 def load_data(url):
+    """Charge les données depuis Google Sheets avec gestion anti-cache et anti-doublons"""
     try:
-        # On force le rafraîchissement avec un paramètre temporel pour Google
-        timestamp_url = f"{url}&t={int(time.time())}"
+        # On force le rafraîchissement avec un paramètre temporel
+        timestamp_url = f"{url}&nocache={int(time.time())}"
         df = pd.read_csv(timestamp_url)
         
-        # Nettoie les espaces dans les noms de colonnes
+        # Nettoyage des noms de colonnes (supprime les espaces invisibles)
         df.columns = [c.strip() for c in df.columns] 
         df = df.fillna("")
         
         # --- NETTOYAGE ANTI-DOUBLONS ---
         if not df.empty and 'Titre' in df.columns:
             df['Titre'] = df['Titre'].astype(str).str.strip()
+            # On garde la première occurrence si un titre est en double
             df = df.drop_duplicates(subset=['Titre'], keep='first')
             
         return df
@@ -147,46 +149,7 @@ def load_data(url):
         return pd.DataFrame()
 
 def scrape_url(url):
-    """Extrait le contenu d'un site de cuisine ✨"""
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        res = requests.get(url, headers=headers, timeout=10)
-        res.encoding = res.apparent_encoding
-        soup = BeautifulSoup(res.text, 'html.parser')
-        
-        # On cherche le titre principal
-        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
-        
-        # Récupération intelligente du texte (ingrédients et étapes)
-        elements = soup.find_all(['li', 'p']) 
-        raw_list = [el.text.strip() for el in elements if 5 < len(el.text.strip()) < 1500]
-        
-        # Supprime les doublons de texte (menus, pubs...) tout en gardant l'ordre
-        content = "\n".join(list(dict.fromkeys(raw_list)))
-        return title, content
-    except Exception as e:
-        st.error(f"Erreur lors de l'extraction : {e}")
-        return None, None
-
-# --- CHARGEMENT INITIAL DU DATAFRAME ---
-# Cet appel se fait une seule fois au lancement de l'app
-df = load_data(URL_CSV)
-# ======================
-# FONCTIONS
-# ======================
-def send_action(payload):
-    with st.spinner("🚀 Action..."):
-        try:
-            r = requests.post(URL_SCRIPT,json=payload,timeout=20)
-            if "Success" in r.text:
-                st.cache_data.clear()
-                time.sleep(0.5)
-                return True
-        except:
-            pass
-    return False
-
-def scrape_url(url):
+    """Extrait proprement le titre et le texte d'un site de cuisine ✨"""
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
         res = requests.get(url, headers=headers, timeout=10)
@@ -196,37 +159,33 @@ def scrape_url(url):
         # Récupération du titre
         title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
         
-        # Récupération plus large des éléments de texte
-        # On augmente la limite à 2000 caractères pour ne pas couper les longues instructions
+        # Récupération large (liens, paragraphes, spans)
         elements = soup.find_all(['li', 'p', 'span']) 
         raw_list = [el.text.strip() for el in elements if 5 < len(el.text.strip()) < 2000]
         
-        # Nettoyage des doublons tout en gardant l'ordre
+        # Nettoyage des doublons de texte tout en gardant l'ordre
         content = "\n".join(list(dict.fromkeys(raw_list)))
         
         return title, content
     except Exception as e:
-        print(f"Erreur scrap: {e}")
+        st.warning(f"L'extraction automatique a échoué : {e}")
         return None, None
 
-@st.cache_data(ttl=5)
-def load_data():
-    try:
-        df = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
-        df = df.fillna('')
-        df.columns = [c.strip() for c in df.columns]
-        
-        # --- NETTOYAGE ANTI-DOUBLONS ---
-        if not df.empty and 'Titre' in df.columns:
-            # On nettoie les noms de colonnes et les titres
-            df['Titre'] = df['Titre'].astype(str).str.strip()
-            # On supprime les doublons AVANT toute autre manipulation
-            df = df.drop_duplicates(subset=['Titre'], keep='first')
-        
-        return df
-    except:
-        return pd.DataFrame()
+def send_action(payload):
+    """Envoie les données vers Google Apps Script"""
+    with st.spinner("🚀 Action en cours..."):
+        try:
+            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
+            if "Success" in r.text:
+                st.cache_data.clear() # On vide le cache pour voir les changements
+                time.sleep(0.5)
+                return True
+        except Exception as e:
+            st.error(f"Erreur de connexion : {e}")
+    return False
 
+# --- APPEL INITIAL UNIQUE ---
+df = load_data(URL_CSV)
 # ======================
 # SIDEBAR
 # ======================
@@ -1297,6 +1256,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
