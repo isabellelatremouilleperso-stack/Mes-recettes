@@ -85,6 +85,11 @@ if st.session_state.page != "print":
         width: 35px !important;
         height: 35px !important;
     }
+    /* Style pour le bouton Annuler (le deuxième bouton de la rangée) */
+    div[data-testid="column"]:nth-child(2) button {
+        background-color: #d32f2f !important; /* Rouge sombre */
+        color: white !important;
+    }
     </style>
     """, unsafe_allow_html=True)
 # ======================
@@ -685,12 +690,11 @@ elif st.session_state.page == "add":
     if col_go.button("Extraire ✨", use_container_width=True):
         if url_input:
             with st.spinner("Analyse et tri de la recette..."):
-                # --- CORRECTION ICI : ON REÇOIT 3 VALEURS ---
                 t, ing, prep = scrape_url(url_input)
                 if t:
                     st.session_state.scraped_title = t
-                    st.session_state.scraped_ingredients = ing # On stocke les ingrédients triés
-                    st.session_state.scraped_content = prep     # On stocke la préparation triée
+                    st.session_state.scraped_ingredients = ing
+                    st.session_state.scraped_content = prep
                     st.success("Extraction réussie ! ✨")
                     st.rerun()
                 else:
@@ -703,15 +707,13 @@ elif st.session_state.page == "add":
     with st.container():
         col_t, col_c = st.columns([2, 1])
         
-        # --- RÉCUPÉRATION DES VALEURS EXTRAITES ---
         titre_val = st.session_state.get('scraped_title', '')
-        ing_val = st.session_state.get('scraped_ingredients', '') # On récupère les ingrédients
+        ing_val = st.session_state.get('scraped_ingredients', '')
         prep_val = st.session_state.get('scraped_content', '')
 
         titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
         cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
         
-        # --- SECTION LIENS ---
         col_link1, col_link2 = st.columns(2)
         source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
         video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
@@ -725,52 +727,66 @@ elif st.session_state.page == "add":
         st.divider()
         
         ci, ce = st.columns(2)
-        # --- CORRECTION ICI : AJOUT DE VALUE=ING_VAL ---
-        ingredients = ci.text_area("🍎 Ingrédients", value=ing_val, height=300, placeholder="2 tasses de farine...", key="ing_area")
-        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=prep_val, height=300, key="prep_area")
+        # Utilisation de st.text_area avec les valeurs scrapées
+        ingredients = ci.text_area("🍎 Ingrédients (un par ligne)", value=ing_val, height=350, placeholder="2 tasses de farine...", key="ing_area")
+        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=prep_val, height=350, key="prep_area")
         
         img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...", key="img_url")
         commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, key="notes_area")
         
         st.divider()
         
-        if st.button("💾 ENREGISTRER DANS MA BIBLIOTHÈQUE", use_container_width=True):
-            if titre and ingredients:
-                import datetime
-                
-                def clean_text(input_val):
-                    return str(input_val).strip()
+        # --- COLONNES POUR LES BOUTONS FINAUX ---
+        c_save, c_cancel = st.columns(2)
+        
+        with c_save:
+            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
+                if titre and ingredients:
+                    import datetime
+                    
+                    # Fonction interne pour nettoyer tout en gardant les sauts de ligne
+                    def clean_text(input_val):
+                        return str(input_val).strip()
 
-                payload = {
-                    "action": "add",
-                    "date": datetime.date.today().strftime("%d/%m/%Y"),
-                    "titre": clean_text(titre),
-                    "source": clean_text(source_url),
-                    "ingredients": clean_text(ingredients),
-                    "preparation": clean_text(instructions),
-                    "image": clean_text(img_url),
-                    "categorie": ", ".join(cat_choisies),
-                    "portions": clean_text(port),
-                    "temps_prepa": clean_text(t_prep),
-                    "temps_cuisson": clean_text(t_cuis),
-                    "commentaires": clean_text(commentaires),
-                    "lien_video": clean_text(video_url)
-                }
+                    payload = {
+                        "action": "add",
+                        "date": datetime.date.today().strftime("%d/%m/%Y"),
+                        "titre": clean_text(titre),
+                        "source": clean_text(source_url),
+                        "ingredients": clean_text(ingredients), # Garde les lignes séparées
+                        "preparation": clean_text(instructions),
+                        "image": clean_text(img_url),
+                        "categorie": ", ".join(cat_choisies),
+                        "portions": clean_text(port),
+                        "temps_prepa": clean_text(t_prep),
+                        "temps_cuisson": clean_text(t_cuis),
+                        "commentaires": clean_text(commentaires),
+                        "lien_video": clean_text(video_url)
+                    }
 
-                if send_action(payload):
-                    st.success(f"✅ '{titre}' a été ajoutée !")
-                    st.cache_data.clear()
-                    # Nettoyage des variables de session après ajout
-                    for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                        if key in st.session_state:
-                            st.session_state[key] = ""
-                    time.sleep(1)
-                    st.session_state.page = "home"
-                    st.rerun()
+                    if send_action(payload):
+                        st.success(f"✅ '{titre}' a été ajoutée !")
+                        st.cache_data.clear()
+                        # Nettoyage des variables
+                        for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
+                            if key in st.session_state:
+                                st.session_state[key] = ""
+                        time.sleep(1)
+                        st.session_state.page = "home"
+                        st.rerun()
+                    else:
+                        st.error("❌ Erreur lors de l'envoi.")
                 else:
-                    st.error("❌ Erreur lors de l'envoi vers Google Sheets.")
-            else:
-                st.error("🚨 Le titre et les ingrédients sont obligatoires !")
+                    st.error("🚨 Le titre et les ingrédients sont obligatoires !")
+
+        with c_cancel:
+            if st.button("❌ ANNULER L'AJOUT", use_container_width=True):
+                # Nettoyage des données temporaires avant de quitter
+                for key in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
+                    if key in st.session_state:
+                        st.session_state[key] = ""
+                st.session_state.page = "home"
+                st.rerun()
  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
@@ -1296,6 +1312,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
