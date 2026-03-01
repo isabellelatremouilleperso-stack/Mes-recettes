@@ -65,25 +65,20 @@ def send_action(payload):
             st.error(f"❌ Erreur de connexion : {e}")
             return False
 
-@st.cache_data(ttl=300) # Réduit à 5 min pour plus de réactivité
+@st.cache_data(ttl=300)
 def load_data(url):
     try:
-        # L'astuce du timestamp évite que Google Sheets ne renvoie une vieille version
-        timestamp_url = f"{url}&nocache={int(time.time())}"
+        # L'astuce ultime : on ajoute un timestamp précis à la milliseconde
+        # pour forcer Google à régénérer le CSV à l'instant T
+        sep = "&" if "?" in url else "?"
+        timestamp_url = f"{url}{sep}t={int(time.time() * 1000)}"
+        
         df = pd.read_csv(timestamp_url)
-        
-        # NETTOYAGE
-        df = df.fillna('') 
-        df.columns = [c.strip() for c in df.columns] 
-        
-        # Sécurité : Si le DF est vide, on renvoie un DF avec les colonnes attendues
-        if df.empty:
-            return pd.DataFrame(columns=['Titre', 'Date', 'Catégorie', 'Ingrédients', 'Préparation'])
-            
+        df = df.fillna('')
+        df.columns = [c.strip() for c in df.columns]
         return df
     except Exception as e:
-        # Si ça ne charge pas, c'est peut-être que le lien CSV est mort ou privé
-        st.error(f"Erreur de lecture : Vérifie que le Google Sheet est 'Publié sur le web' en format CSV.")
+        st.error(f"Erreur : {e}")
         return pd.DataFrame()
 
 def scrape_url(url):
@@ -1198,6 +1193,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
