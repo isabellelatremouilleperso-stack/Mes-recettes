@@ -791,10 +791,9 @@ elif st.session_state.page == "planning":
     st.divider()
 
     try:
-        # CHARGEMENT : On essaie le fichier Planning, sinon la Bibliothèque
+        # CHARGEMENT
         df_plan = load_data(URL_CSV_PLAN)
         
-        # Si le fichier planning est vide, on regarde dans la bibliothèque (version 5:48)
         if df_plan.empty or 'Date' not in df_plan.columns:
             df_all = load_data(URL_CSV)
             if 'Date_Prevue' in df_all.columns:
@@ -808,11 +807,12 @@ elif st.session_state.page == "planning":
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
             df_plan = df_plan.dropna(subset=['Date', 'Titre']).sort_values(by='Date')
 
-            # --- TRADUCTION & AFFICHAGE ---
             jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
             mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
 
             derniere_semaine = -1
+            
+            # --- BOUCLE DE CHAQUE LIGNE ---
             for index, row in df_plan.iterrows():
                 semaine_actuelle = row['Date'].isocalendar()[1]
                 
@@ -824,7 +824,9 @@ elif st.session_state.page == "planning":
 
                 date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
                 
+                # ON CRÉE LES COLONNES ICI POUR CHAQUE LIGNE
                 col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
+                
                 with col_txt:
                     st.markdown(f"""<div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
                                     <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
@@ -837,26 +839,21 @@ elif st.session_state.page == "planning":
                         st.session_state.page = "details"
                         st.rerun()
 
-        with col_del:
-            # On vérifie si l'utilisateur est admin
-            if st.session_state.admin_mode:
-                # Création du bouton poubelle avec une clé unique
-                if st.button("🗑️", key=f"del_{index}"):
-                    # Préparation des données pour Google
-                    # On nettoie la date pour n'envoyer que YYYY-MM-DD
-                    date_clean = str(row['Date']).split(' ')[0]
-                    
-                    payload = {
-                        "action": "remove_plan", 
-                        "titre": row['Titre'], 
-                        "date": date_clean
-                    }
-                    
-                    # Envoi à Google Apps Script
-                    if send_action(payload):
-                        st.cache_data.clear() # Force le rafraîchissement
-                        st.toast(f"Supprimé : {row['Titre']}")
-                        st.rerun()
+                # --- CORRECTION : Ce bloc doit être aligné avec col_cal ---
+                with col_del:
+                    if st.session_state.admin_mode:
+                        if st.button("🗑️", key=f"del_{index}"):
+                            date_clean = str(row['Date']).split(' ')[0]
+                            payload = {
+                                "action": "remove_plan", 
+                                "titre": row['Titre'], 
+                                "date": date_clean
+                            }
+                            if send_action(payload):
+                                st.cache_data.clear()
+                                st.toast(f"Supprimé : {row['Titre']}")
+                                st.rerun()
+
     except Exception as e:
         st.error(f"Oups ! Erreur d'affichage : {e}")
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
@@ -1156,6 +1153,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
