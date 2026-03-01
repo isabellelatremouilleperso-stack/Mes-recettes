@@ -425,24 +425,41 @@ elif st.session_state.page == "details":
             st.write("*Aucune note.*")
 
     with col_d:
-        # INFORMATIONS & MÉTRIQUES
+        # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
+
+        # Fonction de nettoyage locale pour éviter les erreurs de variables non définies
+        def clean_metrique(valeur):
+            v_str = str(valeur).strip().lower()
+            if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]:
+                return "-"
+            # On garde seulement le chiffre entier (ex: 20.0 -> 20)
+            return str(valeur).split('.')[0]
+
+        # Calcul des valeurs propres
+        p_final = clean_metrique(r.get('Temps de préparation'))
+        c_final = clean_metrique(r.get('Temps de cuisson'))
+        port_final = clean_metrique(r.get('Portions'))
+
+        # Affichage des métriques
         m1, m2, m3 = st.columns(3)
-    
-        # On ajoute "min" seulement si on a un vrai chiffre
         m1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
         m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         m3.metric("🍽️ Portions", port_final)
-        
-        # Support Vidéo (Colonne N / Index 13)
+
+        # 2. SUPPORT VIDÉO (SI EXISTE)
         r_vals = list(r.values())
         v_link = r_vals[13] if len(r_vals) > 13 else r.get('video', '')
         if v_link and "http" in str(v_link):
-            st.video(str(v_link)) if "youtube" in str(v_link) else st.link_button("📺 Voir la vidéo", str(v_link), use_container_width=True)
+            st.divider()
+            if "youtube" in str(v_link) or "youtu.be" in str(v_link):
+                st.video(str(v_link))
+            else:
+                st.link_button("📺 Voir la vidéo", str(v_link), use_container_width=True)
 
         st.divider()
 
-        # INGRÉDIENTS
+        # 3. INGRÉDIENTS
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
@@ -450,10 +467,12 @@ elif st.session_state.page == "details":
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             for i, line in enumerate(ings):
                 st.checkbox(line, key=f"chk_{current_title}_{i}")
+        else:
+            st.info("Aucun ingrédient.")
         
         st.divider()
 
-        # PLANNING
+        # 4. PLANNING
         st.subheader("📅 Planifier")
         date_p = st.date_input("Date", key="date_det")
         if st.button("🗓️ Ajouter au planning", use_container_width=True):
@@ -1103,6 +1122,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
