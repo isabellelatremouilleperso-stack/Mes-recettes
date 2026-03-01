@@ -110,7 +110,7 @@ def scrape_url(url):
         return title, final_ing, final_prep
 
     except Exception as e:
-        return None, "", f"Erreur lors de l'extraction : {e}""
+        return None, "", f"Erreur lors de l'extraction : {e}"
 
 # ======================
 # INITIALISATION ET DESIGN
@@ -635,44 +635,43 @@ elif st.session_state.page == "add":
         
         st.divider()
         
-    # --- BOUTONS FINAUX ---
-        c_save, c_cancel = st.columns(2)
-        
-        with c_save:
-            # Cette ligne est maintenant correctement indentée à l'intérieur de 'with c_save'
-            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
-                if titre and ingredients:
-                    import datetime
-                    # Préparation des données pour Google Sheets
-                    payload = {
-                        "action": "add",
-                        "date": datetime.date.today().strftime("%d/%m/%Y"),
-                        "titre": titre.strip(),
-                        "source": source_url.strip(),
-                        "Ingrédients": ingredients.strip().replace('\n', '  \n'),
-                        "Préparation": instructions.strip(),
-                        "Image": img_url.strip(),
-                        "Catégorie": ", ".join(cat_choisies),
-                        "Portions": port.strip(),
-                        "Temps_Prepa": t_prep.strip(),
-                        "Temps_Cuisson": t_cuis.strip(),
-                        "Commentaires": commentaires.strip(),
-                        "video": video_url.strip()
-                    }
-                    
-                    if send_action(payload):
-                        st.success("✅ Enregistré !")
-                        st.cache_data.clear()
-                        st.session_state.page = "home"
-                        st.rerun()
+# --- BOUTONS FINAUX ---
+    c_save, c_cancel = st.columns(2)
+    
+    with c_save:
+        if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
+            if titre and ingredients:
+                import datetime
+                payload = {
+                    "action": "add",
+                    "date": datetime.date.today().strftime("%d/%m/%Y"),
+                    "titre": titre.strip(),
+                    "source": source_url.strip(),
+                    "Ingrédients": ingredients.strip().replace('\n', '  \n'),
+                    "Préparation": instructions.strip(),
+                    "Image": img_url.strip(),
+                    "Catégorie": ", ".join(cat_choisies),
+                    "Portions": port.strip(),
+                    "Temps_Prepa": t_prep.strip(),
+                    "Temps_Cuisson": t_cuis.strip(),
+                    "Commentaires": commentaires.strip(),
+                    "video": video_url.strip()
+                }
+                
+                if send_action(payload):
+                    st.success("✅ Enregistré !")
+                    st.cache_data.clear()
+                    st.session_state.page = "home"
+                    st.rerun()
                 else:
-                    # Le 'else' est maintenant bien aligné avec son 'if'
-                    st.error("🚨 Titre et Ingrédients requis !")
+                    st.error("❌ Erreur de connexion au serveur.")
+            else:
+                st.error("🚨 Le titre et les ingrédients sont obligatoires !")
 
-        with c_cancel:
-            if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
-                st.session_state.page = "home"
-                st.rerun()
+    with c_cancel:
+        if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
+            st.session_state.page = "home"
+            st.rerun()
                 
  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1186,6 +1185,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
