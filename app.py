@@ -1073,31 +1073,71 @@ import textwrap  # Assure-toi que c'est en haut du fichier
 if st.session_state.page == "home":
     st.write("Bienvenue sur Mes Recettes Pro")
 
+# ======================
+# PAGE DÉTAILS
+# ======================
 elif st.session_state.page == "details":
-    st.write("Détails de la recette")
-
-# --- PAGE IMPRIMABLE FINALE (ZÉRO BOITE NOIRE) ---
-elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
         st.error("Aucune donnée de recette trouvée.")
-        if st.button("⬅ Retour"): 
+        if st.button("⬅ Retour"):
             st.session_state.page = "home"
             st.rerun()
     else:
         r = st.session_state.recipe_data
         
-        # 1. NAVIGATION
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("⬅ Retour aux détails", use_container_width=True):
-                st.session_state.page = "details"
-                st.rerun()
-        with col2:
-            import streamlit.components.v1 as components
-            components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
+        # Fonction utilitaire pour éviter les erreurs de texte vide
+        def clean(val):
+            return str(val) if pd.notnull(val) and str(val).strip() != "" else "-"
 
-        # 2. CSS DE FORCE
-        st.markdown("""
+        # 1. Barre d'outils supérieure
+        col_nav, col_actions = st.columns([1, 1])
+        with col_nav:
+            if st.button("⬅ Retour au Planning", use_container_width=True):
+                st.session_state.page = "planning"
+                st.rerun()
+        with col_actions:
+            if st.button("🖨️ Préparer l'impression", use_container_width=True):
+                st.session_state.page = "print"
+                st.rerun()
+
+        st.markdown("---")
+
+        # 2. En-tête de la recette
+        st.title(f"🍳 {r.get('Titre', 'Recette sans titre')}")
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown(f"**🏷️ Catégorie**\n\n{clean(r.get('Catégorie'))}")
+        with c2:
+            st.markdown(f"**👥 Portions**\n\n{clean(r.get('Portions'))}")
+        with c3:
+            # On vérifie tes noms de colonnes (Temps de préparation ou Temps_Prepa ?)
+            t_prep = clean(r.get('Temps de préparation', r.get('Temps_Prepa', '0')))
+            t_cuis = clean(r.get('Temps de cuisson', r.get('Temps_Cuisson', '0')))
+            st.markdown(f"**⏱️ Temps Total**\n\n{t_prep} + {t_cuis} min")
+
+        st.markdown("---")
+
+        # 3. Corps de la recette
+        col_ing, col_prep = st.columns([1, 2])
+
+        with col_ing:
+            st.subheader("🛒 Ingrédients")
+            ingrediants = clean(r.get('Ingrédients'))
+            st.write(ingrediants)
+
+        with col_prep:
+            st.subheader("👨‍🍳 Préparation")
+            prepa = clean(r.get('Préparation'))
+            st.write(prepa)
+
+        # 4. Notes (optionnel)
+        notes = r.get('Notes')
+        if pd.notnull(notes) and str(notes).strip() != "":
+            with st.expander("📝 Notes du chef"):
+                st.write(notes)
+
+# --- PAGE IMPRIMABLE (Ton code existant ici...) ---
 <style>
 @media print {
     [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe { display: none !important; }
@@ -1213,6 +1253,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
