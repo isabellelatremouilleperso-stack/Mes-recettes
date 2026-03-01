@@ -904,7 +904,6 @@ elif st.session_state.page == "shop":
 elif st.session_state.page == "planning":
     st.markdown('<h1 style="color: #e67e22;">📅 Mon Planning</h1>', unsafe_allow_html=True)
     
-    # --- BARRE D'ACTIONS (Retour et Tout vider) ---
     col_nav, col_clear = st.columns([1, 1])
     with col_nav:
         if st.button("⬅ Retour", use_container_width=True):
@@ -912,92 +911,71 @@ elif st.session_state.page == "planning":
             st.rerun()
             
     with col_clear:
-        # On vérifie si on est admin pour afficher le bouton de vidage
         if st.session_state.admin_mode:
-            if st.button("🗑️ Vider le planning", use_container_width=True, help="Efface uniquement la liste dans Google Sheets"):
-                with st.spinner("Nettoyage..."):
-                    if send_action({"action": "clear_planning"}):
-                        st.cache_data.clear()
-                        import time
-                        time.sleep(1)
-                        st.rerun()
+            if st.button("🗑️ Vider le planning", use_container_width=True):
+                if send_action({"action": "clear_planning"}):
+                    st.cache_data.clear()
+                    st.rerun()
         else:
-            # Bouton grisé pour les visiteurs
-            st.button("🗑️ Vider (Admin uniquement)", use_container_width=True, disabled=True)
+            st.button("🔒 Mode Lecture", use_container_width=True, disabled=True)
 
     st.divider()
 
     try:
-        # On lit le planning avec la sécurité pour les caractères invisibles
-        # On utilise ta fonction load_data qui gère déjà le rafraîchissement (nocache)
+        # CHARGEMENT : On essaie le fichier Planning, sinon la Bibliothèque
         df_plan = load_data(URL_CSV_PLAN)
         
-       
-        # NETTOYAGE : On enlève les espaces autour des noms de colonnes
-        df_plan.columns = df_plan.columns.str.strip()
-        
-        if df_plan.empty or len(df_plan) == 0:
+        # Si le fichier planning est vide, on regarde dans la bibliothèque (version 5:48)
+        if df_plan.empty or 'Date' not in df_plan.columns:
+            df_all = load_data(URL_CSV)
+            if 'Date_Prevue' in df_all.columns:
+                df_plan = df_all[df_all['Date_Prevue'].astype(str).str.strip() != ""].copy()
+                df_plan = df_plan.rename(columns={'Date_Prevue': 'Date'})
+
+        if df_plan.empty:
             st.info("Ton planning est vide.")
         else:
-            # On vérifie que 'Date' est bien présent après nettoyage
-            if 'Date' in df_plan.columns:
-                df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
-                df_plan = df_plan.dropna(subset=['Date', 'Titre'])
-                df_plan = df_plan.sort_values(by='Date')
+            df_plan.columns = df_plan.columns.str.strip()
+            df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
+            df_plan = df_plan.dropna(subset=['Date', 'Titre']).sort_values(by='Date')
 
-                # --- TRADUCTION ---
-                jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
-                mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
+            # --- TRADUCTION & AFFICHAGE ---
+            jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
+            mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
 
-                derniere_semaine = -1
+            derniere_semaine = -1
+            for index, row in df_plan.iterrows():
+                semaine_actuelle = row['Date'].isocalendar()[1]
                 
-                for index, row in df_plan.iterrows():
-                    semaine_actuelle = row['Date'].isocalendar()[1]
-                    
-                    if semaine_actuelle != derniere_semaine:
-                        st.markdown(f"""
-                            <div style="background-color: #2e313d; padding: 5px 15px; border-radius: 8px; margin: 20px 0 10px 0; border-left: 3px solid #95a5a6;">
-                                <span style="color: #95a5a6; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">SÉLECTION SEMAINE {semaine_actuelle}</span>
-                            </div>
-                        """, unsafe_allow_html=True)
-                        derniere_semaine = semaine_actuelle
+                if semaine_actuelle != derniere_semaine:
+                    st.markdown(f"""<div style="background-color: #2e313d; padding: 5px 15px; border-radius: 8px; margin: 20px 0 10px 0; border-left: 3px solid #95a5a6;">
+                                    <span style="color: #95a5a6; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">SEMAINE {semaine_actuelle}</span>
+                                 </div>""", unsafe_allow_html=True)
+                    derniere_semaine = semaine_actuelle
 
-                    jour_eng = row['Date'].strftime('%A')
-                    mois_eng = row['Date'].strftime('%B')
-                    date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {row['Date'].strftime('%d')} {mois_fr.get(mois_eng, mois_eng)}"
-                    
-                    col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
-                    
-                    with col_txt:
-                        st.markdown(f"""
-                        <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
-                            <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{date_txt}</div>
-                            <div style="color: white; font-size: 1.05rem; margin-top: 2px; font-weight: 500;">{row['Titre']}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    with col_cal:
-                        st.write("") 
-                        if st.button("📅", key=f"cal_{index}"):
-                            payload = {"action": "calendar", "titre": row['Titre'], "date_prevue": row['Date'].strftime('%d/%m/%Y')}
-                            if send_action(payload):
-                                st.toast(f"Ajouté : {row['Titre']}", icon="✅")
+                date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
+                
+                col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
+                with col_txt:
+                    st.markdown(f"""<div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
+                                    <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
+                                    <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
+                                 </div>""", unsafe_allow_html=True)
+                
+                with col_cal:
+                    if st.button("📖", key=f"view_{index}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
 
-                    with col_del:
-                        st.write("") 
-                        if st.session_state.admin_mode:
-                            if st.button("🗑️", key=f"btn_plan_{index}"):
-                                with st.spinner():
-                                    if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                                        st.cache_data.clear()
-                                        st.rerun()
-                        else:
-                            st.button("🔒", key=f"lock_{index}", disabled=True)
-            else:
-                st.error(f"⚠️ Erreur de colonne. Je vois : {df_plan.columns.tolist()}")
-
+                with col_del:
+                    if st.session_state.admin_mode:
+                        if st.button("🗑️", key=f"del_{index}"):
+                            if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
+                                st.cache_data.clear()
+                                st.rerun()
     except Exception as e:
-        st.error(f"Erreur d'affichage du planning : {e}")
+        st.error(f"Oups ! Erreur d'affichage : {e}")
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
 elif st.session_state.page == "conversion":
     # Titre stylisé pour le haut de la page
@@ -1295,6 +1273,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
