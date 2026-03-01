@@ -378,8 +378,10 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-    # 1. RÉCUPÉRATION ET CHARGEMENT FRAIS
-    current_title = st.session_state.recipe_data.get('Titre')
+    # 1. RÉCUPÉRATION RAPIDE (On utilise ce qui est déjà chargé dans 'df')
+    # On ne fait PLUS de pd.read_csv ici pour gagner 3-5 secondes
+    r = st.session_state.recipe_data
+    current_title = r.get('Titre')
     
     try:
         df_fresh = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
@@ -1172,6 +1174,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
