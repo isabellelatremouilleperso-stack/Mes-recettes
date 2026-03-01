@@ -438,14 +438,32 @@ elif st.session_state.page == "details":
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # --- PLANNING (DÉPLACÉ ICI ET SÉCURISÉ) ---
+        # --- PLANNING (MIS À JOUR AVEC TOAST ET REDIRECTION) ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
             # Clé unique pour éviter l'erreur DuplicateKey
             date_p = st.date_input("Choisir une date", key=f"date_plan_{current_title}")
+            
             if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_plan_{current_title}"):
-                if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
-                    st.success("Ajouté au planning !")
-                    st.balloons()
+                payload = {
+                    "action": "plan", 
+                    "titre": current_title, 
+                    "date_prevue": str(date_p)
+                }
+                
+                # Envoi à Google Apps Script
+                if send_action(payload):
+                    # 1. Le petit message élégant en bas à droite
+                    st.toast(f"Ajouté avec succès : {current_title} !", icon="🍳")
+                    
+                    # 2. On laisse une demi-seconde pour que l'utilisateur voit le toast
+                    time.sleep(0.5) 
+                    
+                    # 3. On vide le cache pour que le planning affiche la nouveauté
+                    st.cache_data.clear()
+                    
+                    # 4. Redirection automatique vers la page planning
+                    st.session_state.page = "planning"
+                    st.rerun()
         
         st.divider()
 
@@ -1153,6 +1171,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
