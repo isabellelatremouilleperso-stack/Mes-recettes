@@ -834,11 +834,22 @@ elif st.session_state.page == "planning":
                         st.rerun()
 
                 with col_del:
-                    if st.session_state.admin_mode:
-                        if st.button("🗑️", key=f"del_{index}"):
-                            if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                                st.cache_data.clear()
-                                st.rerun()
+            if st.session_state.admin_mode:
+                if st.button("🗑️", key=f"del_{index}"):
+                    # On s'assure que la date est au format texte ISO (YYYY-MM-DD)
+                    # car c'est souvent comme ça que Google Sheets la stocke.
+                    date_str = str(row['Date']).split(' ')[0] 
+                    
+                    payload = {
+                        "action": "remove_plan", 
+                        "titre": str(row['Titre']).strip(), 
+                        "date": date_str
+                    }
+                    
+                    if send_action(payload):
+                        st.cache_data.clear()
+                        st.toast("✅ Supprimé du planning")
+                        st.rerun()
     except Exception as e:
         st.error(f"Oups ! Erreur d'affichage : {e}")
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
@@ -1138,6 +1149,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
