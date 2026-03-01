@@ -453,21 +453,32 @@ elif st.session_state.page == "details":
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # --- PLANNING (MIS À JOUR AVEC TOAST ET REDIRECTION) ---
+        # --- PLANNING (BLOC UNIQUE ET CORRIGÉ) ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
-            # Clé unique pour éviter l'erreur DuplicateKey
-            date_p = st.date_input("Choisir une date", key=f"date_plan_{current_title}")
+            # On utilise un suffixe pour garantir l'unicité totale de la clé
+            unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             
-            # --- PLANNING (VERSION CORRIGÉE SANS ACTUALISATION MANUELLE) ---
-        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
-            date_p = st.date_input("Choisir une date", key=f"date_plan_{current_title}")
+            date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
             
-            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_plan_{current_title}"):
+            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_{unique_key}"):
                 payload = {
                     "action": "plan", 
                     "titre": current_title, 
                     "date_prevue": str(date_p)
                 }
+                
+                # Envoi à Google Apps Script
+                if send_action(payload):
+                    st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
+                    
+                    # Rafraîchissement intelligent
+                    st.cache_data.clear()
+                    
+                    # Petit délai pour laisser Google Sheets respirer sans être trop long
+                    time.sleep(1.0) 
+                    
+                    st.session_state.page = "planning"
+                    st.rerun()
                 
                 # Envoi à Google Apps Script
                 if send_action(payload):
@@ -1198,6 +1209,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
