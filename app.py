@@ -524,54 +524,59 @@ if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
                 st.markdown(f"""<a href="{video_link}" target="_blank" style="text-decoration:none;"><div style="background-color:{color};color:white;padding:12px;border-radius:8px;text-align:center;font-weight:bold;">{label}</div></a>""", unsafe_allow_html=True)
             st.divider()
 
-      # --- SECTION INGRÉDIENTS (VERSION ROBUSTE) ---
-        st.subheader("🛒 Ingrédients")
+      # --- SECTION INGRÉDIENTS (VERSION FINALE TOUT-EN-UN) ---
+st.subheader("🛒 Ingrédients")
+
+# 1. Définition de la fonction de recherche intelligente
+def get_value_flexible(d, target_key):
+    # Cherche la clé exacte (ex: 'Ingrédients')
+    if target_key in d: return d[target_key]
+    # Cherche sans tenir compte de la casse ou des espaces au cas où le Sheet change
+    for k in d.keys():
+        if k.lower().strip() == target_key.lower().strip():
+            return d[k]
+    return None
+
+# 2. Récupération de la donnée
+ings_raw = get_value_flexible(r, 'Ingrédients')
+
+# 3. Affichage et Traitement
+if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+    text_ing = str(ings_raw)
+    
+    # On gère tous les séparateurs possibles (carré ❑, point-virgule, retour à la ligne)
+    text_ing = text_ing.replace("❑", "\n").replace(";", "\n")
+    
+    # On crée la liste finale
+    ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+
+    if ings:
+        selected_ings = []
+        # On sécurise l'ID de la recette pour les clés Streamlit
+        recette_id = str(r.get('titre', 'recette')).replace(" ", "_")
         
-        # 1. Tentative de récupération intelligente (cherche 'Ingrédients', 'ingredients', etc.)
-        def get_value_flexible(d, target_key):
-            # Cherche la clé exacte
-            if target_key in d: return d[target_key]
-            # Cherche sans tenir compte de la casse ou des espaces
-            for k in d.keys():
-                if k.lower().strip() == target_key.lower().strip():
-                    return d[k]
-            return None
-
-        ings_raw = get_value_flexible(r, 'Ingrédients')
-
-        if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            text_ing = str(ings_raw)
-            
-            # Nettoyage des séparateurs (Carré, Point-virgule ou Virgule)
-            text_ing = text_ing.replace("❑", "\n").replace(";", "\n")
-            
-            # Découpage en liste
-            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
-
-            if ings:
-                selected_ings = []
-                # On utilise le titre de la recette dans la clé pour éviter les bugs Streamlit
-                recette_id = r.get('titre', 'default').replace(" ", "_")
-                
-                for i, line in enumerate(ings):
-                    if st.checkbox(line, key=f"chk_{recette_id}_{i}"):
-                        selected_ings.append(line)
-                
-                st.write("") 
-                if st.button("📥 Ajouter au Panier", use_container_width=True, key=f"btn_shop_{recette_id}"):
-                    if selected_ings:
-                        for item in selected_ings:
-                            send_action({"action": "add_shop", "article": item})
-                        st.toast(f"✅ {len(selected_ings)} articles ajoutés !")
-                    else:
-                        st.warning("Veuillez cocher au moins un ingrédient.")
+        for i, line in enumerate(ings):
+            if st.checkbox(line, key=f"chk_{recette_id}_{i}"):
+                selected_ings.append(line)
+        
+        st.write("") 
+        if st.button("📥 Ajouter au Panier", use_container_width=True, key=f"btn_shop_{recette_id}"):
+            if selected_ings:
+                for item in selected_ings:
+                    send_action({"action": "add_shop", "article": item})
+                st.toast(f"✅ {len(selected_ings)} articles ajoutés !")
             else:
-                st.write("*Format d'ingrédients non reconnu.*")
-        else:
-            # Si on ne trouve vraiment rien, on affiche un message d'aide
-            st.info("ℹ️ Aucun ingrédient trouvé.")
-            if st.checkbox("Debug : Voir les colonnes détectées"):
-                st.write("Colonnes disponibles dans votre fichier :", list(r.keys()))
+                st.warning("Veuillez cocher au moins un ingrédient.")
+    else:
+        st.write("*Format de texte non reconnu.*")
+else:
+    # --- BLOC DE DEBUG INTÉGRÉ ---
+    st.info("ℹ️ Aucun ingrédient trouvé dans la colonne 'Ingrédients'.")
+    # Ce checkbox n'apparaît que si les ingrédients sont vides, pour vous aider à réparer
+    if st.checkbox("🔍 Debug : Pourquoi mes ingrédients ne s'affichent pas ?"):
+        st.write("Nom de colonne cherché : 'Ingrédients'")
+        st.write("Colonnes réellement détectées dans votre Google Sheet :")
+        st.write(list(r.keys()))
     # PRÉPARATION
     st.subheader("👨‍🍳 Étapes de préparation")
     prep = r.get('Préparation', r.get('preparation', ''))
@@ -1204,6 +1209,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
