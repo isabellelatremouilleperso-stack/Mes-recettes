@@ -1109,26 +1109,26 @@ elif st.session_state.page == "details":
             with st.expander("📝 Notes du chef"):
                 st.write(notes)
 
-# --- PAGE IMPRIMABLE (Ton code existant ici...) ---
-<style>
-@media print {
-    [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe { display: none !important; }
-    html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stCanvas"], .main {
-        background-color: white !important;
-        color: black !important;
+# --- STYLE POUR L'IMPRESSION ---
+    st.markdown("""
+    <style>
+    @media print {
+        /* On cache la navigation Streamlit et les boutons */
+        header, footer, .stButton, [data-testid="stSidebar"] {
+            display: none !important;
+        }
+        /* On force la marge pour éviter le vide en haut de page */
+        .print-sheet { 
+            margin-top: -60px !important; 
+        }
+        /* On s'assure que le texte est noir sur blanc */
+        .main {
+            background-color: white !important;
+            color: black !important;
+        }
     }
-    [data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; }
-    .print-sheet { margin-top: -60px !important; }
-    .page-break { page-break-before: always; margin-top: 20px; }
-    p, div, li { page-break-inside: avoid; }
-}
-.print-sheet { background: white !important; color: black !important; padding: 20px; font-family: sans-serif; }
-.header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
-.info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-h1 { color: black !important; margin: 0 !important; font-size: 30px; }
-h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 10px; }
-</style>
-""", unsafe_allow_html=True)
+    </style>
+    """, unsafe_allow_html=True)
 
         # 3. TRAITEMENT DES DONNÉES
         ing_raw = str(r.get('Ingrédients','')).split('\n')
@@ -1225,6 +1225,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
