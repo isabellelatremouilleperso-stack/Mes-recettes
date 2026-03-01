@@ -50,19 +50,20 @@ def send_action(payload):
             st.error(f"❌ Erreur de connexion : {e}")
             return False
 
-@st.cache_data(ttl=300) 
+@st.cache_data(ttl=3600) # Cache d'une heure pour la rapidité
 def load_data(url):
     try:
+        # L'astuce du nocache force la lecture du fichier réel si le cache est vidé
         timestamp_url = f"{url}&nocache={int(time.time())}"
         df = pd.read_csv(timestamp_url)
-        df.columns = [c.strip() for c in df.columns] 
-        df = df.fillna("")
-        if not df.empty and 'Titre' in df.columns:
-            df['Titre'] = df['Titre'].astype(str).str.strip()
-            df = df.drop_duplicates(subset=['Titre'], keep='first')
+        
+        # NETTOYAGE CRUCIAL
+        df = df.fillna('') # Remplace les cases vides (nan) par du vide propre
+        df.columns = [c.strip() for c in df.columns] # Enlève les espaces dans les noms de colonnes
+        
         return df
     except Exception as e:
-        st.error(f"Erreur chargement : {e}")
+        st.error(f"Erreur lors du chargement : {e}")
         return pd.DataFrame()
 
 def scrape_url(url):
@@ -1162,6 +1163,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
