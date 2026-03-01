@@ -19,14 +19,26 @@ URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhl
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=536412190&single=true&output=csv"
 
-def send_action(data):
-    """Envoie les données au script Google Sheets."""
+def send_action(payload):
+    """Envoie les données au script Google Sheets avec gestion du cache et debug."""
     try:
-        # ICI : On utilise bien URL_SCRIPT (comme à la ligne 15)
-        response = requests.post(URL_SCRIPT, json=data, timeout=10)
-        return response.status_code == 200
+        # On s'assure d'envoyer un JSON propre avec les bons Headers
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(URL_SCRIPT, json=payload, headers=headers, timeout=15)
+        
+        # DEBUG : Affiche la réponse de Google en cas d'échec (à retirer plus tard)
+        # st.write(f"Réponse brute Google : {response.text}") 
+
+        # Si le script Google renvoie "Success", on valide et on vide le cache
+        if response.status_code == 200 and "Success" in response.text:
+            st.cache_data.clear() # INDISPENSABLE pour voir les modifs de suite
+            return True
+        else:
+            st.error(f"Le script Google a répondu : {response.text}")
+            return False
+            
     except Exception as e:
-        st.error(f"Erreur de connexion Google : {e}")
+        st.error(f"Erreur de connexion (Vérifie ton URL_SCRIPT) : {e}")
         return False
         
 # --- INITIALISATION DU SESSION STATE ---
@@ -1273,6 +1285,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
