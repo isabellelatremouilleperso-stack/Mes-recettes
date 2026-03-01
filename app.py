@@ -458,6 +458,10 @@ elif st.session_state.page == "details":
             # Clé unique pour éviter l'erreur DuplicateKey
             date_p = st.date_input("Choisir une date", key=f"date_plan_{current_title}")
             
+            # --- PLANNING (VERSION CORRIGÉE SANS ACTUALISATION MANUELLE) ---
+        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
+            date_p = st.date_input("Choisir une date", key=f"date_plan_{current_title}")
+            
             if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_plan_{current_title}"):
                 payload = {
                     "action": "plan", 
@@ -467,16 +471,17 @@ elif st.session_state.page == "details":
                 
                 # Envoi à Google Apps Script
                 if send_action(payload):
-                    # 1. Le petit message élégant en bas à droite
-                    st.toast(f"Ajouté avec succès : {current_title} !", icon="🍳")
+                    # 1. Message de succès immédiat
+                    st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
                     
-                    # 2. On laisse une demi-seconde pour que l'utilisateur voit le toast
-                    time.sleep(0.5) 
-                    
-                    # 3. On vide le cache pour que le planning affiche la nouveauté
+                    # 2. ON VIDE LE CACHE TOUT DE SUITE
                     st.cache_data.clear()
                     
-                    # 4. Redirection automatique vers la page planning
+                    # 3. PAUSE DE SÉCURITÉ (Crucial pour Google Sheets)
+                    # On passe à 1.5 seconde pour laisser le temps au CSV de se régénérer
+                    time.sleep(1.5) 
+                    
+                    # 4. Redirection vers le planning mis à jour
                     st.session_state.page = "planning"
                     st.rerun()
         
@@ -1193,6 +1198,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
