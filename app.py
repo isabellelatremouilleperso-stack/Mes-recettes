@@ -928,11 +928,20 @@ elif st.session_state.page == "planning":
     st.divider()
 
     try:
-        df_plan = pd.read_csv(URL_CSV_PLAN)
+        # 1. Lecture avec sécurité (utf-8-sig enlève les caractères invisibles au début)
+        df_plan = pd.read_csv(URL_CSV_PLAN, encoding='utf-8-sig')
+        
+        # 2. NETTOYAGE : On enlève les espaces autour des noms de colonnes
+        df_plan.columns = df_plan.columns.str.strip()
         
         if df_plan.empty or len(df_plan) == 0:
             st.info("Ton planning est vide.")
         else:
+            # Vérification de la présence de la colonne 'Date'
+            if 'Date' not in df_plan.columns:
+                st.error(f"⚠️ Erreur : Colonne 'Date' introuvable. Colonnes détectées : {df_plan.columns.tolist()}")
+                st.stop()
+
             # --- NETTOYAGE ET TRI ---
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
             df_plan = df_plan.dropna(subset=['Date', 'Titre'])
@@ -961,7 +970,8 @@ elif st.session_state.page == "planning":
                 mois_eng = row['Date'].strftime('%B')
                 date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {row['Date'].strftime('%d')} {mois_fr.get(mois_eng, mois_eng)}"
                 
-                col_txt, col_btn = st.columns([4, 1])
+                # On ajuste les colonnes pour mettre 2 boutons à droite
+                col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
                 
                 with col_txt:
                     st.markdown(f"""
@@ -971,24 +981,31 @@ elif st.session_state.page == "planning":
                     </div>
                     """, unsafe_allow_html=True)
                 
-                with col_btn:
+                with col_cal:
                     st.write("") 
-                    # Sécurité : Seul l'admin peut supprimer une ligne du planning
+                    # BOUTON CALENDRIER (Action que tu as dans ton Google Script)
+                    if st.button("📅", key=f"cal_{index}"):
+                        payload = {
+                            "action": "calendar",
+                            "titre": row['Titre'],
+                            "date_prevue": row['Date'].strftime('%d/%m/%Y')
+                        }
+                        if send_action(payload):
+                            st.toast(f"Ajouté : {row['Titre']}", icon="✅")
+
+                with col_del:
+                    st.write("") 
                     if st.session_state.admin_mode:
-                        if st.button("🗑️", key=f"btn_plan_{index}_{semaine_actuelle}"):
+                        if st.button("🗑️", key=f"btn_plan_{index}"):
                             with st.spinner():
                                 if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
                                     st.cache_data.clear()
-                                    import time
-                                    time.sleep(1.2)
                                     st.rerun()
                     else:
-                        # Icône de cadenas pour les visiteurs
                         st.button("🔒", key=f"lock_{index}", disabled=True)
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
-
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
 elif st.session_state.page == "conversion":
     # Titre stylisé pour le haut de la page
@@ -1286,6 +1303,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
