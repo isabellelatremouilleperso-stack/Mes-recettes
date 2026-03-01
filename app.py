@@ -65,20 +65,20 @@ def send_action(payload):
             st.error(f"❌ Erreur de connexion : {e}")
             return False
 
-@st.cache_data(ttl=300)
-def load_data(url):
+# Modifie ta fonction load_data comme ceci :
+@st.cache_data(ttl=3600) # Cache d'une heure par défaut
+def load_data(url, force_refresh=False):
+    # On n'ajoute le nocache QUE si on force manuellement, sinon on utilise le cache local
+    timestamp = int(time.time()) if force_refresh else "stable"
+    sep = "&" if "?" in url else "?"
+    timestamp_url = f"{url}{sep}v={timestamp}"
+    
     try:
-        # L'astuce ultime : on ajoute un timestamp précis à la milliseconde
-        # pour forcer Google à régénérer le CSV à l'instant T
-        sep = "&" if "?" in url else "?"
-        timestamp_url = f"{url}{sep}t={int(time.time() * 1000)}"
-        
         df = pd.read_csv(timestamp_url)
         df = df.fillna('')
         df.columns = [c.strip() for c in df.columns]
         return df
-    except Exception as e:
-        st.error(f"Erreur : {e}")
+    except:
         return pd.DataFrame()
 
 def scrape_url(url):
@@ -1188,6 +1188,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
