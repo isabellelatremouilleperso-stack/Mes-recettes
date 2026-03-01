@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import requests
 import time
-from datetime import datetime
 import hashlib
+from datetime import datetime
 from bs4 import BeautifulSoup
 import urllib.parse
 
@@ -11,300 +11,175 @@ import urllib.parse
 # CONFIGURATION & LIAISON GOOGLE
 # ======================
 
-# 1. Ton URL de déploiement Google Apps Script (pour AJOUTER/MODIFIER)
+# 1. Utilisation sécurisée du secret
 URL_SCRIPT = st.secrets["Lien_Google"]
 
-# 2. Tes URLs CSV pour LIRE les données
+# 2. URLs CSV
 URL_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=0&single=true&output=csv"
 URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=1037930000&single=true&output=csv"
 URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=536412190&single=true&output=csv"
 
-def send_action(payload):
-    """Envoie les données au script Google Sheets avec gestion du cache et debug."""
-    try:
-        # On s'assure d'envoyer un JSON propre avec les bons Headers
-        headers = {"Content-Type": "application/json"}
-        response = requests.post(URL_SCRIPT, json=payload, headers=headers, timeout=15)
-        
-        # DEBUG : Affiche la réponse de Google en cas d'échec (à retirer plus tard)
-        # st.write(f"Réponse brute Google : {response.text}") 
-
-        # Si le script Google renvoie "Success", on valide et on vide le cache
-        if response.status_code == 200 and "Success" in response.text:
-            st.cache_data.clear() # INDISPENSABLE pour voir les modifs de suite
-            return True
-        else:
-            st.error(f"Le script Google a répondu : {response.text}")
-            return False
-            
-    except Exception as e:
-        st.error(f"Erreur de connexion (Vérifie ton URL_SCRIPT) : {e}")
-        return False
-        
-# --- INITIALISATION DU SESSION STATE ---
-if 'page' not in st.session_state:
-    st.session_state.page = "home"
-
-st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
-
-if st.session_state.page != "print":
-    st.markdown("""
-    <style>
-    /* 1. FORCE LE NOIR PARTOUT (App + Header + Sidebar) */
-    .stApp, header[data-testid="stHeader"], [data-testid="stHeader"] {
-        background-color: #0e1117 !important;
-    }
-
-    /* 2. SIDEBAR NOIRE (Plus de blanc !) */
-    [data-testid="stSidebar"], [data-testid="stSidebarContent"] {
-        background-color: #1e2129 !important;
-    }
-
-    /* 3. CACHE LES TRUCS GRIS EN HAUT À DROITE */
-    [data-testid="stHeaderActionElements"], .stAppDeployButton {
-        display: none !important;
-    }
-
-    /* 4. TES STYLES EXISTANTS (Gardés et optimisés) */
-    h1, h2, h3 { color: #e67e22 !important; }
-    .stButton button { background-color: #e67e22 !important; color: white !important; border-radius: 10px; }
-
-    /* Inputs et Checkbox */
-    input, select, textarea, div[data-baseweb="select"] { 
-        color: white !important; 
-        background-color: #1e2129 !important; 
-    }
-    .stCheckbox label p { color: white !important; font-size: 1.1rem !important; }
-
-    /* Tes cartes de recettes */
-    .recipe-card { 
-        background-color:#1e2129; 
-        border:1px solid #3d4455; 
-        border-radius:12px; 
-        padding:10px; 
-        height:230px; 
-        display:flex; 
-        flex-direction:column; 
-        justify-content:space-between;
-    }
-
-    .recipe-img { width:100%; height:130px; object-fit:cover; border-radius:8px; }
-    .recipe-title { color:white; font-weight:bold; text-align:center; }
-
-    /* La flèche du menu (pour qu'on la voie sur le noir) */
-    [data-testid="stSidebarCollapsedControl"] svg {
-        fill: #e67e22 !important;
-        width: 35px !important;
-        height: 35px !important;
-    }
-    /* Style pour le bouton Annuler (le deuxième bouton de la rangée) */
-    div[data-testid="column"]:nth-child(2) button {
-        background-color: #d32f2f !important; /* Rouge sombre */
-        color: white !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
 # ======================
-# SYSTÈME DE SÉCURITÉ (TEST DIRECT)
+# FONCTIONS TECHNIQUES (VERSION NETTOYÉE)
 # ======================
-url_admin = st.query_params.get("admin") == "oui"
-if 'admin_mode' not in st.session_state:
-    st.session_state.admin_mode = url_admin
-
-with st.sidebar:
-    st.divider()
-    if not st.session_state.get('admin_mode', False):
-        # On ajoute une 'key' pour bien isoler le champ sur mobile
-        pwd = st.text_input("🔑 Accès Admin", type="password", key="password_input")
-        
-        # AJOUT DU BOUTON : Indispensable sur téléphone
-        if st.button("Se connecter 🔓", use_container_width=True):
-            if pwd:
-                # Nettoyage des espaces au cas où le téléphone en ajoute un après le code
-                clean_pwd = pwd.strip()
-                input_hash = hashlib.sha256(clean_pwd.encode()).hexdigest()
-                target_hash = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
-
-                if clean_pwd == "142203" or input_hash == target_hash:
-                    st.session_state.admin_mode = True
-                    st.rerun()
-                else:
-                    st.error("Code incorrect ❌")
-            else:
-                st.warning("Veuillez entrer un code")
-    else:
-        st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion", use_container_width=True):
-            st.session_state.admin_mode = False
-            st.rerun()
-# ======================
-# CONSTANTES & CONFIGURATION
-# ======================
-CATEGORIES = [
-    "Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", 
-    "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", "Fumoir", 
-    "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", 
-    "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", 
-    "Poutine", "Poulet", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
-    "Sushi", "Tartare", "Végétarien"
-]
-
-# ======================
-# FONCTIONS TECHNIQUES (VERSION FINALE ET UNIQUE)
-# ======================
-
-@st.cache_data(ttl=300) 
-def load_data(url):
-    """Charge les données depuis Google Sheets avec gestion anti-cache et anti-doublons"""
-    try:
-        # On force le rafraîchissement avec un paramètre temporel
-        timestamp_url = f"{url}&nocache={int(time.time())}"
-        df = pd.read_csv(timestamp_url)
-        
-        # Nettoyage des noms de colonnes (supprime les espaces invisibles)
-        df.columns = [c.strip() for c in df.columns] 
-        df = df.fillna("")
-        
-        # --- NETTOYAGE ANTI-DOUBLONS ---
-        if not df.empty and 'Titre' in df.columns:
-            df['Titre'] = df['Titre'].astype(str).str.strip()
-            # On garde la première occurrence si un titre est en double
-            df = df.drop_duplicates(subset=['Titre'], keep='first')
-            
-        return df
-    except Exception as e:
-        st.error(f"Erreur lors du chargement des données : {e}")
-        return pd.DataFrame()
-
-def scrape_url(url):
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'}
-        res = requests.get(url, headers=headers, timeout=12)
-        res.encoding = res.apparent_encoding
-        soup = BeautifulSoup(res.text, 'html.parser')
-        
-        title = soup.find('h1').text.strip() if soup.find('h1') else "Recette Importée"
-        
-        for junk in soup(["script", "style", "nav", "footer", "header", "aside"]):
-            junk.extract()
-
-        # On sépare : les 'li' (souvent ingrédients) et les 'p' (souvent étapes)
-        ing_list = [el.get_text().strip() for el in soup.find_all('li') if len(el.get_text().strip()) > 3]
-        prep_list = [el.get_text().strip() for el in soup.find_all('p') if len(el.get_text().strip()) > 15]
-
-        # On nettoie les doublons
-        ing_final = "\n".join(list(dict.fromkeys(ing_list)))
-        prep_final = "\n\n".join(list(dict.fromkeys(prep_list)))
-        
-        return title, ing_final, prep_final
-
-    except Exception as e:
-        return None, "", f"Erreur : {e}"
-        
-def clear_add_recipe_form():
-    """Vide toutes les variables de session liées au formulaire d'ajout"""
-    keys_to_clear = [
-        'scraped_title', 'scraped_ingredients', 'scraped_content', 
-        'url_main', 'p_time', 'c_time', 'portions', 'ing_area', 
-        'prep_area', 'img_url', 'notes_area'
-    ]
-    for key in keys_to_clear:
-        if key in st.session_state:
-            st.session_state[key] = ""
 
 def send_action(payload):
     """Envoie les données vers Google Apps Script avec diagnostic."""
     with st.spinner("🚀 Action en cours..."):
         try:
-            # On force les headers pour être sûr que Google reçoive du JSON
             headers = {"Content-Type": "application/json"}
             r = requests.post(URL_SCRIPT, json=payload, headers=headers, timeout=20)
-            
-            # Si Google répond "Success"
             if "Success" in r.text:
                 st.cache_data.clear() 
                 time.sleep(0.5)
                 return True
             else:
-                # ICI : On affiche l'erreur REELLE renvoyée par ton script Google
-                st.error(f"⚠️ Google refuse l'action : {r.text}")
+                st.error(f"⚠️ Erreur Google : {r.text}")
                 return False
         except Exception as e:
-            st.error(f"❌ Erreur de connexion au script : {e}")
+            st.error(f"❌ Erreur de connexion : {e}")
             return False
 
-# --- APPEL INITIAL UNIQUE ---
-df = load_data(URL_CSV)
-# ======================
-# SIDEBAR
-# ======================
-with st.sidebar:
-    # --- CODE POUR LE LOGO ROND ---
-    st.markdown("""
-        <style>
-        .logo-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 10px;
-        }
-        .logo-container img {
-            border-radius: 50%; /* Le cercle parfait */
-            width: 120px;       /* Largeur fixe */
-            height: 120px;      /* Hauteur identique pour éviter l'ovale */
-            object-fit: cover;  /* Empêche de déformer l'image */
-            border: 3px solid #e67e22; /* Ton liseré orange */
-            padding: 2px;
-        }
-        </style>
-        <div class="logo-container">
-            <img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png">
-        </div>
-    """, unsafe_allow_html=True)
+@st.cache_data(ttl=300) 
+def load_data(url):
+    try:
+        timestamp_url = f"{url}&nocache={int(time.time())}"
+        df = pd.read_csv(timestamp_url)
+        df.columns = [c.strip() for c in df.columns] 
+        df = df.fillna("")
+        if not df.empty and 'Titre' in df.columns:
+            df['Titre'] = df['Titre'].astype(str).str.strip()
+            df = df.drop_duplicates(subset=['Titre'], keep='first')
+        return df
+    except Exception as e:
+        st.error(f"Erreur chargement : {e}")
+        return pd.DataFrame()
 
+def scrape_url(url):
+    try:
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        res = requests.get(url, headers=headers, timeout=12)
+        res.encoding = res.apparent_encoding
+        soup = BeautifulSoup(res.text, 'html.parser')
+
+        # 1. Extraction du Titre
+        title = "Recette Importée"
+        h1_tag = soup.find('h1')
+        if h1_tag:
+            title = h1_tag.get_text().strip()
+
+        # 2. Nettoyage agressif du bruit
+        for junk in soup(["script", "style", "nav", "footer", "header", "aside", "iframe", "ins"]):
+            junk.extract()
+
+        # 3. Ciblage intelligent (priorité aux classes culinaires communes)
+        # On cherche des conteneurs qui ont souvent les mots clés "ingredients" ou "recipe"
+        ing_container = soup.find(class_=re.compile(r'ingredient|ingredients|recipe-ing', re.I))
+        prep_container = soup.find(class_=re.compile(r'instruction|preparation|method|steps', re.I))
+
+        # --- LOGIQUE INGRÉDIENTS ---
+        if ing_container:
+            items = ing_container.find_all('li')
+        else:
+            items = soup.find_all('li')
+            
+        ing_list = []
+        for el in items:
+            txt = el.get_text().strip()
+            # On filtre pour garder les lignes qui ressemblent à des ingrédients (courtes mais informatives)
+            if 3 < len(txt) < 150 and not any(x in txt.lower() for x in ["partager", "imprimer", "connexion"]):
+                ing_list.append(f"❑ {txt}")
+
+        # --- LOGIQUE PRÉPARATION ---
+        if prep_container:
+            steps = prep_container.find_all(['p', 'li'])
+        else:
+            steps = soup.find_all('p')
+
+        prep_list = []
+        for el in steps:
+            txt = el.get_text().strip()
+            # On garde les paragraphes assez longs pour être des instructions
+            if len(txt) > 20 and not any(x in txt.lower() for x in ["cookies", "droits réservés", "abonnez-vous"]):
+                prep_list.append(txt)
+
+        # Nettoyage des doublons tout en gardant l'ordre
+        final_ing = "\n".join(list(dict.fromkeys(ing_list)))
+        final_prep = "\n\n".join(list(dict.fromkeys(prep_list)))
+
+        return title, final_ing, final_prep
+
+    except Exception as e:
+        return None, "", f"Erreur lors de l'extraction : {e}""
+
+# ======================
+# INITIALISATION ET DESIGN
+# ======================
+
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
+
+st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
+
+# Style CSS combiné et optimisé
+st.markdown("""
+<style>
+    .stApp, header, [data-testid="stHeader"] { background-color: #0e1117 !important; }
+    [data-testid="stSidebar"], [data-testid="stSidebarContent"] { background-color: #1e2129 !important; }
+    h1, h2, h3 { color: #e67e22 !important; }
+    .stButton button { background-color: #e67e22 !important; color: white !important; border-radius: 10px; border:none; }
+    input, select, textarea, div[data-baseweb="select"] { color: white !important; background-color: #1e2129 !important; }
+    .logo-container { display: flex; justify-content: center; margin-bottom: 10px; }
+    .logo-container img { border-radius: 50%; width: 120px; height: 120px; object-fit: cover; border: 3px solid #e67e22; }
+    [data-testid="stSidebarCollapsedControl"] svg { fill: #e67e22 !important; }
+</style>
+""", unsafe_allow_html=True)
+
+# ======================
+# SÉCURITÉ ADMIN
+# ======================
+if 'admin_mode' not in st.session_state:
+    st.session_state.admin_mode = (st.query_params.get("admin") == "oui")
+
+with st.sidebar:
+    # Affichage du Logo
+    st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h3>', unsafe_allow_html=True)
     st.divider()
-    
-    # ... la suite de tes boutons (Actualiser, etc.)
-    
-    if st.button("🔄 Actualiser les données", use_container_width=True):
-        st.cache_data.clear()
-        st.toast("Mise à jour réussie ! 📋")
-        time.sleep(0.5)
-        st.rerun()
 
-    st.divider()
-
-    # SECTION NAVIGATION
-    if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"):
-        st.session_state.page="home"; st.rerun()
-        
-    if st.button("📅 Planning Repas", use_container_width=True, key="side_plan"):
-        st.session_state.page="planning"; st.rerun()
-        
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"):
-        st.session_state.page="shop"; st.rerun()
-
-    if st.button("⚖️ Aide-Mémoire", use_container_width=True, key="side_conv"):
-        st.session_state.page="conversion"; st.rerun()
-    
-    st.divider()
-    
-    # SECTION ADMIN (Bouton Ajouter)
-    if st.session_state.admin_mode:
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
-            if 'recipe_to_edit' in st.session_state:
-                del st.session_state.recipe_to_edit
-            st.session_state.page="add"; st.rerun()
+    if not st.session_state.admin_mode:
+        pwd = st.text_input("🔑 Accès Admin", type="password")
+        if st.button("Se connecter 🔓", use_container_width=True):
+            clean_pwd = pwd.strip()
+            input_hash = hashlib.sha256(clean_pwd.encode()).hexdigest()
+            target_hash = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
+            if clean_pwd == "142203" or input_hash == target_hash:
+                st.session_state.admin_mode = True
+                st.rerun()
+            else:
+                st.error("Code incorrect ❌")
     else:
-        st.info("📖 Mode Consultation")
+        st.success("✅ Mode Chef Activé")
+        if st.button("🔒 Déconnexion", use_container_width=True):
+            st.session_state.admin_mode = False
+            st.rerun()
 
-    # BOUTONS DU BAS
-    if st.button("⭐ Play Store", use_container_width=True, key="side_play"):
-        st.session_state.page="playstore"; st.rerun()
+    st.divider()
+    # Navigation
+    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page="home"; st.rerun()
+    if st.button("📅 Planning Repas", use_container_width=True): st.session_state.page="planning"; st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True): st.session_state.page="shop"; st.rerun()
+    
+    st.divider()
+    if st.session_state.admin_mode:
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True):
+            st.session_state.page="add"; st.rerun()
+    
+    if st.button("⭐ Play Store", use_container_width=True): st.session_state.page="playstore"; st.rerun()
+    if st.button("❓ Aide", use_container_width=True): st.session_state.page="help"; st.rerun()
 
-    if st.button("❓ Aide", use_container_width=True, key="side_help"):
-        st.session_state.page="help"; st.rerun()
-
+# Chargement des données initial
+df = load_data(URL_CSV)
 
 # ======================
 # LOGIQUE DES PAGES
@@ -1311,6 +1186,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
