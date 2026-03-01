@@ -103,15 +103,15 @@ def scrape_url(url):
             if len(txt) > 20 and not any(x in txt.lower() for x in ["cookies", "droits réservés", "abonnez-vous"]):
                 prep_list.append(txt)
 
-        # Nettoyage des doublons tout en gardant l'ordre
-        final_ing = "\n".join(list(dict.fromkeys(ing_list)))
-        final_prep = "\n\n".join(list(dict.fromkeys(prep_list)))
+        # Nettoyage des doublons et suppression des lignes vides
+        final_ing = "\n".join([i for i in list(dict.fromkeys(ing_list)) if i.strip()])
+        final_prep = "\n\n".join([p for p in list(dict.fromkeys(prep_list)) if p.strip()])
 
         return title, final_ing, final_prep
 
     except Exception as e:
-        return None, "", f"Erreur lors de l'extraction : {e}"
-
+        # Retourne des chaînes vides au lieu de None pour éviter les erreurs de concaténation plus tard
+        return "Recette inconnue", "", f"Erreur lors de l'extraction : {e}"
 # ======================
 # INITIALISATION ET DESIGN
 # ======================
@@ -1185,6 +1185,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
