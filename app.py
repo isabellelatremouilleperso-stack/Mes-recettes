@@ -507,10 +507,10 @@ elif st.session_state.page == "details":
         if st.button("🖨️ Imprimer", use_container_width=True):
             st.session_state.page = "print"; st.rerun()
     with c_nav4:
+        # Correction Suppression : Action 'delete'
         if st.button("🗑️ Supprimer", use_container_width=True):
-            if send_action({"action": "delete", "titre": r['Titre']}):
+            if send_action({"action": "delete", "titre": current_title}):
                 st.cache_data.clear()
-                st.toast(f"Recette '{r['Titre']}' supprimée ! 🗑️")
                 st.session_state.page = "home"; st.rerun()
 
     st.divider()
@@ -1311,6 +1311,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
