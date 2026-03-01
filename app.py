@@ -428,9 +428,11 @@ elif st.session_state.page == "details":
         # INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
         m1, m2, m3 = st.columns(3)
-        m1.metric("🕒 Prépa", f"{str(r.get('Temps de préparation', '-')).split('.')[0]} min")
-        m2.metric("🔥 Cuisson", f"{str(r.get('Temps de cuisson', '-')).split('.')[0]} min")
-        m3.metric("🍽️ Portions", r.get('Portions', '-'))
+    
+        # On ajoute "min" seulement si on a un vrai chiffre
+        m1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
+        m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
+        m3.metric("🍽️ Portions", port_final)
         
         # Support Vidéo (Colonne N / Index 13)
         r_vals = list(r.values())
@@ -1101,6 +1103,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
