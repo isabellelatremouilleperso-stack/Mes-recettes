@@ -834,22 +834,25 @@ elif st.session_state.page == "planning":
                         st.rerun()
 
                 with col_del:
-                    if st.session_state.admin_mode:
-                    if st.button("🗑️", key=f"del_{index}"):
-                        # On s'assure que la date est au format texte ISO (YYYY-MM-DD)
-                        # car c'est souvent comme ça que Google Sheets la stocke.
-                        date_str = str(row['Date']).split(' ')[0] 
+            # On vérifie si l'utilisateur est admin
+            if st.session_state.admin_mode:
+                # Création du bouton poubelle avec une clé unique
+                if st.button("🗑️", key=f"del_{index}"):
+                    # Préparation des données pour Google
+                    # On nettoie la date pour n'envoyer que YYYY-MM-DD
+                    date_clean = str(row['Date']).split(' ')[0]
                     
-                        payload = {
-                            "action": "remove_plan", 
-                            "titre": str(row['Titre']).strip(), 
-                            "date": date_str
-                        }
+                    payload = {
+                        "action": "remove_plan", 
+                        "titre": row['Titre'], 
+                        "date": date_clean
+                    }
                     
-                        if send_action(payload):
-                            st.cache_data.clear()
-                            st.toast("✅ Supprimé du planning")
-                            st.rerun()
+                    # Envoi à Google Apps Script
+                    if send_action(payload):
+                        st.cache_data.clear() # Force le rafraîchissement
+                        st.toast(f"Supprimé : {row['Titre']}")
+                        st.rerun()
     except Exception as e:
         st.error(f"Oups ! Erreur d'affichage : {e}")
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
@@ -1149,6 +1152,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
