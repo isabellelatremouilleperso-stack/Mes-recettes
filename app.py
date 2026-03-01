@@ -860,7 +860,7 @@ elif st.session_state.page == "planning":
             # 2. Formatage de la date pour l'affichage
             date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
             
-            # 3. Création des colonnes (Texte, Voir, Éditer, Supprimer)
+            # 3. Création des colonnes
             col_txt, col_cal, col_edit, col_del = st.columns([3, 0.5, 0.5, 0.5])
             
             with col_txt:
@@ -869,7 +869,6 @@ elif st.session_state.page == "planning":
                                 <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
                              </div>""", unsafe_allow_html=True)
 
-            # 4. BOUTON VOIR (📖)
             with col_cal:
                 if st.button("📖", key=f"view_{index}"):
                     df_all = load_data(URL_CSV) 
@@ -879,13 +878,12 @@ elif st.session_state.page == "planning":
                         st.session_state.page = "details"
                         st.rerun()
 
-            # 5. BOUTON MODIFIER (✏️)
             with col_edit:
                 if st.button("✏️", key=f"edit_{index}"):
                     st.session_state[f"editing_{index}"] = True
 
                 if st.session_state.get(f"editing_{index}", False):
-                    # Fenêtre modale simplifiée sous la ligne
+                    # Petit menu pour changer la date
                     new_date = st.date_input("Nouvelle date", value=row['Date'], key=f"date_input_{index}")
                     c1, c2 = st.columns(2)
                     with c1:
@@ -905,16 +903,14 @@ elif st.session_state.page == "planning":
                             st.session_state[f"editing_{index}"] = False
                             st.rerun()
 
-            # 6. BOUTON SUPPRIMER (🗑️)
             with col_del:
-                if st.session_state.get('admin_mode', True):
-                    if st.button("🗑️", key=f"del_{index}"):
-                        date_clean = row['Date'].strftime('%Y-%m-%d')
-                        payload = {"action": "remove_plan", "titre": str(row['Titre']).strip(), "date": date_clean}
-                        if send_action(payload):
-                            st.cache_data.clear()
-                            time.sleep(1)
-                            st.rerun()
+                # Vérifie bien que ce bloc 'if' est décalé (indenté) par rapport au 'with'
+                if st.button("🗑️", key=f"del_{index}"):
+                    date_clean = row['Date'].strftime('%Y-%m-%d')
+                    payload = {"action": "remove_plan", "titre": str(row['Titre']).strip(), "date": date_clean}
+                    if send_action(payload):
+                        st.cache_data.clear()
+                        st.rerun()
     except Exception as e:
         st.error(f"Oups ! Erreur d'affichage : {e}")
         
@@ -1215,6 +1211,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
