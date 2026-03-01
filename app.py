@@ -20,6 +20,16 @@ URL_CSV_SHOP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6W
 URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6WZFzhlGfmYO-pa9k_WuDIU9Gj5AusWeiHWIUPiSBmcuw7cSVX9VsGxxwB_GeE7u_/pub?gid=536412190&single=true&output=csv"
 
 # ======================
+# CONFIGURATION DES DONNÉES
+# ======================
+CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", 
+    "Cabane à sucre", "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", 
+    "Fumoir", "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", 
+    "Pâtes", "Petit-déjeuner", "Plancha", "Plat Principal", "Poisson", "Porc", 
+    "Poulet", "Poutine", "Riz", "Salade", "Slow Cooker", "Soupe", "Sauce", 
+    "Sushi", "Tartare", "Végétarien", "Pizza"]
+
+# ======================
 # FONCTIONS TECHNIQUES (VERSION NETTOYÉE)
 # ======================
 
@@ -326,13 +336,13 @@ if st.session_state.page == "home":
                 "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
                 "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
                 "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
-                "Boisson": "#7FFFD4", "Autre": "#BDC317",
-                "Air Fryer": "#FF4500", "Boulangerie": "#DEB887", "Condiment": "#DAA520",
-                "Épices": "#CD5C5C", "Fumoir": "#333333", "Indien": "#FF9933",
-                "Libanais": "#EE2436", "Mexicain": "#006341", "Pains": "#F5DEB3",
-                "Pizza": "#FF6347", "Plancha": "#708090", "Poutine": "#6F4E37",
-                "Slow Cooker": "#4B0082", "Sushi": "#FF1493", "Tartare": "#B22222",
-                "Végétarien": "#32CD32"
+                "Boisson": "#7FFFD4", "Autre": "#BDC317", "Air Fryer": "#FF4500", 
+                "Boulangerie": "#DEB887", "Condiment": "#DAA520", "Épices": "#CD5C5C", 
+                "Fumoir": "#333333", "Indien": "#FF9933", "Libanais": "#EE2436", 
+                "Mexicain": "#006341", "Pains": "#F5DEB3", "Pizza": "#FF6347", 
+                "Plancha": "#708090", "Poutine": "#6F4E37", "Slow Cooker": "#4B0082", 
+                "Sushi": "#FF1493", "Tartare": "#B22222", "Végétarien": "#32CD32",
+                "Cabane à sucre": "#D2691E"
             }
             return colors.get(cat, "#e67e22")
 
@@ -1152,6 +1162,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
