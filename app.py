@@ -583,11 +583,21 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
 
-    # Fonction de nettoyage pour éviter les erreurs d'affichage et d'envoi
+    # Fonction de nettoyage améliorée
     def clean_val(x):
-        val = str(x)
-        if val.lower() in ["nan", "none", "", "null"]: return ""
-        return val
+        val = str(x).strip().lower()
+        # On attrape tous les cas "vides"
+        if val in ["nan", "none", "", "null", "0", "0.0", "-"]: 
+            return "-"
+        
+        # On nettoie le texte : on enlève le .0 si c'est un nombre entier
+        # Exemple : "20.0" devient "20"
+        return str(x).split('.')[0]
+
+    # --- APPLICATION AUX MÉTRIQUES ---
+    p_final = clean_val(r.get('Temps de préparation', '-'))
+    c_final = clean_val(r.get('Temps de cuisson', '-'))
+    port_final = clean_val(r.get('Portions', '-'))
 
     st.markdown('<h1 style="color: #e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
     
@@ -1091,6 +1101,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
