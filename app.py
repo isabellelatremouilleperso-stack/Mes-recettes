@@ -554,21 +554,21 @@ if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
                 st.toast(f"✅ {len(selected_ings)} articles ajoutés !")
             else:
                 st.warning("Veuillez cocher au moins un ingrédient.")
-else:
-    st.info("ℹ️ Aucun ingrédient trouvé.")
-    if st.checkbox("🔍 Debug Ingrédients"):
-        st.write(list(r.keys()))
+    else:
+        st.info("ℹ️ Aucun ingrédient trouvé.")
+        if st.checkbox("🔍 Debug Ingrédients"):
+            st.write(list(r.keys()))
 
 # --- SECTION PRÉPARATION (SORTIE DU BLOC ELSE) ---
 # Ce bloc doit être aligné tout à gauche pour être indépendant
-st.divider() 
-st.subheader("👨‍🍳 Étapes de préparation")
-prep = r.get('Préparation', r.get('preparation', ''))
+    st.divider() 
+    st.subheader("👨‍🍳 Étapes de préparation")
+    prep = r.get('Préparation', r.get('preparation', ''))
 
-if prep and str(prep).strip() not in ["None", "nan", ""]:
-    st.write(prep)
-else:
-    st.warning("Aucune étape de préparation enregistrée.")
+    if prep and str(prep).strip() not in ["None", "nan", ""]:
+        st.write(prep)
+    else:
+        st.warning("Aucune étape de préparation enregistrée.")
             
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -1193,6 +1193,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
