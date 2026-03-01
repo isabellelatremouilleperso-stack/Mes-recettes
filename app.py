@@ -928,81 +928,68 @@ elif st.session_state.page == "planning":
     st.divider()
 
     try:
-        # 1. Lecture avec sécurité (utf-8-sig enlève les caractères invisibles au début)
+        # 1. On lit le CSV avec 'utf-8-sig' pour éliminer les caractères invisibles au début
         df_plan = pd.read_csv(URL_CSV_PLAN, encoding='utf-8-sig')
         
-        # 2. NETTOYAGE : On enlève les espaces autour des noms de colonnes
+        # 2. On retire les espaces devant/derrière les noms de colonnes (le fameux "Date " ou " Titre")
         df_plan.columns = df_plan.columns.str.strip()
         
         if df_plan.empty or len(df_plan) == 0:
             st.info("Ton planning est vide.")
         else:
-            # Vérification de la présence de la colonne 'Date'
-            if 'Date' not in df_plan.columns:
-                st.error(f"⚠️ Erreur : Colonne 'Date' introuvable. Colonnes détectées : {df_plan.columns.tolist()}")
-                st.stop()
+            # Sécurité : On vérifie si 'Date' existe après le nettoyage
+            if 'Date' in df_plan.columns:
+                # --- NETTOYAGE ET TRI ---
+                df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
+                df_plan = df_plan.dropna(subset=['Date', 'Titre'])
+                df_plan = df_plan.sort_values(by='Date')
 
-            # --- NETTOYAGE ET TRI ---
-            df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
-            df_plan = df_plan.dropna(subset=['Date', 'Titre'])
-            df_plan = df_plan.sort_values(by='Date')
+                # --- TRADUCTION ---
+                jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
+                mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
 
-            # --- TRADUCTION ---
-            jours_fr = {"Monday": "Lundi", "Tuesday": "Mardi", "Wednesday": "Mercredi", "Thursday": "Jeudi", "Friday": "Vendredi", "Saturday": "Samedi", "Sunday": "Dimanche"}
-            mois_fr = {"January": "Janvier", "February": "Février", "March": "Mars", "April": "Avril", "May": "Mai", "June": "Juin", "July": "Juillet", "August": "Août", "September": "Septembre", "October": "Octobre", "November": "Novembre", "December": "Décembre"}
-
-            # --- AFFICHAGE AVEC SÉPARATEUR DE SEMAINE ---
-            derniere_semaine = -1
-            
-            for index, row in df_plan.iterrows():
-                semaine_actuelle = row['Date'].isocalendar()[1]
+                # --- AFFICHAGE AVEC SÉPARATEUR DE SEMAINE ---
+                derniere_semaine = -1
                 
-                if semaine_actuelle != derniere_semaine:
-                    st.markdown(f"""
-                        <div style="background-color: #2e313d; padding: 5px 15px; border-radius: 8px; margin: 20px 0 10px 0; border-left: 3px solid #95a5a6;">
-                            <span style="color: #95a5a6; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">SÉLECTION SEMAINE {semaine_actuelle}</span>
+                for index, row in df_plan.iterrows():
+                    semaine_actuelle = row['Date'].isocalendar()[1]
+                    
+                    if semaine_actuelle != derniere_semaine:
+                        st.markdown(f"""
+                            <div style="background-color: #2e313d; padding: 5px 15px; border-radius: 8px; margin: 20px 0 10px 0; border-left: 3px solid #95a5a6;">
+                                <span style="color: #95a5a6; font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">SÉLECTION SEMAINE {semaine_actuelle}</span>
+                            </div>
+                        """, unsafe_allow_html=True)
+                        derniere_semaine = semaine_actuelle
+
+                    # --- CARTE DE RECETTE ---
+                    jour_eng = row['Date'].strftime('%A')
+                    mois_eng = row['Date'].strftime('%B')
+                    date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {row['Date'].strftime('%d')} {mois_fr.get(mois_eng, mois_eng)}"
+                    
+                    col_txt, col_btn = st.columns([4, 1])
+                    
+                    with col_txt:
+                        st.markdown(f"""
+                        <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
+                            <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{date_txt}</div>
+                            <div style="color: white; font-size: 1.05rem; margin-top: 2px; font-weight: 500;">{row['Titre']}</div>
                         </div>
-                    """, unsafe_allow_html=True)
-                    derniere_semaine = semaine_actuelle
-
-                # --- CARTE DE RECETTE ---
-                jour_eng = row['Date'].strftime('%A')
-                mois_eng = row['Date'].strftime('%B')
-                date_txt = f"{jours_fr.get(jour_eng, jour_eng)} {row['Date'].strftime('%d')} {mois_fr.get(mois_eng, mois_eng)}"
-                
-                # On ajuste les colonnes pour mettre 2 boutons à droite
-                col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
-                
-                with col_txt:
-                    st.markdown(f"""
-                    <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
-                        <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold; text-transform: uppercase;">{date_txt}</div>
-                        <div style="color: white; font-size: 1.05rem; margin-top: 2px; font-weight: 500;">{row['Titre']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_cal:
-                    st.write("") 
-                    # BOUTON CALENDRIER (Action que tu as dans ton Google Script)
-                    if st.button("📅", key=f"cal_{index}"):
-                        payload = {
-                            "action": "calendar",
-                            "titre": row['Titre'],
-                            "date_prevue": row['Date'].strftime('%d/%m/%Y')
-                        }
-                        if send_action(payload):
-                            st.toast(f"Ajouté : {row['Titre']}", icon="✅")
-
-                with col_del:
-                    st.write("") 
-                    if st.session_state.admin_mode:
-                        if st.button("🗑️", key=f"btn_plan_{index}"):
-                            with st.spinner():
-                                if send_action({"action": "remove_plan", "titre": row['Titre'], "date": str(row['Date'].date())}):
-                                    st.cache_data.clear()
-                                    st.rerun()
-                    else:
-                        st.button("🔒", key=f"lock_{index}", disabled=True)
+                        """, unsafe_allow_html=True)
+                    
+                    with col_btn:
+                        st.write("") 
+                        if st.session_state.admin_mode:
+                            if st.button("🗑️", key=f"btn_plan_{index}_{semaine_actuelle}"):
+                                with st.spinner():
+                                    if send_action({"action": "remove_plan", "titre": row['Titre']}):
+                                        st.cache_data.clear()
+                                        st.rerun()
+                        else:
+                            st.button("🔒", key=f"lock_{index}", disabled=True)
+            else:
+                # Si 'Date' n'est toujours pas là, on affiche les noms réels pour comprendre
+                st.error(f"Erreur : Colonne 'Date' introuvable. Colonnes détectées : {df_plan.columns.tolist()}")
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
@@ -1303,6 +1290,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
