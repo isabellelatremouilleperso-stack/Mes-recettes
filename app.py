@@ -494,6 +494,8 @@ elif st.session_state.page == "details":
         else:
             st.info("Aucun ingrédient.")
 
+    # ... (après la fin des colonnes col_g et col_d) ...
+
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
@@ -502,6 +504,18 @@ elif st.session_state.page == "details":
         st.write(prep)
     else:
         st.warning("Aucune étape enregistrée.")
+
+    # --- NOUVEAU : MES NOTES (DÉPLACÉ ICI) ---
+    st.divider()
+    st.markdown("### 📝 Mes Notes & Commentaires")
+    notes_texte = r.get('Commentaires', '')
+    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
+        # On utilise st.info pour que les notes ressortent bien visuellement
+        st.info(notes_texte)
+    else:
+        st.write("*Aucune note pour cette recette.*")
+
+# --- FIN DU BLOC DETAILS ---
         
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -1150,6 +1164,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
