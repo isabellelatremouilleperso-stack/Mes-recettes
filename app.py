@@ -833,7 +833,7 @@ elif st.session_state.page == "planning":
                         st.session_state.page = "details"
                         st.rerun()
 
-                with col_del:
+        with col_del:
             # On vérifie si l'utilisateur est admin
             if st.session_state.admin_mode:
                 # Création du bouton poubelle avec une clé unique
@@ -1152,6 +1152,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
