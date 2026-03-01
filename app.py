@@ -434,14 +434,6 @@ elif st.session_state.page == "details":
         if note_actuelle > 0:
             st.markdown(f"### {'⭐' * note_actuelle}")
 
-        st.divider()
-        st.markdown("### 📝 Mes Notes")
-        notes_texte = r.get('Commentaires', '')
-        if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-            st.info(notes_texte)
-        else:
-            st.write("*Aucune note.*")
-
     with col_d:
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
@@ -1164,6 +1156,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
