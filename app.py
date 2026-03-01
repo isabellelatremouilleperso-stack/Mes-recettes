@@ -33,15 +33,30 @@ CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie"
 # FONCTIONS TECHNIQUES (VERSION NETTOYÉE)
 # ======================
 
+import streamlit as st
+import pandas as pd
+import requests
+import time
+import hashlib
+import re  # <--- AJOUTÉ : Indispensable pour le scraping
+from datetime import datetime
+from bs4 import BeautifulSoup
+import urllib.parse
+
+# ... (tes URLs et catégories restent identiques) ...
+
 def send_action(payload):
     """Envoie les données vers Google Apps Script avec diagnostic."""
     with st.spinner("🚀 Action en cours..."):
         try:
+            # On s'assure que l'URL est bien celle du script
             headers = {"Content-Type": "application/json"}
             r = requests.post(URL_SCRIPT, json=payload, headers=headers, timeout=20)
-            if "Success" in r.text:
+            
+            # Diagnostic : On vérifie si "Success" est présent peu importe la casse
+            if "success" in r.text.lower():
                 st.cache_data.clear() 
-                time.sleep(0.5)
+                # On ne fait pas de rerun ici, on laisse le bouton appelant le faire
                 return True
             else:
                 st.error(f"⚠️ Erreur Google : {r.text}")
@@ -50,20 +65,25 @@ def send_action(payload):
             st.error(f"❌ Erreur de connexion : {e}")
             return False
 
-@st.cache_data(ttl=3600) # Cache d'une heure pour la rapidité
+@st.cache_data(ttl=300) # Réduit à 5 min pour plus de réactivité
 def load_data(url):
     try:
-        # L'astuce du nocache force la lecture du fichier réel si le cache est vidé
+        # L'astuce du timestamp évite que Google Sheets ne renvoie une vieille version
         timestamp_url = f"{url}&nocache={int(time.time())}"
         df = pd.read_csv(timestamp_url)
         
-        # NETTOYAGE CRUCIAL
-        df = df.fillna('') # Remplace les cases vides (nan) par du vide propre
-        df.columns = [c.strip() for c in df.columns] # Enlève les espaces dans les noms de colonnes
+        # NETTOYAGE
+        df = df.fillna('') 
+        df.columns = [c.strip() for c in df.columns] 
         
+        # Sécurité : Si le DF est vide, on renvoie un DF avec les colonnes attendues
+        if df.empty:
+            return pd.DataFrame(columns=['Titre', 'Date', 'Catégorie', 'Ingrédients', 'Préparation'])
+            
         return df
     except Exception as e:
-        st.error(f"Erreur lors du chargement : {e}")
+        # Si ça ne charge pas, c'est peut-être que le lien CSV est mort ou privé
+        st.error(f"Erreur de lecture : Vérifie que le Google Sheet est 'Publié sur le web' en format CSV.")
         return pd.DataFrame()
 
 def scrape_url(url):
@@ -1178,6 +1198,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
