@@ -453,11 +453,9 @@ elif st.session_state.page == "details":
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # --- PLANNING (BLOC UNIQUE ET CORRIGÉ) ---
+        # --- PLANNING (BLOC UNIQUE ET NETTOYÉ) ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
-            # On utilise un suffixe pour garantir l'unicité totale de la clé
             unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
-            
             date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
             
             if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_{unique_key}"):
@@ -467,38 +465,19 @@ elif st.session_state.page == "details":
                     "date_prevue": str(date_p)
                 }
                 
-                # Envoi à Google Apps Script
                 if send_action(payload):
                     st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
-                    
-                    # Rafraîchissement intelligent
                     st.cache_data.clear()
                     
-                    # Petit délai pour laisser Google Sheets respirer sans être trop long
-                    time.sleep(1.0) 
+                    # On a choisi 1.2s : le bon compromis entre vitesse et fiabilité
+                    time.sleep(1.2) 
                     
-                    st.session_state.page = "planning"
-                    st.rerun()
-                
-                # Envoi à Google Apps Script
-                if send_action(payload):
-                    # 1. Message de succès immédiat
-                    st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
-                    
-                    # 2. ON VIDE LE CACHE TOUT DE SUITE
-                    st.cache_data.clear()
-                    
-                    # 3. PAUSE DE SÉCURITÉ (Crucial pour Google Sheets)
-                    # On passe à 1.5 seconde pour laisser le temps au CSV de se régénérer
-                    time.sleep(1.5) 
-                    
-                    # 4. Redirection vers le planning mis à jour
                     st.session_state.page = "planning"
                     st.rerun()
         
         st.divider()
 
-        # Fonction de nettoyage
+        # --- MÉTRIQUES ---
         def clean_metrique(valeur):
             v_str = str(valeur).strip().lower()
             if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
@@ -1209,6 +1188,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
