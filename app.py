@@ -213,17 +213,25 @@ def clear_add_recipe_form():
             st.session_state[key] = ""
 
 def send_action(payload):
-    """Envoie les données vers Google Apps Script"""
+    """Envoie les données vers Google Apps Script avec diagnostic."""
     with st.spinner("🚀 Action en cours..."):
         try:
-            r = requests.post(URL_SCRIPT, json=payload, timeout=20)
+            # On force les headers pour être sûr que Google reçoive du JSON
+            headers = {"Content-Type": "application/json"}
+            r = requests.post(URL_SCRIPT, json=payload, headers=headers, timeout=20)
+            
+            # Si Google répond "Success"
             if "Success" in r.text:
-                st.cache_data.clear() # On vide le cache pour voir les changements
+                st.cache_data.clear() 
                 time.sleep(0.5)
                 return True
+            else:
+                # ICI : On affiche l'erreur REELLE renvoyée par ton script Google
+                st.error(f"⚠️ Google refuse l'action : {r.text}")
+                return False
         except Exception as e:
-            st.error(f"Erreur de connexion : {e}")
-    return False
+            st.error(f"❌ Erreur de connexion au script : {e}")
+            return False
 
 # --- APPEL INITIAL UNIQUE ---
 df = load_data(URL_CSV)
@@ -1285,6 +1293,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
