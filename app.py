@@ -141,12 +141,22 @@ st.markdown("""
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = (st.query_params.get("admin") == "oui")
 
+# --- 5. BARRE LATÉRALE (SIDEBAR) ---
 with st.sidebar:
-    # Affichage du Logo
+    # Logo et Titre
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h3>', unsafe_allow_html=True)
+    
+    # --- LE BOUTON ACTUALISER EST ICI ---
+    if st.button("🔄 Actualiser la Bibliothèque", use_container_width=True, key="btn_refresh_side"):
+        st.cache_data.clear()
+        st.toast("Mise à jour réussie ! 📋")
+        time.sleep(0.5)
+        st.rerun()
+    
     st.divider()
 
+    # Section Sécurité Admin
     if not st.session_state.admin_mode:
         pwd = st.text_input("🔑 Accès Admin", type="password")
         if st.button("Se connecter 🔓", use_container_width=True):
@@ -165,21 +175,24 @@ with st.sidebar:
             st.rerun()
 
     st.divider()
+    
     # Navigation
-    if st.button("📚 Bibliothèque", use_container_width=True): st.session_state.page="home"; st.rerun()
-    if st.button("📅 Planning Repas", use_container_width=True): st.session_state.page="planning"; st.rerun()
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True): st.session_state.page="shop"; st.rerun()
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+        st.session_state.page="home"; st.rerun()
+    if st.button("📅 Planning Repas", use_container_width=True, key="nav_plan"): 
+        st.session_state.page="planning"; st.rerun()
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+        st.session_state.page="shop"; st.rerun()
     
     st.divider()
     if st.session_state.admin_mode:
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True):
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add"):
             st.session_state.page="add"; st.rerun()
     
-    if st.button("⭐ Play Store", use_container_width=True): st.session_state.page="playstore"; st.rerun()
-    if st.button("❓ Aide", use_container_width=True): st.session_state.page="help"; st.rerun()
-
-# Chargement des données initial
-df = load_data(URL_CSV)
+    if st.button("⭐ Play Store", use_container_width=True, key="nav_play"): 
+        st.session_state.page="playstore"; st.rerun()
+    if st.button("❓ Aide", use_container_width=True, key="nav_help"): 
+        st.session_state.page="help"; st.rerun()
 
 # ======================
 # LOGIQUE DES PAGES
@@ -1122,6 +1135,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
