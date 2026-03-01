@@ -304,9 +304,7 @@ with st.sidebar:
 
     if st.button("❓ Aide", use_container_width=True, key="side_help"):
         st.session_state.page="help"; st.rerun()
-# ======================
-# LOGIQUE DES PAGES
-# ======================
+
 
 # ======================
 # LOGIQUE DES PAGES
@@ -766,29 +764,31 @@ elif st.session_state.page == "add":
         c_save, c_cancel = st.columns(2)
         
         with c_save:
-            if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
-                if titre and ingredients:
-                    import datetime
-                    payload = {
-                        "action": "add",
-                        "date": datetime.date.today().strftime("%d/%m/%Y"),
-                        "titre": titre.strip(),
-                        "source": source_url.strip(),
-                        "ingredients": ingredients.strip().replace('\n', '  \n'),
-                        "preparation": instructions.strip(),
-                        "image": img_url.strip(),
-                        "categorie": ", ".join(cat_choisies),
-                        "portions": port.strip(),
-                        "temps_prepa": t_prep.strip(),
-                        "temps_cuisson": t_cuis.strip(),
-                        "commentaires": commentaires.strip(),
-                        "lien_video": video_url.strip()
-                    }
-                    if send_action(payload):
-                        st.success("✅ Enregistré !")
-                        st.cache_data.clear()
-                        st.session_state.page = "home"
-                        st.rerun()
+            # --- BOUTONS FINAUX CORRIGÉS ---
+if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
+    if titre and ingredients:
+        import datetime
+        # On aligne EXACTEMENT sur les noms attendus par le script Google
+        payload = {
+            "action": "add",
+            "date": datetime.date.today().strftime("%d/%m/%Y"),
+            "titre": titre.strip(),
+            "source": source_url.strip(),
+            "Ingrédients": ingredients.strip().replace('\n', '  \n'), # 'I' majuscule + accent
+            "Préparation": instructions.strip(),                      # 'P' majuscule + accent
+            "Image": img_url.strip(),                                  # 'I' majuscule
+            "Catégorie": ", ".join(cat_choisies),                     # 'C' majuscule + accent
+            "Portions": port.strip(),
+            "Temps_Prepa": t_prep.strip(),                             # Correspond au script Google
+            "Temps_Cuisson": t_cuis.strip(),
+            "Commentaires": commentaires.strip(),
+            "video": video_url.strip()                                 # 'video' selon votre script
+        }
+        if send_action(payload):
+            st.success("✅ Enregistré !")
+            st.cache_data.clear()
+            st.session_state.page = "home"
+            st.rerun()
                 else:
                     st.error("🚨 Titre et Ingrédients requis !")
 
@@ -1308,6 +1308,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
