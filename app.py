@@ -609,13 +609,28 @@ elif st.session_state.page == "details":
         c2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         c3.metric("🍽️ Portions", port_final)
         
-        # SECTION PLANNING
-        st.subheader("📅 Planifier ce repas")
-        date_plan = st.date_input("Choisir une date", value=datetime.now(), key="plan_date_det")
-        if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
-            st.success("Ajouté !")
+      # SECTION PLANNING
+st.subheader("📅 Planifier ce repas")
 
-        st.divider()
+date_plan = st.date_input(
+    "Choisir une date",
+    value=datetime.now(),
+    key="plan_date_det"
+)
+
+if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
+
+    payload = {
+        "action": "plan",
+        "titre": st.session_state.recipe_data.get("Titre"),
+        "date_prevue": str(date_plan)
+    }
+
+    if send_action(payload):
+        st.success("Ajouté au planning avec succès !")
+        st.cache_data.clear()
+    else:
+        st.error("Erreur lors de l'ajout au planning.")
 
         # --- NOUVEAU BLOC VIDÉO (AVANT LES INGRÉDIENTS) ---
         # On va chercher la valeur de la colonne N (index 13 dans la liste des valeurs)
@@ -1293,6 +1308,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
