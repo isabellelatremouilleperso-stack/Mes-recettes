@@ -378,21 +378,10 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-    # 1. RÉCUPÉRATION RAPIDE (On utilise ce qui est déjà chargé dans 'df')
-    # On ne fait PLUS de pd.read_csv ici pour gagner 3-5 secondes
+    # 1. RÉCUPÉRATION INSTANTANÉE
+    # On utilise les données déjà en mémoire pour une ouverture immédiate
     r = st.session_state.recipe_data
-    current_title = r.get('Titre')
-    
-    try:
-        df_fresh = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
-        fresh_recipe = df_fresh[df_fresh['Titre'] == current_title]
-        if not fresh_recipe.empty:
-            r = fresh_recipe.iloc[0].to_dict()
-            st.session_state.recipe_data = r
-        else:
-            r = st.session_state.recipe_data
-    except:
-        r = st.session_state.recipe_data
+    current_title = r.get('Titre', 'Recette sans titre')
 
     # --- BARRE DE NAVIGATION ---
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
@@ -413,7 +402,7 @@ elif st.session_state.page == "details":
                 st.session_state.page = "home"; st.rerun()
 
     st.divider()
-    st.header(f"📖 {r.get('Titre','Sans titre')}")
+    st.header(f"📖 {current_title}")
 
     # --- CORPS DE LA PAGE ---
     col_g, col_d = st.columns([1, 1.2])
@@ -423,9 +412,9 @@ elif st.session_state.page == "details":
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # NOTATION INTERACTIVE (Slider de sauvegarde)
+        # NOTATION INTERACTIVE
         try:
-            val_note = r.get('Note', r.get('note', 0))
+            val_note = r.get('Note', 0)
             note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
         except:
             note_actuelle = 0
@@ -434,9 +423,9 @@ elif st.session_state.page == "details":
         nouvelle_note = st.select_slider("Glissez pour noter", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}")
         
         if nouvelle_note != note_actuelle:
-            with st.spinner("Mise à jour de la note..."):
+            with st.spinner("Mise à jour..."):
                 payload_n = r.copy()
-                payload_n.update({"action": "edit", "Note": nouvelle_note, "note": nouvelle_note})
+                payload_n.update({"action": "edit", "Note": nouvelle_note})
                 if send_action(payload_n):
                     st.toast("Note enregistrée ! ⭐")
                     st.session_state.recipe_data['Note'] = nouvelle_note
@@ -457,40 +446,37 @@ elif st.session_state.page == "details":
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # --- DÉPLACEMENT DU PLANNING ICI (SOUS LE TITRE INFO) ---
+        # --- PLANNING (DÉPLACÉ ICI ET SÉCURISÉ) ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
-            date_p = st.date_input("Choisir une date", key="date_det")
-            if st.button("🗓️ Ajouter au planning", use_container_width=True):
+            # Clé unique pour éviter l'erreur DuplicateKey
+            date_p = st.date_input("Choisir une date", key=f"date_plan_{current_title}")
+            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_plan_{current_title}"):
                 if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
                     st.success("Ajouté au planning !")
                     st.balloons()
         
         st.divider()
 
-        # Fonction de nettoyage locale
+        # Fonction de nettoyage
         def clean_metrique(valeur):
             v_str = str(valeur).strip().lower()
-            if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]:
-                return "-"
+            if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
             return str(valeur).split('.')[0]
 
-        # Calcul des valeurs propres
         p_final = clean_metrique(r.get('Temps de préparation'))
         c_final = clean_metrique(r.get('Temps de cuisson'))
         port_final = clean_metrique(r.get('Portions'))
 
-        # Affichage des métriques
         m1, m2, m3 = st.columns(3)
         m1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
         m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         m3.metric("🍽️ Portions", port_final)
 
-        # 2. SUPPORT VIDÉO (S'AFFICHE MAINTENANT SOUS LE PLANNING ET LES INFOS)
-        r_vals = list(r.values())
-        v_link = r_vals[13] if len(r_vals) > 13 else r.get('video', '')
+        # 2. SUPPORT VIDÉO
+        v_link = r.get('Vidéo', r.get('video', ''))
         if v_link and "http" in str(v_link):
             st.divider()
-            if "youtube" in str(v_link) or "youtu.be" in str(v_link):
+            if any(x in str(v_link) for x in ["youtube", "youtu.be", "vimeo"]):
                 st.video(str(v_link))
             else:
                 st.link_button("📺 Voir la vidéo", str(v_link), use_container_width=True)
@@ -507,15 +493,6 @@ elif st.session_state.page == "details":
                 st.checkbox(line, key=f"chk_{current_title}_{i}")
         else:
             st.info("Aucun ingrédient.")
-        
-        st.divider()
-
-        # 4. PLANNING
-        st.subheader("📅 Planifier")
-        date_p = st.date_input("Date", key="date_det")
-        if st.button("🗓️ Ajouter au planning", use_container_width=True):
-            if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
-                st.success("Ajouté !")
 
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
@@ -525,8 +502,7 @@ elif st.session_state.page == "details":
         st.write(prep)
     else:
         st.warning("Aucune étape enregistrée.")
-
-# --- FIN DU BLOC DETAILS ---
+        
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1174,6 +1150,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
