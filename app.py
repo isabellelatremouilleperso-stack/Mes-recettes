@@ -650,23 +650,13 @@ elif st.session_state.page == "add":
                 
  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
+    # On récupère les données de la recette à modifier
     r_edit = st.session_state.get('recipe_to_edit', {})
 
-    # Fonction de nettoyage améliorée
-    def clean_val(x):
-        val = str(x).strip().lower()
-        # On attrape tous les cas "vides"
-        if val in ["nan", "none", "", "null", "0", "0.0", "-"]: 
-            return "-"
-        
-        # On nettoie le texte : on enlève le .0 si c'est un nombre entier
-        # Exemple : "20.0" devient "20"
-        return str(x).split('.')[0]
-
-    # --- APPLICATION AUX MÉTRIQUES ---
-    p_final = clean_val(r.get('Temps de préparation', '-'))
-    c_final = clean_val(r.get('Temps de cuisson', '-'))
-    port_final = clean_val(r.get('Portions', '-'))
+    def clean_edit(x):
+        val = str(x).strip()
+        if val.lower() in ["nan", "none", "", "null", "-"]: return ""
+        return val.split('.')[0] if '.' in val else val
 
     st.markdown('<h1 style="color: #e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
     
@@ -676,70 +666,52 @@ elif st.session_state.page == "edit":
     
     st.divider()
     
-    with st.container():
+    with st.form("form_edition_complete"):
         col_t, col_c = st.columns([2, 1])
-        titre_edit = col_t.text_input("🏷️ Nom de la recette", value=clean_val(r_edit.get('Titre', '')), key="edit_titre")
+        titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
         
-        # Sécurité Catégories
-        raw_cats = clean_val(r_edit.get('Catégorie', 'Autre'))
+        # Gestion des catégories
+        raw_cats = str(r_edit.get('Catégorie', 'Autre'))
         current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
-        valid_cats = [c for c in current_cats if c in CATEGORIES]
-        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=valid_cats if valid_cats else ["Autre"])
+        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=[c for c in current_cats if c in CATEGORIES] or ["Autre"])
         
-        st.markdown("#### ⏱️ Paramètres de cuisson")
+        st.markdown("#### ⏱️ Paramètres")
         cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_val(r_edit.get('Temps_Prepa', '')), key="edit_prep")
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_val(r_edit.get('Temps_Cuisson', '')), key="edit_cuis")
-        port = cp3.text_input("🍽️ Portions", value=clean_val(r_edit.get('Portions', '')), key="edit_port")
-        
-        st.divider()
+        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', ''))))
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', ''))))
+        port = cp3.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
         
         ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", height=300, value=clean_val(r_edit.get('Ingrédients', '')), key="edit_ing")
-        instructions = ce.text_area("👨‍🍳 Étapes de préparation", height=300, value=clean_val(r_edit.get('Préparation', '')), key="edit_ins")
+        ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
+        instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
         
-        img_url = st.text_input("🖼️ Lien de l'image (URL)", value=clean_val(r_edit.get('Image', '')), key="edit_img")
+        img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
+        video_url = st.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
+        commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
 
-        # Vidéo (Nouveau champ)
-        r_list_vals = list(r_edit.values())
-        old_v = r_list_vals[13] if len(r_list_vals) > 13 else ""
-        video_url = st.text_input("📺 Lien Vidéo (YouTube, TikTok, FB)", value=clean_val(old_v), key="edit_vid")
-        
-        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, value=clean_val(r_edit.get('Commentaires', '')), key="edit_comm")
-        
-        st.divider()
-        
-        if st.button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True, key="edit_submit_btn"):
-            if titre_edit.strip() != "" and ingredients.strip() != "":
-                
+        if st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True):
+            if titre_edit and ingredients:
                 payload = {
                     "action": "edit", 
+                    "old_titre": r_edit.get('Titre'), # Crucial pour que Google sache quoi modifier
                     "titre": titre_edit, 
-                    "old_titre": clean_val(r_edit.get('Titre', titre_edit)),
-                    "Catégorie": ", ".join(cat_choisies), 
-                    "Ingrédients": ingredients, 
-                    "Préparation": instructions, 
-                    "Image": img_url, 
-                    "Temps_Prepa": clean_val(t_prep), 
-                    "Temps_Cuisson": clean_val(t_cuis), 
-                    "Portions": clean_val(port), 
-                    "Note": clean_val(r_edit.get('Note', 0)), 
+                    "Catégorie": ", ".join(cat_choisies),
+                    "Ingrédients": ingredients,
+                    "Préparation": instructions,
+                    "Image": img_url,
+                    "Temps_Prepa": t_prep,
+                    "Temps_Cuisson": t_cuis,
+                    "Portions": port,
                     "Commentaires": commentaires,
-                    "video": video_url 
+                    "video": video_url
                 }
-                
-                with st.spinner("Enregistrement en cours..."):
-                    # Utilisation de la fonction send_action que tu as déjà définie
-                    if send_action(payload):
-                        st.success("✅ Recette mise à jour !")
-                        st.cache_data.clear()
-                        if 'recipe_to_edit' in st.session_state: del st.session_state.recipe_to_edit
-                        st.session_state.page = "home"
-                        st.rerun()
-                    else:
-                        st.error("❌ Erreur lors de l'envoi à Google.")
+                if send_action(payload):
+                    st.success("✅ Mis à jour !")
+                    st.cache_data.clear()
+                    st.session_state.page = "home"
+                    st.rerun()
             else:
-                st.error("⚠️ Le titre et les ingrédients sont obligatoires !")
+                st.error("Le titre et les ingrédients sont requis.")
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -1253,6 +1225,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
