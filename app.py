@@ -143,18 +143,21 @@ if 'admin_mode' not in st.session_state:
 
 # --- 5. BARRE LATÉRALE (SIDEBAR) ---
 with st.sidebar:
-    # Logo et Titre
+    # 1. Logo et Titre
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h3>', unsafe_allow_html=True)
     
-    # --- LE BOUTON ACTUALISER EST ICI ---
-    if st.button("🔄 Actualiser la Bibliothèque", use_container_width=True, key="btn_refresh_side"):
+    # 2. BOUTON ACTUALISER (Sur le côté)
+    # On utilise une clé unique 'side_refresh' pour éviter les conflits
+    if st.button("🔄 Actualiser la Bibliothèque", use_container_width=True, key="side_refresh"):
         st.cache_data.clear()
-        st.toast("Mise à jour réussie ! 📋")
+        st.toast("Synchronisation en cours... 📋")
         time.sleep(0.5)
         st.rerun()
-    
+
     st.divider()
+
+    # ... la suite de ton code Admin et Navigation ...
 
     # Section Sécurité Admin
     if not st.session_state.admin_mode:
@@ -1135,6 +1138,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
