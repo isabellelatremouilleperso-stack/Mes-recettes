@@ -760,15 +760,15 @@ elif st.session_state.page == "add":
         
         st.divider()
         
-        # --- BOUTONS FINAUX ---
+    # --- BOUTONS FINAUX ---
         c_save, c_cancel = st.columns(2)
         
         with c_save:
-            # Correction : Ce bloc est maintenant correctement indenté sous 'with c_save'
+            # Cette ligne est maintenant correctement indentée à l'intérieur de 'with c_save'
             if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
                 if titre and ingredients:
                     import datetime
-                    # On aligne EXACTEMENT sur les noms attendus par le script Google
+                    # Préparation des données pour Google Sheets
                     payload = {
                         "action": "add",
                         "date": datetime.date.today().strftime("%d/%m/%Y"),
@@ -791,19 +791,14 @@ elif st.session_state.page == "add":
                         st.session_state.page = "home"
                         st.rerun()
                 else:
+                    # Le 'else' est maintenant bien aligné avec son 'if'
                     st.error("🚨 Titre et Ingrédients requis !")
 
         with c_cancel:
             if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
                 st.session_state.page = "home"
                 st.rerun()
-                else:
-                    st.error("🚨 Titre et Ingrédients requis !")
-
-        with c_cancel:
-            if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
-                st.session_state.page = "home"
-                st.rerun()
+                
  # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
@@ -1316,6 +1311,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
