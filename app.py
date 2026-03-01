@@ -871,12 +871,24 @@ elif st.session_state.page == "planning":
 
                 # CSS pour aligner les boutons verticalement
                 st.markdown("""<style> div[data-testid="column"] button { margin-top: 15px; } </style>""", unsafe_allow_html=True)
-
+                
                 with col_cal:
                     if st.button("📖", key=f"view_{index}"):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
+                        # On recharge la base complète pour récupérer Ingrédients, Préparation, etc.
+                        df_all = load_data(URL_CSV) 
+                        # On cherche la ligne correspondant au titre de la recette
+                        recipe_full = df_all[df_all['Titre'] == row['Titre']]
+                        
+                        if not recipe_full.empty:
+                            # On stocke TOUTES les infos dans le session_state
+                            st.session_state.recipe_data = recipe_full.iloc[0].to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
+                        else:
+                            st.error("Recette introuvable dans la base principale.")
+
+                with col_del:
+                    # ... (ton code pour la poubelle) ...
 
                 with col_del:
                     if st.session_state.get('admin_mode', True): # Ajout d'un 'get' par sécurité
@@ -1196,6 +1208,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
