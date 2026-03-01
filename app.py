@@ -351,17 +351,13 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-    # On récupère le titre de la recette sélectionnée
+    # 1. RÉCUPÉRATION ET CHARGEMENT FRAIS
     current_title = st.session_state.recipe_data.get('Titre')
     
-    # CHARGEMENT FRAIS : On recharge le CSV pour avoir les dernières infos (temps, catégories)
     try:
         df_fresh = pd.read_csv(f"{URL_CSV}&nocache={time.time()}")
-        # On retrouve la ligne correspondant à notre recette
         fresh_recipe = df_fresh[df_fresh['Titre'] == current_title]
-        
         if not fresh_recipe.empty:
-            # On met à jour la mémoire de l'appli avec les données fraîches du Excel
             r = fresh_recipe.iloc[0].to_dict()
             st.session_state.recipe_data = r
         else:
@@ -382,257 +378,96 @@ elif st.session_state.page == "details":
         if st.button("🖨️ Imprimer", use_container_width=True):
             st.session_state.page = "print"; st.rerun()
     with c_nav4:
-        # Correction Suppression : Action 'delete'
         if st.button("🗑️ Supprimer", use_container_width=True):
             if send_action({"action": "delete", "titre": current_title}):
                 st.cache_data.clear()
                 st.session_state.page = "home"; st.rerun()
 
     st.divider()
-
-    # 2. EN-TÊTE
     st.header(f"📖 {r.get('Titre','Sans titre')}")
 
-    # --- 3. CORPS DE LA PAGE (REMPLACEMENT) ---
-col_g, col_d = st.columns([1, 1.2])
+    # --- CORPS DE LA PAGE ---
+    col_g, col_d = st.columns([1, 1.2])
 
-with col_g:
-    # 1. IMAGE (À GAUCHE)
-    img_url = r.get('Image', '')
-    st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
+    with col_g:
+        # VISUEL
+        img_url = r.get('Image', '')
+        st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
+            
+        # NOTATION INTERACTIVE (Slider de sauvegarde)
+        try:
+            val_note = r.get('Note', r.get('note', 0))
+            note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
+        except:
+            note_actuelle = 0
+
+        st.write("**Évaluer cette recette :**")
+        nouvelle_note = st.select_slider("Glissez pour noter", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}")
         
-    # 2. CALCUL SÉCURISÉ DE LA NOTE
-    try:
-        val_note = r.get('Note', r.get('note', 0))
-        note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
-    except (ValueError, TypeError):
-        note_actuelle = 0
-
-    st.write(f"**Note actuelle :** {'⭐' * note_actuelle if note_actuelle > 0 else 'Pas encore notée'}")
-    
-    st.divider()
-    
-    # 3. NOTES DU CHEF (SOUS LA PHOTO)
-    st.markdown("### 📝 Mes Notes")
-    notes_texte = r.get('Commentaires', '')
-    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-        st.info(notes_texte)
-    else:
-        st.write("*Aucune note.*")
-
-with col_d:
-    # 4. INFORMATIONS (À DROITE)
-    st.subheader("📋 Informations")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("🕒 Prépa", f"{str(r.get('Temps de préparation', '-')).split('.')[0]} min")
-    c2.metric("🔥 Cuisson", f"{str(r.get('Temps de cuisson', '-')).split('.')[0]} min")
-    c3.metric("🍽️ Portions", r.get('Portions', '-'))
-    
-    st.divider()
-
-    # 5. INGRÉDIENTS (À DROITE)
-    st.subheader("🛒 Ingrédients")
-    ings_raw = r.get('Ingrédients', r.get('ingredients', ''))
-    
-    if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-        text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-        ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
-        
-        selected_ings = []
-        recette_id = str(r.get('Titre', 'recette')).replace(" ", "_")
-        for i, line in enumerate(ings):
-            if st.checkbox(line, key=f"chk_{recette_id}_{i}"):
-                selected_ings.append(line)
-        
-        if st.button("📥 Ajouter au Panier", use_container_width=True, key=f"btn_shop_{recette_id}"):
-            if selected_ings:
-                for item in selected_ings:
-                    send_action({"action": "add_shop", "article": item})
-                st.toast("✅ Ajouté !")
-    else:
-        st.info("ℹ️ Aucun ingrédient trouvé.")
-
-    st.divider()
-
-    # 6. PLANNING (À DROITE)
-    st.subheader("📅 Planifier")
-    date_p = st.date_input("Choisir une date", key="plan_date_det")
-    if st.button("🗓️ Ajouter au planning", use_container_width=True):
-        payload = {"action": "plan", "titre": r.get("Titre"), "date_prevue": str(date_p)}
-        if send_action(payload):
-            st.success("Ajouté !")
-
-# --- SORTIE DES COLONNES : PRÉPARATION (TOUTE LA LARGEUR) ---
-st.divider()
-st.subheader("👨‍🍳 Étapes de préparation")
-prep = r.get('Préparation', '')
-if prep and str(prep).strip() not in ["None", "nan", ""]:
-    st.write(prep)
-else:
-    st.warning("Aucune étape enregistrée.")
-
-# --- ALIGNEMENT DU ELIF POUR ÉVITER LA SYNTAX ERROR ---
-# Assurez-vous que ce elif est aligné tout à gauche
-# elif st.session_state.page == "add":
-        # 3. SYSTÈME DE NOTATION
-        st.write("**Note de la recette :**")
-        nouvelle_note = st.select_slider(
-            "Évaluer de 0 à 5",
-            options=[0, 1, 2, 3, 4, 5],
-            value=note_actuelle,
-            key=f"slider_note_{r['Titre']}"
-        )
-        
-        if nouvelle_note > 0:
-            st.markdown(f"#### {'⭐' * nouvelle_note}")
-
-        # Sauvegarde automatique
         if nouvelle_note != note_actuelle:
-            with st.spinner("Enregistrement..."):
-                payload = r.copy() 
-                payload.update({
-                    "action": "edit",
-                    "Note": nouvelle_note,
-                    "note": nouvelle_note
-                })
-                
-                if send_action(payload):
+            with st.spinner("Mise à jour de la note..."):
+                payload_n = r.copy()
+                payload_n.update({"action": "edit", "Note": nouvelle_note, "note": nouvelle_note})
+                if send_action(payload_n):
                     st.toast("Note enregistrée ! ⭐")
-                    st.cache_data.clear()
                     st.session_state.recipe_data['Note'] = nouvelle_note
                     st.rerun()
-        
+
+        if note_actuelle > 0:
+            st.markdown(f"### {'⭐' * note_actuelle}")
+
         st.divider()
-            
-        # NOTES DU CHEF
         st.markdown("### 📝 Mes Notes")
-        notes_texte = r.get('Commentaires', r.get('commentaires', ''))
+        notes_texte = r.get('Commentaires', '')
         if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
             st.info(notes_texte)
         else:
-            st.write("*Aucune note pour le moment.*")
-            
-    # --- BLOC INFORMATIONS ---
+            st.write("*Aucune note.*")
+
     with col_d:
+        # INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
+        m1, m2, m3 = st.columns(3)
+        m1.metric("🕒 Prépa", f"{str(r.get('Temps de préparation', '-')).split('.')[0]} min")
+        m2.metric("🔥 Cuisson", f"{str(r.get('Temps de cuisson', '-')).split('.')[0]} min")
+        m3.metric("🍽️ Portions", r.get('Portions', '-'))
         
-        # 1. CATÉGORIE
-        cat = r.get('Catégorie', 'Autre')
-        if not cat or str(cat).lower() == 'nan':
-            cat = "Autre"
-        st.write(f"**🍴 Catégorie :** {cat}")
-        
-        # 2. SOURCE
-        source = r.get('Source', '')
-        if source and "http" in str(source):
-            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+        # Support Vidéo (Colonne N / Index 13)
+        r_vals = list(r.values())
+        v_link = r_vals[13] if len(r_vals) > 13 else r.get('video', '')
+        if v_link and "http" in str(v_link):
+            st.video(str(v_link)) if "youtube" in str(v_link) else st.link_button("📺 Voir la vidéo", str(v_link), use_container_width=True)
+
+        st.divider()
+
+        # INGRÉDIENTS
+        st.subheader("🛒 Ingrédients")
+        ings_raw = r.get('Ingrédients', '')
+        if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
+            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+            for i, line in enumerate(ings):
+                st.checkbox(line, key=f"chk_{current_title}_{i}")
         
         st.divider()
-        
-        # 3. RÉCUPÉRATION ET NETTOYAGE
-        def clean_txt(v):
-            val = str(v).strip().lower()
-            if val in ["nan", "none", "", "-"]: return "-"
-            return str(v).split('.')[0]
 
-        p_final = clean_txt(r.get('Temps de préparation', '-'))
-        c_final = clean_txt(r.get('Temps de cuisson', '-'))
-        port_final = clean_txt(r.get('Portions', '-'))
+        # PLANNING
+        st.subheader("📅 Planifier")
+        date_p = st.date_input("Date", key="date_det")
+        if st.button("🗓️ Ajouter au planning", use_container_width=True):
+            if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
+                st.success("Ajouté !")
 
-        # 4. AFFICHAGE DES MÉTRIQUES
-        c1, c2, c3 = st.columns(3)
-        c1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
-        c2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
-        c3.metric("🍽️ Portions", port_final)
-        
-      # SECTION PLANNING
-st.subheader("📅 Planifier ce repas")
-
-date_plan = st.date_input(
-    "Choisir une date",
-    value=datetime.now(),
-    key="plan_date_det"
-)
-
-if st.button("🗓️ Ajouter au planning & Google", use_container_width=True):
-
-    payload = {
-        "action": "plan",
-        "titre": st.session_state.recipe_data.get("Titre"),
-        "date_prevue": str(date_plan)
-    }
-
-    if send_action(payload):
-        st.success("Ajouté au planning avec succès !")
-        st.cache_data.clear()
-    else:
-        st.error("Erreur lors de l'ajout au planning.")
-
-        # --- NOUVEAU BLOC VIDÉO (AVANT LES INGRÉDIENTS) ---
-        # On va chercher la valeur de la colonne N (index 13 dans la liste des valeurs)
-        r_vals = list(r.values())
-        video_link = r_vals[13] if len(r_vals) > 13 else ""
-
-        if video_link and str(video_link).strip() not in ["None", "nan", ""]:
-            st.subheader("📺 Support Vidéo")
-            if "youtube.com" in str(video_link) or "youtu.be" in str(video_link):
-                st.video(str(video_link))
-            else:
-                # Bouton stylisé pour TikTok/IG/FB
-                label, color = "🔗 Voir la vidéo", "#4285F4"
-                if "tiktok.com" in str(video_link).lower(): label, color = "🎵 Voir sur TikTok", "#EE1D52"
-                elif "instagram.com" in str(video_link).lower(): label, color = "📸 Voir sur Instagram", "#C13584"
-                elif "facebook.com" in str(video_link).lower(): label, color = "🔵 Voir sur Facebook", "#1877F2"
-                
-                st.markdown(f"""<a href="{video_link}" target="_blank" style="text-decoration:none;"><div style="background-color:{color};color:white;padding:12px;border-radius:8px;text-align:center;font-weight:bold;">{label}</div></a>""", unsafe_allow_html=True)
-            st.divider()
-
-      # --- SECTION INGRÉDIENTS ---
-st.subheader("🛒 Ingrédients")
-
-def get_value_flexible(d, target_key):
-    if target_key in d: return d[target_key]
-    for k in d.keys():
-        if k.lower().strip() == target_key.lower().strip():
-            return d[k]
-    return None
-
-ings_raw = get_value_flexible(r, 'Ingrédients')
-
-if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-    text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-    ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
-
-    if ings:
-        selected_ings = []
-        recette_id = str(r.get('titre', 'recette')).replace(" ", "_")
-        for i, line in enumerate(ings):
-            if st.checkbox(line, key=f"chk_{recette_id}_{i}"):
-                selected_ings.append(line)
-        
-        if st.button("📥 Ajouter au Panier", use_container_width=True, key=f"btn_shop_{recette_id}"):
-            if selected_ings:
-                for item in selected_ings:
-                    send_action({"action": "add_shop", "article": item})
-                st.toast(f"✅ {len(selected_ings)} articles ajoutés !")
-            else:
-                st.warning("Veuillez cocher au moins un ingrédient.")
-    else:
-        st.info("ℹ️ Aucun ingrédient trouvé.")
-        if st.checkbox("🔍 Debug Ingrédients"):
-            st.write(list(r.keys()))
-
-# --- SECTION PRÉPARATION (SORTIE DU BLOC ELSE) ---
-# Ce bloc doit être aligné tout à gauche pour être indépendant
-    st.divider() 
+    # --- PRÉPARATION (BAS DE PAGE) ---
+    st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
-    prep = r.get('Préparation', r.get('preparation', ''))
-
-    if prep and str(prep).strip() not in ["None", "nan", ""]:
+    prep = r.get('Préparation', '')
+    if prep:
         st.write(prep)
     else:
-        st.warning("Aucune étape de préparation enregistrée.")
-            
+        st.warning("Aucune étape enregistrée.")
+
+# --- FIN DU BLOC DETAILS ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1256,6 +1091,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
