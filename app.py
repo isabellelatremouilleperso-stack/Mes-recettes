@@ -830,71 +830,57 @@ elif st.session_state.page == "planning":
 
             derniere_semaine = -1
             
-        # --- BOUCLE DE CHAQUE LIGNE ---
-for index, row in df_plan.iterrows():
-    # 1. Calcul de la semaine pour les séparateurs
-    semaine_actuelle = row['Date'].isocalendar()[1]
-    
-    if semaine_actuelle != derniere_semaine:
-        st.markdown(f"""
-            <div style="background: linear-gradient(90deg, #2e313d 0%, #1e2129 100%);
-                        padding: 8px 15px; border-radius: 6px; margin: 25px 0 10px 0; 
-                        border-left: 4px solid #95a5a6; display: flex; align-items: center;">
-                <span style="color: #95a5a6; font-size: 0.85rem; font-weight: 800; letter-spacing: 1.5px;">
-                    📅 SEMAINE {semaine_actuelle}
-                </span>
-            </div>
-        """, unsafe_allow_html=True)
-        derniere_semaine = semaine_actuelle
+            # --- BOUCLE DE CHAQUE LIGNE (BIEN INDENTÉE ICI) ---
+            for index, row in df_plan.iterrows():
+                # 1. Calcul de la semaine pour les séparateurs
+                semaine_actuelle = row['Date'].isocalendar()[1]
+                
+                if semaine_actuelle != derniere_semaine:
+                    st.markdown(f"""
+                        <div style="background: linear-gradient(90deg, #2e313d 0%, #1e2129 100%);
+                                    padding: 8px 15px; border-radius: 6px; margin: 25px 0 10px 0; 
+                                    border-left: 4px solid #95a5a6; display: flex; align-items: center;">
+                            <span style="color: #95a5a6; font-size: 0.85rem; font-weight: 800; letter-spacing: 1.5px;">
+                                📅 SEMAINE {semaine_actuelle}
+                            </span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    derniere_semaine = semaine_actuelle
 
-    # 2. Formatage de la date en français
-    date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
-    
-    # 3. Création des colonnes avec ratios optimisés
-    col_txt, col_cal, col_del = st.columns([3, 0.5, 0.5])
-    
-    with col_txt:
-        # On fixe une hauteur minimale (min-height) pour que les blocs soient uniformes
-        st.markdown(f"""
-            <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; 
-                        border-left: 4px solid #e67e22; margin-bottom: 5px; min-height: 65px; 
-                        display: flex; flex-direction: column; justify-content: center;">
-                <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
-                <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
-            </div>
-        """, unsafe_allow_html=True)
+                # Formatage de la date pour l'affichage
+                date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
+                
+                # Colonnes pour le texte et les boutons
+                col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
+                
+                with col_txt:
+                    st.markdown(f"""<div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px; min-height: 65px;">
+                                    <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
+                                    <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
+                                 </div>""", unsafe_allow_html=True)
 
-    # 4. Injection CSS pour aligner verticalement les boutons avec le bloc de gauche
-    st.markdown("""
-        <style>
-            /* Cible les boutons dans les colonnes pour les descendre un peu */
-            [data-testid="column"] button {
-                margin-top: 15px !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    
-    with col_cal:
-        # Bouton pour voir les détails
-        if st.button("📖", key=f"view_{index}", use_container_width=True):
-            st.session_state.recipe_data = row.to_dict()
-            st.session_state.page = "details"
-            st.rerun()
+                # CSS pour aligner les boutons verticalement
+                st.markdown("""<style> div[data-testid="column"] button { margin-top: 15px; } </style>""", unsafe_allow_html=True)
 
-    with col_del:
-        # Bouton de suppression (uniquement si admin)
-        if st.session_state.admin_mode:
-            if st.button("🗑️", key=f"del_{index}", use_container_width=True):
-                date_clean = str(row['Date']).split(' ')[0]
-                payload = {
-                    "action": "remove_plan", 
-                    "titre": row['Titre'], 
-                    "date": date_clean
-                }
-                if send_action(payload):
-                    st.cache_data.clear()
-                    st.toast(f"Supprimé : {row['Titre']}")
-                    st.rerun()
+                with col_cal:
+                    if st.button("📖", key=f"view_{index}"):
+                        st.session_state.recipe_data = row.to_dict()
+                        st.session_state.page = "details"
+                        st.rerun()
+
+                with col_del:
+                    if st.session_state.admin_mode:
+                        if st.button("🗑️", key=f"del_{index}"):
+                            date_clean = str(row['Date']).split(' ')[0]
+                            payload = {"action": "remove_plan", "titre": row['Titre'], "date": date_clean}
+                            if send_action(payload):
+                                st.cache_data.clear()
+                                st.toast(f"Supprimé : {row['Titre']}")
+                                st.rerun()
+
+    except Exception as e:
+        st.error(f"Oups ! Erreur d'affichage : {e}")
+        
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
 elif st.session_state.page == "conversion":
     # Titre stylisé pour le haut de la page
@@ -1192,6 +1178,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
