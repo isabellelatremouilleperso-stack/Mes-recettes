@@ -840,9 +840,9 @@ elif st.session_state.page == "planning":
 
             derniere_semaine = -1
             
-            # --- BOUCLE DE CHAQUE LIGNE (BIEN INDENTÉE ICI) ---
+            # --- BOUCLE DE CHAQUE LIGNE ---
             for index, row in df_plan.iterrows():
-                # 1. Calcul de la semaine pour les séparateurs
+                # 1. Gestion des séparateurs de semaine
                 semaine_actuelle = row['Date'].isocalendar()[1]
                 
                 if semaine_actuelle != derniere_semaine:
@@ -857,10 +857,10 @@ elif st.session_state.page == "planning":
                     """, unsafe_allow_html=True)
                     derniere_semaine = semaine_actuelle
 
-                # Formatage de la date pour l'affichage
+                # 2. Formatage de la date pour l'affichage
                 date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
                 
-                # Colonnes pour le texte et les boutons
+                # 3. Création des colonnes pour la ligne de planning
                 col_txt, col_cal, col_del = st.columns([3, 0.6, 0.6])
                 
                 with col_txt:
@@ -869,45 +869,33 @@ elif st.session_state.page == "planning":
                                     <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
                                  </div>""", unsafe_allow_html=True)
 
-                # CSS pour aligner les boutons verticalement
-                st.markdown("""<style> div[data-testid="column"] button { margin-top: 15px; } </style>""", unsafe_allow_html=True)
-                
+                # 4. BOUTON VOIR (📖) - Recherche les infos complètes
                 with col_cal:
                     if st.button("📖", key=f"view_{index}"):
-                        # On recharge la base complète pour récupérer Ingrédients, Préparation, etc.
                         df_all = load_data(URL_CSV) 
-                        # On cherche la ligne correspondant au titre de la recette
                         recipe_full = df_all[df_all['Titre'] == row['Titre']]
-                        
                         if not recipe_full.empty:
-                            # On stocke TOUTES les infos dans le session_state
                             st.session_state.recipe_data = recipe_full.iloc[0].to_dict()
                             st.session_state.page = "details"
                             st.rerun()
                         else:
-                            st.error("Recette introuvable dans la base principale.")
+                            st.error("Détails introuvables.")
 
+                # 5. BOUTON SUPPRIMER (🗑️)
                 with col_del:
-                    # ... (ton code pour la poubelle) ...
-
-                with col_del:
-                    if st.session_state.get('admin_mode', True): # Ajout d'un 'get' par sécurité
+                    if st.session_state.get('admin_mode', True):
                         if st.button("🗑️", key=f"del_{index}"):
-                            # On s'assure que la date est au format YYYY-MM-DD
-                            date_clean = row['Date'].strftime('%Y-%m-%d') 
-                            
+                            date_clean = row['Date'].strftime('%Y-%m-%d')
                             payload = {
                                 "action": "remove_plan", 
-                                "titre": str(row['Titre']).strip(), # On enlève les espaces invisibles
+                                "titre": str(row['Titre']).strip(),
                                 "date": date_clean
                             }
-                            
                             if send_action(payload):
                                 st.cache_data.clear()
                                 st.toast(f"✅ Supprimé : {row['Titre']}")
-                                time.sleep(1) # On laisse le temps à Google de noter
+                                time.sleep(1)
                                 st.rerun()
-
     except Exception as e:
         st.error(f"Oups ! Erreur d'affichage : {e}")
         
@@ -1208,6 +1196,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
