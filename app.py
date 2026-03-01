@@ -929,8 +929,10 @@ elif st.session_state.page == "planning":
 
     try:
         # On lit le planning avec la sécurité pour les caractères invisibles
-        df_plan = pd.read_csv(URL_CSV_PLAN, encoding='utf-8-sig')
+        # On utilise ta fonction load_data qui gère déjà le rafraîchissement (nocache)
+        df_plan = load_data(URL_CSV_PLAN)
         
+       
         # NETTOYAGE : On enlève les espaces autour des noms de colonnes
         df_plan.columns = df_plan.columns.str.strip()
         
@@ -1293,6 +1295,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
