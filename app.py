@@ -879,13 +879,21 @@ elif st.session_state.page == "planning":
                         st.rerun()
 
                 with col_del:
-                    if st.session_state.admin_mode:
+                    if st.session_state.get('admin_mode', True): # Ajout d'un 'get' par sécurité
                         if st.button("🗑️", key=f"del_{index}"):
-                            date_clean = str(row['Date']).split(' ')[0]
-                            payload = {"action": "remove_plan", "titre": row['Titre'], "date": date_clean}
+                            # On s'assure que la date est au format YYYY-MM-DD
+                            date_clean = row['Date'].strftime('%Y-%m-%d') 
+                            
+                            payload = {
+                                "action": "remove_plan", 
+                                "titre": str(row['Titre']).strip(), # On enlève les espaces invisibles
+                                "date": date_clean
+                            }
+                            
                             if send_action(payload):
                                 st.cache_data.clear()
-                                st.toast(f"Supprimé : {row['Titre']}")
+                                st.toast(f"✅ Supprimé : {row['Titre']}")
+                                time.sleep(1) # On laisse le temps à Google de noter
                                 st.rerun()
 
     except Exception as e:
@@ -1188,6 +1196,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
