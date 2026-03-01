@@ -393,24 +393,87 @@ elif st.session_state.page == "details":
     # 2. EN-TÊTE
     st.header(f"📖 {r.get('Titre','Sans titre')}")
 
-    # 3. CORPS DE LA PAGE
-    col_g, col_d = st.columns([1, 1.2])
-    
-    with col_g:
-        # 1. IMAGE
-        img_url = r.get('Image', '')
-        st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
-            
-        # 2. CALCUL SÉCURISÉ DE LA NOTE
-        try:
-            val_note = r.get('Note', r.get('note', 0))
-            if val_note is None or str(val_note).strip() in ["", "None", "nan", "-"]:
-                note_actuelle = 0
-            else:
-                note_actuelle = int(float(val_note))
-        except (ValueError, TypeError):
-            note_actuelle = 0
+    # --- 3. CORPS DE LA PAGE (REMPLACEMENT) ---
+col_g, col_d = st.columns([1, 1.2])
 
+with col_g:
+    # 1. IMAGE (À GAUCHE)
+    img_url = r.get('Image', '')
+    st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
+        
+    # 2. CALCUL SÉCURISÉ DE LA NOTE
+    try:
+        val_note = r.get('Note', r.get('note', 0))
+        note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
+    except (ValueError, TypeError):
+        note_actuelle = 0
+
+    st.write(f"**Note actuelle :** {'⭐' * note_actuelle if note_actuelle > 0 else 'Pas encore notée'}")
+    
+    st.divider()
+    
+    # 3. NOTES DU CHEF (SOUS LA PHOTO)
+    st.markdown("### 📝 Mes Notes")
+    notes_texte = r.get('Commentaires', '')
+    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
+        st.info(notes_texte)
+    else:
+        st.write("*Aucune note.*")
+
+with col_d:
+    # 4. INFORMATIONS (À DROITE)
+    st.subheader("📋 Informations")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("🕒 Prépa", f"{str(r.get('Temps de préparation', '-')).split('.')[0]} min")
+    c2.metric("🔥 Cuisson", f"{str(r.get('Temps de cuisson', '-')).split('.')[0]} min")
+    c3.metric("🍽️ Portions", r.get('Portions', '-'))
+    
+    st.divider()
+
+    # 5. INGRÉDIENTS (À DROITE)
+    st.subheader("🛒 Ingrédients")
+    ings_raw = r.get('Ingrédients', r.get('ingredients', ''))
+    
+    if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+        text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
+        ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+        
+        selected_ings = []
+        recette_id = str(r.get('Titre', 'recette')).replace(" ", "_")
+        for i, line in enumerate(ings):
+            if st.checkbox(line, key=f"chk_{recette_id}_{i}"):
+                selected_ings.append(line)
+        
+        if st.button("📥 Ajouter au Panier", use_container_width=True, key=f"btn_shop_{recette_id}"):
+            if selected_ings:
+                for item in selected_ings:
+                    send_action({"action": "add_shop", "article": item})
+                st.toast("✅ Ajouté !")
+    else:
+        st.info("ℹ️ Aucun ingrédient trouvé.")
+
+    st.divider()
+
+    # 6. PLANNING (À DROITE)
+    st.subheader("📅 Planifier")
+    date_p = st.date_input("Choisir une date", key="plan_date_det")
+    if st.button("🗓️ Ajouter au planning", use_container_width=True):
+        payload = {"action": "plan", "titre": r.get("Titre"), "date_prevue": str(date_p)}
+        if send_action(payload):
+            st.success("Ajouté !")
+
+# --- SORTIE DES COLONNES : PRÉPARATION (TOUTE LA LARGEUR) ---
+st.divider()
+st.subheader("👨‍🍳 Étapes de préparation")
+prep = r.get('Préparation', '')
+if prep and str(prep).strip() not in ["None", "nan", ""]:
+    st.write(prep)
+else:
+    st.warning("Aucune étape enregistrée.")
+
+# --- ALIGNEMENT DU ELIF POUR ÉVITER LA SYNTAX ERROR ---
+# Assurez-vous que ce elif est aligné tout à gauche
+# elif st.session_state.page == "add":
         # 3. SYSTÈME DE NOTATION
         st.write("**Note de la recette :**")
         nouvelle_note = st.select_slider(
@@ -1193,6 +1256,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
