@@ -455,12 +455,21 @@ elif st.session_state.page == "details":
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # Fonction de nettoyage locale pour éviter les erreurs de variables non définies
+        # --- DÉPLACEMENT DU PLANNING ICI (SOUS LE TITRE INFO) ---
+        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
+            date_p = st.date_input("Choisir une date", key="date_det")
+            if st.button("🗓️ Ajouter au planning", use_container_width=True):
+                if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
+                    st.success("Ajouté au planning !")
+                    st.balloons()
+        
+        st.divider()
+
+        # Fonction de nettoyage locale
         def clean_metrique(valeur):
             v_str = str(valeur).strip().lower()
             if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]:
                 return "-"
-            # On garde seulement le chiffre entier (ex: 20.0 -> 20)
             return str(valeur).split('.')[0]
 
         # Calcul des valeurs propres
@@ -474,7 +483,7 @@ elif st.session_state.page == "details":
         m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         m3.metric("🍽️ Portions", port_final)
 
-        # 2. SUPPORT VIDÉO (SI EXISTE)
+        # 2. SUPPORT VIDÉO (S'AFFICHE MAINTENANT SOUS LE PLANNING ET LES INFOS)
         r_vals = list(r.values())
         v_link = r_vals[13] if len(r_vals) > 13 else r.get('video', '')
         if v_link and "http" in str(v_link):
@@ -1163,6 +1172,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
