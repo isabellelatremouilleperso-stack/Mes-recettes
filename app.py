@@ -662,6 +662,7 @@ elif st.session_state.page == "add":
         if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
             st.session_state.page = "home"
             st.rerun()
+            
 # --- PAGE IMPRIMABLE (DÉDIÉE) ---
 elif st.session_state.page == "print":
     r = st.session_state.get('recipe_data', {})
@@ -731,7 +732,8 @@ elif st.session_state.page == "print":
     </div>
     """, unsafe_allow_html=True)
 
-    st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P** (ou Cmd + P sur Mac) de votre navigateur.")                
+    st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P** (ou Cmd + P sur Mac) de votre navigateur.")
+    
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -796,6 +798,7 @@ elif st.session_state.page == "edit":
                     st.rerun()
             else:
                 st.error("Le titre et les ingrédients sont requis.")
+                
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -851,6 +854,7 @@ elif st.session_state.page == "shop":
             
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
+        
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1313,6 +1317,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
