@@ -3,9 +3,10 @@ import pandas as pd
 import requests
 import time
 import hashlib
+import urllib.parse
+import textwrap
 from datetime import datetime
 from bs4 import BeautifulSoup
-import urllib.parse
 
 # ======================
 # CONFIGURATION & LIAISON GOOGLE
@@ -1294,6 +1295,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
