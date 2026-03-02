@@ -174,17 +174,24 @@ with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
-    # 2. SECTION SÉCURITÉ (Bien alignée avec 4 espaces)
+    # --- SECTION SÉCURITÉ DIAGNOSTIC ---
     if not st.session_state.get('admin_mode', False):
         pwd = st.text_input("🔑 Accès Admin", type="password")
         if st.button("Se connecter 🔓", use_container_width=True):
             user_input = str(pwd).strip()
             input_hash = hashlib.sha256(user_input.encode()).hexdigest()
             
-            # Récupération du hash dans tes Secrets Streamlit
+            # Récupération du secret
             target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
             
-            if input_hash == target_hash and target_hash != "":
+            # --- AFFICHAGE POUR COMPRENDRE ---
+            if target_hash == "":
+                st.warning("⚠️ L'application ne trouve pas le secret 'admin_password_hash' dans Streamlit Cloud.")
+            else:
+                st.info(f"DEBUG - Ton hash : {input_hash[:10]}...")
+                st.info(f"DEBUG - Secret trouvé : {target_hash[:10]}...")
+
+            if input_hash == target_hash:
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
@@ -206,7 +213,7 @@ with st.sidebar:
         st.session_state.page = "planning"
         st.rerun()
     
-    if st.button("🛒 Ta Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
         st.session_state.page = "shop"
         st.rerun()
     
@@ -1201,6 +1208,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
