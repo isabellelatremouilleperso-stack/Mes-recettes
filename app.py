@@ -547,17 +547,25 @@ elif st.session_state.page == "details":
         m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         m3.metric("🍽️ Portions", port_final)
 
-        # 2. SUPPORT VIDÉO
-        v_link = r.get('Vidéo', r.get('video', ''))
-        if v_link and "http" in str(v_link):
+       # --- 2. SUPPORT VIDÉO (VERSION AMÉLIORÉE & INDENTÉE) ---
+        # On cherche toutes les variantes de nom de colonne possibles
+        v_link = r.get('Vidéo', r.get('video', r.get('video ', r.get('Vidéo ', ''))))
+        
+        # On vérifie que ce n'est pas vide et que c'est bien un lien
+        if v_link and str(v_link).strip().lower().startswith("http"):
             st.divider()
-            if any(x in str(v_link) for x in ["youtube", "youtu.be", "vimeo"]):
-                st.video(str(v_link))
+            
+            url_propre = str(v_link).strip()
+            
+            # .lower() ici est crucial pour détecter "YouTube" ou "YOUTUBE"
+            if any(x in url_propre.lower() for x in ["youtube", "youtu.be", "vimeo"]):
+                st.video(url_propre)
             else:
-                st.link_button("📺 Voir la vidéo", str(v_link), use_container_width=True)
-
-        st.divider()
-
+                # Pour TikTok, Instagram, Facebook ou les blogs
+                st.link_button("📺 Voir la vidéo (Lien externe)", url_propre, use_container_width=True)
+            
+            st.divider()
+    
         # 3. INGRÉDIENTS AVEC SÉLECTION INDIVIDUELLE
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
@@ -1259,6 +1267,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
