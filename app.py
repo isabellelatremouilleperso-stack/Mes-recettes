@@ -727,11 +727,14 @@ elif st.session_state.page == "print":
     </div>
     """
 
-    # 5. RENDU FINAL
+    # 5. RENDU FINAL (C'est ICI que tu mets la ligne magique)
+    # Elle doit être collée contre la marge de gauche (alignée avec fiche_html)
     st.markdown(fiche_html, unsafe_allow_html=True)
 
+    # Enfin, les dernières petites infos
     st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P**.")
     st.stop()
+
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1211,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
