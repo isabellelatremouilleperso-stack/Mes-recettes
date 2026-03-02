@@ -210,7 +210,7 @@ with st.sidebar:
     # Navigation
     if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
         st.session_state.page="home"; st.rerun()
-    if st.button("📅 Repas", use_container_width=True, key="nav_plan"): 
+    if st.button("📅 Planning", use_container_width=True, key="nav_plan"): 
         st.session_state.page = "planning"
         st.rerun()
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
@@ -1214,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
