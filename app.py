@@ -711,10 +711,7 @@ elif st.session_state.page == "print":
     ing_raw = str(r.get('Ingrédients', ''))
     prep_raw = str(r.get('Préparation', ''))
 
-    # 4. LA FEUILLE DE RECETTE (Version ultra-compatible)
-    # On utilise white-space: pre-wrap pour conserver tes retours à la ligne 
-    # sans avoir besoin de transformer le texte en HTML complexe.
-    
+    # 4. LA FEUILLE DE RECETTE
     fiche_html = f"""
     <div class="print-sheet" style="background-color: white; color: black; padding: 40px; border-radius: 5px;">
         <h1 style="text-align: center; margin-bottom: 5px; color: #e67e22;">{titre}</h1>
@@ -732,15 +729,12 @@ elif st.session_state.page == "print":
     </div>
     """
 
-    # L'affichage critique
+    # 5. RENDU FINAL (Bien aligné sur la gauche !)
     st.markdown(fiche_html, unsafe_allow_html=True)
 
-    fiche_html = f"""<div class="print-sheet">
-    <h1 style="text-align: center; color: #e67e22;">{titre}</h1>
-    <h3 style="color: #e67e22;">🛒 Ingrédients</h3>
-    <div style="color: black; white-space: pre-wrap;">{r.get('Ingrédients', '')}</div>
-    </div>"""
-        st.markdown(fiche_html, unsafe_allow_html=True)
+    st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P**.")
+    st.stop()
+    
 
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1221,6 +1215,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
