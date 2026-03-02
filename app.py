@@ -182,23 +182,32 @@ with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
-    # --- SECTION SÉCURITÉ ---
+    # --- SECTION SÉCURITÉ (MODE DIAGNOSTIC) ---
     if not st.session_state.get('admin_mode', False):
-        pwd_input = st.text_input("🔑 Accès Admin", type="password", key="password_sidebar")
+        pwd_input = st.text_input("🔑 Accès Admin", type="password", key="diag_pwd")
         
-        if st.button("Se connecter 🔓", use_container_width=True, key="login_sidebar"):
-            # Nettoyage et Hachage
+        if st.button("Se connecter 🔓", use_container_width=True, key="diag_btn"):
+            # 1. Nettoyage extrême
             user_code = str(pwd_input).strip()
             input_hash = hashlib.sha256(user_code.encode()).hexdigest().strip()
             
-            # Récupération du Secret
-            target_hash = st.secrets.get("admin_password_hash", "").strip()
+            # 2. Récupération du secret
+            raw_secret = st.secrets.get("admin_password_hash", "")
+            target_hash = str(raw_secret).strip()
             
-            if input_hash == target_hash and target_hash != "":
+            # --- ZONE DE TEST VISUEL ---
+            if input_hash == target_hash:
+                st.success("✅ MATCH ! Le code est bon.")
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
-                st.error("Code incorrect ❌")
+                st.error("❌ ÉCHEC DE COMPARAISON")
+                st.write(f"Ton hash (142203) : `{input_hash}`")
+                st.write(f"Secret en base : `{target_hash}`")
+                st.write(f"Longueurs : Saisie({len(input_hash)}) chars | Secret({len(target_hash)}) chars")
+                
+                if len(target_hash) == 0:
+                    st.warning("⚠️ L'application ne lit aucun secret. Vérifie le nom 'admin_password_hash' dans Streamlit.")
     else:
         st.success("✅ Mode Chef Activé")
         if st.button("🔒 Déconnexion", use_container_width=True, key="logout_sidebar"):
@@ -1212,6 +1221,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
