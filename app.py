@@ -418,7 +418,7 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-    # 1. RÉCUPÉRATION ET NETTOYAGE (Version simplifiée et robuste)
+    # 1. RÉCUPÉRATION ET NETTOYAGE
     r_raw = st.session_state.get('recipe_data', {})
     
     if not r_raw:
@@ -427,7 +427,6 @@ elif st.session_state.page == "details":
             st.session_state.page = "home"; st.rerun()
         st.stop()
 
-    # Sécurité anti-doublons : on force 'r' à être un dictionnaire unique
     if isinstance(r_raw, pd.DataFrame):
         r = r_raw.iloc[0].to_dict()
     elif isinstance(r_raw, list) and len(r_raw) > 0:
@@ -448,7 +447,7 @@ elif st.session_state.page == "details":
             st.session_state.page = "edit"; st.rerun()
     with c_nav3:
         if st.button("🖨️ Imprimer", use_container_width=True):
-            st.session_state.recipe_data = r # On passe la donnée propre
+            st.session_state.recipe_data = r 
             st.session_state.page = "print"; st.rerun()
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True):
@@ -461,6 +460,7 @@ elif st.session_state.page == "details":
 
     # --- CORPS DE LA PAGE ---
     col_g, col_d = st.columns([1, 1.2])
+    
     with col_g:
         # VISUEL
         img_url = r.get('Image', '')
@@ -492,7 +492,22 @@ elif st.session_state.page == "details":
         # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # --- PLANNING (BLOC UNIQUE ET NETTOYÉ) ---
+        # --- AJOUT : CATÉGORIES ET SOURCE ---
+        c_info1, c_info2 = st.columns([1, 1])
+        with c_info1:
+            cat = r.get('Catégorie', 'Autre')
+            if not cat or str(cat).lower() == 'nan': cat = "Autre"
+            st.markdown(f"**🍴 Catégorie :**\n`{cat}`")
+        with c_info2:
+            src = r.get('Source', '')
+            if src and "http" in str(src):
+                st.link_button("🌐 Voir la Source", str(src), use_container_width=True)
+            else:
+                st.markdown("**🌐 Source :**\n*Non spécifiée*")
+        
+        st.write("") # Espace de respiration
+
+        # --- PLANNING ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
             unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
@@ -507,10 +522,7 @@ elif st.session_state.page == "details":
                 if send_action(payload):
                     st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
                     st.cache_data.clear()
-                    
-                    # On a choisi 1.2s : le bon compromis entre vitesse et fiabilité
                     time.sleep(1.2) 
-                    
                     st.session_state.page = "planning"
                     st.rerun()
         
@@ -547,38 +559,30 @@ elif st.session_state.page == "details":
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            # Nettoyage des séparateurs pour avoir une belle liste
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
-            # --- ZONE DE SÉLECTION ---
             sel = []
             for i, line in enumerate(ings):
-                # Si la case est cochée, on ajoute l'ingrédient à la liste 'sel'
                 if st.checkbox(line, key=f"chk_sel_{current_title}_{i}"):
                     sel.append(line)
             
-            st.write("") # Petit espace
+            st.write("") 
             
-            # --- BOUTON D'ACTION ---
-            # On n'affiche le bouton que si au moins un élément est sélectionné (optionnel mais plus propre)
             if sel:
-                if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel"):
+                if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key=f"btn_add_sel_{current_title}"):
                     with st.spinner("Envoi à l'épicerie..."):
                         for it in sel:
                             send_action({"action": "add_shop", "article": it})
-                    
-                    st.toast(f"✅ {len(sel)} articles ajoutés à la liste !", icon="🛒")
+                    st.toast(f"✅ Articles ajoutés !", icon="🛒")
                     time.sleep(1)
                     st.rerun()
             else:
                 st.info("Cochez les ingrédients à acheter.")
         else:
-            st.info("Aucun ingrédient pour cette recette.")
+            st.info("Aucun ingrédient.")
 
-    # ... (après la fin des colonnes col_g et col_d) ...
-
-    # --- PRÉPARATION (BAS DE PAGE) ---
+    # --- BAS DE PAGE ---
     st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
     prep = r.get('Préparation', '')
@@ -587,17 +591,13 @@ elif st.session_state.page == "details":
     else:
         st.warning("Aucune étape enregistrée.")
 
-    # --- NOUVEAU : MES NOTES (DÉPLACÉ ICI) ---
     st.divider()
     st.markdown("### 📝 Mes Notes & Commentaires")
     notes_texte = r.get('Commentaires', '')
     if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-        # On utilise st.info pour que les notes ressortent bien visuellement
         st.info(notes_texte)
     else:
         st.write("*Aucune note pour cette recette.*")
-# --- FIN DU BLOC DETAILS ---
-
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1246,6 +1246,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
