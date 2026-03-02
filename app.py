@@ -438,24 +438,44 @@ elif st.session_state.page == "details":
 
     current_title = r.get('Titre', 'Recette sans titre')
 
-    # --- BARRE DE NAVIGATION ---
-    c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
-    with c_nav1:
-        if st.button("⬅ Retour", use_container_width=True): 
-           st.session_state.page="home"; st.rerun()
-    with c_nav2:
-        if st.button("✏️ Éditer", use_container_width=True):
-            st.session_state.recipe_to_edit = r.copy()
-            st.session_state.page = "edit"; st.rerun()
-    with c_nav3:
-        if st.button("🖨️ Imprimer", use_container_width=True):
-            st.session_state.recipe_data = r 
-            st.session_state.page = "print"; st.rerun()
-    with c_nav4:
-        if st.button("🗑️ Supprimer", use_container_width=True):
-            if send_action({"action": "delete", "titre": current_title}):
-                st.cache_data.clear()
-                st.session_state.page = "home"; st.rerun()
+    # --- BARRE DE NAVIGATION (LOGIQUE CONSULTATION VS ADMIN) ---
+    is_admin = st.session_state.get('admin_mode', False)
+
+    if is_admin:
+        # Affichage complet pour le Chef
+        c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
+        
+        with c_nav1:
+            if st.button("⬅ Retour", use_container_width=True, key="btn_ret_adm"): 
+                st.session_state.page="home"; st.rerun()
+        
+        with c_nav2:
+            if st.button("✏️ Éditer", use_container_width=True, key="btn_edit_adm"):
+                st.session_state.recipe_to_edit = r.copy()
+                st.session_state.page = "edit"; st.rerun()
+        
+        with c_nav3:
+            if st.button("🖨️ Imprimer", use_container_width=True, key="btn_print_adm"):
+                st.session_state.recipe_data = r 
+                st.session_state.page = "print"; st.rerun()
+        
+        with c_nav4:
+            if st.button("🗑️ Supprimer", use_container_width=True, key="btn_del_adm"):
+                if send_action({"action": "delete", "titre": current_title}):
+                    st.cache_data.clear()
+                    st.session_state.page = "home"; st.rerun()
+    else:
+        # Affichage restreint pour les invités (Mode Consultation)
+        c_nav_pub1, c_nav_pub2 = st.columns([1, 1])
+        
+        with c_nav_pub1:
+            if st.button("⬅ Retour", use_container_width=True, key="btn_ret_pub"): 
+                st.session_state.page="home"; st.rerun()
+        
+        with c_nav_pub2:
+            if st.button("🖨️ Imprimer la recette", use_container_width=True, key="btn_print_pub"):
+                st.session_state.recipe_data = r 
+                st.session_state.page = "print"; st.rerun()
 
     st.divider()
     st.header(f"📖 {current_title}")
@@ -1273,6 +1293,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
