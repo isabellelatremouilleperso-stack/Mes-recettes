@@ -410,7 +410,7 @@ if st.session_state.page == "home":
                         """, unsafe_allow_html=True)
                         if st.button("📖 Ouvrir la recette", key=f"v_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict()
-                            st.session_state.page = "details"
+                            st.session_state.page = ""
                             st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
@@ -1246,6 +1246,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
