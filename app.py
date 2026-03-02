@@ -394,9 +394,23 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-    # 1. RÉCUPÉRATION INSTANTANÉE
-    # On utilise les données déjà en mémoire pour une ouverture immédiate
-    r = st.session_state.recipe_data
+    # 1. RÉCUPÉRATION ET NETTOYAGE (Version simplifiée et robuste)
+    r_raw = st.session_state.get('recipe_data', {})
+    
+    if not r_raw:
+        st.error("Aucune donnée trouvée.")
+        if st.button("⬅ Retour"):
+            st.session_state.page = "home"; st.rerun()
+        st.stop()
+
+    # Sécurité anti-doublons : on force 'r' à être un dictionnaire unique
+    if isinstance(r_raw, pd.DataFrame):
+        r = r_raw.iloc[0].to_dict()
+    elif isinstance(r_raw, list) and len(r_raw) > 0:
+        r = r_raw[0]
+    else:
+        r = r_raw
+
     current_title = r.get('Titre', 'Recette sans titre')
 
     # --- BARRE DE NAVIGATION ---
@@ -410,6 +424,7 @@ elif st.session_state.page == "details":
             st.session_state.page = "edit"; st.rerun()
     with c_nav3:
         if st.button("🖨️ Imprimer", use_container_width=True):
+            st.session_state.recipe_data = r # On passe la donnée propre
             st.session_state.page = "print"; st.rerun()
     with c_nav4:
         if st.button("🗑️ Supprimer", use_container_width=True):
@@ -422,7 +437,6 @@ elif st.session_state.page == "details":
 
     # --- CORPS DE LA PAGE ---
     col_g, col_d = st.columns([1, 1.2])
-
     with col_g:
         # VISUEL
         img_url = r.get('Image', '')
@@ -1114,6 +1128,13 @@ import textwrap  # Assure-toi que c'est en haut du fichier
 # --- PAGES ---
 if st.session_state.page == "home":
     st.write("Bienvenue sur Mes Recettes Pro")
+    
+    # 1. CHARGEMENT DES DONNÉES (Assure-toi que URL_CSV est défini plus haut dans ton code)
+    df_raw = load_data(URL_CSV)
+    
+    # 2. SUPPRESSION DES DOUBLONS (Les deux lignes magiques)
+    # On garde la première occurrence de chaque titre
+    df = df_raw.drop_duplicates(subset=['Titre'], keep='first')
 
 # ======================
 # PAGE DÉTAILS
@@ -1285,6 +1306,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
