@@ -685,40 +685,58 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE (Version ultra-corrigée)
+       # 2. CSS DE FORCE (Version A4 Optimisée)
         st.markdown("""
         <style>
         @media print {
-            /* On cache tout l'interface Streamlit et les barres de titre */
-            header, footer, .stButton, button, iframe, [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader { 
-                display: none !important; 
-            }
-            
-            /* On réinitialise l'application pour qu'elle ne prenne aucune place */
-            .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
-                padding: 0 !important;
-                margin: 0 !important;
-                background-color: white !important;
+            /* 1. CONFIGURATION DU PAPIER */
+            @page {
+                size: A4;
+                margin: 15mm !important;
             }
 
-            /* On force la fiche à se coller en haut de la page */
-            .print-sheet { 
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
+            /* 2. NETTOYAGE COMPLET DE L'UI */
+            header, footer, .stButton, button, iframe, 
+            [data-testid="stHeader"], 
+            [data-testid="stSidebar"], 
+            .stAppHeader {
+                display: none !important;
+            }
+
+            /* 3. RESET DES CONTENEURS (Anti-page blanche) */
+            html, body, .stApp, .main, 
+            [data-testid="stAppViewContainer"], 
+            [data-testid="stAppViewBlockContainer"] {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                height: auto !important;
+            }
+
+            /* 4. LA FICHE (Position relative pour stabilité multi-pages) */
+            .print-sheet {
+                position: relative !important;
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
+                color: black !important;
             }
             
-            /* Empêche de couper les paragraphes au milieu */
+            /* Empêche de couper les paragraphes entre deux pages */
             p, div, li { page-break-inside: avoid; }
-            .page-break { page-break-before: always; }
+            h3 { page-break-after: avoid; }
         }
         
-        /* Style pour l'affichage écran */
-        .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; border-radius: 10px; }
+        /* Style pour l'affichage écran normal */
+        .print-sheet { 
+            background: white !important; 
+            color: black !important; 
+            padding: 30px; 
+            font-family: sans-serif; 
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
         .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
         .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         h1 { color: black !important; margin: 0 !important; font-size: 28px; }
@@ -753,7 +771,6 @@ elif st.session_state.page == "print":
 
         st.markdown(fiche_html, unsafe_allow_html=True)
         st.stop()
-
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1233,6 +1250,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
