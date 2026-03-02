@@ -540,8 +540,25 @@ elif st.session_state.page == "details":
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+            
             for i, line in enumerate(ings):
                 st.checkbox(line, key=f"chk_{current_title}_{i}")
+            
+            # --- LE BOUTON REVIENT ICI ---
+            st.write("") # Petit espace
+            if st.button("➕ Ajouter tout à mon épicerie", use_container_width=True, key=f"add_grocery_{current_title}"):
+                if 'grocery_list' not in st.session_state:
+                    st.session_state.grocery_list = []
+                
+                # On ajoute chaque ligne d'ingrédient à la liste de session
+                for item in ings:
+                    if item not in st.session_state.grocery_list:
+                        st.session_state.grocery_list.append(item)
+                
+                st.toast(f"🛒 {len(ings)} ingrédients ajoutés !", icon="✨")
+                time.sleep(1)
+                st.session_state.page = "shop" # On redirige vers la liste pour voir le résultat
+                st.rerun()
         else:
             st.info("Aucun ingrédient.")
 
@@ -1215,6 +1232,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
