@@ -547,29 +547,28 @@ elif st.session_state.page == "details":
         m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         m3.metric("🍽️ Portions", port_final)
 
-       # --- 2. SUPPORT VIDÉO (COLONNE N / INDEX 13) ---
-        # On extrait la 14ème colonne (N) de la ligne r
-        # Si r est un dictionnaire, on cherche la clé 'n' ou 'Vidéo'
-        # Si r est une liste, on prend l'index 13
-        
+       # --- 2. SUPPORT VIDÉO (CIBLE COLONNE N) ---
+        # On essaie de récupérer la valeur peu importe le format de 'r'
         v_link = ""
         if isinstance(r, dict):
-            # On cherche par nom ou par la lettre de colonne si configuré
-            v_link = r.get('n', r.get('Vidéo', r.get('video', '')))
+            # Priorité aux noms de colonnes probables
+            v_link = r.get('Vidéo', r.get('video', r.get('Video', '')))
+            # Si toujours rien, on tente de récupérer la 14ème valeur du dictionnaire
+            if not v_link:
+                values = list(r.values())
+                if len(values) > 13: v_link = values[13] 
         elif isinstance(r, (list, tuple)) and len(r) > 13:
-            v_link = r[13] # L'index 13 correspond à la colonne N
+            v_link = r[13]
 
+        # Nettoyage et affichage
         if v_link and str(v_link).strip().lower().startswith("http"):
             st.divider()
             url_propre = str(v_link).strip()
-            
             st.markdown("#### 📺 Support Vidéo")
             
-            # Test si c'est un format supporté par le lecteur intégré
             if any(x in url_propre.lower() for x in ["youtube", "youtu.be", "vimeo"]):
                 st.video(url_propre)
             else:
-                # Bouton de redirection pour les autres (TikTok, Instagram, etc.)
                 st.link_button("▶️ Voir la vidéo externe", url_propre, use_container_width=True)
             st.divider()
     
@@ -1274,6 +1273,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
