@@ -393,6 +393,7 @@ if st.session_state.page == "home":
                             st.rerun()
     else:
         st.warning("Aucune donnée trouvée.")
+    
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
@@ -668,7 +669,7 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "print":
     r = st.session_state.get('recipe_data', {})
     
-    # 1. NAVIGATION
+    # 1. NAVIGATION (Boutons en haut de l'écran)
     col1, col2 = st.columns(2)
     with col1:
         if st.button("⬅ Retour aux détails", use_container_width=True):
@@ -678,57 +679,57 @@ elif st.session_state.page == "print":
         import streamlit.components.v1 as components
         components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-    # 2. CSS DE FORCE
+    # 2. STYLE CSS (Pour l'écran et pour l'imprimante)
     st.markdown("""
     <style>
     @media print {
-        [data-testid="stHeader"], [data-testid="stSidebar"], footer, .stButton, button, iframe { display: none !important; }
-        html, body, .stApp, [data-testid="stAppViewContainer"], .main {
-            background-color: white !important;
-            color: black !important;
-        }
-        [data-testid="stAppViewBlockContainer"] { padding-top: 0 !important; }
-        .print-sheet { margin-top: -60px !important; }
+        /* On cache l'interface Streamlit */
+        header, footer, .stButton, button, iframe, [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
+        /* On force le fond blanc et on enlève les marges parasites */
+        .main, .stApp, [data-testid="stAppViewBlockContainer"] { padding: 0 !important; margin: 0 !important; background-color: white !important; }
+        /* La fiche prend toute la place sans décalage */
+        .print-sheet { position: absolute; top: 0; left: 0; width: 100%; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
         .page-break { page-break-before: always; margin-top: 20px; }
-        p, div, li { page-break-inside: avoid; }
     }
-    .print-sheet { background: white !important; color: black !important; padding: 20px; font-family: sans-serif; }
+    /* Style pour l'aperçu à l'écran */
+    .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
     .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
     .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-    h1 { color: black !important; margin: 0 !important; font-size: 30px; }
-    h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 10px; }
+    h1 { color: black !important; margin: 0 !important; font-size: 28px; }
+    h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. TRAITEMENT DES DONNÉES
+    # 3. TRAITEMENT DU TEXTE
     ing_raw = str(r.get('Ingrédients','')).split('\n')
     html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
     prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
     
+    # Si plus de 15 ingrédients, on prépare un saut de page pour que la préparation ne soit pas coupée
     nb_ingredients = len([l for l in ing_raw if l.strip()])
     class_saut_page = "page-break" if nb_ingredients > 15 else ""
 
-    # 4. RENDU FINAL
+    # 4. LE CONTENU HTML (Zéro espace au début de chaque ligne HTML)
     fiche_html = f"""
 <div class="print-sheet">
-    <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
-    <div class="info-box">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-    <div style="margin-bottom: 15px;">
-        <h3>🛒 Ingrédients</h3>
-        <div style="column-count: 2; column-gap: 30px; font-size: 13px;">{html_ing}</div>
-    </div>
-    <div class="{class_saut_page}">
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="line-height: 1.5; text-align: justify; font-size: 13px;">{prepa_final}</div>
-    </div>
-    <div style="text-align:center; color:#888; font-size:11px; margin-top:30px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
+<div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
+<div class="info-box">
+<span>Catégorie : {r.get('Catégorie','-')}</span>
+<span>Portions : {r.get('Portions','-')}</span>
+<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+</div>
+<div style="margin-bottom: 15px;">
+<h3>🛒 Ingrédients</h3>
+<div style="column-count: 2; column-gap: 30px; font-size: 13px; color: black;">{html_ing}</div>
+</div>
+<div class="{class_saut_page}">
+<h3>👨‍🍳 Préparation</h3>
+<div style="line-height: 1.5; text-align: justify; font-size: 13px; color: black;">{prepa_final}</div>
+</div>
+<div style="text-align:center; color:#888; font-size:10px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mon Carnet de Recettes Pro</div>
 </div>
 """
-    # 5. AFFICHAGE
+    # 5. AFFICHAGE ET ARRÊT
     st.markdown(fiche_html, unsafe_allow_html=True)
     st.stop()
     
@@ -1212,6 +1213,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
