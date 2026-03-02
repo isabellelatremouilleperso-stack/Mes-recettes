@@ -685,36 +685,44 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE (C'est ici qu'on règle la page blanche)
+        # 2. CSS DE FORCE (Version ultra-corrigée)
         st.markdown("""
         <style>
         @media print {
-            /* On cache tout l'interface Streamlit */
+            /* On cache tout l'interface Streamlit et les barres de titre */
             header, footer, .stButton, button, iframe, [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader { 
                 display: none !important; 
             }
-            /* On force le contenu à remonter au pixel zéro */
+            
+            /* On réinitialise l'application pour qu'elle ne prenne aucune place */
             .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
                 padding: 0 !important;
                 margin: 0 !important;
                 background-color: white !important;
             }
+
+            /* On force la fiche à se coller en haut de la page */
             .print-sheet { 
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                box-shadow: none !important;
             }
+            
+            /* Empêche de couper les paragraphes au milieu */
+            p, div, li { page-break-inside: avoid; }
             .page-break { page-break-before: always; }
         }
-        /* Style pour l'écran */
-        .print-sheet { background: white !important; color: black !important; padding: 20px; font-family: sans-serif; }
+        
+        /* Style pour l'affichage écran */
+        .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; border-radius: 10px; }
         .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
         .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         h1 { color: black !important; margin: 0 !important; font-size: 28px; }
-        h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 10px; }
+        h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
         </style>
         """, unsafe_allow_html=True)
 
@@ -722,11 +730,8 @@ elif st.session_state.page == "print":
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
         prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
-        
-        nb_ingredients = len([l for l in ing_raw if l.strip()])
-        class_saut_page = "page-break" if nb_ingredients > 15 else ""
 
-        # 4. RENDU FINAL (Alignement corrigé pour éviter l'IndentationError)
+        # 4. RENDU FINAL
         fiche_html = f"""
 <div class="print-sheet">
     <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
@@ -739,11 +744,11 @@ elif st.session_state.page == "print":
         <h3>🛒 Ingrédients</h3>
         <div style="column-count: 2; column-gap: 30px; font-size: 13px; color: black;">{html_ing}</div>
     </div>
-    <div class="{class_saut_page}">
+    <div>
         <h3>👨‍🍳 Préparation</h3>
         <div style="line-height: 1.5; text-align: justify; font-size: 13px; color: black;">{prepa_final}</div>
     </div>
-    <div style="text-align:center; color:#888; font-size:10px; margin-top:30px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
+    <div style="text-align:center; color:#888; font-size:10px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
 </div>"""
 
         st.markdown(fiche_html, unsafe_allow_html=True)
@@ -1228,6 +1233,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
