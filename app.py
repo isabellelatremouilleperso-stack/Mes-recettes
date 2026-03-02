@@ -669,7 +669,7 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "print":
     r = st.session_state.get('recipe_data', {})
     
-    # 1. NAVIGATION (Boutons en haut de l'écran)
+    # 1. NAVIGATION (Boutons visibles à l'écran seulement)
     col1, col2 = st.columns(2)
     with col1:
         if st.button("⬅ Retour aux détails", use_container_width=True):
@@ -679,20 +679,38 @@ elif st.session_state.page == "print":
         import streamlit.components.v1 as components
         components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-    # 2. STYLE CSS (Pour l'écran et pour l'imprimante)
+    # 2. CSS DE FORCE (Version anti-page blanche)
     st.markdown("""
     <style>
     @media print {
-        /* On cache l'interface Streamlit */
-        header, footer, .stButton, button, iframe, [data-testid="stHeader"], [data-testid="stSidebar"] { display: none !important; }
-        /* On force le fond blanc et on enlève les marges parasites */
-        .main, .stApp, [data-testid="stAppViewBlockContainer"] { padding: 0 !important; margin: 0 !important; background-color: white !important; }
-        /* La fiche prend toute la place sans décalage */
-        .print-sheet { position: absolute; top: 0; left: 0; width: 100%; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        /* On cache tout l'interface Streamlit */
+        header, footer, .stButton, button, iframe, [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader { 
+            display: none !important; 
+        }
+        
+        /* On réinitialise les marges de la page pour éviter la page blanche */
+        .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
+            padding: 0 !important;
+            margin: 0 !important;
+            background-color: white !important;
+        }
+
+        /* On force la fiche à remonter tout en haut de la feuille */
+        .print-sheet { 
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+
         .page-break { page-break-before: always; margin-top: 20px; }
     }
-    /* Style pour l'aperçu à l'écran */
-    .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2); }
+    
+    /* Style pour l'affichage propre à l'écran */
+    .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; border-radius: 10px; }
     .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
     .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     h1 { color: black !important; margin: 0 !important; font-size: 28px; }
@@ -700,16 +718,16 @@ elif st.session_state.page == "print":
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. TRAITEMENT DU TEXTE
+    # 3. TRAITEMENT DES DONNÉES
     ing_raw = str(r.get('Ingrédients','')).split('\n')
     html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
     prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
     
-    # Si plus de 15 ingrédients, on prépare un saut de page pour que la préparation ne soit pas coupée
+    # Saut de page si la liste d'ingrédients est trop longue
     nb_ingredients = len([l for l in ing_raw if l.strip()])
     class_saut_page = "page-break" if nb_ingredients > 15 else ""
 
-    # 4. LE CONTENU HTML (Zéro espace au début de chaque ligne HTML)
+    # 4. RENDU FINAL (Zéro espace au début pour éviter l'IndentationError)
     fiche_html = f"""
 <div class="print-sheet">
 <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
@@ -727,12 +745,11 @@ elif st.session_state.page == "print":
 <div style="line-height: 1.5; text-align: justify; font-size: 13px; color: black;">{prepa_final}</div>
 </div>
 <div style="text-align:center; color:#888; font-size:10px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mon Carnet de Recettes Pro</div>
-</div>
-"""
-    # 5. AFFICHAGE ET ARRÊT
+</div>"""
+
+    # 5. AFFICHAGE (Attention à l'alignement ici !)
     st.markdown(fiche_html, unsafe_allow_html=True)
     st.stop()
-    
 
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1213,6 +1230,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
