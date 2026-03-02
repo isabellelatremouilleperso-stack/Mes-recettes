@@ -174,24 +174,16 @@ with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
-    # --- SECTION SÉCURITÉ DIAGNOSTIC ---
+    # --- SECTION SÉCURITÉ ---
     if not st.session_state.get('admin_mode', False):
         pwd = st.text_input("🔑 Accès Admin", type="password")
         if st.button("Se connecter 🔓", use_container_width=True):
             user_input = str(pwd).strip()
+            # On calcule la signature (hash) du code entré
             input_hash = hashlib.sha256(user_input.encode()).hexdigest()
-            
-            # Récupération du secret
+            # On récupère la signature enregistrée dans Streamlit
             target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
             
-            # --- AFFICHAGE POUR COMPRENDRE ---
-            if target_hash == "":
-                st.warning("⚠️ L'application ne trouve pas le secret 'admin_password_hash'.")
-            else:
-                # On affiche les 10 premiers caractères pour comparer sans tout dévoiler
-                st.info(f"DEBUG - Ton hash : {input_hash[:10]}...")
-                st.info(f"DEBUG - Secret trouvé : {target_hash[:10]}...")
-
             if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
@@ -202,6 +194,22 @@ with st.sidebar:
         if st.button("🔒 Déconnexion", use_container_width=True):
             st.session_state.admin_mode = False
             st.rerun()
+
+    # --- SÉPARATEUR (Aligné avec le "if" ci-dessus) ---
+    st.divider()
+
+    # --- NAVIGATION ---
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+        st.session_state.page = "home"
+        st.rerun()
+    
+    if st.button("📅 Planning", use_container_width=True, key="nav_plan"): 
+        st.session_state.page = "planning"
+        st.rerun()
+    
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+        st.session_state.page = "shop"
+        st.rerun()
 
     st.divider()
 
@@ -1209,6 +1217,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
