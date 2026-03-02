@@ -186,12 +186,13 @@ with st.sidebar:
             
             # --- AFFICHAGE POUR COMPRENDRE ---
             if target_hash == "":
-                st.warning("⚠️ L'application ne trouve pas le secret 'admin_password_hash' dans Streamlit Cloud.")
+                st.warning("⚠️ L'application ne trouve pas le secret 'admin_password_hash'.")
             else:
+                # On affiche les 10 premiers caractères pour comparer sans tout dévoiler
                 st.info(f"DEBUG - Ton hash : {input_hash[:10]}...")
                 st.info(f"DEBUG - Secret trouvé : {target_hash[:10]}...")
 
-            if input_hash == target_hash:
+            if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
@@ -1208,6 +1209,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
