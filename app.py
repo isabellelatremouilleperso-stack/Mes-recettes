@@ -418,6 +418,9 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
+    # --- FORCE LE SCROLL EN HAUT ---
+    st.markdown("<div id='top'></div>", unsafe_allow_html=True)
+    
     # 1. RÉCUPÉRATION ET NETTOYAGE (version simplifiée et robuste)
     r_raw = st.session_state.get('recipe_data', {})
     
@@ -1252,6 +1255,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
