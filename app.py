@@ -735,9 +735,12 @@ elif st.session_state.page == "print":
     # L'affichage critique
     st.markdown(fiche_html, unsafe_allow_html=True)
 
-    # Enfin, les dernières petites infos
-    st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P**.")
-    st.stop()
+    fiche_html = f"""<div class="print-sheet">
+    <h1 style="text-align: center; color: #e67e22;">{titre}</h1>
+    <h3 style="color: #e67e22;">🛒 Ingrédients</h3>
+    <div style="color: black; white-space: pre-wrap;">{r.get('Ingrédients', '')}</div>
+    </div>"""
+        st.markdown(fiche_html, unsafe_allow_html=True)
 
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1218,6 +1221,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
