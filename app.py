@@ -551,9 +551,8 @@ elif st.session_state.page == "details":
         st.info(notes_texte)
     else:
         st.write("*Aucune note pour cette recette.*")
-
 # --- FIN DU BLOC DETAILS ---
-        
+
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -735,7 +734,7 @@ elif st.session_state.page == "print":
     """, unsafe_allow_html=True)
 
     st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P** (ou Cmd + P sur Mac) de votre navigateur.")
-    
+
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -800,7 +799,7 @@ elif st.session_state.page == "edit":
                     st.rerun()
             else:
                 st.error("Le titre et les ingrédients sont requis.")
-                
+
 # --- PAGE ÉPICERIE ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
@@ -1322,6 +1321,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
