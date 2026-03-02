@@ -1150,113 +1150,6 @@ if st.session_state.page == "home":
     # On garde la première occurrence de chaque titre
     df = df_raw.drop_duplicates(subset=['Titre'], keep='first')
 
-# ======================
-# PAGE DÉTAILS
-# ======================
-elif st.session_state.page == "details":
-    if 'recipe_data' not in st.session_state:
-        st.error("Aucune donnée de recette trouvée.")
-        if st.button("⬅ Retour"):
-            st.session_state.page = "home"
-            st.rerun()
-    else:
-        r = st.session_state.recipe_data
-        
-        # Fonction utilitaire pour éviter les erreurs de texte vide
-        def clean(val):
-            return str(val) if pd.notnull(val) and str(val).strip() != "" else "-"
-
-        # 1. Barre d'outils supérieure
-        col_nav, col_actions = st.columns([1, 1])
-        with col_nav:
-            if st.button("⬅ Retour au Planning", use_container_width=True):
-                st.session_state.page = "planning"
-                st.rerun()
-        with col_actions:
-            if st.button("🖨️ Préparer l'impression", use_container_width=True):
-                st.session_state.page = "print"
-                st.rerun()
-
-        st.markdown("---")
-
-        # 2. En-tête de la recette
-        st.title(f"🍳 {r.get('Titre', 'Recette sans titre')}")
-        
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            st.markdown(f"**🏷️ Catégorie**\n\n{clean(r.get('Catégorie'))}")
-        with c2:
-            st.markdown(f"**👥 Portions**\n\n{clean(r.get('Portions'))}")
-        with c3:
-            # On vérifie tes noms de colonnes (Temps de préparation ou Temps_Prepa ?)
-            t_prep = clean(r.get('Temps de préparation', r.get('Temps_Prepa', '0')))
-            t_cuis = clean(r.get('Temps de cuisson', r.get('Temps_Cuisson', '0')))
-            st.markdown(f"**⏱️ Temps Total**\n\n{t_prep} + {t_cuis} min")
-
-        st.markdown("---")
-
-        # 3. Corps de la recette
-        col_ing, col_prep = st.columns([1, 2])
-
-        with col_ing:
-            st.subheader("🛒 Ingrédients")
-            ingrediants = clean(r.get('Ingrédients'))
-            st.write(ingrediants)
-
-        with col_prep:
-            st.subheader("👨‍🍳 Préparation")
-            prepa = clean(r.get('Préparation'))
-            st.write(prepa)
-
-        # 4. Notes (optionnel)
-        notes = r.get('Notes')
-        if pd.notnull(notes) and str(notes).strip() != "":
-            with st.expander("📝 Notes du chef"):
-                st.write(notes)
-
-# --- STYLE POUR L'IMPRESSION ---
-    st.markdown("""
-    <style>
-    @media print {
-        header, footer, .stButton, [data-testid="stSidebar"] { display: none !important; }
-        .print-sheet { margin-top: -60px !important; }
-        .main { background-color: white !important; color: black !important; }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    # 3. TRAITEMENT DES DONNÉES (ALIGNÉ AVEC LE ST.MARKDOWN CI-DESSUS)
-    ing_raw = str(r.get('Ingrédients','')).split('\n')
-    html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
-    prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
-        
-    # Logique de saut de page
-    nb_ingredients = len([l for l in ing_raw if l.strip()])
-    class_saut_page = "page-break" if nb_ingredients > 15 else ""
-
-    # 4. RENDU FINAL
-    fiche_html = f"""
-<div class="print-sheet">
-<div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
-<div class="info-box">
-<span>Catégorie : {r.get('Catégorie','-')}</span>
-<span>Portions : {r.get('Portions','-')}</span>
-<span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-</div>
-<div style="margin-bottom: 15px;">
-<h3>🛒 Ingrédients</h3>
-<div style="column-count: 2; column-gap: 30px; font-size: 13px;">{html_ing}</div>
-</div>
-<div class="{class_saut_page}">
-<h3>👨‍🍳 Préparation</h3>
-<div style="line-height: 1.5; text-align: justify; font-size: 13px;">{prepa_final}</div>
-</div>
-<div style="text-align:center; color:#888; font-size:11px; margin-top:30px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
-</div>
-"""
-    # Cette ligne doit être alignée avec "fiche_html" au-dessus
-    st.markdown(fiche_html, unsafe_allow_html=True)
-    
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.markdown('<h1 style="color: #e67e22;">❓ Centre d\'aide</h1>', unsafe_allow_html=True)
@@ -1321,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
