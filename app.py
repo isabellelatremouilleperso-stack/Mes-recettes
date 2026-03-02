@@ -991,90 +991,87 @@ elif st.session_state.page == "planning":
             derniere_semaine = -1
             
             # 3. BOUCLE D'AFFICHAGE
-            for index, row in df_plan.iterrows():
-                
-                # --- A. GESTION DES SÉPARATEURS DE SEMAINE ---
-                semaine_actuelle = row['Date'].isocalendar()[1]
-                if semaine_actuelle != derniere_semaine:
-                    st.markdown(f"""
-                        <div style="background: linear-gradient(90deg, #2e313d 0%, #1e2129 100%);
-                                    padding: 8px 15px; border-radius: 6px; margin: 25px 0 10px 0; 
-                                    border-left: 4px solid #95a5a6; display: flex; align-items: center;">
-                            <span style="color: #95a5a6; font-size: 0.85rem; font-weight: 800; letter-spacing: 1.5px;">
-                                📅 SEMAINE {semaine_actuelle}
-                            </span>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    derniere_semaine = semaine_actuelle
+for index, row in df_plan.iterrows():
+    # --- A. GESTION DES SÉPARATEURS DE SEMAINE ---
+    semaine_actuelle = row['Date'].isocalendar()[1]
+    if semaine_actuelle != derniere_semaine:
+        st.markdown(f"""
+            <div style="background: linear-gradient(90deg, #2e313d 0%, #1e2129 100%);
+                        padding: 8px 15px; border-radius: 6px; margin: 25px 0 10px 0; 
+                        border-left: 4px solid #95a5a6; display: flex; align-items: center;">
+                <span style="color: #95a5a6; font-size: 0.85rem; font-weight: 800; letter-spacing: 1.5px;">
+                    📅 SEMAINE {semaine_actuelle}
+                </span>
+            </div>
+        """, unsafe_allow_html=True)
+        derniere_semaine = semaine_actuelle
 
-                # --- B. FORMATAGE SÉCURISÉ DE LA DATE ---
-                try:
-                    nom_jour = jours_fr.get(row['Date'].strftime('%A'), "Jour")
-                    num_jour = row['Date'].strftime('%d')
-                    nom_mois = mois_fr.get(row['Date'].strftime('%B'), "Mois")
-                    date_txt = f"{nom_jour} {num_jour} {nom_mois}"
-                except:
-                    date_txt = "Date inconnue"
+    # --- B. FORMATAGE SÉCURISÉ DE LA DATE ---
+    try:
+        nom_jour = jours_fr.get(row['Date'].strftime('%A'), "Jour")
+        num_jour = row['Date'].strftime('%d')
+        nom_mois = mois_fr.get(row['Date'].strftime('%B'), "Mois")
+        date_txt = f"{nom_jour} {num_jour} {nom_mois}"
+    except:
+        date_txt = "Date inconnue"
 
-                # --- C. AFFICHAGE DE LA LIGNE RECETTE ---
-                col_txt, col_cal, col_edit, col_del = st.columns([3, 0.5, 0.5, 0.5])
-                
-                with col_txt:
-                    st.markdown(f"""
-                        <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
-                            <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
-                            <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
-                        </div>
-                    """, unsafe_allow_html=True)
+    # --- C. AFFICHAGE DE LA LIGNE RECETTE ---
+    col_txt, col_cal, col_edit, col_del = st.columns([3, 0.5, 0.5, 0.5])
+    
+    with col_txt:
+        st.markdown(f"""
+            <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
+                <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
+                <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
+            </div>
+        """, unsafe_allow_html=True)
 
-                with col_cal:
-                    if st.button("📖", key=f"view_{index}"):
-                        df_all = load_data(URL_CSV) 
-                        recipe_full = df_all[df_all['Titre'] == row['Titre']]
-                        if not recipe_full.empty:
-                            st.session_state.recipe_data = recipe_full.iloc[0].to_dict()
-                            st.session_state.page = "details"
-                            st.rerun()
+    with col_cal:
+        if st.button("📖", key=f"view_{index}"):
+            df_all = load_data(URL_CSV) 
+            recipe_full = df_all[df_all['Titre'] == row['Titre']]
+            if not recipe_full.empty:
+                st.session_state.recipe_data = recipe_full.iloc[0].to_dict()
+                st.session_state.page = "details"
+                st.rerun()
 
-                # --- PROTECTION DU PLANNING (MODE ADMIN) ---
-        is_admin = st.session_state.get('admin_mode', False)
+    # --- PROTECTION DU PLANNING (MODE ADMIN) ---
+    # CETTE LIGNE DOIT ÊTRE DÉCALÉE À DROITE (DANS LE FOR)
+    is_admin = st.session_state.get('admin_mode', False)
 
-        with col_edit:
-            # On affiche le bouton d'édition UNIQUEMENT si on est Admin
-            if is_admin:
-                if st.button("✏️", key=f"edit_{index}"):
-                    st.session_state[f"editing_{index}"] = True
+    with col_edit:
+        if is_admin:
+            if st.button("✏️", key=f"edit_{index}"):
+                st.session_state[f"editing_{index}"] = True
 
-                if st.session_state.get(f"editing_{index}", False):
-                    new_date = st.date_input("Nouvelle date", value=row['Date'], key=f"date_input_{index}")
-                    c1, c2 = st.columns(2)
-                    with c1:
-                        if st.button("✅", key=f"confirm_{index}"):
-                            payload = {
-                                "action": "update_plan",
-                                "titre": row['Titre'],
-                                "old_date": row['Date'].strftime('%Y-%m-%d'),
-                                "new_date": new_date.strftime('%Y-%m-%d')
-                            }
-                            with st.spinner("Mise à jour..."):
-                                if send_action(payload):
-                                    st.cache_data.clear()
-                                    st.session_state[f"editing_{index}"] = False
-                                    st.rerun()
-                    with c2:
-                        if st.button("❌", key=f"cancel_{index}"):
+            if st.session_state.get(f"editing_{index}", False):
+                new_date = st.date_input("Nouvelle date", value=row['Date'], key=f"date_input_{index}")
+                c1, c2 = st.columns(2)
+                with c1:
+                    if st.button("✅", key=f"confirm_{index}"):
+                        payload = {
+                            "action": "update_plan",
+                            "titre": row['Titre'],
+                            "old_date": row['Date'].strftime('%Y-%m-%d'),
+                            "new_date": new_date.strftime('%Y-%m-%d')
+                        }
+                        if send_action(payload):
+                            st.cache_data.clear()
                             st.session_state[f"editing_{index}"] = False
                             st.rerun()
-
-        with col_del:
-            # On affiche la poubelle UNIQUEMENT si on est Admin
-            if is_admin:
-                if st.button("🗑️", key=f"del_{index}"):
-                    date_clean = row['Date'].strftime('%Y-%m-%d')
-                    payload = {"action": "remove_plan", "titre": str(row['Titre']).strip(), "date": date_clean}
-                    if send_action(payload):
-                        st.cache_data.clear()
+                with c2:
+                    if st.button("❌", key=f"cancel_{index}"):
+                        st.session_state[f"editing_{index}"] = False
                         st.rerun()
+
+    with col_del:
+        if is_admin:
+            if st.button("🗑️", key=f"del_{index}"):
+                date_clean = row['Date'].strftime('%Y-%m-%d')
+                payload = {"action": "remove_plan", "titre": str(row['Titre']).strip(), "date": date_clean}
+                if send_action(payload):
+                    st.cache_data.clear()
+                    st.rerun()
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
@@ -1307,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
