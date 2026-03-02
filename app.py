@@ -139,6 +139,7 @@ def scrape_url(url):
     except Exception as e:
         # Retourne des chaînes vides au lieu de None pour éviter les erreurs de concaténation plus tard
         return "Recette inconnue", "", f"Erreur lors de l'extraction : {e}"
+        
 # ======================
 # INITIALISATION ET DESIGN
 # ======================
@@ -209,8 +210,8 @@ with st.sidebar:
     # Navigation
     if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
         st.session_state.page="home"; st.rerun()
-    if st.button("📅 Planning Repas", use_container_width=True, key="nav_plan"): 
-        st.session_state.page="planning"; st.rerun()
+    if st.button("📅  Repas", use_container_width=True, key="nav_plan"): 
+        st.session_state.page=""; st.rerun()
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
         st.session_state.page="shop"; st.rerun()
     
@@ -855,6 +856,7 @@ elif st.session_state.page == "shop":
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
         
+st.stop()        
 # ======================
 # PAGE PLANNING
 # ======================
@@ -983,6 +985,7 @@ elif st.session_state.page == "planning":
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
+        
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
 elif st.session_state.page == "conversion":
     # Titre stylisé pour le haut de la page
@@ -1253,6 +1256,7 @@ elif st.session_state.page == "details":
 """
     # Cette ligne doit être alignée avec "fiche_html" au-dessus
     st.markdown(fiche_html, unsafe_allow_html=True)
+    
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.markdown('<h1 style="color: #e67e22;">❓ Centre d\'aide</h1>', unsafe_allow_html=True)
@@ -1317,6 +1321,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
