@@ -427,6 +427,7 @@ elif st.session_state.page == "details":
             st.session_state.page = "home"; st.rerun()
         st.stop()
 
+    # Transformation en dictionnaire propre
     if isinstance(r_raw, pd.DataFrame):
         r = r_raw.iloc[0].to_dict()
     elif isinstance(r_raw, list) and len(r_raw) > 0:
@@ -439,18 +440,18 @@ elif st.session_state.page == "details":
     # --- BARRE DE NAVIGATION ---
     c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
     with c_nav1:
-        if st.button("⬅ Retour", use_container_width=True): 
+        if st.button("⬅ Retour", use_container_width=True, key="btn_ret"): 
            st.session_state.page="home"; st.rerun()
     with c_nav2:
-        if st.button("✏️ Éditer", use_container_width=True):
+        if st.button("✏️ Éditer", use_container_width=True, key="btn_edit"):
             st.session_state.recipe_to_edit = r.copy()
             st.session_state.page = "edit"; st.rerun()
     with c_nav3:
-        if st.button("🖨️ Imprimer", use_container_width=True):
+        if st.button("🖨️ Imprimer", use_container_width=True, key="btn_print"):
             st.session_state.recipe_data = r 
             st.session_state.page = "print"; st.rerun()
     with c_nav4:
-        if st.button("🗑️ Supprimer", use_container_width=True):
+        if st.button("🗑️ Supprimer", use_container_width=True, key="btn_del"):
             if send_action({"action": "delete", "titre": current_title}):
                 st.cache_data.clear()
                 st.session_state.page = "home"; st.rerun()
@@ -466,7 +467,7 @@ elif st.session_state.page == "details":
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # NOTATION INTERACTIVE
+        # NOTATION
         try:
             val_note = r.get('Note', 0)
             note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
@@ -474,26 +475,22 @@ elif st.session_state.page == "details":
             note_actuelle = 0
 
         st.write("**Évaluer cette recette :**")
-        nouvelle_note = st.select_slider("Glissez pour noter", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}")
+        nouvelle_note = st.select_slider("Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"sl_{current_title}")
         
         if nouvelle_note != note_actuelle:
             with st.spinner("Mise à jour..."):
-                payload_n = r.copy()
-                payload_n.update({"action": "edit", "Note": nouvelle_note})
-                if send_action(payload_n):
+                p_note = r.copy()
+                p_note.update({"action": "edit", "Note": nouvelle_note})
+                if send_action(p_note):
                     st.toast("Note enregistrée ! ⭐")
                     st.session_state.recipe_data['Note'] = nouvelle_note
                     st.rerun()
 
-        if note_actuelle > 0:
-            st.markdown(f"### {'⭐' * note_actuelle}")
-
-    # --- DANS LE BLOC elif st.session_state.page == "details": ---
     with col_d:
         # 1. INFORMATIONS
         st.subheader("📋 Informations")
 
-        # --- CATÉGORIES ET SOURCE ---
+        # CATÉGORIES ET SOURCE
         c_info1, c_info2 = st.columns(2)
         with c_info1:
             cat_val = r.get('Catégorie', 'Autre')
@@ -507,7 +504,7 @@ elif st.session_state.page == "details":
         
         st.write("") 
 
-        # --- PLANNING ---
+        # PLANNING
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
             u_id = hashlib.md5(current_title.encode()).hexdigest()[:6]
             date_p = st.date_input("Choisir une date", key=f"d_{u_id}")
@@ -521,7 +518,7 @@ elif st.session_state.page == "details":
         
         st.divider()
 
-        # --- MÉTRIQUES ---
+        # MÉTRIQUES
         m1, m2, m3 = st.columns(3)
         m1.metric("🕒 Prépa", f"{r.get('Temps de préparation', '-')} min")
         m2.metric("🔥 Cuisson", f"{r.get('Temps de cuisson', '-')} min")
@@ -529,21 +526,20 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # --- INGRÉDIENTS ---
+        # INGRÉDIENTS AVEC SÉLECTION
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings_list = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
-            # Sélection
             sel_items = []
             for i, line in enumerate(ings_list):
                 if st.checkbox(line, key=f"c_{u_id}_{i}"):
                     sel_items.append(line)
             
             if sel_items:
-                if st.button(f"📥 Ajouter ({len(sel_items)}) au Panier", use_container_width=True, key=f"shop_{u_id}"):
+                if st.button(f"📥 Ajouter ({len(sel_items)}) au Panier", use_container_width=True, key=f"sh_{u_id}"):
                     for it in sel_items:
                         send_action({"action": "add_shop", "article": it})
                     st.toast("Ajouté ! 🛒")
@@ -553,19 +549,16 @@ elif st.session_state.page == "details":
     # --- BAS DE PAGE ---
     st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
-    prep = r.get('Préparation', '')
-    if prep:
-        st.write(prep)
-    else:
-        st.warning("Aucune étape enregistrée.")
+    st.write(r.get('Préparation', 'Aucune étape enregistrée.'))
 
     st.divider()
     st.markdown("### 📝 Mes Notes & Commentaires")
-    notes_texte = r.get('Commentaires', '')
-    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-        st.info(notes_texte)
+    notes_txt = r.get('Commentaires', '')
+    if notes_txt and str(notes_txt).strip() not in ["None", "nan", ""]:
+        st.info(notes_txt)
     else:
-        st.write("*Aucune note pour cette recette.*")
+        st.write("*Aucune note.*")
+        
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1214,6 +1207,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
