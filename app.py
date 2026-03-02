@@ -145,62 +145,87 @@ import hashlib
 import time
 
 # ======================
+# INITIALISATION ET DESIGN
+# ======================
+
+# 1. Configuration de la page (DOIT être la première commande)
+st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
+
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
+if 'admin_mode' not in st.session_state:
+    st.session_state.admin_mode = False
+
+# 2. Style CSS (Ta mise en forme)
+st.markdown("""
+<style>
+    .stApp { background-color: #0e1117 !important; }
+    [data-testid="stSidebar"] { background-color: #1e2129 !important; }
+    h1, h2, h3 { color: #e67e22 !important; }
+    .stButton button { 
+        background-color: #e67e22 !important; 
+        color: white !important; 
+        border-radius: 10px; 
+        border: none;
+        font-weight: bold;
+    }
+    .logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
+    .logo-container img { border-radius: 50%; width: 120px; height: 120px; object-fit: cover; border: 3px solid #e67e22; }
+</style>
+""", unsafe_allow_html=True)
+
+# ======================
 # BARRE LATÉRALE (SIDEBAR)
 # ======================
 with st.sidebar:
-    # Logo et Titre
+    # Logo
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
-    st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center;">Mes Recettes</h3>', unsafe_allow_html=True)
 
     # --- SECTION SÉCURITÉ ---
-    if not st.session_state.get('admin_mode', False):
+    if not st.session_state.admin_mode:
         pwd = st.text_input("🔑 Accès Admin", type="password")
-        if st.button("Se connecter 🔓", use_container_width=True, key="side_login"):
+        if st.button("Se connecter 🔓", use_container_width=True, key="login_btn"):
             user_input = str(pwd).strip()
+            # Hash pour le code 142203
             input_hash = hashlib.sha256(user_input.encode()).hexdigest()
             target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
             
-            if input_hash == target_hash and target_hash != "":
+            if input_hash == target_hash:
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
                 st.error("Code incorrect ❌")
     else:
         st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion", use_container_width=True, key="side_logout"):
+        if st.button("🔒 Déconnexion", use_container_width=True, key="logout_btn"):
             st.session_state.admin_mode = False
             st.rerun()
 
     st.divider()
 
-    # --- NAVIGATION PRINCIPALE ---
-    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+    # --- NAVIGATION ---
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"):
         st.session_state.page = "home"
         st.rerun()
     
-    if st.button("📅 Planning", use_container_width=True, key="nav_plan"): 
+    if st.button("📅 Planning", use_container_width=True, key="nav_plan"):
         st.session_state.page = "planning"
         st.rerun()
     
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+    if st.button("🛒 Liste d'épicerie", use_container_width=True, key="nav_shop"):
         st.session_state.page = "shop"
         st.rerun()
     
     st.divider()
-    
-    # --- OPTIONS SUPPLÉMENTAIRES ---
-    
-    # N'apparaît que si connecté
-    if st.session_state.get('admin_mode', False):
+
+    # Boutons Admin et Aide
+    if st.session_state.admin_mode:
         if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add"):
             st.session_state.page = "add"
             st.rerun()
-    
-    if st.button("⭐ Play Store", use_container_width=True, key="nav_play"): 
-        st.session_state.page = "playstore"
-        st.rerun()
-        
-    if st.button("❓ Aide", use_container_width=True, key="nav_help"): 
+            
+    if st.button("❓ Aide", use_container_width=True, key="nav_help"):
         st.session_state.page = "help"
         st.rerun()
 # ======================
@@ -1179,6 +1204,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
