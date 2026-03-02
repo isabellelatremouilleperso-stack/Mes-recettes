@@ -489,10 +489,28 @@ elif st.session_state.page == "details":
             st.markdown(f"### {'⭐' * note_actuelle}")
 
     with col_d:
-        # 1. INFORMATIONS & MÉTRIQUES
+        # 1. INFORMATIONS GÉNÉRALES
         st.subheader("📋 Informations")
 
-        # --- PLANNING (BLOC UNIQUE ET NETTOYÉ) ---
+        # --- NOUVEAU : CATÉGORIE ET SOURCE ---
+        c_info1, c_info2 = st.columns(2)
+        with c_info1:
+            # On récupère la catégorie ou "Autre" par défaut
+            cat_val = r.get('Catégorie', 'Autre')
+            if not cat_val or str(cat_val).lower() == 'nan': cat_val = "Autre"
+            st.markdown(f"**🍴 Catégorie :**\n`{cat_val}`")
+            
+        with c_info2:
+            # On récupère le lien source
+            src_val = r.get('Source', '')
+            if src_val and "http" in str(src_val):
+                st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
+            else:
+                st.markdown("**🌐 Source :**\n*Non spécifiée*")
+        
+        st.write("") # Petit espace de respiration
+
+        # --- PLANNING (Ton code d'origine) ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
             unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
@@ -507,16 +525,13 @@ elif st.session_state.page == "details":
                 if send_action(payload):
                     st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
                     st.cache_data.clear()
-                    
-                    # On a choisi 1.2s : le bon compromis entre vitesse et fiabilité
                     time.sleep(1.2) 
-                    
                     st.session_state.page = "planning"
                     st.rerun()
         
         st.divider()
 
-        # --- MÉTRIQUES ---
+        # --- MÉTRIQUES (Ton code d'origine) ---
         def clean_metrique(valeur):
             v_str = str(valeur).strip().lower()
             if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
@@ -1237,6 +1252,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
