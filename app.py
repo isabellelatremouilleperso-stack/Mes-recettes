@@ -684,82 +684,77 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE (Version Superposition - Anti-Page Blanche)
         st.markdown("""
-        <style>
-        /* =================== STYLE ÉCRAN =================== */
-        .main .block-container {
-            padding-top: 1rem !important;
-            max-width: 900px !important;
-        }
-        
-        .print-sheet { 
-            background: white !important; 
-            color: black !important; 
-            padding: 30px; 
-            font-family: Arial, sans-serif; 
-            border-radius: 10px;
-            border: 1px solid #ddd;
-            margin: 10px auto;
-            position: relative !important;
-        }
+<style>
+/* ================== STYLE ÉCRAN ================== */
+.print-sheet { 
+    background: white !important; 
+    color: black !important; 
+    padding: 30px; 
+    font-family: Arial, sans-serif; 
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    margin: 10px auto;
+    max-width: 850px;
+    display: block !important; /* Force l'affichage écran */
+}
 
-        /* =================== IMPRESSION =================== */
-        @media print {
-            @page {
-                size: A4;
-                margin: 10mm 15mm !important;
-            }
+/* ================== IMPRESSION ================== */
+@media print {
+    @page {
+        size: A4;
+        margin: 10mm 15mm !important;
+    }
 
-            /* 1. On cache l'interface Streamlit sans cacher le reste */
-            header, footer, .stButton, button, iframe,
-            [data-testid="stHeader"], [data-testid="stSidebar"], 
-            .stAppHeader, [data-testid="stDecoration"] {
-                display: none !important;
-            }
+    /* Cache l'interface Streamlit sans cacher le contenu */
+    header, footer, .stButton, button, iframe,
+    [data-testid="stHeader"], 
+    [data-testid="stSidebar"], 
+    .stAppHeader, 
+    [data-testid="stDecoration"] {
+        display: none !important;
+    }
 
-            /* 2. On neutralise les marges des conteneurs parents */
-            .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
-                padding: 0 !important;
-                margin: 0 !important;
-                background-color: white !important;
-                height: auto !important;
-            }
+    /* Remonte la fiche tout en haut de la page 1 */
+    .main, .stApp, [data-testid="stAppViewBlockContainer"] {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
 
-            /* 3. LE FIX CRUCIAL : On téléporte la fiche tout en haut de la page 1 */
-            .print-sheet {
-                position: absolute !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100% !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                box-shadow: none !important;
-            }
+    .print-sheet {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        border: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+    }
 
-            /* On s'assure que tout le texte à l'intérieur est bien noir */
-            .print-sheet * {
-                color: black !important;
-            }
-        }
+    /* Force le texte en noir (important si l'utilisateur est en mode sombre) */
+    .print-sheet * {
+        color: black !important;
+    }
+}
 
-        /* DESIGN GÉNÉRAL */
-        .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
-        .info-box { 
-            display: flex !important; 
-            justify-content: space-between; 
-            font-weight: bold; 
-            margin-bottom: 15px; 
-            font-size: 14px; 
-            border-bottom: 1px solid #eee; 
-            padding-bottom: 5px; 
-            color: #444 !important; 
-        }
-        h1 { color: black !important; margin: 0 !important; font-size: 26px; }
-        h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
-        </style>
-        """, unsafe_allow_html=True)
+/* DESIGN DES ÉLÉMENTS */
+.header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
+.info-box { 
+    display: flex !important; /* Utilisation de !important pour forcer le flex */
+    justify-content: space-between; 
+    font-weight: bold; 
+    margin-bottom: 15px; 
+    font-size: 14px; 
+    border-bottom: 1px solid #eee; 
+    padding-bottom: 5px; 
+    color: #444 !important;
+}
+h1 { color: black !important; margin: 0 !important; font-size: 26px; }
+h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
+
+</style>
+""", unsafe_allow_html=True)
 
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1240,6 +1235,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
