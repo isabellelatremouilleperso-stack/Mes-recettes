@@ -163,72 +163,29 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ======================
-# SÉCURITÉ ADMIN
-# ======================
-if 'admin_mode' not in st.session_state:
-    st.session_state.admin_mode = (st.query_params.get("admin") == "oui")
-
-# --- 5. BARRE LATÉRALE (SIDEBAR) ---
-with st.sidebar:
-    # 1. Logo et Titre
-    st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
-    st.markdown('<h3 style="text-align: center; color: #e67e22; margin-top: -10px;">Mes Recettes</h3>', unsafe_allow_html=True)
-    
-    # 2. BOUTON ACTUALISER
-    if st.button("🔄 Actualiser la Bibliothèque", use_container_width=True, key="side_refresh"):
-        st.cache_data.clear()
-        st.toast("Synchronisation en cours... 📋")
-        time.sleep(0.5)
-        st.rerun()
-
-    st.divider()
-
-    # --- SECTION SÉCURITÉ (Maintenant BIEN INDENTÉE dans la sidebar) ---
+# --- SECTION SÉCURITÉ (Indentation Sidebar) ---
     if not st.session_state.admin_mode:
         pwd = st.text_input("🔑 Accès Admin", type="password")
         if st.button("Se connecter 🔓", use_container_width=True):
-            clean_pwd = pwd.strip()
-            input_hash = hashlib.sha256(clean_pwd.encode()).hexdigest()
+            # 1. On nettoie la saisie de l'utilisateur
+            user_input = pwd.strip()
             
-            # Récupération du hash dans les Secrets
-            target_hash = st.secrets.get("admin_password_hash", "AUCUN_HASH_CONFIGURE")
+            # 2. On génère le hash de ce que l'utilisateur a tapé
+            input_hash = hashlib.sha256(user_input.encode()).hexdigest()
             
-            if input_hash == target_hash:
+            # 3. On récupère le secret et on le nettoie aussi (.strip())
+            # On utilise .get() pour éviter que l'app plante si le secret manque
+            raw_target = st.secrets.get("admin_password_hash", "")
+            target_hash = raw_target.strip()
+            
+            if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
+                # Optionnel : décommenter la ligne suivante pour voir le hash si ça échoue encore
+                # st.write(f"DEBUG: {input_hash}") 
                 st.error("Code incorrect ❌")
-    else:
-        st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion", use_container_width=True):
-            st.session_state.admin_mode = False
-            st.rerun()
-    
-    st.divider()
-    
-    # --- NAVIGATION (Aussi dans la sidebar) ---
-    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
-        st.session_state.page="home"; st.rerun()
-    
-    if st.button("📅 Planning", use_container_width=True, key="nav_plan"): 
-        st.session_state.page = "planning"; st.rerun()
-    
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
-        st.session_state.page="shop"; st.rerun()
-    
-    st.divider()
-    
-    # Option Admin supplémentaire
-    if st.session_state.admin_mode:
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add"):
-            st.session_state.page="add"; st.rerun()
-    
-    if st.button("⭐ Play Store", use_container_width=True, key="nav_play"): 
-        st.session_state.page="playstore"; st.rerun()
-        
-    if st.button("❓ Aide", use_container_width=True, key="nav_help"): 
-        st.session_state.page="help"; st.rerun()
+
 # ======================
 # LOGIQUE DES PAGES
 # ======================
@@ -1205,6 +1162,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
