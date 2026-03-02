@@ -856,6 +856,7 @@ elif st.session_state.page == "shop":
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
 
+
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1320,6 +1321,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
