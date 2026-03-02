@@ -684,12 +684,12 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE
+        # 2. CSS DE FORCE (Version Nettoyage par le Vide - Optimisée)
         st.markdown("""
         <style>
-        /* FIX ÉCRAN : Pour que la fiche ne soit pas cachée par le noir */
+        /* =================== STYLE ÉCRAN =================== */
         .main .block-container {
-            padding-top: 1rem !important;
+            padding-top: 2rem !important;
             max-width: 900px !important;
         }
         .print-sheet { 
@@ -700,74 +700,70 @@ elif st.session_state.page == "print":
             border-radius: 10px;
             border: 1px solid #ddd;
             display: block !important;
-            visibility: visible !important;
         }
 
+        /* =================== IMPRESSION =================== */
         @media print {
             @page {
                 size: A4;
-                margin: 10mm 15mm !important;
-            }
-            
-            /* On tue tout ce qui n'est pas la recette */
-            header, footer, .stButton, button, iframe, 
-            [data-testid="stHeader"], [data-testid="stSidebar"], 
-            .stAppHeader, [data-testid="stDecoration"] {
-                display: none !important;
+                margin: 15mm !important;
             }
 
-            /* On remonte le contenu au pixel zéro */
-            .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
-                padding: 0 !important;
-                margin: 0 !important;
-                background-color: white !important;
+            /* 1. On rend tout invisible par défaut */
+            body * {
+                visibility: hidden !important;
             }
 
+            /* 2. On réactive UNIQUEMENT la fiche et tout ce qu'elle contient */
+            .print-sheet, .print-sheet * {
+                visibility: visible !important;
+            }
+
+            /* 3. On force la fiche à se coller au pixel zéro (Supprime la page 1 blanche) */
             .print-sheet {
+                display: block !important;
                 position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
-                border: none !important;
                 width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                background: white !important;
+            }
+
+            /* 4. On sature les conteneurs Streamlit pour qu'ils ne créent pas de pages vides */
+            header, footer, [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader {
+                display: none !important;
             }
             
-            h3, p, li { page-break-inside: avoid; }
+            .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
+                padding: 0 !important;
+                margin: 0 !important;
+                height: auto !important;
+            }
+
+            /* Empêche les coupures de texte */
+            h1, h3 { page-break-after: avoid; }
+            p, li, .info-box { page-break-inside: avoid; }
         }
 
+        /* DESIGN GÉNÉRAL */
         .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
-        .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; color: #444; }
+        .info-box { 
+            display: flex !important; 
+            justify-content: space-between; 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            font-size: 14px; 
+            border-bottom: 1px solid #eee; 
+            padding-bottom: 5px; 
+            color: #444; 
+        }
         h1 { color: black !important; margin: 0 !important; font-size: 26px; }
         h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
         </style>
         """, unsafe_allow_html=True)
-
-        # 3. TRAITEMENT DES DONNÉES
-        ing_raw = str(r.get('Ingrédients','')).split('\n')
-        html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
-        prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
-
-        # 4. RENDU FINAL
-        fiche_html = f"""
-<div class="print-sheet">
-    <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
-    <div class="info-box">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-    <div style="margin-bottom: 15px;">
-        <h3>🛒 Ingrédients</h3>
-        <div style="column-count: 2; column-gap: 30px; font-size: 13px; color: black;">{html_ing}</div>
-    </div>
-    <div>
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="line-height: 1.5; text-align: justify; font-size: 13px; color: black;">{prepa_final}</div>
-    </div>
-    <div style="text-align:center; color:#888; font-size:10px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
-</div>"""
-
-        st.markdown(fiche_html, unsafe_allow_html=True)
-        st.stop()
 
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1248,6 +1244,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
