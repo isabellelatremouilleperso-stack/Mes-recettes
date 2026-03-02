@@ -547,23 +547,30 @@ elif st.session_state.page == "details":
         m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
         m3.metric("🍽️ Portions", port_final)
 
-       # --- 2. SUPPORT VIDÉO (VERSION AMÉLIORÉE & INDENTÉE) ---
-        # On cherche toutes les variantes de nom de colonne possibles
-        v_link = r.get('Vidéo', r.get('video', r.get('video ', r.get('Vidéo ', ''))))
+       # --- 2. SUPPORT VIDÉO (COLONNE N / INDEX 13) ---
+        # On extrait la 14ème colonne (N) de la ligne r
+        # Si r est un dictionnaire, on cherche la clé 'n' ou 'Vidéo'
+        # Si r est une liste, on prend l'index 13
         
-        # On vérifie que ce n'est pas vide et que c'est bien un lien
+        v_link = ""
+        if isinstance(r, dict):
+            # On cherche par nom ou par la lettre de colonne si configuré
+            v_link = r.get('n', r.get('Vidéo', r.get('video', '')))
+        elif isinstance(r, (list, tuple)) and len(r) > 13:
+            v_link = r[13] # L'index 13 correspond à la colonne N
+
         if v_link and str(v_link).strip().lower().startswith("http"):
             st.divider()
-            
             url_propre = str(v_link).strip()
             
-            # .lower() ici est crucial pour détecter "YouTube" ou "YOUTUBE"
+            st.markdown("#### 📺 Support Vidéo")
+            
+            # Test si c'est un format supporté par le lecteur intégré
             if any(x in url_propre.lower() for x in ["youtube", "youtu.be", "vimeo"]):
                 st.video(url_propre)
             else:
-                # Pour TikTok, Instagram, Facebook ou les blogs
-                st.link_button("📺 Voir la vidéo (Lien externe)", url_propre, use_container_width=True)
-            
+                # Bouton de redirection pour les autres (TikTok, Instagram, etc.)
+                st.link_button("▶️ Voir la vidéo externe", url_propre, use_container_width=True)
             st.divider()
     
         # 3. INGRÉDIENTS AVEC SÉLECTION INDIVIDUELLE
@@ -1267,6 +1274,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
