@@ -711,27 +711,26 @@ elif st.session_state.page == "print":
     ing_raw = str(r.get('Ingrédients', ''))
     prep_raw = str(r.get('Préparation', ''))
 
-    # 4. LA FEUILLE DE RECETTE
-    fiche_html = f"""
-    <div class="print-sheet" style="background-color: white; color: black; padding: 40px; border-radius: 5px;">
-        <h1 style="text-align: center; margin-bottom: 5px; color: #e67e22;">{titre}</h1>
-        <p style="text-align: center; font-style: italic; margin-bottom: 30px; color: #666;">Catégorie : {cat}</p>
-        
-        <h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">🛒 Ingrédients</h3>
-        <div style="margin-bottom: 30px; line-height: 1.6; color: black; white-space: pre-wrap;">{r.get('Ingrédients', '')}</div>
-        
-        <h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">👨‍🍳 Étapes de préparation</h3>
-        <div style="line-height: 1.6; color: black; white-space: pre-wrap;">{r.get('Préparation', '')}</div>
-        
-        <div style="margin-top: 50px; border-top: 1px solid #eee; font-size: 10px; text-align: center; color: #999;">
-            Imprimé depuis mon carnet de recettes personnel
-        </div>
-    </div>
-    """
+    # 3. PRÉPARATION
+    titre = r.get('Titre', 'Sans titre')
+    cat = r.get('Catégorie', '-')
 
-    # 5. RENDU FINAL (Bien aligné sur la gauche !)
+    # 4. LA FEUILLE DE RECETTE (Zéro espace au début des lignes HTML)
+    fiche_html = f"""<div style="background-color: white; color: black; padding: 40px; border-radius: 5px; font-family: sans-serif;">
+<h1 style="text-align: center; margin-bottom: 5px; color: #e67e22;">{titre}</h1>
+<p style="text-align: center; font-style: italic; margin-bottom: 30px; color: #666;">Catégorie : {cat}</p>
+<h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">🛒 Ingrédients</h3>
+<div style="margin-bottom: 30px; line-height: 1.6; color: black; white-space: pre-wrap;">{r.get('Ingrédients', '')}</div>
+<h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">👨‍🍳 Étapes de préparation</h3>
+<div style="line-height: 1.6; color: black; white-space: pre-wrap;">{r.get('Préparation', '')}</div>
+<div style="margin-top: 50px; border-top: 1px solid #eee; font-size: 10px; text-align: center; color: #999;">
+Imprimé depuis mon carnet de recettes personnel
+</div>
+</div>"""
+
+    # 5. RENDU FINAL (Aligné parfaitement sur la gauche)
     st.markdown(fiche_html, unsafe_allow_html=True)
-
+    
     st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P**.")
     st.stop()
     
@@ -1215,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
