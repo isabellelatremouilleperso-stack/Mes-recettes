@@ -684,14 +684,15 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE (Version Nettoyage par le Vide - Optimisée)
+        # 2. CSS DE FORCE (Version Superposition - Anti-Page Blanche)
         st.markdown("""
         <style>
         /* =================== STYLE ÉCRAN =================== */
         .main .block-container {
-            padding-top: 2rem !important;
+            padding-top: 1rem !important;
             max-width: 900px !important;
         }
+        
         .print-sheet { 
             background: white !important; 
             color: black !important; 
@@ -699,53 +700,48 @@ elif st.session_state.page == "print":
             font-family: Arial, sans-serif; 
             border-radius: 10px;
             border: 1px solid #ddd;
-            display: block !important;
+            margin: 10px auto;
+            position: relative !important;
         }
 
         /* =================== IMPRESSION =================== */
         @media print {
             @page {
                 size: A4;
-                margin: 15mm !important;
+                margin: 10mm 15mm !important;
             }
 
-            /* 1. On rend tout invisible par défaut */
-            body * {
-                visibility: hidden !important;
+            /* 1. On cache l'interface Streamlit sans cacher le reste */
+            header, footer, .stButton, button, iframe,
+            [data-testid="stHeader"], [data-testid="stSidebar"], 
+            .stAppHeader, [data-testid="stDecoration"] {
+                display: none !important;
             }
 
-            /* 2. On réactive UNIQUEMENT la fiche et tout ce qu'elle contient */
-            .print-sheet, .print-sheet * {
-                visibility: visible !important;
+            /* 2. On neutralise les marges des conteneurs parents */
+            .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
+                padding: 0 !important;
+                margin: 0 !important;
+                background-color: white !important;
+                height: auto !important;
             }
 
-            /* 3. On force la fiche à se coller au pixel zéro (Supprime la page 1 blanche) */
+            /* 3. LE FIX CRUCIAL : On téléporte la fiche tout en haut de la page 1 */
             .print-sheet {
-                display: block !important;
                 position: absolute !important;
                 top: 0 !important;
                 left: 0 !important;
                 width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
                 border: none !important;
-                background: white !important;
-            }
-
-            /* 4. On sature les conteneurs Streamlit pour qu'ils ne créent pas de pages vides */
-            header, footer, [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader {
-                display: none !important;
-            }
-            
-            .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
                 padding: 0 !important;
                 margin: 0 !important;
-                height: auto !important;
+                box-shadow: none !important;
             }
 
-            /* Empêche les coupures de texte */
-            h1, h3 { page-break-after: avoid; }
-            p, li, .info-box { page-break-inside: avoid; }
+            /* On s'assure que tout le texte à l'intérieur est bien noir */
+            .print-sheet * {
+                color: black !important;
+            }
         }
 
         /* DESIGN GÉNÉRAL */
@@ -758,7 +754,7 @@ elif st.session_state.page == "print":
             font-size: 14px; 
             border-bottom: 1px solid #eee; 
             padding-bottom: 5px; 
-            color: #444; 
+            color: #444 !important; 
         }
         h1 { color: black !important; margin: 0 !important; font-size: 26px; }
         h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
@@ -1244,6 +1240,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
