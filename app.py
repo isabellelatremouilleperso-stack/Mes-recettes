@@ -182,24 +182,26 @@ with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
-    # --- SECTION SÉCURITÉ PROPRE ---
+    # --- SECTION SÉCURITÉ (TEST DE RÉALITÉ) ---
     if not st.session_state.get('admin_mode', False):
         pwd_input = st.text_input("🔑 Accès Admin", type="password", key="sidebar_pwd")
         
         if st.button("Se connecter 🔓", use_container_width=True):
             user_code = str(pwd_input).strip()
-            
-            # On génère le hash de ce que l'utilisateur tape
             input_hash = hashlib.sha256(user_code.encode()).hexdigest().strip()
             
-            # On récupère la référence cachée dans les Secrets
+            # Récupération
             target_hash = st.secrets.get("admin_password_hash", "").strip()
             
-            if input_hash == target_hash and target_hash != "":
+            if input_hash == target_hash:
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
                 st.error("Accès refusé ❌")
+                # ON AFFICHE LES LONGUEURS POUR TROUVER L'ERREUR
+                st.info(f"Saisie : {len(input_hash)} car. | Secret : {len(target_hash)} car.")
+                if len(target_hash) == 0:
+                    st.warning("⚠️ Ton secret 'admin_password_hash' n'est pas trouvé dans Streamlit Cloud.")
     else:
         st.success("✅ Mode Chef Activé")
         if st.button("🔒 Déconnexion", use_container_width=True, key="sidebar_logout_action"):
@@ -1213,6 +1215,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
