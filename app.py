@@ -673,88 +673,55 @@ elif st.session_state.page == "print":
             st.rerun()
     else:
         r = st.session_state.recipe_data
+        
+        # 1. BOUTON DE RETOUR (Streamlit classique)
+        if st.button("⬅ Retour aux détails"):
+            st.session_state.page = "details"
+            st.rerun()
 
-        # 1. NAVIGATION
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("⬅ Retour aux détails", use_container_width=True):
-                st.session_state.page = "details"
-                st.rerun()
-        with col2:
-            import streamlit.components.v1 as components
-            components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
+        # 2. PRÉPARATION DES DONNÉES
+        ing_raw = str(r.get('Ingrédients','')).split('\n')
+        html_ing = "".join([f"<li>{l.strip()}</li>" for l in ing_raw if l.strip()])
+        prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
 
-        st.markdown("""
-<style>
-/* ================== STYLE ÉCRAN ================== */
-.print-sheet { 
-    background: white !important; 
-    color: black !important; 
-    padding: 30px; 
-    font-family: Arial, sans-serif; 
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    margin: 10px auto;
-    max-width: 850px;
-    display: block !important; /* Force l'affichage écran */
-}
+        # 3. HTML PUR (Injecté dans un composant isolé)
+        # On met tout le CSS et le contenu ensemble ici
+        fiche_isolee = f"""
+        <div id="print-area" style="background:white; color:black; padding:20px; font-family:Arial, sans-serif;">
+            <style>
+                @media print {{
+                    @page {{ size: A4; margin: 10mm; }}
+                    .no-print {{ display: none !important; }}
+                    body {{ background: white !important; }}
+                }}
+                .header-line {{ border-bottom: 3px solid #e67e22; margin-bottom: 10px; }}
+                .info-box {{ display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; color: #444; }}
+                h1 {{ margin: 0; font-size: 24px; color: black; }}
+                h3 {{ color: #e67e22; border-bottom: 1px solid #ddd; margin-top: 15px; }}
+                .ingredients {{ column-count: 2; column-gap: 20px; font-size: 13px; list-style-type: none; padding: 0; }}
+            </style>
+            
+            <button class="no-print" onclick="window.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer; margin-bottom:20px;">
+                🖨️ LANCER L'IMPRESSION
+            </button>
 
-/* ================== IMPRESSION ================== */
-@media print {
-    @page {
-        size: A4;
-        margin: 10mm 15mm !important;
-    }
+            <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
+            <div class="info-box">
+                <span>Catégorie : {r.get('Catégorie','-')}</span>
+                <span>Portions : {r.get('Portions','-')}</span>
+                <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
+            </div>
+            <h3>🛒 Ingrédients</h3>
+            <ul class="ingredients">{html_ing}</ul>
+            <h3>👨‍🍳 Préparation</h3>
+            <div style="font-size: 13px; line-height: 1.5;">{prepa_final}</div>
+        </div>
+        """
 
-    /* Cache l'interface Streamlit sans cacher le contenu */
-    header, footer, .stButton, button, iframe,
-    [data-testid="stHeader"], 
-    [data-testid="stSidebar"], 
-    .stAppHeader, 
-    [data-testid="stDecoration"] {
-        display: none !important;
-    }
-
-    /* Remonte la fiche tout en haut de la page 1 */
-    .main, .stApp, [data-testid="stAppViewBlockContainer"] {
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    .print-sheet {
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100% !important;
-        border: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        box-shadow: none !important;
-    }
-
-    /* Force le texte en noir (important si l'utilisateur est en mode sombre) */
-    .print-sheet * {
-        color: black !important;
-    }
-}
-
-/* DESIGN DES ÉLÉMENTS */
-.header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
-.info-box { 
-    display: flex !important; /* Utilisation de !important pour forcer le flex */
-    justify-content: space-between; 
-    font-weight: bold; 
-    margin-bottom: 15px; 
-    font-size: 14px; 
-    border-bottom: 1px solid #eee; 
-    padding-bottom: 5px; 
-    color: #444 !important;
-}
-h1 { color: black !important; margin: 0 !important; font-size: 26px; }
-h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
-
-</style>
-""", unsafe_allow_html=True)
+        # 4. AFFICHAGE DANS L'IFRAME
+        import streamlit.components.v1 as components
+        components.html(fiche_isolee, height=1000, scrolling=True)
+        st.stop()
 
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
@@ -1235,6 +1202,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
