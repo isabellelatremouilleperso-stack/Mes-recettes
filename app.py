@@ -1183,35 +1183,24 @@ elif st.session_state.page == "details":
     st.markdown("""
     <style>
     @media print {
-        /* On cache la navigation Streamlit et les boutons */
-        header, footer, .stButton, [data-testid="stSidebar"] {
-            display: none !important;
-        }
-        /* On force la marge pour éviter le vide en haut de page */
-        .print-sheet { 
-            margin-top: -60px !important; 
-        }
-        /* On s'assure que le texte est noir sur blanc */
-        .main {
-            background-color: white !important;
-            color: black !important;
-        }
+        header, footer, .stButton, [data-testid="stSidebar"] { display: none !important; }
+        .print-sheet { margin-top: -60px !important; }
+        .main { background-color: white !important; color: black !important; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-        # 3. TRAITEMENT DES DONNÉES
-        ing_raw = str(r.get('Ingrédients','')).split('\n')
-        html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
-        prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
+    # 3. TRAITEMENT DES DONNÉES (ALIGNÉ AVEC LE ST.MARKDOWN CI-DESSUS)
+    ing_raw = str(r.get('Ingrédients','')).split('\n')
+    html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
+    prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
         
-        # Logique de saut de page
-        nb_ingredients = len([l for l in ing_raw if l.strip()])
-        class_saut_page = "page-break" if nb_ingredients > 15 else ""
+    # Logique de saut de page
+    nb_ingredients = len([l for l in ing_raw if l.strip()])
+    class_saut_page = "page-break" if nb_ingredients > 15 else ""
 
-        # 4. RENDU FINAL (SANS AUCUNE INDENTATION DANS LE TEXTE)
-        # TRÈS IMPORTANT : Ne rajoute pas d'espaces au début des lignes ci-dessous !
-        fiche_html = f"""
+    # 4. RENDU FINAL
+    fiche_html = f"""
 <div class="print-sheet">
 <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
 <div class="info-box">
@@ -1230,7 +1219,8 @@ elif st.session_state.page == "details":
 <div style="text-align:center; color:#888; font-size:11px; margin-top:30px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
 </div>
 """
-        st.markdown(fiche_html, unsafe_allow_html=True)
+    # Cette ligne doit être alignée avec "fiche_html" au-dessus
+    st.markdown(fiche_html, unsafe_allow_html=True)
 # --- PAGE AIDE ---
 elif st.session_state.page=="help":
     st.markdown('<h1 style="color: #e67e22;">❓ Centre d\'aide</h1>', unsafe_allow_html=True)
@@ -1295,6 +1285,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
