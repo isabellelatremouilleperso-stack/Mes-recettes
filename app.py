@@ -210,8 +210,9 @@ with st.sidebar:
     # Navigation
     if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
         st.session_state.page="home"; st.rerun()
-    if st.button("📅  Repas", use_container_width=True, key="nav_plan"): 
-        st.session_state.page=""; st.rerun()
+    if st.button("📅 Repas", use_container_width=True, key="nav_plan"): 
+        st.session_state.page = "planning"
+        st.rerun()
     if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
         st.session_state.page="shop"; st.rerun()
     
@@ -679,7 +680,7 @@ elif st.session_state.page == "print":
     <style>
     @media print {
         /* On masque tout ce qui est interface Streamlit */
-        header, footer, .stButton, [data-testid="stSidebar"], [data-testid="stHeader"] {
+        header, footer, .stButton, [data-testid="st"], [data-testid="stHeader"] {
             display: none !important;
         }
         /* On force le texte en noir sur fond blanc */
@@ -1321,6 +1322,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
