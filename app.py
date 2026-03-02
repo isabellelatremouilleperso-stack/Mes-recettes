@@ -812,14 +812,19 @@ elif st.session_state.page == "edit":
         instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
         
         img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
-        video_url = st.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
+
+        # --- AJOUT DU LIEN SOURCE ICI ---
+        col_v, col_s = st.columns(2)
+        video_url = col_v.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
+        source_url = col_s.text_input("🌐 Lien Source (Site web)", value=r_edit.get('Source', ''))
+        
         commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
 
         if st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True):
             if titre_edit and ingredients:
                 payload = {
                     "action": "edit", 
-                    "old_titre": r_edit.get('Titre'), # Crucial pour que Google sache quoi modifier
+                    "old_titre": r_edit.get('Titre'),
                     "titre": titre_edit, 
                     "Catégorie": ", ".join(cat_choisies),
                     "Ingrédients": ingredients,
@@ -829,7 +834,8 @@ elif st.session_state.page == "edit":
                     "Temps_Cuisson": t_cuis,
                     "Portions": port,
                     "Commentaires": commentaires,
-                    "video": video_url
+                    "video": video_url,
+                    "Source": source_url  # <--- CRUCIAL : on ajoute la source dans l'envoi
                 }
                 if send_action(payload):
                     st.success("✅ Mis à jour !")
@@ -1253,6 +1259,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
