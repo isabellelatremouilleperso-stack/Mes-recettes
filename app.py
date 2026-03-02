@@ -711,10 +711,6 @@ elif st.session_state.page == "print":
     ing_raw = str(r.get('Ingrédients', ''))
     prep_raw = str(r.get('Préparation', ''))
 
-    # 3. PRÉPARATION
-    titre = r.get('Titre', 'Sans titre')
-    cat = r.get('Catégorie', '-')
-
     # 4. LA FEUILLE DE RECETTE (Avec saut de page forcé pour la préparation)
     # Note : Le style est collé à gauche pour éviter que Streamlit ne l'affiche comme du code
     fiche_html = f"""<div style="background-color: white; color: black; padding: 40px; border-radius: 5px; font-family: sans-serif;">
@@ -1220,6 +1216,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
