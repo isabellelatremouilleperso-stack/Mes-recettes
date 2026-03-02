@@ -212,30 +212,35 @@ with st.sidebar:
 
     st.divider()
 
-    # --- NAVIGATION ---
-    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"):
+    # --- NAVIGATION UNIQUE (Pour éviter l'erreur de l'image 3) ---
+    if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"): 
         st.session_state.page = "home"
         st.rerun()
     
-    if st.button("📅 Planning", use_container_width=True, key="nav_plan"):
+    if st.button("📅 Planning", use_container_width=True, key="side_plan"): 
         st.session_state.page = "planning"
         st.rerun()
     
-    if st.button("🛒 Liste d'épicerie", use_container_width=True, key="nav_shop"):
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"): 
         st.session_state.page = "shop"
         st.rerun()
     
     st.divider()
-
-    # Boutons Admin et Aide
-    if st.session_state.admin_mode:
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add"):
+    
+    # Options Admin (N'apparaît que si connecté)
+    if st.session_state.get('admin_mode', False):
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
             st.session_state.page = "add"
             st.rerun()
-            
-    if st.button("❓ Aide", use_container_width=True, key="nav_help"):
+    
+    if st.button("⭐ Play Store", use_container_width=True, key="side_play"): 
+        st.session_state.page = "playstore"
+        st.rerun()
+        
+    if st.button("❓ Aide", use_container_width=True, key="side_help"): 
         st.session_state.page = "help"
         st.rerun()
+
 # ======================
 # LOGIQUE DES PAGES (CONTENU PRINCIPAL)
 # ======================
@@ -1212,6 +1217,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
