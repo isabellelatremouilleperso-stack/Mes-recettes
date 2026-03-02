@@ -703,32 +703,32 @@ elif st.session_state.page == "print":
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. PRÉPARATION DU CONTENU (On garde tout !)
+    # 3. PRÉPARATION DU CONTENU (Version simplifiée pour éviter le double codage)
     titre = r.get('Titre', 'Sans titre')
     cat = r.get('Catégorie', '-')
-    ing_html = str(r.get('Ingrédients', '')).replace('\n', '<br>')
-    prep_html = str(r.get('Préparation', '')).replace('\n', '<br>')
+    
+    # On garde le texte brut ici, sans ajouter de <br> tout de suite
+    ing_raw = str(r.get('Ingrédients', ''))
+    prep_raw = str(r.get('Préparation', ''))
 
-    # 4. LA FEUILLE DE RECETTE (Exactement tes sections)
+    # 4. LA FEUILLE DE RECETTE
     fiche_html = f"""
     <div class="print-sheet">
         <h1 style="text-align: center; margin-bottom: 5px; color: #e67e22;">{titre}</h1>
         <p style="text-align: center; font-style: italic; margin-bottom: 30px; color: #666;">Catégorie : {cat}</p>
         
         <h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">🛒 Ingrédients</h3>
-        <div style="margin-bottom: 30px; line-height: 1.6; color: black;">{ing_html}</div>
+        <div style="margin-bottom: 30px; line-height: 1.6; color: black; white-space: pre-wrap;">{ing_raw}</div>
         
         <h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">👨‍🍳 Étapes de préparation</h3>
-        <div style="line-height: 1.6; color: black;">{prep_html}</div>
+        <div style="line-height: 1.6; color: black; white-space: pre-wrap;">{prep_raw}</div>
         
         <div style="margin-top: 50px; border-top: 1px solid #eee; font-size: 10px; text-align: center; color: #999;">
             Imprimé depuis mon carnet de recettes personnel
         </div>
     </div>
     """
-
-    # 5. RENDU FINAL (C'est ICI que tu mets la ligne magique)
-    # Elle doit être collée contre la marge de gauche (alignée avec fiche_html)
+    
     st.markdown(fiche_html, unsafe_allow_html=True)
 
     # Enfin, les dernières petites infos
@@ -1214,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
