@@ -174,7 +174,7 @@ st.markdown("""
 # ======================
 with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
-    st.markdown('<h3 style="text-align: center;">Mes Recettes</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
     # --- SECTION SÉCURITÉ ---
     if not st.session_state.admin_mode:
@@ -183,8 +183,8 @@ with st.sidebar:
             user_input = pwd.strip()
             input_hash = hashlib.sha256(user_input.encode()).hexdigest()
             
-            # On récupère le hash dans les Secrets (image blanche de tantôt)
-            target_hash = st.secrets.get("admin_password_hash", "")
+            # On récupère le secret (Vérifie bien le nom dans Streamlit Cloud)
+            target_hash = st.secrets.get("admin_password_hash", "").strip()
             
             if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
@@ -199,10 +199,28 @@ with st.sidebar:
 
     st.divider()
     
-    # --- NAVIGATION ---
-    if st.button("📚 Bibliothèque", use_container_width=True):
-        st.session_state.page = "home"
-        st.rerun()
+    # --- NAVIGATION (Tout ce qui suit doit être aligné ici !) ---
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
+        st.session_state.page="home"; st.rerun()
+    
+    if st.button("📅 Planning", use_container_width=True, key="nav_plan"): 
+        st.session_state.page = "planning"; st.rerun()
+    
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_shop"): 
+        st.session_state.page="shop"; st.rerun()
+    
+    st.divider()
+    
+    # Options Admin (Ajouter recette)
+    if st.session_state.admin_mode:
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add"):
+            st.session_state.page="add"; st.rerun()
+    
+    if st.button("⭐ Play Store", use_container_width=True, key="nav_play"): 
+        st.session_state.page="playstore"; st.rerun()
+        
+    if st.button("❓ Aide", use_container_width=True, key="nav_help"): 
+        st.session_state.page="help"; st.rerun()
 
 # ======================
 # LOGIQUE DES PAGES (CONTENU PRINCIPAL)
@@ -1180,6 +1198,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
