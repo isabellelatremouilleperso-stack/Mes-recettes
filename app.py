@@ -732,7 +732,7 @@ elif st.session_state.page == "print":
     """, unsafe_allow_html=True)
 
     st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P** (ou Cmd + P sur Mac) de votre navigateur.")                
- # --- PAGE ÉDITION (DÉDIÉE) ---
+# --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
     r_edit = st.session_state.get('recipe_to_edit', {})
@@ -1313,6 +1313,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
