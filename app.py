@@ -668,64 +668,58 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "print":
     r = st.session_state.get('recipe_data', {})
     
-    # Bouton pour revenir aux détails (invisible à l'impression grâce au CSS)
+    # 1. Bouton pour revenir aux détails (invisible à l'impression)
     if st.button("⬅ Retour à la fiche recette", use_container_width=True):
         st.session_state.page = "details"
         st.rerun()
 
-    # --- LE CERVEAU DE L'IMPRESSION (CSS) ---
-    # Ce bloc dit au navigateur : "Quand on imprime, cache tout sauf la feuille de recette"
+    # 2. LE STYLE CSS (Inchangé, mais optimisé pour ton design sombre)
     st.markdown("""
     <style>
     @media print {
-        /* On masque tout ce qui est interface Streamlit */
-        header, footer, .stButton, [data-testid="st"], [data-testid="stHeader"] {
+        header, footer, .stButton, [data-testid="stHeader"], [data-testid="stSidebar"], .stInfo {
             display: none !important;
         }
-        /* On force le texte en noir sur fond blanc */
-        .main {
-            background-color: white !important;
-            color: black !important;
-        }
-        /* On remonte le contenu pour éviter le vide en haut de page */
+        .stApp { background-color: white !important; }
+        .main { background-color: white !important; color: black !important; }
         .print-sheet { 
             margin-top: -50px !important; 
+            box-shadow: none !important; 
             color: black !important;
         }
         h1, h3 { color: black !important; border-bottom: 1px solid #ccc; }
     }
     
-    /* Style pour l'aperçu à l'écran (pour que ce soit joli avant d'imprimer) */
     .print-sheet {
         background-color: white;
         padding: 40px;
         border-radius: 5px;
-        color: black;
+        color: black !important;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        max-width: 900px;
+        margin: auto;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    # --- PRÉPARATION DU CONTENU ---
+    # 3. PRÉPARATION DU CONTENU (On garde tout !)
     titre = r.get('Titre', 'Sans titre')
     cat = r.get('Catégorie', '-')
-    
-    # Transformation des sauts de ligne pour le format HTML
     ing_html = str(r.get('Ingrédients', '')).replace('\n', '<br>')
     prep_html = str(r.get('Préparation', '')).replace('\n', '<br>')
 
-   # 1. On stocke le contenu dans la variable 'fiche_html'
+    # 4. LA FEUILLE DE RECETTE (Exactement tes sections)
     fiche_html = f"""
     <div class="print-sheet">
-        <h1 style="text-align: center; margin-bottom: 5px;">{titre}</h1>
-        <p style="text-align: center; font-style: italic; margin-bottom: 30px;">Catégorie : {cat}</p>
+        <h1 style="text-align: center; margin-bottom: 5px; color: #e67e22;">{titre}</h1>
+        <p style="text-align: center; font-style: italic; margin-bottom: 30px; color: #666;">Catégorie : {cat}</p>
         
-        <h3 style="color: #e67e22;">🛒 Ingrédients</h3>
-        <div style="margin-bottom: 30px; line-height: 1.6;">{ing_html}</div>
+        <h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">🛒 Ingrédients</h3>
+        <div style="margin-bottom: 30px; line-height: 1.6; color: black;">{ing_html}</div>
         
-        <h3 style="color: #e67e22;">👨‍🍳 Étapes de préparation</h3>
-        <div style="line-height: 1.6;">{prep_html}</div>
+        <h3 style="color: #e67e22; border-bottom: 1px solid #eee; padding-bottom: 5px;">👨‍🍳 Étapes de préparation</h3>
+        <div style="line-height: 1.6; color: black;">{prep_html}</div>
         
         <div style="margin-top: 50px; border-top: 1px solid #eee; font-size: 10px; text-align: center; color: #999;">
             Imprimé depuis mon carnet de recettes personnel
@@ -733,10 +727,11 @@ elif st.session_state.page == "print":
     </div>
     """
 
-    # 2. On l'affiche UNE SEULE FOIS avec le paramètre magique
+    # 5. RENDU FINAL
     st.markdown(fiche_html, unsafe_allow_html=True)
 
-    st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P** (ou Cmd + P sur Mac) de votre navigateur.")
+    st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P**.")
+    st.stop()
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1216,6 +1211,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
