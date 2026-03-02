@@ -238,7 +238,15 @@ with st.sidebar:
     if st.button("❓ Aide", use_container_width=True, key="nav_sidebar_help"): 
         st.session_state.page = "help"
         st.rerun()
+       
+    if st.button("🔄 Actualiser les données", use_container_width=True):
+        st.cache_data.clear()
+        st.toast("Mise à jour réussie ! 📋")
+        time.sleep(0.5)
+        st.rerun()
 
+    st.divider()
+ 
 # ======================
 # LOGIQUE DES PAGES (CONTENU PRINCIPAL)
 # ======================
@@ -1238,6 +1246,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
