@@ -534,33 +534,39 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # 3. INGRÉDIENTS
+        # 3. INGRÉDIENTS AVEC SÉLECTION INDIVIDUELLE
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
+        
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            # Nettoyage des séparateurs pour avoir une belle liste
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
+            # --- ZONE DE SÉLECTION ---
+            sel = []
             for i, line in enumerate(ings):
-                st.checkbox(line, key=f"chk_{current_title}_{i}")
+                # Si la case est cochée, on ajoute l'ingrédient à la liste 'sel'
+                if st.checkbox(line, key=f"chk_sel_{current_title}_{i}"):
+                    sel.append(line)
             
-            # --- LE BOUTON REVIENT ICI ---
             st.write("") # Petit espace
-            if st.button("➕ Ajouter tout à mon épicerie", use_container_width=True, key=f"add_grocery_{current_title}"):
-                if 'grocery_list' not in st.session_state:
-                    st.session_state.grocery_list = []
-                
-                # On ajoute chaque ligne d'ingrédient à la liste de session
-                for item in ings:
-                    if item not in st.session_state.grocery_list:
-                        st.session_state.grocery_list.append(item)
-                
-                st.toast(f"🛒 {len(ings)} ingrédients ajoutés !", icon="✨")
-                time.sleep(1)
-                st.session_state.page = "shop" # On redirige vers la liste pour voir le résultat
-                st.rerun()
+            
+            # --- BOUTON D'ACTION ---
+            # On n'affiche le bouton que si au moins un élément est sélectionné (optionnel mais plus propre)
+            if sel:
+                if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel"):
+                    with st.spinner("Envoi à l'épicerie..."):
+                        for it in sel:
+                            send_action({"action": "add_shop", "article": it})
+                    
+                    st.toast(f"✅ {len(sel)} articles ajoutés à la liste !", icon="🛒")
+                    time.sleep(1)
+                    st.rerun()
+            else:
+                st.info("Cochez les ingrédients à acheter.")
         else:
-            st.info("Aucun ingrédient.")
+            st.info("Aucun ingrédient pour cette recette.")
 
     # ... (après la fin des colonnes col_g et col_d) ...
 
@@ -1232,6 +1238,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
