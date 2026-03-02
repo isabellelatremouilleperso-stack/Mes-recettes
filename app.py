@@ -169,10 +169,35 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Ton bloc actuel s'arrête ici ---
+# 1. Barre latérale (On ouvre le bloc "with" sans espaces au début)
+with st.sidebar:
+    st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
+
+    # 2. SECTION SÉCURITÉ (Bien alignée avec 4 espaces)
+    if not st.session_state.get('admin_mode', False):
+        pwd = st.text_input("🔑 Accès Admin", type="password")
+        if st.button("Se connecter 🔓", use_container_width=True):
+            user_input = str(pwd).strip()
+            input_hash = hashlib.sha256(user_input.encode()).hexdigest()
+            
+            # Récupération du hash dans tes Secrets Streamlit
+            target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
+            
+            if input_hash == target_hash and target_hash != "":
+                st.session_state.admin_mode = True
+                st.rerun()
+            else:
+                st.error("Code incorrect ❌")
+    else:
+        st.success("✅ Mode Chef Activé")
+        if st.button("🔒 Déconnexion", use_container_width=True):
+            st.session_state.admin_mode = False
+            st.rerun()
+
     st.divider()
-    
-    # --- LA SUITE À AJOUTER (Toujours avec l'alignement/indentation) ---
+
+    # 3. NAVIGATION (Toujours avec 4 espaces pour rester dans la sidebar)
     if st.button("📚 Bibliothèque", use_container_width=True, key="nav_home"): 
         st.session_state.page = "home"
         st.rerun()
@@ -187,8 +212,8 @@ st.markdown("""
     
     st.divider()
     
-    # Bouton qui n'apparaît QUE si tu es connecté
-    if st.session_state.admin_mode:
+    # Bouton qui n'apparaît QUE si tu es connecté en admin
+    if st.session_state.get('admin_mode', False):
         if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add"):
             st.session_state.page = "add"
             st.rerun()
@@ -1176,6 +1201,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
