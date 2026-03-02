@@ -674,7 +674,7 @@ elif st.session_state.page == "print":
     else:
         r = st.session_state.recipe_data
 
-        # 1. BOUTONS DE NAVIGATION
+        # 1. NAVIGATION
         col1, col2 = st.columns(2)
         with col1:
             if st.button("⬅ Retour aux détails", use_container_width=True):
@@ -684,60 +684,58 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE (Version Hybride Écran/Impression)
+        # 2. CSS DE FORCE
         st.markdown("""
         <style>
-        /* --- STYLE POUR L'ÉCRAN (Fixe l'écran noir) --- */
+        /* FIX ÉCRAN : Pour que la fiche ne soit pas cachée par le noir */
+        .main .block-container {
+            padding-top: 1rem !important;
+            max-width: 900px !important;
+        }
         .print-sheet { 
             background: white !important; 
             color: black !important; 
             padding: 30px; 
-            font-family: sans-serif; 
+            font-family: Arial, sans-serif; 
             border-radius: 10px;
-            max-width: 850px;
-            margin: 20px auto;
-            border: 1px solid #eee;
+            border: 1px solid #ddd;
             display: block !important;
+            visibility: visible !important;
         }
 
-        /* --- CONFIGURATION IMPRESSION (Fixe la page blanche) --- */
         @media print {
             @page {
                 size: A4;
                 margin: 10mm 15mm !important;
             }
             
-            /* Cache absolument tout le superflu */
+            /* On tue tout ce qui n'est pas la recette */
             header, footer, .stButton, button, iframe, 
             [data-testid="stHeader"], [data-testid="stSidebar"], 
             .stAppHeader, [data-testid="stDecoration"] {
                 display: none !important;
             }
 
-            /* Supprime les marges Streamlit pour remonter le texte au pixel 0 */
+            /* On remonte le contenu au pixel zéro */
             .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
                 padding: 0 !important;
                 margin: 0 !important;
                 background-color: white !important;
             }
 
-            /* Force la fiche à commencer tout en haut */
             .print-sheet {
-                position: relative !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100% !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 border: none !important;
-                box-shadow: none !important;
+                width: 100% !important;
             }
             
-            /* Évite de couper les instructions au milieu */
             h3, p, li { page-break-inside: avoid; }
         }
 
-        /* Design des titres et boîtes */
         .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
-        .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; color: #444; }
         h1 { color: black !important; margin: 0 !important; font-size: 26px; }
         h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
         </style>
@@ -770,6 +768,7 @@ elif st.session_state.page == "print":
 
         st.markdown(fiche_html, unsafe_allow_html=True)
         st.stop()
+
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1249,6 +1248,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
