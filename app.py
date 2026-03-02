@@ -183,15 +183,17 @@ with st.sidebar:
     st.markdown('<h3 style="text-align: center;">Mes Recettes</h3>', unsafe_allow_html=True)
 
     # --- SECTION SÉCURITÉ ---
-    if not st.session_state.admin_mode:
+    if not st.session_state.get('admin_mode', False):
         pwd = st.text_input("🔑 Accès Admin", type="password")
-        if st.button("Se connecter 🔓", use_container_width=True, key="login_btn"):
+        if st.button("Se connecter 🔓", use_container_width=True):
+            # Nettoyage de ce que tu tapes
             user_input = str(pwd).strip()
-            # Hash pour le code 142203
             input_hash = hashlib.sha256(user_input.encode()).hexdigest()
+            
+            # Récupération ET nettoyage forcé du secret enregistré
             target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
             
-            if input_hash == target_hash:
+            if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
@@ -1204,6 +1206,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
