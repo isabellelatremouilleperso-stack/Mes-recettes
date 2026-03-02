@@ -685,7 +685,7 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-       # 2. CSS DE FORCE (Version A4 Optimisée)
+       # 2. CSS DE FORCE (Version Anti-Pages Fantômes)
         st.markdown("""
         <style>
         @media print {
@@ -695,40 +695,48 @@ elif st.session_state.page == "print":
                 margin: 15mm !important;
             }
 
-            /* 2. NETTOYAGE COMPLET DE L'UI */
+            /* 2. CACHER TOUT L'UI ET LA DÉCO */
             header, footer, .stButton, button, iframe, 
             [data-testid="stHeader"], 
             [data-testid="stSidebar"], 
-            .stAppHeader {
+            .stAppHeader,
+            [data-testid="stDecoration"] {
                 display: none !important;
+                height: 0 !important;
+                visibility: hidden !important;
             }
 
-            /* 3. RESET DES CONTENEURS (Anti-page blanche) */
+            /* 3. RESET AGRESSIF DES CONTENEURS */
             html, body, .stApp, .main, 
             [data-testid="stAppViewContainer"], 
-            [data-testid="stAppViewBlockContainer"] {
+            [data-testid="stAppViewBlockContainer"],
+            [data-testid="stVerticalBlock"] {
                 background: white !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 height: auto !important;
+                min-height: auto !important;
+                display: block !important;
             }
 
-            /* 4. LA FICHE (Position relative pour stabilité multi-pages) */
+            /* 4. FORCER LA FICHE TOUT EN HAUT (Tue la page 1) */
             .print-sheet {
-                position: relative !important;
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 width: 100% !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 box-shadow: none !important;
-                color: black !important;
+                background: white !important;
             }
             
-            /* Empêche de couper les paragraphes entre deux pages */
+            /* Évite de couper les blocs au milieu */
             p, div, li { page-break-inside: avoid; }
             h3 { page-break-after: avoid; }
         }
         
-        /* Style pour l'affichage écran normal */
+        /* Style écran normal */
         .print-sheet { 
             background: white !important; 
             color: black !important; 
@@ -743,34 +751,7 @@ elif st.session_state.page == "print":
         h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 15px; }
         </style>
         """, unsafe_allow_html=True)
-
-        # 3. TRAITEMENT DES DONNÉES
-        ing_raw = str(r.get('Ingrédients','')).split('\n')
-        html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
-        prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
-
-        # 4. RENDU FINAL
-        fiche_html = f"""
-<div class="print-sheet">
-    <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
-    <div class="info-box">
-        <span>Catégorie : {r.get('Catégorie','-')}</span>
-        <span>Portions : {r.get('Portions','-')}</span>
-        <span>Temps : {r.get('Temps_Prepa','0')} + {r.get('Temps_Cuisson','0')} min</span>
-    </div>
-    <div style="margin-bottom: 15px;">
-        <h3>🛒 Ingrédients</h3>
-        <div style="column-count: 2; column-gap: 30px; font-size: 13px; color: black;">{html_ing}</div>
-    </div>
-    <div>
-        <h3>👨‍🍳 Préparation</h3>
-        <div style="line-height: 1.5; text-align: justify; font-size: 13px; color: black;">{prepa_final}</div>
-    </div>
-    <div style="text-align:center; color:#888; font-size:10px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mes Recettes Pro</div>
-</div>"""
-
-        st.markdown(fiche_html, unsafe_allow_html=True)
-        st.stop()
+        
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1250,6 +1231,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
