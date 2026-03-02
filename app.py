@@ -487,42 +487,61 @@ elif st.session_state.page == "details":
                     st.rerun()
 
     with col_d:
-        # 1. INFORMATIONS
+        # 1. INFORMATIONS & MÉTRIQUES
         st.subheader("📋 Informations")
 
-        # CATÉGORIES ET SOURCE
-        c_info1, c_info2 = st.columns(2)
-        with c_info1:
-            cat_val = r.get('Catégorie', 'Autre')
-            st.markdown(f"**🍴 Catégorie :**\n`{cat_val}`")
-        with c_info2:
-            src_val = r.get('Source', '')
-            if src_val and "http" in str(src_val):
-                st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
-            else:
-                st.markdown("**🌐 Source :**\n*Non spécifiée*")
-        
-        st.write("") 
+        # --- AJOUT : CATÉGORIE ET SOURCE ---
+        # On récupère la catégorie
+        cat = r.get('Catégorie', 'Autre')
+        if not cat or str(cat).lower() == 'nan':
+            cat = "Autre"
+        st.write(f"**🍴 Catégorie :** {cat}")
 
-        # PLANNING
+        # On récupère la source
+        source = r.get('Source', '')
+        if source and "http" in str(source):
+            st.link_button("🌐 Voir la source originale", str(source), use_container_width=True)
+        
+        st.divider()
+
+        # --- PLANNING (Ton code d'origine) ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
-            u_id = hashlib.md5(current_title.encode()).hexdigest()[:6]
-            date_p = st.date_input("Choisir une date", key=f"d_{u_id}")
-            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"b_{u_id}"):
-                if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
-                    st.toast("🍳 Ajouté !")
+            unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
+            date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
+            
+            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_{unique_key}"):
+                payload = {
+                    "action": "plan", 
+                    "titre": current_title, 
+                    "date_prevue": str(date_p)
+                }
+                
+                if send_action(payload):
+                    st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
                     st.cache_data.clear()
-                    time.sleep(1)
+                    
+                    # On a choisi 1.2s : le bon compromis entre vitesse et fiabilité
+                    time.sleep(1.2) 
+                    
                     st.session_state.page = "planning"
                     st.rerun()
         
         st.divider()
 
-        # MÉTRIQUES
+        # --- MÉTRIQUES (Ton code d'origine) ---
+        def clean_metrique(valeur):
+            v_str = str(valeur).strip().lower()
+            if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
+            return str(valeur).split('.')[0]
+
+        p_final = clean_metrique(r.get('Temps de préparation'))
+        c_final = clean_metrique(r.get('Temps de cuisson'))
+        port_final = clean_metrique(r.get('Portions'))
+
         m1, m2, m3 = st.columns(3)
-        m1.metric("🕒 Prépa", f"{r.get('Temps de préparation', '-')} min")
-        m2.metric("🔥 Cuisson", f"{r.get('Temps de cuisson', '-')} min")
-        m3.metric("🍽️ Portions", r.get('Portions', '-'))
+        m1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
+        m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
+        m3.metric("🍽️ Portions", port_final)
 
         st.divider()
 
@@ -1207,6 +1226,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
