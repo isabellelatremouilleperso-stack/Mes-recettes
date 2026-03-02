@@ -879,9 +879,12 @@ elif st.session_state.page == "edit":
             else:
                 st.error("Le titre et les ingrédients sont requis.")
 
-# --- PAGE ÉPICERIE ---
+# --- PAGE ÉPICERIE (SÉCURISÉE) ---
 elif st.session_state.page == "shop":
     st.header("🛒 Ma Liste d'épicerie")
+    
+    # On définit si l'utilisateur est admin
+    is_admin = st.session_state.get('admin_mode', False)
     
     if st.button("⬅ Retour"):
         st.session_state.page = "home"
@@ -892,43 +895,47 @@ elif st.session_state.page == "shop":
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
-            # On utilise un formulaire Streamlit pour éviter que la page ne saute à chaque clic
-            with st.form("shop_form"):
-                to_del = []
-                st.write("Cochez les articles à retirer de la liste :")
+            if is_admin:
+                # --- MODE ADMIN : Formulaire de suppression ---
+                with st.form("shop_form"):
+                    to_del = []
+                    st.write("Cochez les articles à retirer de la liste :")
+                    
+                    for idx, row in df_s.iterrows():
+                        article_nom = str(row.iloc[0]).strip()
+                        if article_nom:
+                            if st.checkbox(article_nom, key=f"sh_{idx}"):
+                                to_del.append(article_nom)
+                    
+                    st.divider()
+                    submit_del = st.form_submit_button("🗑 Retirer les articles sélectionnés", use_container_width=True)
                 
-                # On affiche les articles
+                # Bouton "Vider tout" (Admin uniquement)
+                if st.button("🧨 Vider toute la liste", use_container_width=True):
+                    if send_action({"action": "clear_shop"}):
+                        st.cache_data.clear()
+                        st.success("Liste vidée !")
+                        st.rerun()
+
+                # Logique de suppression suite au clic sur le bouton du formulaire
+                if submit_del:
+                    if to_del:
+                        with st.spinner("Mise à jour..."):
+                            if send_action({"action": "remove_shop", "articles": to_del}):
+                                st.cache_data.clear()
+                                st.toast(f"Retiré : {len(to_del)} article(s)")
+                                st.rerun()
+                    else:
+                        st.warning("Veuillez cocher au moins un article.")
+            
+            else:
+                # --- MODE CONSULTATION : Affichage simple sans interaction ---
+                st.info("📖 Mode Consultation : Vous pouvez consulter la liste, mais seul le Chef peut retirer des articles.")
                 for idx, row in df_s.iterrows():
                     article_nom = str(row.iloc[0]).strip()
-                    if article_nom: # On ignore les lignes vides
-                        # Si coché, on ajoute à la liste to_del
-                        if st.checkbox(article_nom, key=f"sh_{idx}"):
-                            to_del.append(article_nom)
-                
-                st.divider()
-                
-                # Le bouton de validation du formulaire
-                submit_del = st.form_submit_button("🗑 Retirer les articles sélectionnés", use_container_width=True)
-                
-            # Bouton "Vider tout" hors du formulaire pour plus de sécurité
-            if st.button("🧨 Vider toute la liste", use_container_width=True):
-                if send_action({"action": "clear_shop"}):
-                    st.cache_data.clear()
-                    st.success("Liste vidée !")
-                    st.rerun()
-
-            # Logique de suppression suite au clic sur le bouton du formulaire
-            if submit_del:
-                if to_del:
-                    with st.spinner("Mise à jour..."):
-                        # ENVOI UNIQUE à Google Apps Script
-                        if send_action({"action": "remove_shop", "articles": to_del}):
-                            st.cache_data.clear()
-                            st.toast(f"Retiré : {len(to_del)} article(s)")
-                            st.rerun()
-                else:
-                    st.warning("Veuillez cocher au moins un article.")
-                    
+                    if article_nom:
+                        st.markdown(f"**❑** {article_nom}")
+                        
         else:
             st.info("Votre liste est vide pour le moment.")
             
@@ -1029,38 +1036,45 @@ elif st.session_state.page == "planning":
                             st.session_state.page = "details"
                             st.rerun()
 
-                with col_edit:
-                    if st.button("✏️", key=f"edit_{index}"):
-                        st.session_state[f"editing_{index}"] = True
+                # --- PROTECTION DU PLANNING (MODE ADMIN) ---
+        is_admin = st.session_state.get('admin_mode', False)
 
-                    if st.session_state.get(f"editing_{index}", False):
-                        new_date = st.date_input("Nouvelle date", value=row['Date'], key=f"date_input_{index}")
-                        c1, c2 = st.columns(2)
-                        with c1:
-                            if st.button("✅", key=f"confirm_{index}"):
-                                payload = {
-                                    "action": "update_plan",
-                                    "titre": row['Titre'],
-                                    "old_date": row['Date'].strftime('%Y-%m-%d'),
-                                    "new_date": new_date.strftime('%Y-%m-%d')
-                                }
-                                with st.spinner("Mise à jour..."):
-                                    if send_action(payload):
-                                        st.cache_data.clear()
-                                        st.session_state[f"editing_{index}"] = False
-                                        st.rerun()
-                        with c2:
-                            if st.button("❌", key=f"cancel_{index}"):
-                                st.session_state[f"editing_{index}"] = False
-                                st.rerun()
+        with col_edit:
+            # On affiche le bouton d'édition UNIQUEMENT si on est Admin
+            if is_admin:
+                if st.button("✏️", key=f"edit_{index}"):
+                    st.session_state[f"editing_{index}"] = True
 
-                with col_del:
-                    if st.button("🗑️", key=f"del_{index}"):
-                        date_clean = row['Date'].strftime('%Y-%m-%d')
-                        payload = {"action": "remove_plan", "titre": str(row['Titre']).strip(), "date": date_clean}
-                        if send_action(payload):
-                            st.cache_data.clear()
+                if st.session_state.get(f"editing_{index}", False):
+                    new_date = st.date_input("Nouvelle date", value=row['Date'], key=f"date_input_{index}")
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button("✅", key=f"confirm_{index}"):
+                            payload = {
+                                "action": "update_plan",
+                                "titre": row['Titre'],
+                                "old_date": row['Date'].strftime('%Y-%m-%d'),
+                                "new_date": new_date.strftime('%Y-%m-%d')
+                            }
+                            with st.spinner("Mise à jour..."):
+                                if send_action(payload):
+                                    st.cache_data.clear()
+                                    st.session_state[f"editing_{index}"] = False
+                                    st.rerun()
+                    with c2:
+                        if st.button("❌", key=f"cancel_{index}"):
+                            st.session_state[f"editing_{index}"] = False
                             st.rerun()
+
+        with col_del:
+            # On affiche la poubelle UNIQUEMENT si on est Admin
+            if is_admin:
+                if st.button("🗑️", key=f"del_{index}"):
+                    date_clean = row['Date'].strftime('%Y-%m-%d')
+                    payload = {"action": "remove_plan", "titre": str(row['Titre']).strip(), "date": date_clean}
+                    if send_action(payload):
+                        st.cache_data.clear()
+                        st.rerun()
 
     except Exception as e:
         st.error(f"Erreur d'affichage du planning : {e}")
@@ -1293,6 +1307,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
