@@ -178,21 +178,21 @@ st.markdown("""
 # BARRE LATÉRALE (SIDEBAR)
 # ======================
 with st.sidebar:
-    # Logo
+    # Logo et Design
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
-    st.markdown('<h3 style="text-align: center;">Mes Recettes</h3>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
     # --- SECTION SÉCURITÉ ---
     if not st.session_state.get('admin_mode', False):
-        # Cette ligne est essentielle pour taper le code !
-        pwd = st.text_input("🔑 Accès Admin", type="password", key="admin_pwd_input")
+        pwd_input = st.text_input("🔑 Accès Admin", type="password", key="password_sidebar")
         
-        if st.button("Se connecter 🔓", use_container_width=True, key="final_login_btn"):
-            user_input = str(pwd).strip()
-            input_hash = hashlib.sha256(user_input.encode()).hexdigest().strip()
+        if st.button("Se connecter 🔓", use_container_width=True, key="login_sidebar"):
+            # Nettoyage et Hachage
+            user_code = str(pwd_input).strip()
+            input_hash = hashlib.sha256(user_code.encode()).hexdigest().strip()
             
-            # Récupération du secret
-            target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
+            # Récupération du Secret
+            target_hash = st.secrets.get("admin_password_hash", "").strip()
             
             if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
@@ -201,38 +201,38 @@ with st.sidebar:
                 st.error("Code incorrect ❌")
     else:
         st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion", use_container_width=True, key="logout_btn"):
+        if st.button("🔒 Déconnexion", use_container_width=True, key="logout_sidebar"):
             st.session_state.admin_mode = False
             st.rerun()
 
     st.divider()
 
-    # --- NAVIGATION UNIQUE ---
-    if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"): 
+    # --- NAVIGATION PRINCIPALE ---
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_biblio"): 
         st.session_state.page = "home"
         st.rerun()
     
-    if st.button("📅 Planning", use_container_width=True, key="side_plan"): 
+    if st.button("📅 Planning", use_container_width=True, key="nav_planning"): 
         st.session_state.page = "planning"
         st.rerun()
     
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="side_shop"): 
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_grocery"): 
         st.session_state.page = "shop"
         st.rerun()
-    
+
+    # --- OPTIONS ADMIN ET AIDE ---
     st.divider()
     
-    # Options Admin (N'apparaît que si connecté)
     if st.session_state.get('admin_mode', False):
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="side_add"):
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add_recipe"):
             st.session_state.page = "add"
             st.rerun()
     
-    if st.button("⭐ Play Store", use_container_width=True, key="side_play"): 
+    if st.button("⭐ Play Store", use_container_width=True, key="nav_playstore"): 
         st.session_state.page = "playstore"
         st.rerun()
         
-    if st.button("❓ Aide", use_container_width=True, key="side_help"): 
+    if st.button("❓ Aide", use_container_width=True, key="nav_help_page"): 
         st.session_state.page = "help"
         st.rerun()
 
@@ -1212,6 +1212,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
