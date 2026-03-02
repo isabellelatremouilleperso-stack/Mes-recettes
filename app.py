@@ -990,8 +990,9 @@ elif st.session_state.page == "planning":
 
             derniere_semaine = -1
             
-            # 3. BOUCLE D'AFFICHAGE
+            # --- 3. BOUCLE D'AFFICHAGE ---
 for index, row in df_plan.iterrows():
+    
     # --- A. GESTION DES SÉPARATEURS DE SEMAINE ---
     semaine_actuelle = row['Date'].isocalendar()[1]
     if semaine_actuelle != derniere_semaine:
@@ -1035,8 +1036,7 @@ for index, row in df_plan.iterrows():
                 st.session_state.page = "details"
                 st.rerun()
 
-    # --- PROTECTION DU PLANNING (MODE ADMIN) ---
-    # CETTE LIGNE DOIT ÊTRE DÉCALÉE À DROITE (DANS LE FOR)
+    # --- PROTECTION DU PLANNING (DANS LA BOUCLE) ---
     is_admin = st.session_state.get('admin_mode', False)
 
     with col_edit:
@@ -1304,6 +1304,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
