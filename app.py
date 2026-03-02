@@ -488,97 +488,65 @@ elif st.session_state.page == "details":
         if note_actuelle > 0:
             st.markdown(f"### {'⭐' * note_actuelle}")
 
+    # --- DANS LE BLOC elif st.session_state.page == "details": ---
     with col_d:
-        # 1. INFORMATIONS & MÉTRIQUES
+        # 1. INFORMATIONS
         st.subheader("📋 Informations")
 
-        # --- AJOUT : CATÉGORIES ET SOURCE ---
-        c_info1, c_info2 = st.columns([1, 1])
+        # --- CATÉGORIES ET SOURCE ---
+        c_info1, c_info2 = st.columns(2)
         with c_info1:
-            cat = r.get('Catégorie', 'Autre')
-            if not cat or str(cat).lower() == 'nan': cat = "Autre"
-            st.markdown(f"**🍴 Catégorie :**\n`{cat}`")
+            cat_val = r.get('Catégorie', 'Autre')
+            st.markdown(f"**🍴 Catégorie :**\n`{cat_val}`")
         with c_info2:
-            src = r.get('Source', '')
-            if src and "http" in str(src):
-                st.link_button("🌐 Voir la Source", str(src), use_container_width=True)
+            src_val = r.get('Source', '')
+            if src_val and "http" in str(src_val):
+                st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
             else:
                 st.markdown("**🌐 Source :**\n*Non spécifiée*")
         
-        st.write("") # Espace de respiration
+        st.write("") 
 
         # --- PLANNING ---
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
-            unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
-            date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
-            
-            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_{unique_key}"):
-                payload = {
-                    "action": "plan", 
-                    "titre": current_title, 
-                    "date_prevue": str(date_p)
-                }
-                
-                if send_action(payload):
-                    st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
+            u_id = hashlib.md5(current_title.encode()).hexdigest()[:6]
+            date_p = st.date_input("Choisir une date", key=f"d_{u_id}")
+            if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"b_{u_id}"):
+                if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
+                    st.toast("🍳 Ajouté !")
                     st.cache_data.clear()
-                    time.sleep(1.2) 
+                    time.sleep(1)
                     st.session_state.page = "planning"
                     st.rerun()
         
         st.divider()
 
         # --- MÉTRIQUES ---
-        def clean_metrique(valeur):
-            v_str = str(valeur).strip().lower()
-            if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
-            return str(valeur).split('.')[0]
-
-        p_final = clean_metrique(r.get('Temps de préparation'))
-        c_final = clean_metrique(r.get('Temps de cuisson'))
-        port_final = clean_metrique(r.get('Portions'))
-
         m1, m2, m3 = st.columns(3)
-        m1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
-        m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
-        m3.metric("🍽️ Portions", port_final)
-
-        # 2. SUPPORT VIDÉO
-        v_link = r.get('Vidéo', r.get('video', ''))
-        if v_link and "http" in str(v_link):
-            st.divider()
-            if any(x in str(v_link) for x in ["youtube", "youtu.be", "vimeo"]):
-                st.video(str(v_link))
-            else:
-                st.link_button("📺 Voir la vidéo", str(v_link), use_container_width=True)
+        m1.metric("🕒 Prépa", f"{r.get('Temps de préparation', '-')} min")
+        m2.metric("🔥 Cuisson", f"{r.get('Temps de cuisson', '-')} min")
+        m3.metric("🍽️ Portions", r.get('Portions', '-'))
 
         st.divider()
 
-        # 3. INGRÉDIENTS AVEC SÉLECTION INDIVIDUELLE
+        # --- INGRÉDIENTS ---
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
-        
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+            ings_list = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
-            sel = []
-            for i, line in enumerate(ings):
-                if st.checkbox(line, key=f"chk_sel_{current_title}_{i}"):
-                    sel.append(line)
+            # Sélection
+            sel_items = []
+            for i, line in enumerate(ings_list):
+                if st.checkbox(line, key=f"c_{u_id}_{i}"):
+                    sel_items.append(line)
             
-            st.write("") 
-            
-            if sel:
-                if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key=f"btn_add_sel_{current_title}"):
-                    with st.spinner("Envoi à l'épicerie..."):
-                        for it in sel:
-                            send_action({"action": "add_shop", "article": it})
-                    st.toast(f"✅ Articles ajoutés !", icon="🛒")
-                    time.sleep(1)
-                    st.rerun()
-            else:
-                st.info("Cochez les ingrédients à acheter.")
+            if sel_items:
+                if st.button(f"📥 Ajouter ({len(sel_items)}) au Panier", use_container_width=True, key=f"shop_{u_id}"):
+                    for it in sel_items:
+                        send_action({"action": "add_shop", "article": it})
+                    st.toast("Ajouté ! 🛒")
         else:
             st.info("Aucun ingrédient.")
 
@@ -1246,6 +1214,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
