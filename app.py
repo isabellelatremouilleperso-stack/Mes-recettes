@@ -182,66 +182,57 @@ with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center; color: #e67e22;">Mes Recettes</h3>', unsafe_allow_html=True)
 
-    # --- SECTION SÉCURITÉ (MODE DIAGNOSTIC) ---
+    # --- SECTION SÉCURITÉ ---
     if not st.session_state.get('admin_mode', False):
-        pwd_input = st.text_input("🔑 Accès Admin", type="password", key="diag_pwd")
+        pwd_input = st.text_input("🔑 Accès Admin", type="password", key="sidebar_password_field")
         
-        if st.button("Se connecter 🔓", use_container_width=True, key="diag_btn"):
-            # 1. Nettoyage extrême
+        if st.button("Se connecter 🔓", use_container_width=True, key="sidebar_login_action"):
             user_code = str(pwd_input).strip()
+            # On génère le hash SHA-256 complet
             input_hash = hashlib.sha256(user_code.encode()).hexdigest().strip()
             
-            # 2. Récupération du secret
-            raw_secret = st.secrets.get("admin_password_hash", "")
-            target_hash = str(raw_secret).strip()
+            # On récupère le secret (qui doit faire 64 caractères)
+            target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
             
-            # --- ZONE DE TEST VISUEL ---
-            if input_hash == target_hash:
-                st.success("✅ MATCH ! Le code est bon.")
+            if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
-                st.error("❌ ÉCHEC DE COMPARAISON")
-                st.write(f"Ton hash (142203) : `{input_hash}`")
-                st.write(f"Secret en base : `{target_hash}`")
-                st.write(f"Longueurs : Saisie({len(input_hash)}) chars | Secret({len(target_hash)}) chars")
-                
-                if len(target_hash) == 0:
-                    st.warning("⚠️ L'application ne lit aucun secret. Vérifie le nom 'admin_password_hash' dans Streamlit.")
+                st.error("Code incorrect ❌")
     else:
         st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion", use_container_width=True, key="logout_sidebar"):
+        if st.button("🔒 Déconnexion", use_container_width=True, key="sidebar_logout_action"):
             st.session_state.admin_mode = False
             st.rerun()
 
     st.divider()
 
     # --- NAVIGATION PRINCIPALE ---
-    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_biblio"): 
+    if st.button("📚 Bibliothèque", use_container_width=True, key="nav_sidebar_home"): 
         st.session_state.page = "home"
         st.rerun()
     
-    if st.button("📅 Planning", use_container_width=True, key="nav_planning"): 
+    if st.button("📅 Planning", use_container_width=True, key="nav_sidebar_plan"): 
         st.session_state.page = "planning"
         st.rerun()
     
-    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_grocery"): 
+    if st.button("🛒 Ma Liste d'épicerie", use_container_width=True, key="nav_sidebar_shop"): 
         st.session_state.page = "shop"
         st.rerun()
 
-    # --- OPTIONS ADMIN ET AIDE ---
+    # --- OPTIONS SUPPLÉMENTAIRES ---
     st.divider()
     
     if st.session_state.get('admin_mode', False):
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_add_recipe"):
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_sidebar_add"):
             st.session_state.page = "add"
             st.rerun()
     
-    if st.button("⭐ Play Store", use_container_width=True, key="nav_playstore"): 
+    if st.button("⭐ Play Store", use_container_width=True, key="nav_sidebar_play"): 
         st.session_state.page = "playstore"
         st.rerun()
         
-    if st.button("❓ Aide", use_container_width=True, key="nav_help_page"): 
+    if st.button("❓ Aide", use_container_width=True, key="nav_sidebar_help"): 
         st.session_state.page = "help"
         st.rerun()
 
@@ -1221,6 +1212,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
