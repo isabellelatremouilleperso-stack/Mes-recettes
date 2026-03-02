@@ -140,16 +140,23 @@ def scrape_url(url):
         # Retourne des chaînes vides au lieu de None pour éviter les erreurs de concaténation plus tard
         return "Recette inconnue", "", f"Erreur lors de l'extraction : {e}"
         
+import streamlit as st
+import hashlib
+import time
+
 # ======================
 # INITIALISATION ET DESIGN
 # ======================
 
-if 'page' not in st.session_state:
-    st.session_state.page = "home"
-
+# 1. Configuration de la page (DOIT être la première commande Streamlit)
 st.set_page_config(page_title="Mes Recettes Pro", layout="wide", page_icon="🍳")
 
-# Style CSS combiné et optimisé
+if 'page' not in st.session_state:
+    st.session_state.page = "home"
+if 'admin_mode' not in st.session_state:
+    st.session_state.admin_mode = False
+
+# 2. Style CSS
 st.markdown("""
 <style>
     .stApp, header, [data-testid="stHeader"] { background-color: #0e1117 !important; }
@@ -159,38 +166,48 @@ st.markdown("""
     input, select, textarea, div[data-baseweb="select"] { color: white !important; background-color: #1e2129 !important; }
     .logo-container { display: flex; justify-content: center; margin-bottom: 10px; }
     .logo-container img { border-radius: 50%; width: 120px; height: 120px; object-fit: cover; border: 3px solid #e67e22; }
-    [data-testid="stSidebarCollapsedControl"] svg { fill: #e67e22 !important; }
 </style>
 """, unsafe_allow_html=True)
 
-# --- SECTION SÉCURITÉ (Indentation Sidebar) ---
+# ======================
+# BARRE LATÉRALE (SIDEBAR)
+# ======================
+with st.sidebar:
+    st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
+    st.markdown('<h3 style="text-align: center;">Mes Recettes</h3>', unsafe_allow_html=True)
+
+    # --- SECTION SÉCURITÉ ---
     if not st.session_state.admin_mode:
         pwd = st.text_input("🔑 Accès Admin", type="password")
         if st.button("Se connecter 🔓", use_container_width=True):
-            # 1. On nettoie la saisie de l'utilisateur
             user_input = pwd.strip()
-            
-            # 2. On génère le hash de ce que l'utilisateur a tapé
             input_hash = hashlib.sha256(user_input.encode()).hexdigest()
             
-            # 3. On récupère le secret et on le nettoie aussi (.strip())
-            # On utilise .get() pour éviter que l'app plante si le secret manque
-            raw_target = st.secrets.get("admin_password_hash", "")
-            target_hash = raw_target.strip()
+            # On récupère le hash dans les Secrets (image blanche de tantôt)
+            target_hash = st.secrets.get("admin_password_hash", "")
             
             if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
-                # Optionnel : décommenter la ligne suivante pour voir le hash si ça échoue encore
-                # st.write(f"DEBUG: {input_hash}") 
                 st.error("Code incorrect ❌")
+    else:
+        st.success("✅ Mode Chef Activé")
+        if st.button("🔒 Déconnexion", use_container_width=True):
+            st.session_state.admin_mode = False
+            st.rerun()
+
+    st.divider()
+    
+    # --- NAVIGATION ---
+    if st.button("📚 Bibliothèque", use_container_width=True):
+        st.session_state.page = "home"
+        st.rerun()
 
 # ======================
-# LOGIQUE DES PAGES
+# LOGIQUE DES PAGES (CONTENU PRINCIPAL)
 # ======================
 
-# --- PAGE ACCUEIL ---
 if st.session_state.page == "home":
     c1, c2 = st.columns([4, 1])
     c1.header("📚 Ma Bibliothèque")
@@ -199,7 +216,8 @@ if st.session_state.page == "home":
         st.rerun()
     
     st.divider()
-
+    
+    st.write("Bienvenue dans votre bibliothèque de recettes !")
     # --- NOUVELLE BARRE D'OUTILS (Navigation rapide) ---
     col_nav1, col_nav2 = st.columns(2)
     with col_nav1:
@@ -1162,6 +1180,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
