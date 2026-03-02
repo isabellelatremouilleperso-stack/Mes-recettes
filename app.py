@@ -182,24 +182,23 @@ with st.sidebar:
     st.markdown('<div class="logo-container"><img src="https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png"></div>', unsafe_allow_html=True)
     st.markdown('<h3 style="text-align: center;">Mes Recettes</h3>', unsafe_allow_html=True)
 
-    # --- SECTION SÉCURITÉ NETTOYÉE ---
+    # --- SECTION SÉCURITÉ ---
+    if not st.session_state.get('admin_mode', False):
+        # Cette ligne est essentielle pour taper le code !
+        pwd = st.text_input("🔑 Accès Admin", type="password", key="admin_pwd_input")
+        
         if st.button("Se connecter 🔓", use_container_width=True, key="final_login_btn"):
-            # 1. On nettoie la saisie utilisateur
             user_input = str(pwd).strip()
             input_hash = hashlib.sha256(user_input.encode()).hexdigest().strip()
             
-            # 2. On récupère et on nettoie le secret de force
-            raw_secret = st.secrets.get("admin_password_hash", "")
-            target_hash = str(raw_secret).strip()
+            # Récupération du secret
+            target_hash = str(st.secrets.get("admin_password_hash", "")).strip()
             
-            # 3. Comparaison stricte
             if input_hash == target_hash and target_hash != "":
                 st.session_state.admin_mode = True
                 st.rerun()
             else:
-                st.error(f"Erreur de correspondance ❌")
-                # Optionnel : affiche la longueur pour détecter un espace invisible
-                # st.write(f"Longueurs : Input({len(input_hash)}) vs Secret({len(target_hash)})")
+                st.error("Code incorrect ❌")
     else:
         st.success("✅ Mode Chef Activé")
         if st.button("🔒 Déconnexion", use_container_width=True, key="logout_btn"):
@@ -208,7 +207,7 @@ with st.sidebar:
 
     st.divider()
 
-    # --- NAVIGATION UNIQUE (Pour éviter l'erreur de l'image 3) ---
+    # --- NAVIGATION UNIQUE ---
     if st.button("📚 Bibliothèque", use_container_width=True, key="side_home"): 
         st.session_state.page = "home"
         st.rerun()
@@ -1213,6 +1212,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
