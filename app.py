@@ -684,51 +684,58 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-        # 2. CSS DE FORCE (Corrigé pour l'écran et l'impression)
+        # 2. CSS DE FORCE (Version Hybride Écran/Impression)
         st.markdown("""
         <style>
-        /* --- VISIBLE SUR ÉCRAN --- */
+        /* --- STYLE POUR L'ÉCRAN (Fixe l'écran noir) --- */
         .print-sheet { 
             background: white !important; 
             color: black !important; 
             padding: 30px; 
             font-family: sans-serif; 
             border-radius: 10px;
-            max-width: 800px;
+            max-width: 850px;
             margin: 20px auto;
+            border: 1px solid #eee;
+            display: block !important;
         }
 
-        /* --- CONFIGURATION IMPRESSION --- */
+        /* --- CONFIGURATION IMPRESSION (Fixe la page blanche) --- */
         @media print {
             @page {
                 size: A4;
                 margin: 10mm 15mm !important;
             }
             
-            /* Cache l'interface Streamlit */
+            /* Cache absolument tout le superflu */
             header, footer, .stButton, button, iframe, 
-            [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader, [data-testid="stDecoration"] {
+            [data-testid="stHeader"], [data-testid="stSidebar"], 
+            .stAppHeader, [data-testid="stDecoration"] {
                 display: none !important;
             }
 
-            /* Supprime les marges de l'application pour remonter le texte */
+            /* Supprime les marges Streamlit pour remonter le texte au pixel 0 */
             .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
                 padding: 0 !important;
                 margin: 0 !important;
                 background-color: white !important;
             }
 
-            /* Force la fiche à commencer en haut de la page 1 */
+            /* Force la fiche à commencer tout en haut */
             .print-sheet {
                 position: relative !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 width: 100% !important;
+                border: none !important;
                 box-shadow: none !important;
             }
+            
+            /* Évite de couper les instructions au milieu */
+            h3, p, li { page-break-inside: avoid; }
         }
 
-        /* Style des éléments de la recette */
+        /* Design des titres et boîtes */
         .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
         .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         h1 { color: black !important; margin: 0 !important; font-size: 26px; }
@@ -736,12 +743,12 @@ elif st.session_state.page == "print":
         </style>
         """, unsafe_allow_html=True)
 
-        # 3. PRÉPARATION DES DONNÉES
+        # 3. TRAITEMENT DES DONNÉES
         ing_raw = str(r.get('Ingrédients','')).split('\n')
         html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
         prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
 
-        # 4. RENDU HTML
+        # 4. RENDU FINAL
         fiche_html = f"""
 <div class="print-sheet">
     <div class="header-line"><h1>{r.get('Titre','Recette')}</h1></div>
@@ -763,7 +770,6 @@ elif st.session_state.page == "print":
 
         st.markdown(fiche_html, unsafe_allow_html=True)
         st.stop()
-        
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1243,6 +1249,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
