@@ -715,8 +715,8 @@ elif st.session_state.page == "print":
     ing_html = str(r.get('Ingrédients', '')).replace('\n', '<br>')
     prep_html = str(r.get('Préparation', '')).replace('\n', '<br>')
 
-    # --- LA FEUILLE DE RECETTE ---
-    st.markdown(f"""
+   # 1. On stocke le contenu dans la variable 'fiche_html'
+    fiche_html = f"""
     <div class="print-sheet">
         <h1 style="text-align: center; margin-bottom: 5px;">{titre}</h1>
         <p style="text-align: center; font-style: italic; margin-bottom: 30px;">Catégorie : {cat}</p>
@@ -731,10 +731,12 @@ elif st.session_state.page == "print":
             Imprimé depuis mon carnet de recettes personnel
         </div>
     </div>
-    """, unsafe_allow_html=True)
+    """
+
+    # 2. On l'affiche UNE SEULE FOIS avec le paramètre magique
+    st.markdown(fiche_html, unsafe_allow_html=True)
 
     st.info("💡 **Astuce :** Pour imprimer réellement, utilisez le raccourci **Ctrl + P** (ou Cmd + P sur Mac) de votre navigateur.")
-
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1214,6 +1216,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
