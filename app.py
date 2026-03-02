@@ -669,7 +669,7 @@ elif st.session_state.page == "add":
 elif st.session_state.page == "print":
     r = st.session_state.get('recipe_data', {})
     
-    # 1. NAVIGATION (Boutons visibles à l'écran seulement)
+    # 1. NAVIGATION (Visible à l'écran seulement)
     col1, col2 = st.columns(2)
     with col1:
         if st.button("⬅ Retour aux détails", use_container_width=True):
@@ -683,12 +683,12 @@ elif st.session_state.page == "print":
     st.markdown("""
     <style>
     @media print {
-        /* On cache tout l'interface Streamlit */
+        /* On cache absolument tout l'interface Streamlit */
         header, footer, .stButton, button, iframe, [data-testid="stHeader"], [data-testid="stSidebar"], .stAppHeader { 
             display: none !important; 
         }
         
-        /* On réinitialise les marges de la page pour éviter la page blanche */
+        /* On réinitialise les marges pour éviter la page blanche */
         .main, .stApp, [data-testid="stAppViewContainer"], [data-testid="stAppViewBlockContainer"] {
             padding: 0 !important;
             margin: 0 !important;
@@ -705,12 +705,10 @@ elif st.session_state.page == "print":
             left: 0;
             width: 100%;
         }
-
         .page-break { page-break-before: always; margin-top: 20px; }
     }
     
-    /* Style pour l'affichage propre à l'écran */
-    .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; border-radius: 10px; }
+    .print-sheet { background: white !important; color: black !important; padding: 30px; font-family: sans-serif; }
     .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
     .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
     h1 { color: black !important; margin: 0 !important; font-size: 28px; }
@@ -718,15 +716,11 @@ elif st.session_state.page == "print":
     </style>
     """, unsafe_allow_html=True)
 
-    # 3. TRAITEMENT DES DONNÉES
+    # 3. TRAITEMENT DU TEXTE
     ing_raw = str(r.get('Ingrédients','')).split('\n')
     html_ing = "".join([f"<div style='margin-bottom:3px;'>• {l.strip()}</div>" for l in ing_raw if l.strip()])
     prepa_final = str(r.get('Préparation', '')).replace('\n', '<br>')
     
-    # Saut de page si la liste d'ingrédients est trop longue
-    nb_ingredients = len([l for l in ing_raw if l.strip()])
-    class_saut_page = "page-break" if nb_ingredients > 15 else ""
-
     # 4. RENDU FINAL (Zéro espace au début pour éviter l'IndentationError)
     fiche_html = f"""
 <div class="print-sheet">
@@ -740,17 +734,16 @@ elif st.session_state.page == "print":
 <h3>🛒 Ingrédients</h3>
 <div style="column-count: 2; column-gap: 30px; font-size: 13px; color: black;">{html_ing}</div>
 </div>
-<div class="{class_saut_page}">
+<div>
 <h3>👨‍🍳 Préparation</h3>
 <div style="line-height: 1.5; text-align: justify; font-size: 13px; color: black;">{prepa_final}</div>
 </div>
 <div style="text-align:center; color:#888; font-size:10px; margin-top:40px; border-top:1px solid #eee; padding-top:10px;">Généré par Mon Carnet de Recettes Pro</div>
 </div>"""
 
-    # 5. AFFICHAGE (Attention à l'alignement ici !)
+    # 5. AFFICHAGE (Alignement corrigé)
     st.markdown(fiche_html, unsafe_allow_html=True)
     st.stop()
-
 # --- PAGE ÉDITION (DÉDIÉE) ---
 elif st.session_state.page == "edit":
     # On récupère les données de la recette à modifier
@@ -1230,6 +1223,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
