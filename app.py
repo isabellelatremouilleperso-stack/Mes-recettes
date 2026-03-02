@@ -188,23 +188,26 @@ with st.sidebar:
     # ... la suite de ton code Admin et Navigation ...
 
     # Section Sécurité Admin
-    if not st.session_state.admin_mode:
-        pwd = st.text_input("🔑 Accès Admin", type="password")
-        if st.button("Se connecter 🔓", use_container_width=True):
-            clean_pwd = pwd.strip()
-            input_hash = hashlib.sha256(clean_pwd.encode()).hexdigest()
-            target_hash = "81907797768e18f2d5743c7b3967d79b9423c8e427b372f69466e31b63604f7a"
-            if clean_pwd == "142203" or input_hash == target_hash:
-                st.session_state.admin_mode = True
-                st.rerun()
-            else:
-                st.error("Code incorrect ❌")
-    else:
-        st.success("✅ Mode Chef Activé")
-        if st.button("🔒 Déconnexion", use_container_width=True):
-            st.session_state.admin_mode = False
+if not st.session_state.admin_mode:
+    pwd = st.text_input("🔑 Accès Admin", type="password")
+    if st.button("Se connecter 🔓", use_container_width=True):
+        clean_pwd = pwd.strip()
+        input_hash = hashlib.sha256(clean_pwd.encode()).hexdigest()
+        
+        # On récupère le hash stocké dans les secrets de l'app
+        # Si le secret n'existe pas, on met une valeur bidon par sécurité
+        target_hash = st.secrets.get("admin_password_hash", "AUCUN_HASH_CONFIGURE")
+        
+        if input_hash == target_hash:
+            st.session_state.admin_mode = True
             st.rerun()
-
+        else:
+            st.error("Code incorrect ❌")
+else:
+    st.success("✅ Mode Chef Activé")
+    if st.button("🔒 Déconnexion", use_container_width=True):
+        st.session_state.admin_mode = False
+        st.rerun()
     st.divider()
     
     # Navigation
@@ -1202,6 +1205,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
