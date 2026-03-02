@@ -864,7 +864,7 @@ elif st.session_state.page == "planning":
             st.rerun()
             
     with col_clear:
-        if st.session_state.admin_mode:
+        if st.session_state.get('admin_mode', False):
             if st.button("🗑️ Vider le planning", use_container_width=True):
                 if send_action({"action": "clear_planning"}):
                     st.cache_data.clear()
@@ -875,9 +875,10 @@ elif st.session_state.page == "planning":
     st.divider()
 
     try:
-        # CHARGEMENT
+        # 1. CHARGEMENT DES DONNÉES
         df_plan = load_data(URL_CSV_PLAN)
         
+        # Secours si le fichier planning est vide mais que des dates sont dans le fichier principal
         if df_plan.empty or 'Date' not in df_plan.columns:
             df_all = load_data(URL_CSV)
             if 'Date_Prevue' in df_all.columns:
@@ -887,6 +888,7 @@ elif st.session_state.page == "planning":
         if df_plan.empty:
             st.info("Ton planning est vide.")
         else:
+            # 2. PRÉPARATION DU NETTOYAGE
             df_plan.columns = df_plan.columns.str.strip()
             df_plan['Date'] = pd.to_datetime(df_plan['Date'], errors='coerce')
             df_plan = df_plan.dropna(subset=['Date', 'Titre']).sort_values(by='Date')
@@ -896,11 +898,11 @@ elif st.session_state.page == "planning":
 
             derniere_semaine = -1
             
-            # --- LA BOUCLE DOIT ÊTRE DANS LE "ELSE" (ICI) ---
+            # 3. BOUCLE D'AFFICHAGE
             for index, row in df_plan.iterrows():
-                # 1. Gestion des séparateurs de semaine
-                semaine_actuelle = row['Date'].isocalendar()[1]
                 
+                # --- A. GESTION DES SÉPARATEURS DE SEMAINE ---
+                semaine_actuelle = row['Date'].isocalendar()[1]
                 if semaine_actuelle != derniere_semaine:
                     st.markdown(f"""
                         <div style="background: linear-gradient(90deg, #2e313d 0%, #1e2129 100%);
@@ -913,17 +915,25 @@ elif st.session_state.page == "planning":
                     """, unsafe_allow_html=True)
                     derniere_semaine = semaine_actuelle
 
-                # 2. Formatage de la date
-                date_txt = f"{jours_fr.get(row['Date'].strftime('%A'))} {row['Date'].strftime('%d')} {mois_fr.get(row['Date'].strftime('%B'))}"
-                
-                # 3. Création des colonnes
+                # --- B. FORMATAGE SÉCURISÉ DE LA DATE ---
+                try:
+                    nom_jour = jours_fr.get(row['Date'].strftime('%A'), "Jour")
+                    num_jour = row['Date'].strftime('%d')
+                    nom_mois = mois_fr.get(row['Date'].strftime('%B'), "Mois")
+                    date_txt = f"{nom_jour} {num_jour} {nom_mois}"
+                except:
+                    date_txt = "Date inconnue"
+
+                # --- C. AFFICHAGE DE LA LIGNE RECETTE ---
                 col_txt, col_cal, col_edit, col_del = st.columns([3, 0.5, 0.5, 0.5])
                 
                 with col_txt:
-                    st.markdown(f"""<div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
-                                    <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
-                                    <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
-                                 </div>""", unsafe_allow_html=True)
+                    st.markdown(f"""
+                        <div style="background-color: #1e2129; padding: 12px; border-radius: 10px; border-left: 4px solid #e67e22; margin-bottom: 5px;">
+                            <div style="color: #e67e22; font-size: 0.75rem; font-weight: bold;">{date_txt}</div>
+                            <div style="color: white; font-size: 1.05rem; font-weight: 500;">{row['Titre']}</div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
                 with col_cal:
                     if st.button("📖", key=f"view_{index}"):
@@ -951,9 +961,7 @@ elif st.session_state.page == "planning":
                                 }
                                 with st.spinner("Mise à jour..."):
                                     if send_action(payload):
-                                        import time
                                         st.cache_data.clear()
-                                        time.sleep(1.5) # Délai pour laisser Google Sheets respirer
                                         st.session_state[f"editing_{index}"] = False
                                         st.rerun()
                         with c2:
@@ -970,8 +978,7 @@ elif st.session_state.page == "planning":
                             st.rerun()
 
     except Exception as e:
-        st.error(f"Oups ! Erreur d'affichage : {e}")
-        
+        st.error(f"Erreur d'affichage du planning : {e}")
 # --- PAGE CONVERSION / AIDE-MÉMOIRE ---
 elif st.session_state.page == "conversion":
     # Titre stylisé pour le haut de la page
@@ -1306,6 +1313,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
