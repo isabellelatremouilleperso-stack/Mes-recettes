@@ -685,26 +685,67 @@ elif st.session_state.page == "print":
             import streamlit.components.v1 as components
             components.html('<button onclick="window.parent.print()" style="width:100%; height:40px; background:#e67e22; color:white; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">🖨️ LANCER L\'IMPRESSION</button>', height=50)
 
-       # 2. CSS DE FORCE (Version Anti-Pages Fantômes)
+       # 2. CSS DE FORCE (Version Nettoyage Chirurgical)
         st.markdown("""
         <style>
+        /* --- STYLE POUR L'ÉCRAN --- */
+        .print-sheet { 
+            background: white !important; 
+            color: black !important; 
+            padding: 30px; 
+            font-family: sans-serif; 
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        /* --- STYLE POUR L'IMPRESSION --- */
         @media print {
-            /* 1. CONFIGURATION DU PAPIER */
             @page {
                 size: A4;
-                margin: 15mm !important;
+                margin: 10mm 15mm !important; /* Marges réduites pour tout faire tenir */
             }
 
-            /* 2. CACHER TOUT L'UI ET LA DÉCO */
+            /* On cache tout l'attirail Streamlit */
             header, footer, .stButton, button, iframe, 
             [data-testid="stHeader"], 
             [data-testid="stSidebar"], 
             .stAppHeader,
             [data-testid="stDecoration"] {
                 display: none !important;
-                height: 0 !important;
-                visibility: hidden !important;
             }
+
+            /* Supprime les paddings énormes de Streamlit qui causent la page blanche */
+            .main, .stApp, 
+            [data-testid="stAppViewContainer"], 
+            [data-testid="stAppViewBlockContainer"] {
+                padding: 0 !important;
+                margin: 0 !important;
+                background-color: white !important;
+            }
+
+            /* La fiche recette : On RESTE en relative mais on enlève les marges */
+            .print-sheet {
+                position: relative !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                box-shadow: none !important;
+                display: block !important;
+                color: black !important;
+            }
+            
+            /* Empêche les coupures de texte bizarres */
+            h1, h3, p, li { page-break-inside: avoid; }
+            .recipe-section { page-break-inside: avoid; margin-bottom: 10px; }
+        }
+        
+        /* Design des titres */
+        .header-line { border-bottom: 3px solid #e67e22; margin-bottom: 10px; }
+        .info-box { display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 15px; font-size: 14px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        h1 { color: black !important; margin: 0 !important; font-size: 26px; }
+        h3 { color: #e67e22 !important; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-top: 10px; }
+        </style>
+        """, unsafe_allow_html=True)
 
             /* 3. RESET AGRESSIF DES CONTENEURS */
             html, body, .stApp, .main, 
@@ -1231,6 +1272,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
