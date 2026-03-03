@@ -646,7 +646,6 @@ elif st.session_state.page == "add":
         st.session_state.page = "home"
         st.rerun()
         
-    # --- SECTION RECHERCHE GOOGLE CANADA ---
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
@@ -654,10 +653,8 @@ elif st.session_state.page == "add":
     
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
+    c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Google.ca</div></a>""", unsafe_allow_html=True)
     
-    c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Aller sur Google.ca</div></a>""", unsafe_allow_html=True)
-    
-    # --- SECTION IMPORTATION WEB / SCRAPING ---
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
@@ -665,80 +662,55 @@ elif st.session_state.page == "add":
     
     if col_go.button("Extraire ✨", use_container_width=True):
         if url_input:
-            with st.spinner("Analyse et tri de la recette..."):
+            with st.spinner("Analyse..."):
                 t, ing, prep = scrape_url(url_input)
                 if t:
-                    st.session_state.scraped_title = t
-                    st.session_state.scraped_ingredients = ing
-                    st.session_state.scraped_content = prep
+                    st.session_state.scraped_title, st.session_state.scraped_ingredients, st.session_state.scraped_content = t, ing, prep
                     st.success("Extraction réussie ! ✨")
                     st.rerun()
                 else:
-                    st.warning("⚠️ Ce site bloque l'accès automatique. Copiez le texte manuellement.")
+                    st.warning("⚠️ Site bloqué ou erreur.")
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
     
-    # --- FORMULAIRE PRINCIPAL ---
-with st.container():
-    col_t, col_c = st.columns([2, 1])
-    
-    titre_val = st.session_state.get('scraped_title', '')
-    ing_val = st.session_state.get('scraped_ingredients', '')
-    prep_val = st.session_state.get('scraped_content', '')
-
-    titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
-    
-    # --- MODIFICATION ICI ---
-    # On définit la liste locale au cas où CATEGORIES n'est pas à jour
-    mes_options = [
-        "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
-        "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
-        "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
-        "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
-        "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
-        "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
-        "Végétarien", "Cabane à sucre", "Autre"
-    ]
-    
-    # On enlève le default=["Autre"] pour laisser l'utilisateur choisir librement
-    cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
-    # --------------------------
-    
-    col_link1, col_link2 = st.columns(2)
-    source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
-    video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
-    
-    st.markdown("#### ⏱️ Paramètres de cuisson")
-    cp1, cp2, cp3 = st.columns(3)
-    t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
-    t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
-    port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
-    
-    st.divider()
+    with st.container():
+        col_t, col_c = st.columns([2, 1])
+        titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
         
-        ci, ce = st.columns(2)
-        # Utilisation de st.text_area avec les valeurs scrapées
-        ingredients = ci.text_area("🍎 Ingrédients (un par ligne)", value=ing_val, height=350, placeholder="2 tasses de farine...", key="ing_area")
-        instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=prep_val, height=350, key="prep_area")
+        mes_options = ["Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer", "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", "Végétarien", "Cabane à sucre", "Autre"]
+        cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
         
-        img_url = st.text_input("🖼️ Lien de l'image (URL)", placeholder="https://...", key="img_url")
-        commentaires = st.text_area("📝 Mes Notes & Astuces", height=100, key="notes_area")
+        col_link1, col_link2 = st.columns(2)
+        source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
+        video_url_in = col_link2.text_input("🎬 Lien Vidéo", placeholder="URL vidéo...")
+        
+        st.markdown("#### ⏱️ Paramètres")
+        cp1, cp2, cp3 = st.columns(3)
+        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
+        port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
         
         st.divider()
         
-# --- BOUTONS FINAUX ---
-    c_save, c_cancel = st.columns(2)
-    
-    with c_save:
-        if st.button("💾 ENREGISTRER MA RECETTE", use_container_width=True, key="save_vfinal"):
+        ci, ce = st.columns(2)
+        ingredients = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
+        instructions = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
+        
+        img_url = st.text_input("🖼️ Lien de l'image", placeholder="https://...", key="img_url")
+        commentaires = st.text_area("📝 Mes Notes", height=100, key="notes_area")
+        
+        st.divider()
+        
+        c_save, c_cancel = st.columns(2)
+        if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
             if titre and ingredients:
                 import datetime
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
-                    "source": source_url.strip(),
+                    "source": source_url_in.strip(),
                     "Ingrédients": ingredients.strip().replace('\n', '  \n'),
                     "Préparation": instructions.strip(),
                     "Image": img_url.strip(),
@@ -747,21 +719,17 @@ with st.container():
                     "Temps_Prepa": t_prep.strip(),
                     "Temps_Cuisson": t_cuis.strip(),
                     "Commentaires": commentaires.strip(),
-                    "video": video_url.strip()
+                    "video": video_url_in.strip()
                 }
-                
                 if send_action(payload):
                     st.success("✅ Enregistré !")
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
-                else:
-                    st.error("❌ Erreur de connexion au serveur.")
             else:
-                st.error("🚨 Le titre et les ingrédients sont obligatoires !")
+                st.error("🚨 Titre et Ingrédients obligatoires !")
 
-    with c_cancel:
-        if st.button("❌ ANNULER L'AJOUT", use_container_width=True, key="cancel_vfinal"):
+        if c_cancel.button("❌ ANNULER L'AJOUT", use_container_width=True):
             st.session_state.page = "home"
             st.rerun()
             
@@ -1285,6 +1253,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
