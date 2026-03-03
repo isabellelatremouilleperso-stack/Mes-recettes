@@ -840,8 +840,7 @@ elif st.session_state.page == "edit":
         st.rerun()
     
     st.divider()
-    
-    with st.form("form_edition_complete"):
+with st.form("form_edition_complete"):
             col_t, col_c = st.columns([2, 1])
             titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
             
@@ -859,7 +858,6 @@ elif st.session_state.page == "edit":
             raw_cats = str(r_edit.get('Catégorie', ''))
             current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
             
-            # Correction du bug "Autre" en enlevant le "or ['Autre']"
             cat_choisies = col_c.multiselect(
                 "📁 Catégories", 
                 LISTE_CATS, 
@@ -877,11 +875,12 @@ elif st.session_state.page == "edit":
             t_cuis = cp2.text_input("🔥 Cuisson (min)", value=t_cuis_val)
             port = cp3.text_input("🍽️ Portions", value=port_val)
             
+            # --- SECTION TEXTE (IMAGE INCLUSE ICI) ---
             ci, ce = st.columns(2)
             ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
             instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
             
-            # --- LES LIENS ET NOTES (BIEN ALIGNÉS) ---
+            # Le lien de l'image est ici, bien visible !
             img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
 
             col_v, col_s = st.columns(2)
@@ -890,10 +889,10 @@ elif st.session_state.page == "edit":
             
             commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
 
-            # BOUTON DE VALIDATION (À L'INTÉRIEUR DU WITH)
+            # Bouton de validation
             submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
 
-        # --- TRAITEMENT DES DONNÉES (APRÈS LE FORMULAIRE) ---
+        # --- LOGIQUE D'ENVOI (HORS DU FORMULAIRE) ---
         if submit_btn:
             if titre_edit and ingredients:
                 payload = {
@@ -912,7 +911,7 @@ elif st.session_state.page == "edit":
                     "Source": source_url 
                 }
                 if send_action(payload):
-                    st.success("✅ Mis à jour avec succès !")
+                    st.success("✅ Recette mise à jour avec succès !")
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
@@ -1345,6 +1344,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
