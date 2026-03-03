@@ -340,7 +340,7 @@ if st.session_state.page == "home":
                 "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
                 "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
                 "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
-                "Végétarien", "Cabane à sucre", "Autre"
+                "Végétarien", "Cabane à sucre", "Temps des fêtes", "Autre"
             ]
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
 
@@ -382,7 +382,9 @@ if st.session_state.page == "home":
                 "Mexicain": "#006341", "Pains": "#F5DEB3", "Pizza": "#FF6347", 
                 "Plancha": "#708090", "Poutine": "#6F4E37", "Slow Cooker": "#4B0082", 
                 "Sushi": "#FF1493", "Tartare": "#B22222", "Végétarien": "#32CD32",
-                "Cabane à sucre": "#D2691E"
+                "Cabane à sucre": "#D2691E",
+                "Temps des fêtes": "#C41E3A",  # <--- AJOUT ICI
+                "Temps des fetes": "#C41E3A"   # <--- VERSION SANS ACCENT
             }
             return colors.get(cat.strip(), "#e67e22")
 
@@ -1258,6 +1260,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
