@@ -23,12 +23,15 @@ URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6W
 # ======================
 # CONFIGURATION DES DONNÉES
 # ======================
-CATEGORIES = ["Agneau", "Air Fryer", "Apéro", "Autre", "Boisson", "Boulangerie", "Bœuf", 
-    "Cabane à sucre", "Condiment", "Dessert", "Entrée", "Épices", "Fruits de mer", 
-    "Fumoir", "Goûter", "Indien", "Légumes", "Libanais", "Mexicain", "Pains", 
-    "Pâtes", "Petit-déjeuner", "Plancha", "Plat Principal", "Poisson", "Porc", 
-    "Poulet", "Poutine", "Riz", "Salade", "Slow Cooker", "Soupe", "Sauce", 
-    "Sushi", "Tartare", "Végétarien", "Pizza"]
+mes_categories = [
+    "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
+    "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
+    "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
+    "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
+    "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
+    "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
+    "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
+]
 
 # ======================
 # FONCTIONS TECHNIQUES (VERSION NETTOYÉE)
@@ -1260,6 +1263,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
