@@ -827,32 +827,26 @@ elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
     def clean_edit(x):
         v = str(x).strip()
-        if v.lower() in ["nan","none","","null","-"]: return ""
-        return v.split('.')[0] if '.' in v else v
+        return v.split('.')[0] if '.' in v else v if v.lower() not in ["nan","none","","null","-"] else ""
     st.markdown('<h1 style="color:#e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
     if st.button("⬅ Annuler et Retour", use_container_width=True):
         st.session_state.page = "details"
         st.rerun()
     st.divider()
     with st.form("form_edition_complete"):
-        c_t, c_c = st.columns([2, 1])
-        titre_edit = c_t.text_input("🏷️ Nom", value=r_edit.get('Titre', ''))
-        L_CATS = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Accompagnement","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Air Fryer","Boulangerie","Condiment","Épices","Fumoir","Indien","Libanais","Mexicain","Pains","Pizza","Plancha","Poutine","Slow Cooker","Sushi","Tartare","Végétarien","Cabane à sucre","Autre"]
+        titre_edit = st.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
+        L_CATS = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Accompagnement","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Air Fryer","Boulangerie","Condiment","Épices","Fumoir","Indien","Libanais","Mexicain","Pains","Pizza","Plancha","Poutine","Slow Cooker","Sushi","Tartare","Végétarien","Cabane à sucre", "Autre"]
         raw_c = str(r_edit.get('Catégorie', ''))
         curr_c = [c.strip() for c in raw_c.split(',') if c.strip()]
-        cat_choisies = c_c.multiselect("📁 Catégories", L_CATS, default=[c for c in curr_c if c in L_CATS])
-        st.markdown("#### ⏱️ Paramètres")
-        cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', '')))
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', '')))
-        port = cp3.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
-        col_ing, col_inst = st.columns(2)
-        ingredients = col_ing.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
-        instructions = col_inst.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
+        cat_choisies = st.multiselect("📁 Catégories", L_CATS, default=[c for c in curr_c if c in L_CATS])
+        t_prep = st.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', '')))
+        t_cuis = st.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', '')))
+        port = st.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
+        ingredients = st.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
+        instructions = st.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
         img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
-        cv, cs = st.columns(2)
-        video_url = cv.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
-        source_url = cs.text_input("🌐 Lien Source", value=r_edit.get('Source', ''))
+        video_url = st.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
+        source_url = st.text_input("🌐 Lien Source", value=r_edit.get('Source', ''))
         commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
         submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
         if submit_btn:
@@ -864,7 +858,7 @@ elif st.session_state.page == "edit":
                     st.session_state.page = "home"
                     st.rerun()
             else:
-                st.error("Titre et ingrédients requis.")
+                st.error("Le titre et les ingrédients sont requis.")
 
 # --- PAGE ÉPICERIE (SÉCURISÉE) ---
 elif st.session_state.page == "shop":
@@ -1292,6 +1286,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
