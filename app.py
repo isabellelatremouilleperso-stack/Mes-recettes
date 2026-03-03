@@ -482,6 +482,7 @@ elif st.session_state.page == "details":
 
     # --- CORPS DE LA PAGE ---
     col_g, col_d = st.columns([1, 1.2])
+    
     with col_g:
         # VISUEL
         img_url = r.get('Image', '')
@@ -495,7 +496,7 @@ elif st.session_state.page == "details":
             note_actuelle = 0
 
         st.write("**Évaluer cette recette :**")
-        nouvelle_note = st.select_slider("Glissez pour noter", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}")
+        nouvelle_note = st.select_slider("Glissez pour noter", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}", label_visibility="collapsed")
         
         if nouvelle_note != note_actuelle:
             with st.spinner("Mise à jour..."):
@@ -512,114 +513,76 @@ elif st.session_state.page == "details":
     with col_d:
         # 1. INFORMATIONS GÉNÉRALES
         st.subheader("📋 Informations")
-
-        # --- NOUVEAU : CATÉGORIE ET SOURCE ---
         c_info1, c_info2 = st.columns(2)
         with c_info1:
-            # On récupère la catégorie ou "Autre" par défaut
             cat_val = r.get('Catégorie', 'Autre')
             if not cat_val or str(cat_val).lower() == 'nan': cat_val = "Autre"
             st.markdown(f"**🍴 Catégorie :**\n`{cat_val}`")
-            
         with c_info2:
-            # On récupère le lien source
             src_val = r.get('Source', '')
             if src_val and "http" in str(src_val):
                 st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
             else:
                 st.markdown("**🌐 Source :**\n*Non spécifiée*")
         
-        st.write("") # Petit espace de respiration
-
-        # --- PLANNING (Ton code d'origine) ---
-        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
+        # PLANNING
+        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=False):
             unique_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             date_p = st.date_input("Choisir une date", key=f"date_{unique_key}")
-            
             if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_{unique_key}"):
-                payload = {
-                    "action": "plan", 
-                    "titre": current_title, 
-                    "date_prevue": str(date_p)
-                }
-                
-                if send_action(payload):
+                if send_action({"action": "plan", "titre": current_title, "date_prevue": str(date_p)}):
                     st.toast(f"🍳 Ajouté : {current_title} !", icon="✅")
                     st.cache_data.clear()
-                    time.sleep(1.2) 
-                    st.session_state.page = "planning"
-                    st.rerun()
-        
+                    time.sleep(1)
+                    st.session_state.page = "planning"; st.rerun()
+
         st.divider()
 
-        # --- MÉTRIQUES (Ton code d'origine) ---
+        # MÉTRIQUES
         def clean_metrique(valeur):
             v_str = str(valeur).strip().lower()
             if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
             return str(valeur).split('.')[0]
 
-        p_final = clean_metrique(r.get('Temps de préparation'))
-        c_final = clean_metrique(r.get('Temps de cuisson'))
-        port_final = clean_metrique(r.get('Portions'))
-
         m1, m2, m3 = st.columns(3)
-        m1.metric("🕒 Prépa", f"{p_final} min" if p_final != "-" else "-")
-        m2.metric("🔥 Cuisson", f"{c_final} min" if c_final != "-" else "-")
-        m3.metric("🍽️ Portions", port_final)
+        m1.metric("🕒 Prépa", f"{clean_metrique(r.get('Temps_Prepa', r.get('Temps de préparation')))} min")
+        m2.metric("🔥 Cuisson", f"{clean_metrique(r.get('Temps_Cuisson', r.get('Temps de cuisson')))} min")
+        m3.metric("🍽️ Port.", clean_metrique(r.get('Portions')))
 
-       # --- 2. SUPPORT VIDÉO (CIBLE COLONNE N) ---
-        # On essaie de récupérer la valeur peu importe le format de 'r'
-        v_link = ""
-        if isinstance(r, dict):
-            # Priorité aux noms de colonnes probables
-            v_link = r.get('Vidéo', r.get('video', r.get('Video', '')))
-            # Si toujours rien, on tente de récupérer la 14ème valeur du dictionnaire
-            if not v_link:
-                values = list(r.values())
-                if len(values) > 13: v_link = values[13] 
-        elif isinstance(r, (list, tuple)) and len(r) > 13:
-            v_link = r[13]
-
-        # Nettoyage et affichage
+        # SUPPORT VIDÉO (placé dans la colonne info pour gagner de la place)
+        v_link = r.get('Vidéo', r.get('video', r.get('Video', '')))
         if v_link and str(v_link).strip().lower().startswith("http"):
-            st.divider()
-            url_propre = str(v_link).strip()
-            st.markdown("#### 📺 Support Vidéo")
-            
-            if any(x in url_propre.lower() for x in ["youtube", "youtu.be", "vimeo"]):
-                st.video(url_propre)
-            else:
-                st.link_button("▶️ Voir la vidéo externe", url_propre, use_container_width=True)
-            st.divider()
+            st.link_button("📺 Voir le support vidéo", str(v_link).strip(), use_container_width=True)
+
+    # --- SECTION INGRÉDIENTS (DEUX COLONNES SOUS LA PHOTO) ---
+    st.divider()
+    st.subheader("🛒 Ingrédients")
+    ings_raw = r.get('Ingrédients', '')
     
-        # 3. INGRÉDIENTS AVEC SÉLECTION INDIVIDUELLE
-        st.subheader("🛒 Ingrédients")
-        ings_raw = r.get('Ingrédients', '')
+    if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+        text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
+        ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
         
-        if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
-            
-            sel = []
-            for i, line in enumerate(ings):
-                if st.checkbox(line, key=f"chk_sel_{current_title}_{i}"):
-                    sel.append(line)
-            
-            st.write("") 
-            
-            if sel:
-                if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel"):
-                    with st.spinner("Envoi à l'épicerie..."):
-                        for it in sel:
-                            send_action({"action": "add_shop", "article": it})
-                    
-                    st.toast(f"✅ {len(sel)} articles ajoutés à la liste !", icon="🛒")
-                    time.sleep(1)
-                    st.rerun()
-            else:
-                st.info("Cochez les ingrédients à acheter.")
-        else:
-            st.info("Aucun ingrédient pour cette recette.")
+        # Séparation dynamique en 2 colonnes
+        col_ing1, col_ing2 = st.columns(2)
+        moitie = (len(ings) + 1) // 2
+        sel = []
+
+        with col_ing1:
+            for i in range(moitie):
+                if st.checkbox(ings[i], key=f"chk_left_{i}"): sel.append(ings[i])
+        with col_ing2:
+            for i in range(moitie, len(ings)):
+                if st.checkbox(ings[i], key=f"chk_right_{i}"): sel.append(ings[i])
+        
+        if sel:
+            if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True):
+                with st.spinner("Ajout..."):
+                    for it in sel: send_action({"action": "add_shop", "article": it})
+                st.toast("🛒 Articles ajoutés !")
+                time.sleep(1); st.rerun()
+    else:
+        st.info("Aucun ingrédient répertorié.")
 
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
@@ -630,6 +593,12 @@ elif st.session_state.page == "details":
     else:
         st.warning("Aucune étape enregistrée.")
 
+    # NOTES
+    st.divider()
+    st.markdown("### 📝 Mes Notes")
+    notes_texte = r.get('Commentaires', '')
+    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
+        st.info(notes_texte)
     # --- NOUVEAU : MES NOTES (DÉPLACÉ ICI) ---
     st.divider()
     st.markdown("### 📝 Mes Notes & Commentaires")
@@ -1325,6 +1294,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
