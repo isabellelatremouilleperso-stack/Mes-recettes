@@ -823,42 +823,41 @@ elif st.session_state.page == "print":
         components.html(fiche_isolee, height=1000, scrolling=True)
         st.stop()
 
+
 elif st.session_state.page == "edit":
     r_edit = st.session_state.get('recipe_to_edit', {})
     def clean_edit(x):
         v = str(x).strip()
         return v.split('.')[0] if '.' in v else v if v.lower() not in ["nan","none","","null","-"] else ""
-    st.markdown('<h1 style="color:#e67e22;">✏️ Modifier la Recette</h1>', unsafe_allow_html=True)
-    if st.button("⬅ Annuler et Retour", use_container_width=True):
+    st.markdown('### ✏️ Modifier la Recette')
+    if st.button("⬅ Annuler"):
         st.session_state.page = "details"
         st.rerun()
-    st.divider()
-    with st.form("form_edition_complete"):
-        titre_edit = st.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
-        L_CATS = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Accompagnement","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Air Fryer","Boulangerie","Condiment","Épices","Fumoir","Indien","Libanais","Mexicain","Pains","Pizza","Plancha","Poutine","Slow Cooker","Sushi","Tartare","Végétarien","Cabane à sucre", "Autre"]
+    with st.form("form_edit"):
+        titre_edit = st.text_input("Nom", value=r_edit.get('Titre', ''))
+        L_CATS = ["Poulet","Bœuf","Porc","Agneau","Poisson","Fruits de mer","Pâtes","Riz","Légumes","Accompagnement","Soupe","Salade","Entrée","Plat Principal","Dessert","Petit-déjeuner","Goûter","Apéro","Sauce","Boisson","Air Fryer","Boulangerie","Condiment","Épices","Fumoir","Indien","Libanais","Mexicain","Pains","Pizza","Plancha","Poutine","Slow Cooker","Sushi","Tartare","Végétarien","Cabane à sucre","Autre"]
         raw_c = str(r_edit.get('Catégorie', ''))
         curr_c = [c.strip() for c in raw_c.split(',') if c.strip()]
-        cat_choisies = st.multiselect("📁 Catégories", L_CATS, default=[c for c in curr_c if c in L_CATS])
-        t_prep = st.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', '')))
-        t_cuis = st.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', '')))
-        port = st.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
-        ingredients = st.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
-        instructions = st.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
-        img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
-        video_url = st.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
-        source_url = st.text_input("🌐 Lien Source", value=r_edit.get('Source', ''))
-        commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
-        submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
+        cat_choisies = st.multiselect("Catégories", L_CATS, default=[c for c in curr_c if c in L_CATS])
+        t_prep = st.text_input("Prépa", value=clean_edit(r_edit.get('Temps_Prepa', '')))
+        t_cuis = st.text_input("Cuisson", value=clean_edit(r_edit.get('Temps_Cuisson', '')))
+        port = st.text_input("Portions", value=clean_edit(r_edit.get('Portions', '')))
+        ingredients = st.text_area("Ingrédients", value=r_edit.get('Ingrédients', ''), height=200)
+        instructions = st.text_area("Étapes", value=r_edit.get('Préparation', ''), height=200)
+        img_url = st.text_input("Image", value=r_edit.get('Image', ''))
+        video_url = st.text_input("Vidéo", value=r_edit.get('video', ''))
+        source_url = st.text_input("Source", value=r_edit.get('Source', ''))
+        commentaires = st.text_area("Notes", value=r_edit.get('Commentaires', ''))
+        submit_btn = st.form_submit_button("Enregistrer")
         if submit_btn:
             if titre_edit and ingredients:
                 p = {"action":"edit","old_titre":r_edit.get('Titre'),"titre":titre_edit,"Catégorie":", ".join(cat_choisies),"Ingrédients":ingredients,"Préparation":instructions,"Image":img_url,"Temps_Prepa":t_prep,"Temps_Cuisson":t_cuis,"Portions":port,"Commentaires":commentaires,"video":video_url,"Source":source_url}
                 if send_action(p):
-                    st.success("✅ Recette mise à jour !")
+                    st.success("Ok !")
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
-            else:
-                st.error("Le titre et les ingrédients sont requis.")
+
 
 # --- PAGE ÉPICERIE (SÉCURISÉE) ---
 elif st.session_state.page == "shop":
@@ -1286,6 +1285,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
