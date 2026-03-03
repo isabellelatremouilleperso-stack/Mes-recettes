@@ -418,8 +418,8 @@ if st.session_state.page == "home":
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
-   
-    # 1. RÉCUPÉRATION ET NETTOYAGE (version simplifiée et robuste)
+    
+    # 1. RÉCUPÉRATION ET NETTOYAGE
     r_raw = st.session_state.get('recipe_data', {})
     
     if not r_raw:
@@ -428,7 +428,7 @@ elif st.session_state.page == "details":
             st.session_state.page = "home"; st.rerun()
         st.stop()
 
-    # Sécurité anti-doublons : on force 'r' à être un dictionnaire unique
+    # Sécurité anti-doublons
     if isinstance(r_raw, pd.DataFrame):
         r = r_raw.iloc[0].to_dict()
     elif isinstance(r_raw, list) and len(r_raw) > 0:
@@ -437,66 +437,52 @@ elif st.session_state.page == "details":
         r = r_raw
 
     current_title = r.get('Titre', 'Recette sans titre')
-
-    # --- BARRE DE NAVIGATION (LOGIQUE CONSULTATION VS ADMIN) ---
     is_admin = st.session_state.get('admin_mode', False)
 
+    # --- BARRE DE NAVIGATION ---
     if is_admin:
-        # Affichage complet pour le Chef
         c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
-        
         with c_nav1:
             if st.button("⬅ Retour", use_container_width=True, key="btn_ret_adm"): 
                 st.session_state.page="home"; st.rerun()
-        
         with c_nav2:
             if st.button("✏️ Éditer", use_container_width=True, key="btn_edit_adm"):
                 st.session_state.recipe_to_edit = r.copy()
                 st.session_state.page = "edit"; st.rerun()
-        
         with c_nav3:
             if st.button("🖨️ Imprimer", use_container_width=True, key="btn_print_adm"):
-                st.session_state.recipe_data = r 
-                st.session_state.page = "print"; st.rerun()
-        
+                st.session_state.recipe_data = r; st.session_state.page = "print"; st.rerun()
         with c_nav4:
             if st.button("🗑️ Supprimer", use_container_width=True, key="btn_del_adm"):
                 if send_action({"action": "delete", "titre": current_title}):
-                    st.cache_data.clear()
-                    st.session_state.page = "home"; st.rerun()
+                    st.cache_data.clear(); st.session_state.page = "home"; st.rerun()
     else:
-        # Affichage restreint pour les invités (Mode Consultation)
         c_nav_pub1, c_nav_pub2 = st.columns([1, 1])
-        
         with c_nav_pub1:
             if st.button("⬅ Retour", use_container_width=True, key="btn_ret_pub"): 
                 st.session_state.page="home"; st.rerun()
-        
         with c_nav_pub2:
-            if st.button("🖨️ Imprimer la recette", use_container_width=True, key="btn_print_pub"):
-                st.session_state.recipe_data = r 
-                st.session_state.page = "print"; st.rerun()
+            if st.button("🖨️ Imprimer", use_container_width=True, key="btn_print_pub"):
+                st.session_state.recipe_data = r; st.session_state.page = "print"; st.rerun()
 
     st.divider()
     st.header(f"📖 {current_title}")
 
-    # --- CORPS DE LA PAGE ---
+    # --- CORPS DE LA PAGE (VISUEL & INFOS) ---
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
-        # VISUEL
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
-        # NOTATION INTERACTIVE
+        # NOTATION
         try:
             val_note = r.get('Note', 0)
             note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
-        except:
-            note_actuelle = 0
+        except: note_actuelle = 0
 
         st.write("**Évaluer cette recette :**")
-        nouvelle_note = st.select_slider("Glissez pour noter", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}", label_visibility="collapsed")
+        nouvelle_note = st.select_slider("Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"slider_{current_title}", label_visibility="collapsed")
         
         if nouvelle_note != note_actuelle:
             with st.spinner("Mise à jour..."):
@@ -511,7 +497,6 @@ elif st.session_state.page == "details":
             st.markdown(f"### {'⭐' * note_actuelle}")
 
     with col_d:
-        # 1. INFORMATIONS GÉNÉRALES
         st.subheader("📋 Informations")
         c_info1, c_info2 = st.columns(2)
         with c_info1:
@@ -545,13 +530,14 @@ elif st.session_state.page == "details":
             return str(valeur).split('.')[0]
 
         m1, m2, m3 = st.columns(3)
-        m1.metric("🕒 Prépa", f"{clean_metrique(r.get('Temps_Prepa', r.get('Temps de préparation')))} min")
-        m2.metric("🔥 Cuisson", f"{clean_metrique(r.get('Temps_Cuisson', r.get('Temps de cuisson')))} min")
-        m3.metric("🍽️ Port.", clean_metrique(r.get('Portions')))
+        m1.metric("🕒 Prépa", f"{clean_metrique(r.get('Temps de préparation'))} min")
+        m2.metric("🔥 Cuisson", f"{clean_metrique(r.get('Temps de cuisson'))} min")
+        m3.metric("🍽️ Portions", clean_metrique(r.get('Portions')))
 
-        # SUPPORT VIDÉO (placé dans la colonne info pour gagner de la place)
+        # SUPPORT VIDÉO
         v_link = r.get('Vidéo', r.get('video', r.get('Video', '')))
         if v_link and str(v_link).strip().lower().startswith("http"):
+            st.divider()
             st.link_button("📺 Voir le support vidéo", str(v_link).strip(), use_container_width=True)
 
     # --- SECTION INGRÉDIENTS (DEUX COLONNES SOUS LA PHOTO) ---
@@ -560,10 +546,10 @@ elif st.session_state.page == "details":
     ings_raw = r.get('Ingrédients', '')
     
     if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+        # On uniformise les séparateurs (❑, point-virgule ou retour ligne)
         text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
         ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
         
-        # Séparation dynamique en 2 colonnes
         col_ing1, col_ing2 = st.columns(2)
         moitie = (len(ings) + 1) // 2
         sel = []
@@ -575,8 +561,10 @@ elif st.session_state.page == "details":
             for i in range(moitie, len(ings)):
                 if st.checkbox(ings[i], key=f"chk_right_{i}"): sel.append(ings[i])
         
+        # BOUTON ÉPICERIE (S'affiche si au moins un ingrédient est coché)
         if sel:
-            if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True):
+            st.write("")
+            if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, type="primary"):
                 with st.spinner("Ajout..."):
                     for it in sel: send_action({"action": "add_shop", "article": it})
                 st.toast("🛒 Articles ajoutés !")
@@ -593,13 +581,7 @@ elif st.session_state.page == "details":
     else:
         st.warning("Aucune étape enregistrée.")
 
-    # NOTES
-    st.divider()
-    st.markdown("### 📝 Mes Notes")
-    notes_texte = r.get('Commentaires', '')
-    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-        st.info(notes_texte)
-    # --- NOUVEAU : MES NOTES (DÉPLACÉ ICI) ---
+    # --- NOTES & COMMENTAIRES ---
     st.divider()
     st.markdown("### 📝 Mes Notes & Commentaires")
     notes_texte = r.get('Commentaires', '')
@@ -1294,6 +1276,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
