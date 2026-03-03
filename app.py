@@ -845,7 +845,6 @@ elif st.session_state.page == "edit":
             col_t, col_c = st.columns([2, 1])
             titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
             
-            # --- GESTION DES CATÉGORIES ---
             LISTE_CATS = [
                 "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
                 "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
@@ -862,17 +861,10 @@ elif st.session_state.page == "edit":
             
             st.markdown("#### ⏱️ Paramètres")
             cp1, cp2, cp3 = st.columns(3)
+            t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', '')))
+            t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', '')))
+            port = cp3.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
             
-            # On récupère les valeurs proprement
-            t_p = clean_edit(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', '')))
-            t_c = clean_edit(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', '')))
-            p_v = clean_edit(r_edit.get('Portions', ''))
-            
-            t_prep = cp1.text_input("🕒 Préparation (min)", value=t_p)
-            t_cuis = cp2.text_input("🔥 Cuisson (min)", value=t_c)
-            port = cp3.text_input("🍽️ Portions", value=p_v)
-            
-            # --- SECTION ALIGNÉE ---
             ci, ce = st.columns(2)
             ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
             instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
@@ -887,7 +879,6 @@ elif st.session_state.page == "edit":
             
             submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
 
-        # --- LOGIQUE D'ENVOI (HORS DU WITH) ---
         if submit_btn:
             if titre_edit and ingredients:
                 payload = {
@@ -1339,6 +1330,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
