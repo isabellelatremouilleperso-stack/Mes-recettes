@@ -840,7 +840,7 @@ elif st.session_state.page == "edit":
         st.rerun()
     
     st.divider()
-with st.form("form_edition_complete"):
+    with st.form("form_edition_complete"):
             col_t, col_c = st.columns([2, 1])
             titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
             
@@ -857,42 +857,29 @@ with st.form("form_edition_complete"):
             
             raw_cats = str(r_edit.get('Catégorie', ''))
             current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
-            
-            cat_choisies = col_c.multiselect(
-                "📁 Catégories", 
-                LISTE_CATS, 
-                default=[c for c in current_cats if c in LISTE_CATS]
-            )
+            cat_choisies = col_c.multiselect("📁 Catégories", LISTE_CATS, default=[c for c in current_cats if c in LISTE_CATS])
             
             st.markdown("#### ⏱️ Paramètres")
             cp1, cp2, cp3 = st.columns(3)
+            t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', '')))
+            t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', '')))
+            port = cp3.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
             
-            t_prep_val = clean_edit(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', '')))
-            t_cuis_val = clean_edit(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', '')))
-            port_val = clean_edit(r_edit.get('Portions', ''))
-            
-            t_prep = cp1.text_input("🕒 Préparation (min)", value=t_prep_val)
-            t_cuis = cp2.text_input("🔥 Cuisson (min)", value=t_cuis_val)
-            port = cp3.text_input("🍽️ Portions", value=port_val)
-            
-            # --- SECTION TEXTE (IMAGE INCLUSE ICI) ---
             ci, ce = st.columns(2)
             ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
             instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
             
-            # Le lien de l'image est ici, bien visible !
             img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
-
+            
             col_v, col_s = st.columns(2)
             video_url = col_v.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
             source_url = col_s.text_input("🌐 Lien Source (Site web)", value=r_edit.get('Source', ''))
             
             commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
-
-            # Bouton de validation
+            
             submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
 
-        # --- LOGIQUE D'ENVOI (HORS DU FORMULAIRE) ---
+        # --- LOGIQUE D'ENVOI (HORS DU FORMULAIRE - ALIGNÉ SUR 'WITH') ---
         if submit_btn:
             if titre_edit and ingredients:
                 payload = {
@@ -1344,6 +1331,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
