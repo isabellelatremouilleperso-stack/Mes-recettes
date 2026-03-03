@@ -518,17 +518,46 @@ elif st.session_state.page == "details":
         img_url = r.get('Image', '')
         st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
             
+        # --- LOGIQUE DE LA NOTE (CORRIGÉE POUR COLONNE B) ---
         try:
             val_note = r.get('Note', 0)
-            note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-"] else 0
-        except: note_actuelle = 0
+            # Conversion robuste pour éviter les erreurs de type
+            note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
+        except: 
+            note_actuelle = 0
 
-        st.write("**Évaluer cette recette :**")
-        nouvelle_note = st.select_slider("Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, key=f"sl_{current_title}", label_visibility="collapsed")
+        st.write(f"**Évaluer cette recette ({note_actuelle} ⭐) :**")
+        
+        # Le slider utilise le titre comme clé unique pour éviter les conflits Streamlit
+        nouvelle_note = st.select_slider(
+            "Note", 
+            options=[0, 1, 2, 3, 4, 5], 
+            value=note_actuelle, 
+            key=f"sl_{current_title}", 
+            label_visibility="collapsed"
+        )
+        
+        # On n'envoie l'action que si la note a réellement changé
         if nouvelle_note != note_actuelle:
-            payload_n = r.copy(); payload_n.update({"action": "edit", "Note": nouvelle_note})
-            if send_action(payload_n):
-                st.toast("Note enregistrée ! ⭐"); st.session_state.recipe_data['Note'] = nouvelle_note; st.rerun()
+            with st.spinner("Mise à jour de la note..."):
+                # CONSTRUCTION DU PAYLOAD PRÉCIS
+                # On envoie 'old_titre' pour que Google trouve la ligne en colonne B
+                payload_n = {
+                    "action": "edit",
+                    "old_titre": current_title.strip(),
+                    "Note": nouvelle_note
+                }
+                
+                if send_action(payload_n):
+                    st.toast("Note enregistrée ! ⭐")
+                    # Mise à jour locale pour un affichage immédiat
+                    if isinstance(st.session_state.recipe_data, dict):
+                        st.session_state.recipe_data['Note'] = nouvelle_note
+                    
+                    st.cache_data.clear() # Nettoie le cache pour l'accueil
+                    st.rerun()
+                else:
+                    st.error("🚨 Erreur : La recette n'a pas été trouvée. Vérifiez le titre en colonne B.")
 
     with col_d:
         st.subheader("📋 Informations")
@@ -1313,6 +1342,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
