@@ -268,15 +268,13 @@ if st.session_state.page == "home":
             st.session_state.page = "planning"
             st.rerun()
     with col_nav2:
-        # Voici ton bouton Aide-Mémoire facile à retrouver
         if st.button("📏 Aide-Mémoire & Conversions", use_container_width=True):
             st.session_state.page = "conversion"
             st.rerun()
     
     st.write("") # Petit espace esthétique
 
-
-    # --- STYLE CSS (Inchangé) ---
+    # --- STYLE CSS ---
     st.markdown("""
         <style>
         .recipe-card {
@@ -326,105 +324,97 @@ if st.session_state.page == "home":
     """, unsafe_allow_html=True)
     
     df = load_data(URL_CSV)
-if not df.empty:
-    # --- BARRE DE FILTRES ET TRI ---
-    col_search, col_cat, col_tri = st.columns([2, 1, 1])
     
-    with col_search:
-        search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
+    # --- DEBUT DU BLOC CORRIGÉ (Tout doit être décalé ici) ---
+    if not df.empty:
+        # --- BARRE DE FILTRES ET TRI ---
+        col_search, col_cat, col_tri = st.columns([2, 1, 1])
         
-    with col_cat:
-        # TA LISTE PERSONNALISÉE : Tu as le contrôle total ici
-        mes_categories = [
-            "Toutes", "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
-            "Pâtes", "Riz", "Légumes", "Soupe", "Salade", "Entrée", 
-            "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
-            "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
-            "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
-            "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
-            "Végétarien", "Cabane à sucre", "Autre"
-        ]
-        cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
+        with col_search:
+            search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
+            
+        with col_cat:
+            mes_categories = [
+                "Toutes", "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
+                "Pâtes", "Riz", "Légumes", "Soupe", "Salade", "Entrée", 
+                "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
+                "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
+                "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
+                "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
+                "Végétarien", "Cabane à sucre", "Autre"
+            ]
+            cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
 
-    with col_tri:
-        ordre = st.selectbox("🔃 Trier par :", ["A ➡️ Z", "Z ➡️ A", "Les plus récentes"])
-    
-    # --- LOGIQUE DE FILTRE ---
-    # On cherche dans le titre et les ingrédients
-    mask = (df['Titre'].str.contains(search, case=False, na=False)) | \
-           (df['Ingrédients'].str.contains(search, case=False, na=False))
-    
-    # MODIFICATION CLÉ : On utilise .str.contains pour les catégories multiples
-    if cat_choisie != "Toutes":
-        mask = mask & (df['Catégorie'].str.contains(cat_choisie, case=False, na=False))
-    
-    rows = df[mask].copy()
+        with col_tri:
+            ordre = st.selectbox("🔃 Trier par :", ["A ➡️ Z", "Z ➡️ A", "Les plus récentes"])
+        
+        # --- LOGIQUE DE FILTRE ---
+        mask = (df['Titre'].str.contains(search, case=False, na=False)) | \
+               (df['Ingrédients'].str.contains(search, case=False, na=False))
+        
+        if cat_choisie != "Toutes":
+            mask = mask & (df['Catégorie'].str.contains(cat_choisie, case=False, na=False))
+        
+        rows = df[mask].copy()
 
-    # --- LOGIQUE DE TRI ---
-    if ordre == "A ➡️ Z":
-        rows = rows.sort_values(by="Titre", ascending=True)
-    elif ordre == "Z ➡️ A":
-        rows = rows.sort_values(by="Titre", ascending=False)
-    elif ordre == "Les plus récentes":
-        rows = rows.iloc[::-1] 
+        # --- LOGIQUE DE TRI ---
+        if ordre == "A ➡️ Z":
+            rows = rows.sort_values(by="Titre", ascending=True)
+        elif ordre == "Z ➡️ A":
+            rows = rows.sort_values(by="Titre", ascending=False)
+        elif ordre == "Les plus récentes":
+            rows = rows.iloc[::-1] 
 
-    # --- NETTOYAGE ET DOUBLONS ---
-    rows = rows.drop_duplicates(subset=['Titre']).reset_index(drop=True)
+        rows = rows.drop_duplicates(subset=['Titre']).reset_index(drop=True)
 
-    # --- FONCTION COULEUR ---
-    def get_cat_color(cat):
-        colors = {
-            "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
-            "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
-            "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
-            "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
-            "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
-            "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
-            "Boisson": "#7FFFD4", "Autre": "#BDC317", "Air Fryer": "#FF4500", 
-            "Boulangerie": "#DEB887", "Condiment": "#DAA520", "Épices": "#CD5C5C", 
-            "Fumoir": "#333333", "Indien": "#FF9933", "Libanais": "#EE2436", 
-            "Mexicain": "#006341", "Pains": "#F5DEB3", "Pizza": "#FF6347", 
-            "Plancha": "#708090", "Poutine": "#6F4E37", "Slow Cooker": "#4B0082", 
-            "Sushi": "#FF1493", "Tartare": "#B22222", "Végétarien": "#32CD32",
-            "Cabane à sucre": "#D2691E"
-        }
-        return colors.get(cat.strip(), "#e67e22")
+        # --- FONCTION COULEUR ---
+        def get_cat_color(cat):
+            colors = {
+                "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
+                "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
+                "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
+                "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
+                "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
+                "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
+                "Boisson": "#7FFFD4", "Autre": "#BDC317", "Air Fryer": "#FF4500", 
+                "Boulangerie": "#DEB887", "Condiment": "#DAA520", "Épices": "#CD5C5C", 
+                "Fumoir": "#333333", "Indien": "#FF9933", "Libanais": "#EE2436", 
+                "Mexicain": "#006341", "Pains": "#F5DEB3", "Pizza": "#FF6347", 
+                "Plancha": "#708090", "Poutine": "#6F4E37", "Slow Cooker": "#4B0082", 
+                "Sushi": "#FF1493", "Tartare": "#B22222", "Végétarien": "#32CD32",
+                "Cabane à sucre": "#D2691E"
+            }
+            return colors.get(cat.strip(), "#e67e22")
 
-    # --- AFFICHAGE DES RÉSULTATS ---
-    for i in range(0, len(rows), 2):
-        grid_cols = st.columns(2) 
-        for j in range(2):
-            if i+j < len(rows):
-                row = rows.iloc[i+j]
-                with grid_cols[j]:
-                    img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
-                    
-                    # LOGIQUE DES BADGES MULTIPLES
-                    raw_cats = str(row['Catégorie']).split(',') if row['Catégorie'] else ["Recette"]
-                    badges_html = ""
-                    for c in raw_cats:
-                        c_clean = c.strip()
-                        if c_clean:
-                            couleur = get_cat_color(c_clean)
-                            badges_html += f'<span class="category-badge" style="background-color:{couleur}; color:white; padding:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c_clean}</span>'
+        # --- AFFICHAGE DES RÉSULTATS ---
+        for i in range(0, len(rows), 2):
+            grid_cols = st.columns(2) 
+            for j in range(2):
+                if i+j < len(rows):
+                    row = rows.iloc[i+j]
+                    with grid_cols[j]:
+                        img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
+                        
+                        raw_cats = str(row['Catégorie']).split(',') if row['Catégorie'] else ["Recette"]
+                        badges_html = "".join([f'<span class="category-badge" style="background-color:{get_cat_color(c)}; color:white; padding:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c.strip()}</span>' for c in raw_cats if c.strip()])
 
-                    st.markdown(f"""
-                        <div class="recipe-card">
-                            <div class="recipe-img-container"><img src="{img_url}"></div>
-                            <div class="recipe-content">
-                                <div style="margin-bottom:8px;">{badges_html}</div>
-                                <div class="recipe-title-text">{row['Titre']}</div>
+                        st.markdown(f"""
+                            <div class="recipe-card">
+                                <div class="recipe-img-container"><img src="{img_url}"></div>
+                                <div class="recipe-content">
+                                    <div style="margin-bottom:8px;">{badges_html}</div>
+                                    <div class="recipe-title-text">{row['Titre']}</div>
+                                </div>
                             </div>
-                        </div>
-                    """, unsafe_allow_html=True)
-                    
-                    if st.button("📖 Ouvrir la recette", key=f"v_{i+j}", use_container_width=True):
-                        st.session_state.recipe_data = row.to_dict()
-                        st.session_state.page = "details"
-                        st.rerun()
-else:
-    st.warning("Aucune donnée trouvée.")
-    
+                        """, unsafe_allow_html=True)
+                        
+                        if st.button("📖 Ouvrir la recette", key=f"v_{i+j}", use_container_width=True):
+                            st.session_state.recipe_data = row.to_dict()
+                            st.session_state.page = "details"
+                            st.rerun()
+    else:
+        st.warning("Aucune donnée trouvée.")
+# --- FIN DU BLOC HOME ---
 
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
@@ -1315,6 +1305,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
