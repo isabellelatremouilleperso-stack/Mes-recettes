@@ -324,8 +324,7 @@ if st.session_state.page == "home":
     """, unsafe_allow_html=True)
     
     df = load_data(URL_CSV)
-    
-    # --- DEBUT DU BLOC CORRIGÉ (Tout doit être décalé ici) ---
+
     if not df.empty:
         # --- BARRE DE FILTRES ET TRI ---
         col_search, col_cat, col_tri = st.columns([2, 1, 1])
@@ -336,7 +335,7 @@ if st.session_state.page == "home":
         with col_cat:
             mes_categories = [
                 "Toutes", "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
-                "Pâtes", "Riz", "Légumes", "Soupe", "Salade", "Entrée", 
+                "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
                 "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
                 "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
                 "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
@@ -373,6 +372,7 @@ if st.session_state.page == "home":
                 "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
                 "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
                 "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
+                "Accompagnement": "#00A36C", 
                 "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
                 "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
                 "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
@@ -1305,6 +1305,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
