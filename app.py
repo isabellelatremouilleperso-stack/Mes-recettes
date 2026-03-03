@@ -762,7 +762,7 @@ elif st.session_state.page == "edit":
     def clean_edit(x):
         """Nettoie les valeurs pour l'affichage (enlève NaN, les .0, etc.)"""
         val = str(x).strip()
-        if val.lower() in ["nan", "none", "", "null", "-", " "]: return ""
+        if val.lower() in ["nan", "none", "", "null", "-", " "]: return ""
         return val.split('.')[0] if '.' in val else val
 
     # --- TITRE DE LA PAGE ---
@@ -780,15 +780,15 @@ elif st.session_state.page == "edit":
         col_t, col_c = st.columns([2, 1])
         titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
         
-        # --- GESTION DES CATÉGORIES ---
+        # --- GESTION DES CATÉGORIES (MISE À JOUR ALPHABÉTIQUE) ---
         LISTE_CATS = [
-            "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
-            "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
-            "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
-            "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
-            "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
-            "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
-            "Végétarien", "Cabane à sucre", "Autre"
+            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
+            "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
+            "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
+            "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
+            "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
+            "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
+            "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
         ]
         
         # On récupère les catégories actuelles, on nettoie et on fait correspondre
@@ -810,12 +810,10 @@ elif st.session_state.page == "edit":
         
         # --- SECTION TEXTE (Ingrédients et Préparation) ---
         ci, ce = st.columns(2)
-        # On s'assure que c'est bien aligné à 12 espaces (3 tabulations de 4 espaces)
         ingredients = ci.text_area("🍎 Ingrédients (un par ligne)", value=r_edit.get('Ingrédients', ''), height=300)
         instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=r_edit.get('Préparation', ''), height=300)
         
         # --- SECTION LIENS ET MÉDIAS ---
-        # On remet l'image et la source comme elles étaient
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''))
         
         col_v, col_s = st.columns(2)
@@ -823,21 +821,20 @@ elif st.session_state.page == "edit":
         source_url = col_s.text_input("🌐 Lien Source (Site web)", value=r_edit.get('Source', ''))
         
         # Champ commentaires
-        commentaires = st.text_area("📝 Mes Notes & Astuces (visibles uniquement ici)", value=r_edit.get('Commentaires', ''), height=100)
+        commentaires = st.text_area("📝 Mes Notes & Astuces", value=r_edit.get('Commentaires', ''), height=100)
         
         st.divider()
         
         # --- BOUTON DE SOUMISSION ---
-        # Il DOIT être à l'intérieur du bloc 'with st.form'
         submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
 
-    # --- LOGIQUE D'ENREGISTREMENT (HORS DU WITH FORM) ---
+    # --- LOGIQUE D'ENREGISTREMENT ---
     if submit_btn:
         if titre_edit and ingredients:
             with st.spinner("Mise à jour de la recette..."):
                 payload = {
                     "action": "edit", 
-                    "old_titre": r_edit.get('Titre'), # Pour retrouver l'ancienne ligne
+                    "old_titre": r_edit.get('Titre'),
                     "titre": titre_edit.strip(), 
                     "Catégorie": ", ".join(cat_choisies),
                     "Ingrédients": ingredients.strip().replace('\n', '  \n'),
@@ -848,19 +845,18 @@ elif st.session_state.page == "edit":
                     "Portions": port.strip(),
                     "Commentaires": commentaires.strip(),
                     "video": video_url.strip(),
-                    "Source": source_url.strip() # On s'assure que 'Source' est bien là
+                    "Source": source_url.strip()
                 }
                 
                 if send_action(payload):
                     st.success("✅ Recette mise à jour avec succès !")
-                    st.cache_data.clear() # On vide le cache pour forcer la relecture
-                    st.session_state.page = "home" # On retourne à l'accueil
+                    st.cache_data.clear() 
+                    st.session_state.page = "home"
                     st.rerun()
                 else:
                     st.error("❌ Erreur de connexion au serveur lors de la mise à jour.")
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
-
 
 # --- PAGE ÉPICERIE (SÉCURISÉE) ---
 elif st.session_state.page == "shop":
@@ -1288,6 +1284,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
