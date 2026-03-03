@@ -680,27 +680,42 @@ elif st.session_state.page == "add":
     st.divider()
     
     # --- FORMULAIRE PRINCIPAL ---
-    with st.container():
-        col_t, col_c = st.columns([2, 1])
-        
-        titre_val = st.session_state.get('scraped_title', '')
-        ing_val = st.session_state.get('scraped_ingredients', '')
-        prep_val = st.session_state.get('scraped_content', '')
+with st.container():
+    col_t, col_c = st.columns([2, 1])
+    
+    titre_val = st.session_state.get('scraped_title', '')
+    ing_val = st.session_state.get('scraped_ingredients', '')
+    prep_val = st.session_state.get('scraped_content', '')
 
-        titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
-        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=["Autre"])
-        
-        col_link1, col_link2 = st.columns(2)
-        source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
-        video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
-        
-        st.markdown("#### ⏱️ Paramètres de cuisson")
-        cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
-        port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
-        
-        st.divider()
+    titre = col_t.text_input("🏷️ Nom de la recette", value=titre_val, placeholder="Ex: Lasagne de maman", max_chars=150)
+    
+    # --- MODIFICATION ICI ---
+    # On définit la liste locale au cas où CATEGORIES n'est pas à jour
+    mes_options = [
+        "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
+        "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
+        "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
+        "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
+        "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
+        "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
+        "Végétarien", "Cabane à sucre", "Autre"
+    ]
+    
+    # On enlève le default=["Autre"] pour laisser l'utilisateur choisir librement
+    cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
+    # --------------------------
+    
+    col_link1, col_link2 = st.columns(2)
+    source_url = col_link1.text_input("🔗 Lien source (Site Web)", value=url_input if url_input else "", placeholder="https://...")
+    video_url = col_link2.text_input("🎬 Lien Vidéo (TikTok, Instagram, FB)", placeholder="URL de la vidéo...")
+    
+    st.markdown("#### ⏱️ Paramètres de cuisson")
+    cp1, cp2, cp3 = st.columns(3)
+    t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
+    t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
+    port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
+    
+    st.divider()
         
         ci, ce = st.columns(2)
         # Utilisation de st.text_area avec les valeurs scrapées
@@ -1305,6 +1320,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
