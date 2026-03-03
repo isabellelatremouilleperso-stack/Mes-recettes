@@ -24,13 +24,15 @@ URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6W
 # CONFIGURATION DES DONNÉES
 # ======================
 mes_categories = [
-    "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
-    "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
-    "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
-    "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
-    "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
-    "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
-    "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
+    "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
+    "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
+    "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
+    "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", "Légumes", 
+    "Libanais", "Marinade", "Mexicain", "Muffins", "Pains", "Pâtes", 
+    "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", 
+    "Poisson", "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", 
+    "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
+    "Végétarien", "Vinaigrette", "Autre"
 ]
 
 # ======================
@@ -336,15 +338,17 @@ if st.session_state.page == "home":
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
             
         with col_cat:
-            # LISTE TRIÉE ALPHABÉTIQUEMENT
+            # LISTE MISE À JOUR : + Marinade, Vinaigrette, Pâtisserie, Muffins, Gâteau, Confiserie, Asiatique, Crème-glacée, Poke bowl
             mes_categories = [
-                "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
-                "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
-                "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
-                "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
-                "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
-                "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
-                "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
+                "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
+                "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
+                "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
+                "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", "Légumes", 
+                "Libanais", "Marinade", "Mexicain", "Muffins", "Pains", "Pâtes", 
+                "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", 
+                "Poisson", "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", 
+                "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
+                "Végétarien", "Vinaigrette", "Autre"
             ]
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
 
@@ -370,35 +374,43 @@ if st.session_state.page == "home":
 
         rows = rows.drop_duplicates(subset=['Titre']).reset_index(drop=True)
 
-        # --- FONCTION COULEUR (TRIÉE ET À JOUR) ---
+        # --- FONCTION COULEUR (MISE À JOUR AVEC 49 CATÉGORIES) ---
         def get_cat_color(cat):
             colors = {
                 "Accompagnement": "#00A36C",
                 "Agneau": "#8B4513",
                 "Air Fryer": "#FF4500",
                 "Apéro": "#FF4500",
+                "Asiatique": "#FF1493",    # Rose profond
                 "Boisson": "#7FFFD4",
                 "Boulangerie": "#DEB887",
                 "Bœuf": "#C70039",
                 "Cabane à sucre": "#D2691E",
                 "Condiment": "#DAA520",
+                "Confiserie": "#FF69B4",   # Rose bonbon
+                "Crème-glacée": "#AFEEEE", # Bleu givré
                 "Dessert": "#FF33FF",
                 "Entrée": "#95A5A6",
                 "Épices": "#CD5C5C",
                 "Fruits de mer": "#00CED1",
                 "Fumoir": "#333333",
+                "Gâteau": "#F08080",       # Corail doux
                 "Goûter": "#D2691E",
                 "Indien": "#FF9933",
                 "Légumes": "#28B463",
                 "Libanais": "#EE2436",
+                "Marinade": "#A0522D",     # Brun terreux
                 "Mexicain": "#006341",
+                "Muffins": "#BC8F8F",      # Brun rosé
                 "Pains": "#F5DEB3",
                 "Pâtes": "#F1C40F",
+                "Pâtisserie": "#EDB9F1",   # Lavande clair
                 "Petit-déjeuner": "#FFD700",
                 "Pizza": "#FF6347",
                 "Plancha": "#708090",
                 "Plat Principal": "#E67E22",
                 "Poisson": "#3498DB",
+                "Poke bowl": "#20B2AA",    # Turquoise mer
                 "Porc": "#FFC0CB",
                 "Poulet": "#FF5733",
                 "Poutine": "#6F4E37",
@@ -412,8 +424,10 @@ if st.session_state.page == "home":
                 "Temps des fêtes": "#C41E3A",
                 "Temps des fetes": "#C41E3A",
                 "Végétarien": "#32CD32",
+                "Vinaigrette": "#9ACD32",  # Vert lime doux
                 "Autre": "#BDC317"
             }
+            # .strip() permet de gérer les espaces involontaires dans tes données
             return colors.get(cat.strip(), "#e67e22")
 
         # --- AFFICHAGE DES RÉSULTATS ---
@@ -641,15 +655,18 @@ elif st.session_state.page == "add":
         col_t, col_c = st.columns([2, 1])
         titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
         
-        # --- LISTE MISE À JOUR ET TRIÉE ---
+        # --- LISTE MISE À JOUR ET TRIÉE (48 OPTIONS) ---
         mes_options = [
-            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
-            "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
-            "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
-            "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
-            "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
-            "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
-            "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
+            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
+            "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
+            "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
+            "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
+            "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
+            "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
+            "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", 
+            "Poulet", "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", 
+            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
+            "Vinaigrette", "Autre"
         ]
         cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
         
@@ -789,15 +806,18 @@ elif st.session_state.page == "edit":
         col_t, col_c = st.columns([2, 1])
         titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
         
-        # --- GESTION DES CATÉGORIES (MISE À JOUR ALPHABÉTIQUE) ---
+        # --- GESTION DES CATÉGORIES (MISE À JOUR ALPHABÉTIQUE COMPLÈTE) ---
         LISTE_CATS = [
-            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
-            "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
-            "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
-            "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
-            "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
-            "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
-            "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
+            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
+            "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
+            "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
+            "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
+            "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
+            "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
+            "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", 
+            "Poulet", "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", 
+            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
+            "Vinaigrette", "Autre"
         ]
         
         # On récupère les catégories actuelles, on nettoie et on fait correspondre
@@ -1293,6 +1313,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
