@@ -336,14 +336,15 @@ if st.session_state.page == "home":
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
             
         with col_cat:
+            # LISTE TRIÉE ALPHABÉTIQUEMENT
             mes_categories = [
-                "Toutes", "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
-                "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
-                "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
-                "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
-                "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
-                "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
-                "Végétarien", "Cabane à sucre", "Temps des fêtes", "Autre"
+                "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
+                "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
+                "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
+                "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
+                "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
+                "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
+                "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
             ]
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
 
@@ -369,25 +370,49 @@ if st.session_state.page == "home":
 
         rows = rows.drop_duplicates(subset=['Titre']).reset_index(drop=True)
 
-        # --- FONCTION COULEUR ---
+        # --- FONCTION COULEUR (TRIÉE ET À JOUR) ---
         def get_cat_color(cat):
             colors = {
-                "Poulet": "#FF5733", "Bœuf": "#C70039", "Porc": "#FFC0CB", 
-                "Agneau": "#8B4513", "Poisson": "#3498DB", "Fruits de mer": "#00CED1",
-                "Pâtes": "#F1C40F", "Riz": "#F5F5DC", "Légumes": "#28B463", 
-                "Accompagnement": "#00A36C", 
-                "Soupe": "#4682B4", "Salade": "#7CFC00", "Entrée": "#95A5A6",
-                "Plat Principal": "#E67E22", "Dessert": "#FF33FF", "Petit-déjeuner": "#FFD700",
-                "Goûter": "#D2691E", "Apéro": "#FF4500", "Sauce": "#8B0000", 
-                "Boisson": "#7FFFD4", "Autre": "#BDC317", "Air Fryer": "#FF4500", 
-                "Boulangerie": "#DEB887", "Condiment": "#DAA520", "Épices": "#CD5C5C", 
-                "Fumoir": "#333333", "Indien": "#FF9933", "Libanais": "#EE2436", 
-                "Mexicain": "#006341", "Pains": "#F5DEB3", "Pizza": "#FF6347", 
-                "Plancha": "#708090", "Poutine": "#6F4E37", "Slow Cooker": "#4B0082", 
-                "Sushi": "#FF1493", "Tartare": "#B22222", "Végétarien": "#32CD32",
+                "Accompagnement": "#00A36C",
+                "Agneau": "#8B4513",
+                "Air Fryer": "#FF4500",
+                "Apéro": "#FF4500",
+                "Boisson": "#7FFFD4",
+                "Boulangerie": "#DEB887",
+                "Bœuf": "#C70039",
                 "Cabane à sucre": "#D2691E",
-                "Temps des fêtes": "#C41E3A",  # <--- AJOUT ICI
-                "Temps des fetes": "#C41E3A"   # <--- VERSION SANS ACCENT
+                "Condiment": "#DAA520",
+                "Dessert": "#FF33FF",
+                "Entrée": "#95A5A6",
+                "Épices": "#CD5C5C",
+                "Fruits de mer": "#00CED1",
+                "Fumoir": "#333333",
+                "Goûter": "#D2691E",
+                "Indien": "#FF9933",
+                "Légumes": "#28B463",
+                "Libanais": "#EE2436",
+                "Mexicain": "#006341",
+                "Pains": "#F5DEB3",
+                "Pâtes": "#F1C40F",
+                "Petit-déjeuner": "#FFD700",
+                "Pizza": "#FF6347",
+                "Plancha": "#708090",
+                "Plat Principal": "#E67E22",
+                "Poisson": "#3498DB",
+                "Porc": "#FFC0CB",
+                "Poulet": "#FF5733",
+                "Poutine": "#6F4E37",
+                "Riz": "#F5F5DC",
+                "Salade": "#7CFC00",
+                "Sauce": "#8B0000",
+                "Slow Cooker": "#4B0082",
+                "Soupe": "#4682B4",
+                "Sushi": "#FF1493",
+                "Tartare": "#B22222",
+                "Temps des fêtes": "#C41E3A",
+                "Temps des fetes": "#C41E3A",
+                "Végétarien": "#32CD32",
+                "Autre": "#BDC317"
             }
             return colors.get(cat.strip(), "#e67e22")
 
@@ -1263,6 +1288,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
