@@ -842,23 +842,47 @@ elif st.session_state.page == "edit":
     st.divider()
     
     with st.form("form_edition_complete"):
-        col_t, col_c = st.columns([2, 1])
-        titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
-        
-        # Gestion des catégories
-        raw_cats = str(r_edit.get('Catégorie', 'Autre'))
-        current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
-        cat_choisies = col_c.multiselect("📁 Catégories", CATEGORIES, default=[c for c in current_cats if c in CATEGORIES] or ["Autre"])
-        
-        st.markdown("#### ⏱️ Paramètres")
-        cp1, cp2, cp3 = st.columns(3)
-        t_prep = cp1.text_input("🕒 Préparation (min)", value=clean_edit(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', ''))))
-        t_cuis = cp2.text_input("🔥 Cuisson (min)", value=clean_edit(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', ''))))
-        port = cp3.text_input("🍽️ Portions", value=clean_edit(r_edit.get('Portions', '')))
-        
-        ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
-        instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
+            col_t, col_c = st.columns([2, 1])
+            titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
+            
+            # --- GESTION DES CATÉGORIES CORRIGÉE ---
+            # On définit la liste ici pour être sûr qu'Accompagnement existe
+            LISTE_CATS = [
+                "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
+                "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
+                "Plat Principal", "Dessert", "Petit-déjeuner", "Goûter", "Apéro", 
+                "Sauce", "Boisson", "Air Fryer", "Boulangerie", "Condiment", 
+                "Épices", "Fumoir", "Indien", "Libanais", "Mexicain", "Pains", 
+                "Pizza", "Plancha", "Poutine", "Slow Cooker", "Sushi", "Tartare", 
+                "Végétarien", "Cabane à sucre", "Autre"
+            ]
+            
+            raw_cats = str(r_edit.get('Catégorie', ''))
+            current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
+            
+            # On enlève le "or ['Autre']" qui bloquait les changements
+            cat_choisies = col_c.multiselect(
+                "📁 Catégories", 
+                LISTE_CATS, 
+                default=[c for c in current_cats if c in LISTE_CATS]
+            )
+            
+            st.markdown("#### ⏱️ Paramètres")
+            cp1, cp2, cp3 = st.columns(3)
+            
+            # Nettoyage des données pour l'affichage
+            t_prep_val = clean_edit(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', '')))
+            t_cuis_val = clean_edit(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', '')))
+            port_val = clean_edit(r_edit.get('Portions', ''))
+            
+            t_prep = cp1.text_input("🕒 Préparation (min)", value=t_prep_val)
+            t_cuis = cp2.text_input("🔥 Cuisson (min)", value=t_cuis_val)
+            port = cp3.text_input("🍽️ Portions", value=port_val)
+            
+            # --- SECTION TEXTE (Vérifie bien l'alignement ici) ---
+            ci, ce = st.columns(2)
+            ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
+            instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
         
         img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
 
@@ -1320,6 +1344,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
