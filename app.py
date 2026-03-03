@@ -638,41 +638,41 @@ elif st.session_state.page == "add":
     st.divider()
     
     with st.container():
-    col_t, col_c = st.columns([2, 1])
-    titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
-    
-    # --- LISTE MISE À JOUR ET TRIÉE ---
-    mes_options = [
-        "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
-        "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
-        "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
-        "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
-        "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
-        "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
-        "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
-    ]
-    cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
-    
-    col_link1, col_link2 = st.columns(2)
-    source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
-    video_url_in = col_link2.text_input("🎬 Lien Vidéo", placeholder="URL vidéo...")
-    
-    st.markdown("#### ⏱️ Paramètres")
-    cp1, cp2, cp3 = st.columns(3)
-    t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
-    t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
-    port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
-    
-    st.divider()
-    
-    ci, ce = st.columns(2)
-    ingredients = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
-    instructions = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
-    
-    img_url = st.text_input("🖼️ Lien de l'image", placeholder="https://...", key="img_url")
-    commentaires = st.text_area("📝 Mes Notes", height=100, key="notes_area")
-    
-    st.divider()
+        col_t, col_c = st.columns([2, 1])
+        titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
+        
+        # --- LISTE MISE À JOUR ET TRIÉE ---
+        mes_options = [
+            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Boisson", 
+            "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", "Dessert", 
+            "Entrée", "Épices", "Fruits de mer", "Fumoir", "Goûter", "Indien", 
+            "Légumes", "Libanais", "Mexicain", "Pains", "Pâtes", "Petit-déjeuner", 
+            "Pizza", "Plancha", "Plat Principal", "Poisson", "Porc", "Poulet", 
+            "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", "Soupe", 
+            "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Autre"
+        ]
+        cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
+        
+        col_link1, col_link2 = st.columns(2)
+        source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
+        video_url_in = col_link2.text_input("🎬 Lien Vidéo", placeholder="URL vidéo...")
+        
+        st.markdown("#### ⏱️ Paramètres")
+        cp1, cp2, cp3 = st.columns(3)
+        t_prep = cp1.text_input("🕒 Préparation (min)", placeholder="15", key="p_time")
+        t_cuis = cp2.text_input("🔥 Cuisson (min)", placeholder="45", key="c_time")
+        port = cp3.text_input("🍽️ Portions", placeholder="4", key="portions")
+        
+        st.divider()
+        
+        ci, ce = st.columns(2)
+        ingredients = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
+        instructions = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
+        
+        img_url = st.text_input("🖼️ Lien de l'image", placeholder="https://...", key="img_url")
+        commentaires = st.text_area("📝 Mes Notes", height=100, key="notes_area")
+        
+        st.divider()
         
         c_save, c_cancel = st.columns(2)
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
@@ -1293,6 +1293,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
