@@ -845,8 +845,7 @@ elif st.session_state.page == "edit":
             col_t, col_c = st.columns([2, 1])
             titre_edit = col_t.text_input("🏷️ Nom de la recette", value=r_edit.get('Titre', ''))
             
-            # --- GESTION DES CATÉGORIES CORRIGÉE ---
-            # On définit la liste ici pour être sûr qu'Accompagnement existe
+            # --- GESTION DES CATÉGORIES ---
             LISTE_CATS = [
                 "Poulet", "Bœuf", "Porc", "Agneau", "Poisson", "Fruits de mer",
                 "Pâtes", "Riz", "Légumes", "Accompagnement", "Soupe", "Salade", "Entrée", 
@@ -860,7 +859,7 @@ elif st.session_state.page == "edit":
             raw_cats = str(r_edit.get('Catégorie', ''))
             current_cats = [c.strip() for c in raw_cats.split(',') if c.strip()]
             
-            # On enlève le "or ['Autre']" qui bloquait les changements
+            # Correction du bug "Autre" en enlevant le "or ['Autre']"
             cat_choisies = col_c.multiselect(
                 "📁 Catégories", 
                 LISTE_CATS, 
@@ -870,7 +869,6 @@ elif st.session_state.page == "edit":
             st.markdown("#### ⏱️ Paramètres")
             cp1, cp2, cp3 = st.columns(3)
             
-            # Nettoyage des données pour l'affichage
             t_prep_val = clean_edit(r_edit.get('Temps_Prepa', r_edit.get('Temps de préparation', '')))
             t_cuis_val = clean_edit(r_edit.get('Temps_Cuisson', r_edit.get('Temps de cuisson', '')))
             port_val = clean_edit(r_edit.get('Portions', ''))
@@ -879,21 +877,24 @@ elif st.session_state.page == "edit":
             t_cuis = cp2.text_input("🔥 Cuisson (min)", value=t_cuis_val)
             port = cp3.text_input("🍽️ Portions", value=port_val)
             
-            # --- SECTION TEXTE (Vérifie bien l'alignement ici) ---
             ci, ce = st.columns(2)
             ingredients = ci.text_area("🍎 Ingrédients", value=r_edit.get('Ingrédients', ''), height=300)
             instructions = ce.text_area("👨‍🍳 Étapes", value=r_edit.get('Préparation', ''), height=300)
-        
-        img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
+            
+            # --- LES LIENS ET NOTES (BIEN ALIGNÉS) ---
+            img_url = st.text_input("🖼️ Lien de l'image", value=r_edit.get('Image', ''))
 
-        # --- AJOUT DU LIEN SOURCE ICI ---
-        col_v, col_s = st.columns(2)
-        video_url = col_v.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
-        source_url = col_s.text_input("🌐 Lien Source (Site web)", value=r_edit.get('Source', ''))
-        
-        commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
+            col_v, col_s = st.columns(2)
+            video_url = col_v.text_input("📺 Lien Vidéo", value=r_edit.get('video', ''))
+            source_url = col_s.text_input("🌐 Lien Source (Site web)", value=r_edit.get('Source', ''))
+            
+            commentaires = st.text_area("📝 Mes Notes", value=r_edit.get('Commentaires', ''))
 
-        if st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True):
+            # BOUTON DE VALIDATION (À L'INTÉRIEUR DU WITH)
+            submit_btn = st.form_submit_button("💾 ENREGISTRER LES MODIFICATIONS", use_container_width=True)
+
+        # --- TRAITEMENT DES DONNÉES (APRÈS LE FORMULAIRE) ---
+        if submit_btn:
             if titre_edit and ingredients:
                 payload = {
                     "action": "edit", 
@@ -908,10 +909,10 @@ elif st.session_state.page == "edit":
                     "Portions": port,
                     "Commentaires": commentaires,
                     "video": video_url,
-                    "Source": source_url  # <--- CRUCIAL : on ajoute la source dans l'envoi
+                    "Source": source_url 
                 }
                 if send_action(payload):
-                    st.success("✅ Mis à jour !")
+                    st.success("✅ Mis à jour avec succès !")
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
@@ -1344,6 +1345,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
