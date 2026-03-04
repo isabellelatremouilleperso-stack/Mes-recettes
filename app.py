@@ -735,7 +735,7 @@ elif st.session_state.page == "add":
                 
                 # --- CORRECTION DES LIGNES COLLÉES ---
                 # On ajoute deux espaces en fin de ligne pour forcer le saut de ligne en Markdown
-                ing_propre = "\n".join([line.strip() + "  " for line in ingredients_txt.split('\n') if line.strip()])
+                ing_propre = "\n".join([f"- {line.strip()}" for line in ingredients_txt.split('\n') if line.strip()])
                 
                 payload = {
                     "action": "add",
@@ -1364,6 +1364,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
