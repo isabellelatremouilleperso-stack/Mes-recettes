@@ -626,10 +626,7 @@ elif st.session_state.page == "details":
     if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
         st.info(notes_texte)
     else:
-        st.write("*Aucune note pour cette recette.*")
-        
-st.write(f"Page actuelle : {st.session_state.page}") # Pour vérifier si on entre bien dans la condition
-
+        st.write("*Aucune note pour cette recette.*")       
 elif st.session_state.page == "add":
     import urllib.parse
     import datetime
@@ -1328,6 +1325,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
