@@ -31,8 +31,8 @@ mes_categories = [
     "Libanais", "Marinade", "Mexicain", "Muffins", "Pains", "Pâtes", 
     "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", 
     "Poisson", "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", 
-    "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
-    "Végétarien", "Vinaigrette", "Autre"
+    "Sandwich", "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", 
+    "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
 ]
 
 # ======================
@@ -338,7 +338,7 @@ if st.session_state.page == "home":
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
             
         with col_cat:
-            # LISTE MISE À JOUR : + Marinade, Vinaigrette, Pâtisserie, Muffins, Gâteau, Confiserie, Asiatique, Crème-glacée, Poke bowl
+    # LISTE MISE À JOUR : + Sandwich
             mes_categories = [
                 "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
                 "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
@@ -347,8 +347,8 @@ if st.session_state.page == "home":
                 "Libanais", "Marinade", "Mexicain", "Muffins", "Pains", "Pâtes", 
                 "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", 
                 "Poisson", "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", 
-                "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
-                "Végétarien", "Vinaigrette", "Autre"
+                "Sandwich", "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", 
+                "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
             ]
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
 
@@ -416,6 +416,7 @@ if st.session_state.page == "home":
                 "Poutine": "#6F4E37",
                 "Riz": "#F5F5DC",
                 "Salade": "#7CFC00",
+                "Sandwich": "#DAA520",     # Jaune Moutarde
                 "Sauce": "#8B0000",
                 "Slow Cooker": "#4B0082",
                 "Soupe": "#4682B4",
@@ -429,7 +430,6 @@ if st.session_state.page == "home":
             }
             # .strip() permet de gérer les espaces involontaires dans tes données
             return colors.get(cat.strip(), "#e67e22")
-
         # --- AFFICHAGE DES RÉSULTATS ---
         for i in range(0, len(rows), 2):
             grid_cols = st.columns(2) 
@@ -701,10 +701,11 @@ elif st.session_state.page == "add":
             "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
             "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
             "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", 
-            "Poulet", "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", 
-            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
-            "Vinaigrette", "Autre"
+            "Poulet", "Poutine", "Riz", "Salade", "Sandwich", "Sauce", 
+            "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
+            "Végétarien", "Vinaigrette", "Autre"
         ]
+
         cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
         
         col_link1, col_link2 = st.columns(2)
@@ -866,9 +867,9 @@ elif st.session_state.page == "edit":
             "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
             "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
             "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", 
-            "Poulet", "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", 
-            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
-            "Vinaigrette", "Autre"
+            "Poulet", "Poutine", "Riz", "Salade", "Sandwich", "Sauce", 
+            "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
+            "Végétarien", "Vinaigrette", "Autre"
         ]
         
         # On récupère les catégories actuelles, on nettoie et on fait correspondre
@@ -1364,6 +1365,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
