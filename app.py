@@ -9,6 +9,10 @@ import textwrap
 from datetime import datetime
 from bs4 import BeautifulSoup
 
+# INITIALISATION (À mettre tout en haut)
+if 'page' not in st.session_state or st.session_state.page is None:
+    st.session_state.page = 'home'
+
 # ======================
 # CONFIGURATION & LIAISON GOOGLE
 # ======================
@@ -1327,6 +1331,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
