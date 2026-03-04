@@ -91,54 +91,51 @@ def scrape_url(url):
     import requests
     from bs4 import BeautifulSoup
 
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"}
+    # Headers pour simuler un humain et éviter le blocage
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+    }
+    
     try:
-        res = requests.get(url, headers=headers, timeout=10)
-        res.encoding = res.apparent_encoding # Pour gérer les accents québécois
-        soup = BeautifulSoup(res.text, 'html.parser')
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return None, None, None
+            
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # --- TITRE ---
-        titre = "Recette importée"
+        # 1. Extraction du Titre
+        titre = ""
         if soup.find('h1'):
-            titre = soup.find('h1').text.strip()
-        elif soup.title:
-            titre = soup.title.text.split('-')[0].strip()
-
-        # --- INGRÉDIENTS (Recherche large) ---
-        ing_list = []
-        # On cherche toutes les listes qui pourraient être des ingrédients
-        for liste in soup.find_all(['ul', 'ol', 'div']):
-            classe = str(liste.get('class', '')).lower()
-            identifiant = str(liste.get('id', '')).lower()
-            
-            # Si le mot "ingredient" est dans la classe ou l'ID
-            if "ingredient" in classe or "ingredient" in identifiant:
-                items = liste.find_all(['li', 'div', 'p'])
-                for item in items:
-                    t = item.text.strip()
-                    if t and len(t) > 2 and len(t) < 200: # Évite les textes trop longs ou courts
-                        ing_list.append(f"• {t}")
+            titre = soup.find('h1').get_text().strip()
         
-        # --- PRÉPARATION (Recherche large) ---
+        # 2. Extraction des Ingrédients (recherche par mots-clés dans les classes)
+        ing_list = []
+        # On cherche les conteneurs qui ressemblent à des ingrédients
+        for container in soup.find_all(['div', 'ul', 'section']):
+            cls = str(container.get('class', '')).lower()
+            if 'ingredient' in cls:
+                for li in container.find_all('li'):
+                    text = li.get_text().strip()
+                    if text: ing_list.append(text)
+        
+        # 3. Extraction de la Préparation
         prep_list = []
-        for zone in soup.find_all(['div', 'section', 'ol', 'ul']):
-            cl_id = (str(zone.get('class', '')) + str(zone.get('id', ''))).lower()
-            
-            if any(x in cl_id for x in ["instruction", "preparation", "etape", "step", "method"]):
-                pas = zone.find_all(['li', 'p', 'div'])
-                for p in pas:
-                    t = p.text.strip()
-                    if len(t) > 10: # Une étape de préparation fait généralement plus de 10 caractères
-                        if t not in prep_list: # Évite les doublons
-                            prep_list.append(t)
+        for container in soup.find_all(['div', 'ol', 'section']):
+            cls = str(container.get('class', '')).lower()
+            if any(x in cls for x in ['instruction', 'preparation', 'etape', 'step']):
+                for step in container.find_all(['li', 'p']):
+                    text = step.get_text().strip()
+                    if len(text) > 10: # Éviter les petits bruits
+                        prep_list.append(text)
 
-        # Nettoyage final des doublons pour les ingrédients
+        # On nettoie les doublons tout en gardant l'ordre
         ing_final = "\n".join(list(dict.fromkeys(ing_list)))
         prep_final = "\n\n".join(list(dict.fromkeys(prep_list)))
 
         return titre, ing_final, prep_final
+
     except Exception as e:
-        return f"Erreur : {str(e)}", "", ""
+        return None, None, None
         
 import streamlit as st
 import hashlib
@@ -227,8 +224,8 @@ with st.sidebar:
     st.divider()
     
     if st.session_state.get('admin_mode', False):
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_sidebar_add"):
-            st.session_state.page = "add"
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_sidebar_"):
+            st.session_state.page = ""
             st.rerun()
     
     if st.button("⭐ Play Store", use_container_width=True, key="nav_sidebar_play"): 
@@ -297,7 +294,7 @@ if st.session_state.page == "home":
             object-fit: cover;
         }
         .recipe-content {
-            padding: 15px;
+            ping: 15px;
             text-align: center;
         }
         .recipe-title-text {
@@ -1359,6 +1356,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
