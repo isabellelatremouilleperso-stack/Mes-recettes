@@ -611,21 +611,26 @@ elif st.session_state.page == "details":
         m2.metric("🔥 Cuisson", f"{clean_metrique(r.get('Temps de cuisson'))} min")
         m3.metric("🍽️ Portions", clean_metrique(r.get('Portions')))
 
-    # --- 2. SUPPORT VIDÉO (RÉTABLISSEMENT) ---
-    # On récupère le lien peu importe le nom de la colonne (Vidéo ou video)
-    v_link = r.get('Vidéo', r.get('video', ''))
+    # --- 2. SUPPORT VIDÉO (ADAPTÉ À TA COLONNE : Lien vidéo) ---
+    # On cherche précisément "Lien vidéo", sinon on essaie les variantes
+    v_link = r.get('Lien vidéo') or r.get('Lien Vidéo') or r.get('Vidéo') or r.get('video') or ""
     
-    if v_link and str(v_link).strip().lower().startswith("http"):
+    # Nettoyage et vérification que c'est bien une URL
+    v_link_str = str(v_link).strip()
+
+    if v_link_str.lower().startswith("http"):
         st.divider()
-        url_propre = str(v_link).strip()
         st.markdown("#### 🎬 Support Vidéo")
         
-        # Si c'est un lien YouTube ou Vimeo, on l'affiche directement dans l'app
-        if any(x in url_propre.lower() for x in ["youtube", "youtu.be", "vimeo"]):
-            st.video(url_propre)
+        # Si c'est YouTube ou Vimeo, on l'affiche dans la page
+        if any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"]):
+            try:
+                st.video(v_link_str)
+            except Exception:
+                st.link_button("▶️ Regarder la vidéo (Lien externe)", v_link_str, use_container_width=True)
         else:
-            # Sinon, on met un gros bouton pour ouvrir le lien externe
-            st.link_button("▶️ Voir la vidéo externe", url_propre, use_container_width=True)
+            # Pour TikTok, Instagram ou autres liens de sites de cuisine
+            st.link_button("▶️ Voir la vidéo de la recette", v_link_str, use_container_width=True, type="primary")
     
     # --- SECTION INGRÉDIENTS (DEUX COLONNES SOUS LA PHOTO) ---
     st.divider()
@@ -1422,6 +1427,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
