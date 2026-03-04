@@ -629,14 +629,14 @@ elif st.session_state.page == "details":
         st.write("*Aucune note pour cette recette.*")
 
 elif st.session_state.page == "add":
-    import urllib.parse
-    import datetime
-
-    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
+    st.title("🚩 TEST : La page ADD est active")
     
-    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
+    if st.button("⬅ RETOUR AU MENU"):
         st.session_state.page = "home"
         st.rerun()
+    
+    st.success("Si vous voyez ce message, le problème ne vient pas de la navigation, mais du code à l'intérieur de la page d'ajout.")
+    st.info(f"Variable de page : {st.session_state.page}")
         
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
@@ -1326,6 +1326,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
