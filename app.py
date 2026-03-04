@@ -25,14 +25,14 @@ URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6W
 # ======================
 mes_categories = [
     "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-    "BBQ", "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
-    "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", "Four à pizza",
-    "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", "Légumes", 
-    "Libanais", "Marinade", "Mexicain", "Muffins", "Ninja Creami", "Ninja Slushie",
-    "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", 
-    "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", "Poutine", 
-    "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", "Sushi", 
-    "Tartare", "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
+    "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Bœuf", "Cabane à sucre", 
+    "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
+    "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
+    "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", "Ninja Creami", 
+    "Ninja Slushie", "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
+    "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", 
+    "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", 
+    "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
 ]
 
 # ======================
@@ -390,6 +390,7 @@ if st.session_state.page == "home":
                 "Asiatique": "#FF1493",
                 "BBQ": "#900C3F",          # Rouge charbon / Grillade
                 "Boisson": "#7FFFD4",
+                "Boîte à lunch": "#008080", # Bleu canard / Frais
                 "Boulangerie": "#DEB887",
                 "Bœuf": "#C70039",
                 "Cabane à sucre": "#D2691E",
@@ -705,7 +706,7 @@ elif st.session_state.page == "add":
         
         mes_options = [
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-            "BBQ", "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", 
+            "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Bœuf", "Cabane à sucre", 
             "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", 
             "Épices", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
             "Goûter", "Indien", "Légumes", "Libanais", "Marinade", 
@@ -888,7 +889,7 @@ elif st.session_state.page == "edit":
         # --- GESTION DES CATÉGORIES (MISE À JOUR ALPHABÉTIQUE COMPLÈTE) ---
         LISTE_CATS = [
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-            "BBQ", "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", 
+            "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Bœuf", "Cabane à sucre", 
             "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", 
             "Épices", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
             "Goûter", "Indien", "Légumes", "Libanais", "Marinade", 
@@ -1393,6 +1394,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
