@@ -733,11 +733,30 @@ elif st.session_state.page == "add":
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
             if titre and ingredients_txt:
                 import datetime
+                import re
+
+                # --- NOUVELLE LOGIQUE DE NETTOYAGE ---
+                # 1. On remplace les caractères spéciaux (carrés, ronds, puces) par un saut de ligne
+                # Cela traite le cas où tout est collé sur une seule ligne avec des symboles
+                nettoyage = re.sub(r'[▢❑○●•✅]', '\n', ingredients_txt)
                 
-                # --- CORRECTION DES LIGNES COLLÉES ---
-                # On ajoute deux espaces en fin de ligne pour forcer le saut de ligne en Markdown
-                ing_propre = "\n".join([f"- {line.strip()}" for line in ingredients_txt.split('\n') if line.strip()])
+                # 2. On sépare le texte par ligne
+                lignes_brutes = nettoyage.split('\n')
                 
+                # 3. On nettoie chaque ligne et on ajoute un tiret au début pour le format liste
+                lignes_propres = []
+                for l in lignes_brutes:
+                    clean_l = l.strip()
+                    if clean_l:
+                        # On évite de doubler le tiret si l'utilisateur l'a déjà mis
+                        if not clean_l.startswith('-'):
+                            lignes_propres.append(f"- {clean_l}")
+                        else:
+                            lignes_propres.append(clean_l)
+
+                ing_propre = "\n".join(lignes_propres)
+                
+                # --- CONSTRUCTION DU PAYLOAD ---
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
@@ -1365,6 +1384,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
