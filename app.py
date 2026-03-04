@@ -88,45 +88,62 @@ def load_data(url, force_refresh=False):
         return pd.DataFrame()
 
 def scrape_url(url):
-    import requests
-    from bs4 import BeautifulSoup
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
-    }
-    
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200:
-            return None, None, None
-            
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        # 1. Titre
-        titre = soup.find('h1').get_text().strip() if soup.find('h1') else "Recette sans titre"
-        
-        # 2. Ingrédients
-        ing_list = []
-        for container in soup.find_all(['div', 'ul', 'section']):
-            cls = str(container.get('class', '')).lower()
-            if 'ingredient' in cls:
-                for li in container.find_all('li'):
-                    text = li.get_text().strip()
-                    if text: ing_list.append(f"• {text}")
-        
-        # 3. Préparation
-        prep_list = []
-        for container in soup.find_all(['div', 'ol', 'section']):
-            cls = str(container.get('class', '')).lower()
-            if any(x in cls for x in ['instruction', 'preparation', 'etape', 'step']):
-                for step in container.find_all(['li', 'p']):
-                    text = step.get_text().strip()
-                    if len(text) > 10:
-                        prep_list.append(text)
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        res = requests.get(url, headers=headers, timeout=12)
+        res.encoding = res.apparent_encoding
+        soup = BeautifulSoup(res.text, 'html.parser')
 
-        return titre, "\n".join(list(dict.fromkeys(ing_list))), "\n\n".join(list(dict.fromkeys(prep_list)))
-    except:
-        return None, None, None
+        # 1. Extraction du Titre
+        title = "Recette Importée"
+        h1_tag = soup.find('h1')
+        if h1_tag:
+            title = h1_tag.get_text().strip()
+
+        # 2. Nettoyage agressif du bruit
+        for junk in soup(["script", "style", "nav", "footer", "header", "aside", "iframe", "ins"]):
+            junk.extract()
+
+        # 3. Ciblage intelligent (priorité aux classes culinaires communes)
+        # On cherche des conteneurs qui ont souvent les mots clés "ingredients" ou "recipe"
+        ing_container = soup.find(class_=re.compile(r'ingredient|ingredients|recipe-ing', re.I))
+        prep_container = soup.find(class_=re.compile(r'instruction|preparation|method|steps', re.I))
+
+        # --- LOGIQUE INGRÉDIENTS ---
+        if ing_container:
+            items = ing_container.find_all('li')
+        else:
+            items = soup.find_all('li')
+            
+        ing_list = []
+        for el in items:
+            txt = el.get_text().strip()
+            # On filtre pour garder les lignes qui ressemblent à des ingrédients (courtes mais informatives)
+            if 3 < len(txt) < 150 and not any(x in txt.lower() for x in ["partager", "imprimer", "connexion"]):
+                ing_list.append(f"❑ {txt}")
+
+        # --- LOGIQUE PRÉPARATION ---
+        if prep_container:
+            steps = prep_container.find_all(['p', 'li'])
+        else:
+            steps = soup.find_all('p')
+
+        prep_list = []
+        for el in steps:
+            txt = el.get_text().strip()
+            # On garde les paragraphes assez longs pour être des instructions
+            if len(txt) > 20 and not any(x in txt.lower() for x in ["cookies", "droits réservés", "abonnez-vous"]):
+                prep_list.append(txt)
+
+        # Nettoyage des doublons et suppression des lignes vides
+        final_ing = "\n".join([i for i in list(dict.fromkeys(ing_list)) if i.strip()])
+        final_prep = "\n\n".join([p for p in list(dict.fromkeys(prep_list)) if p.strip()])
+
+        return title, final_ing, final_prep
+
+    except Exception as e:
+        # Retourne des chaînes vides au lieu de None pour éviter les erreurs de concaténation plus tard
+        return "Recette inconnue", "", f"Erreur lors de l'extraction : {e}"
         
 import streamlit as st
 import hashlib
@@ -215,8 +232,8 @@ with st.sidebar:
     st.divider()
     
     if st.session_state.get('admin_mode', False):
-        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_sidebar_"):
-            st.session_state.page = ""
+        if st.button("➕ AJOUTER RECETTE", use_container_width=True, key="nav_sidebar_add"):
+            st.session_state.page = "add"
             st.rerun()
     
     if st.button("⭐ Play Store", use_container_width=True, key="nav_sidebar_play"): 
@@ -285,7 +302,7 @@ if st.session_state.page == "home":
             object-fit: cover;
         }
         .recipe-content {
-            ping: 15px;
+            padding: 15px;
             text-align: center;
         }
         .recipe-title-text {
@@ -301,7 +318,7 @@ if st.session_state.page == "home":
         }
         .category-badge {
             display: inline-block;
-            ping: 4px 12px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: bold;
@@ -423,7 +440,7 @@ if st.session_state.page == "home":
                         img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
                         
                         raw_cats = str(row['Catégorie']).split(',') if row['Catégorie'] else ["Recette"]
-                        badges_html = "".join([f'<span class="category-badge" style="background-color:{get_cat_color(c)}; color:white; ping:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c.strip()}</span>' for c in raw_cats if c.strip()])
+                        badges_html = "".join([f'<span class="category-badge" style="background-color:{get_cat_color(c)}; color:white; padding:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c.strip()}</span>' for c in raw_cats if c.strip()])
 
                         st.markdown(f"""
                             <div class="recipe-card">
@@ -627,8 +644,7 @@ elif st.session_state.page == "details":
         st.info(notes_texte)
     else:
         st.write("*Aucune note pour cette recette.*")
-
-
+        
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1326,429 +1342,6 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
