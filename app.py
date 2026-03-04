@@ -1,4 +1,5 @@
 import streamlit as st
+st.title(f"DEBUG: La page actuelle est {st.session_state.get('page', 'VIDE')}")
 import pandas as pd
 import requests
 import time
@@ -1326,6 +1327,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
