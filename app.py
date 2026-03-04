@@ -25,14 +25,14 @@ URL_CSV_PLAN = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRaY9boJAnQ5mh6W
 # ======================
 mes_categories = [
     "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-    "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", 
+    "BBQ", "Biscuits", "Boisson", "Boîte à lunch", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", 
     "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
     "Fondue", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", "Goûter", 
     "Indien", "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
     "Ninja Creami", "Ninja Slushie", "Pains", "Pâtes", "Pâtisserie", 
     "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", 
-    "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", "Sandwich", 
-    "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
+    "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", "Sandwich",  
+    "Sauce", "Slow Cooker", "Soupe", "Sport", "Sushi", "Tartare", "Temps des fêtes", 
     "Végétarien", "Vinaigrette", "Autre"
 ]
 
@@ -348,13 +348,13 @@ if st.session_state.page == "home":
     # LISTE MISE À JOUR : + Sandwich
             mes_categories = [
                 "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-                "BBQ", "Boisson", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", "Condiment", 
+                "BBQ", "Biscuits", "Boisson", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", "Condiment", 
                 "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", "Fondue", 
                 "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
                 "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", "Ninja Creami", 
                 "Ninja Slushie", "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
                 "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", 
-                "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", 
+                "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", "Sport",
                 "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
             ]
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
@@ -391,6 +391,7 @@ if st.session_state.page == "home":
                 "Apéro": "#FF4500",
                 "Asiatique": "#FF1493",
                 "BBQ": "#900C3F",
+                "Biscuits": "#D2B48C",
                 "Boisson": "#7FFFD4",
                 "Boîte à lunch": "#008080",
                 "Boulangerie": "#DEB887",
@@ -436,6 +437,7 @@ if st.session_state.page == "home":
                 "Sauce": "#8B0000",
                 "Slow Cooker": "#4B0082",
                 "Soupe": "#4682B4",
+                "Sport": "#1E90FF",
                 "Sushi": "#FF1493",
                 "Tartare": "#B22222",
                 "Temps des fêtes": "#C41E3A",
@@ -712,7 +714,7 @@ elif st.session_state.page == "add":
         
         mes_options = [
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-            "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Buffet", "Buffet chinois","Bœuf", "Cabane à sucre", 
+            "BBQ", "Biscuits", "Boisson", "Boîte à lunch", "Boulangerie", "Buffet", "Buffet chinois","Bœuf", "Cabane à sucre", 
             "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", 
             "Épices", "Fondue", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
             "Goûter", "Indien", "Légumes", "Libanais", "Marinade", 
@@ -720,7 +722,7 @@ elif st.session_state.page == "add":
             "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", 
             "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", 
             "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", 
-            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
+            "Soupe", "Sport", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
             "Vinaigrette", "Autre"
         ]
         cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
@@ -895,7 +897,7 @@ elif st.session_state.page == "edit":
         # --- GESTION DES CATÉGORIES (MISE À JOUR ALPHABÉTIQUE COMPLÈTE) ---
         LISTE_CATS = [
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-            "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", 
+            "BBQ", "Biscuits", "Boisson", "Boîte à lunch", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", 
             "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", 
             "Épices", "Fondue", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
             "Goûter", "Indien", "Légumes", "Libanais", "Marinade", 
@@ -903,7 +905,7 @@ elif st.session_state.page == "edit":
             "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", 
             "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", 
             "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", 
-            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
+            "Soupe", "Sport", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
             "Vinaigrette", "Autre"
         ]
         
@@ -1400,6 +1402,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
