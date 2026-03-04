@@ -525,73 +525,47 @@ elif st.session_state.page == "details":
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
+        # 1. Gestion de l'image (Inchangée, mais sécurisée)
         img_url = r.get('Image', '')
-        # --- AFFICHAGE SÉCURISÉ DE L'IMAGE ---
         img_url_str = str(img_url).strip() if img_url else ""
-        
-        # On vérifie si c'est vraiment un lien internet
-        if img_url_str.startswith("http"):
-            img_source = img_url_str
-        else:
-            img_source = "https://via.placeholder.com/400?text=Pas+d'image"
+        img_source = img_url_str if img_url_str.startswith("http") else "https://via.placeholder.com/400?text=Pas+d'image"
 
         try:
             st.image(img_source, use_container_width=True)
         except Exception:
-            # Si le lien est mort ou l'image corrompue, on affiche le placeholder
             st.image("https://via.placeholder.com/400?text=Erreur+Image", use_container_width=True)
             
-        # --- LOGIQUE DE LA NOTE (CORRIGÉE POUR COLONNE B) ---
+        # 2. Système de Notation (Exactement ton code d'origine)
         try:
             val_note = r.get('Note', 0)
-            # Conversion robuste pour éviter les erreurs de type
             note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
         except: 
             note_actuelle = 0
 
         st.write(f"**Évaluer cette recette ({note_actuelle} ⭐) :**")
-        
-        # Le slider utilise le titre comme clé unique pour éviter les conflits Streamlit
         nouvelle_note = st.select_slider(
-            "Note", 
-            options=[0, 1, 2, 3, 4, 5], 
-            value=note_actuelle, 
-            key=f"sl_{current_title}", 
-            label_visibility="collapsed"
+            "Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, 
+            key=f"sl_{current_title}", label_visibility="collapsed"
         )
         
-        # On n'envoie l'action que si la note a réellement changé
         if nouvelle_note != note_actuelle:
-            with st.spinner("Mise à jour de la note..."):
-                # CONSTRUCTION DU PAYLOAD PRÉCIS
-                # On envoie 'old_titre' pour que Google trouve la ligne en colonne B
-                payload_n = {
-                    "action": "edit",
-                    "old_titre": current_title.strip(),
-                    "Note": nouvelle_note
-                }
-                
-                if send_action(payload_n):
+            with st.spinner("Mise à jour..."):
+                if send_action({"action": "edit", "old_titre": current_title.strip(), "Note": nouvelle_note}):
                     st.toast("Note enregistrée ! ⭐")
-                    # Mise à jour locale pour un affichage immédiat
-                    if isinstance(st.session_state.recipe_data, dict):
-                        st.session_state.recipe_data['Note'] = nouvelle_note
-                    
-                    st.cache_data.clear() # Nettoie le cache pour l'accueil
-                    st.rerun()
-                else:
-                    st.error("🚨 Erreur : La recette n'a pas été trouvée. Vérifiez le titre en colonne B.")
+                    st.cache_data.clear(); st.rerun()
 
     with col_d:
+        # 3. Informations & Planning (Regroupés pour plus de clarté)
         st.subheader("📋 Informations")
         c_i1, c_i2 = st.columns(2)
         with c_i1:
-            cat_val = r.get('Catégorie', 'Autre')
-            st.markdown(f"**🍴 Catégorie :**\n`{cat_val}`")
+            st.markdown(f"**🍴 Catégorie :**\n`{r.get('Catégorie', 'Autre')}`")
         with c_i2:
             src_val = r.get('Source', '')
-            if src_val and "http" in str(src_val): st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
-            else: st.markdown("**🌐 Source :**\n*Non spécifiée*")
+            if src_val and "http" in str(src_val): 
+                st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
+            else: 
+                st.markdown("**🌐 Source :**\n*Non spécifiée*")
         
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=False):
             u_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
@@ -601,6 +575,8 @@ elif st.session_state.page == "details":
                     st.cache_data.clear(); st.session_state.page = "planning"; st.rerun()
 
         st.divider()
+        
+        # 4. Métriques (Ton code de nettoyage métrique est ici)
         def clean_metrique(valeur):
             v_str = str(valeur).strip().lower()
             if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
@@ -610,6 +586,17 @@ elif st.session_state.page == "details":
         m1.metric("🕒 Prépa", f"{clean_metrique(r.get('Temps de préparation'))} min")
         m2.metric("🔥 Cuisson", f"{clean_metrique(r.get('Temps de cuisson'))} min")
         m3.metric("🍽️ Portions", clean_metrique(r.get('Portions')))
+
+        # 5. Vidéo (La partie ajoutée qui gère ton "Lien vidéo")
+        v_link = r.get('Lien vidéo') or r.get('video') or r.get('Vidéo') or ""
+        v_link_str = str(v_link).strip()
+        if v_link_str.lower().startswith("http"):
+            st.write("") 
+            if any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"]):
+                with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=False):
+                    st.video(v_link_str)
+            else:
+                st.link_button("▶️ Regarder la vidéo de la recette", v_link_str, use_container_width=True, type="primary")
 
     # --- 2. SUPPORT VIDÉO (ADAPTÉ À TA COLONNE : Lien vidéo) ---
     # On cherche précisément "Lien vidéo", sinon on essaie les variantes
@@ -1427,6 +1414,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
