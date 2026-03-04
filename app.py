@@ -648,19 +648,23 @@ elif st.session_state.page == "details":
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
+    # --- NAVIGATION ---
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
         
+    # --- SECTION RECHERCHE GOOGLE ---
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
     search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed", max_chars=100)
     
+    import urllib.parse
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Google.ca</div></a>""", unsafe_allow_html=True)
     
+    # --- SECTION IMPORTATION ---
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
@@ -668,23 +672,27 @@ elif st.session_state.page == "add":
     
     if col_go.button("Extraire ✨", use_container_width=True):
         if url_input:
-            with st.spinner("Analyse..."):
+            with st.spinner("Analyse en cours..."):
                 t, ing, prep = scrape_url(url_input)
-                if t:
-                    st.session_state.scraped_title, st.session_state.scraped_ingredients, st.session_state.scraped_content = t, ing, prep
+                # Correction du bug "Titre = URL" :
+                if t and t.strip() != url_input.strip() and "importée" not in t.lower():
+                    st.session_state.scraped_title = t
+                    st.session_state.scraped_ingredients = ing
+                    st.session_state.scraped_content = prep
                     st.success("Extraction réussie ! ✨")
                     st.rerun()
                 else:
-                    st.warning("⚠️ Site bloqué ou erreur.")
+                    # Message d'erreur explicite si le site bloque l'extraction
+                    st.error("⚠️ Le site bloque l'accès automatique ou le contenu est introuvable. Veuillez copier-coller manuellement.")
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
     
+    # --- FORMULAIRE DE SAISIE ---
     with st.container():
         col_t, col_c = st.columns([2, 1])
         titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
         
-        # --- LISTE MISE À JOUR ET TRIÉE (48 OPTIONS) ---
         mes_options = [
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
             "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
@@ -712,8 +720,8 @@ elif st.session_state.page == "add":
         st.divider()
         
         ci, ce = st.columns(2)
-        ingredients = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
-        instructions = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
+        ingredients_txt = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
+        instructions_txt = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
         
         img_url = st.text_input("🖼️ Lien de l'image", placeholder="https://...", key="img_url")
         commentaires = st.text_area("📝 Mes Notes", height=100, key="notes_area")
@@ -722,15 +730,20 @@ elif st.session_state.page == "add":
         
         c_save, c_cancel = st.columns(2)
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
-            if titre and ingredients:
+            if titre and ingredients_txt:
                 import datetime
+                
+                # --- CORRECTION DES LIGNES COLLÉES ---
+                # On ajoute deux espaces en fin de ligne pour forcer le saut de ligne en Markdown
+                ing_propre = "\n".join([line.strip() + "  " for line in ingredients_txt.split('\n') if line.strip()])
+                
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ingredients.strip().replace('\n', '  \n'),
-                    "Préparation": instructions.strip(),
+                    "Ingrédients": ing_propre,
+                    "Préparation": instructions_txt.strip(),
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
                     "Portions": port.strip(),
@@ -739,15 +752,24 @@ elif st.session_state.page == "add":
                     "Commentaires": commentaires.strip(),
                     "video": video_url_in.strip()
                 }
+                
                 if send_action(payload):
                     st.success("✅ Enregistré !")
+                    # Nettoyage des données temporaires
+                    for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
+                        if k in st.session_state: del st.session_state[k]
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
+                else:
+                    st.error("❌ Erreur de communication avec Google Sheets.")
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
         if c_cancel.button("❌ ANNULER L'AJOUT", use_container_width=True):
+            # Nettoyage avant de partir
+            for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
+                if k in st.session_state: del st.session_state[k]
             st.session_state.page = "home"
             st.rerun()
             
@@ -1342,6 +1364,417 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
