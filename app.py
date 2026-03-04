@@ -91,7 +91,6 @@ def scrape_url(url):
     import requests
     from bs4 import BeautifulSoup
 
-    # Headers pour simuler un humain et éviter le blocage
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
     }
@@ -103,38 +102,30 @@ def scrape_url(url):
             
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # 1. Extraction du Titre
-        titre = ""
-        if soup.find('h1'):
-            titre = soup.find('h1').get_text().strip()
+        # 1. Titre
+        titre = soup.find('h1').get_text().strip() if soup.find('h1') else "Recette sans titre"
         
-        # 2. Extraction des Ingrédients (recherche par mots-clés dans les classes)
+        # 2. Ingrédients
         ing_list = []
-        # On cherche les conteneurs qui ressemblent à des ingrédients
         for container in soup.find_all(['div', 'ul', 'section']):
             cls = str(container.get('class', '')).lower()
             if 'ingredient' in cls:
                 for li in container.find_all('li'):
                     text = li.get_text().strip()
-                    if text: ing_list.append(text)
+                    if text: ing_list.append(f"• {text}")
         
-        # 3. Extraction de la Préparation
+        # 3. Préparation
         prep_list = []
         for container in soup.find_all(['div', 'ol', 'section']):
             cls = str(container.get('class', '')).lower()
             if any(x in cls for x in ['instruction', 'preparation', 'etape', 'step']):
                 for step in container.find_all(['li', 'p']):
                     text = step.get_text().strip()
-                    if len(text) > 10: # Éviter les petits bruits
+                    if len(text) > 10:
                         prep_list.append(text)
 
-        # On nettoie les doublons tout en gardant l'ordre
-        ing_final = "\n".join(list(dict.fromkeys(ing_list)))
-        prep_final = "\n\n".join(list(dict.fromkeys(prep_list)))
-
-        return titre, ing_final, prep_final
-
-    except Exception as e:
+        return titre, "\n".join(list(dict.fromkeys(ing_list))), "\n\n".join(list(dict.fromkeys(prep_list)))
+    except:
         return None, None, None
         
 import streamlit as st
@@ -638,25 +629,24 @@ elif st.session_state.page == "details":
         st.write("*Aucune note pour cette recette.*")
         
 elif st.session_state.page == "add":
+    import urllib.parse
+    import datetime
+
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
-    # --- NAVIGATION ---
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
         
-    # --- SECTION RECHERCHE GOOGLE ---
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
     c_search, c_btn = st.columns([3, 1])
     search_query = c_search.text_input("Que cherchez-vous ?", placeholder="Ex: Pâte à tarte Ricardo", label_visibility="collapsed", max_chars=100)
     
-    import urllib.parse
     query_encoded = urllib.parse.quote(search_query + ' recette') if search_query else ""
     target_url = f"https://www.google.ca/search?q={query_encoded}" if search_query else "https://www.google.ca"
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Google.ca</div></a>""", unsafe_allow_html=True)
     
-    # --- SECTION IMPORTATION ---
     st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
     
     col_url, col_go = st.columns([4, 1])
@@ -666,37 +656,23 @@ elif st.session_state.page == "add":
         if url_input:
             with st.spinner("Analyse en cours..."):
                 t, ing, prep = scrape_url(url_input)
-                # Correction du bug "Titre = URL" :
-                if t and t.strip() != url_input.strip() and "importée" not in t.lower():
+                if t:
                     st.session_state.scraped_title = t
                     st.session_state.scraped_ingredients = ing
                     st.session_state.scraped_content = prep
                     st.success("Extraction réussie ! ✨")
                     st.rerun()
                 else:
-                    # Message d'erreur explicite si le site bloque l'extraction
-                    st.error("⚠️ Le site bloque l'accès automatique ou le contenu est introuvable. Veuillez copier-coller manuellement.")
+                    st.error("⚠️ Site bloqué ou contenu introuvable.")
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
     
-    # --- FORMULAIRE DE SAISIE ---
     with st.container():
         col_t, col_c = st.columns([2, 1])
         titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
         
-        mes_options = [
-            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
-            "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
-            "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
-            "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
-            "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
-            "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
-            "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", 
-            "Poulet", "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", 
-            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
-            "Vinaigrette", "Autre"
-        ]
+        mes_options = ["Accompagnement", "Bœuf", "Dessert", "Entrée", "Gâteau", "Pâtes", "Poulet", "Salade", "Végétarien", "Autre"]
         cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
         
         col_link1, col_link2 = st.columns(2)
@@ -712,6 +688,7 @@ elif st.session_state.page == "add":
         st.divider()
         
         ci, ce = st.columns(2)
+        # On utilise .get pour éviter que le champ soit vide au rafraîchissement
         ingredients_txt = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
         instructions_txt = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
         
@@ -723,10 +700,7 @@ elif st.session_state.page == "add":
         c_save, c_cancel = st.columns(2)
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
             if titre and ingredients_txt:
-                import datetime
-                
-                # --- CORRECTION DES LIGNES COLLÉES ---
-                # On ajoute deux espaces en fin de ligne pour forcer le saut de ligne en Markdown
+                # FIX des lignes collées : on force le double espace Markdown
                 ing_propre = "\n".join([line.strip() + "  " for line in ingredients_txt.split('\n') if line.strip()])
                 
                 payload = {
@@ -747,19 +721,15 @@ elif st.session_state.page == "add":
                 
                 if send_action(payload):
                     st.success("✅ Enregistré !")
-                    # Nettoyage des données temporaires
                     for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                         if k in st.session_state: del st.session_state[k]
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
-                else:
-                    st.error("❌ Erreur de communication avec Google Sheets.")
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
         if c_cancel.button("❌ ANNULER L'AJOUT", use_container_width=True):
-            # Nettoyage avant de partir
             for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                 if k in st.session_state: del st.session_state[k]
             st.session_state.page = "home"
@@ -1356,6 +1326,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
