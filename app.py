@@ -90,61 +90,55 @@ def load_data(url, force_refresh=False):
 def scrape_url(url):
     import requests
     from bs4 import BeautifulSoup
-    
+
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36"}
     try:
-        # On simule un vrai navigateur pour éviter d'être bloqué
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-        response = requests.get(url, headers=headers, timeout=10)
-        if response.status_code != 200:
-            return None, None, None
+        res = requests.get(url, headers=headers, timeout=10)
+        res.encoding = res.apparent_encoding # Pour gérer les accents québécois
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        # --- TITRE ---
+        titre = "Recette importée"
+        if soup.find('h1'):
+            titre = soup.find('h1').text.strip()
+        elif soup.title:
+            titre = soup.title.text.split('-')[0].strip()
+
+        # --- INGRÉDIENTS (Recherche large) ---
+        ing_list = []
+        # On cherche toutes les listes qui pourraient être des ingrédients
+        for liste in soup.find_all(['ul', 'ol', 'div']):
+            classe = str(liste.get('class', '')).lower()
+            identifiant = str(liste.get('id', '')).lower()
             
-        soup = BeautifulSoup(response.text, 'html.parser')
+            # Si le mot "ingredient" est dans la classe ou l'ID
+            if "ingredient" in classe or "ingredient" in identifiant:
+                items = liste.find_all(['li', 'div', 'p'])
+                for item in items:
+                    t = item.text.strip()
+                    if t and len(t) > 2 and len(t) < 200: # Évite les textes trop longs ou courts
+                        ing_list.append(f"• {t}")
         
-        # --- 1. EXTRACTION DU TITRE ---
-        title = ""
-        title_tag = soup.find('h1')
-        if title_tag:
-            title = title_tag.get_text().strip()
-        else:
-            title = soup.title.string.split('-')[0].strip() if soup.title else "Recette"
+        # --- PRÉPARATION (Recherche large) ---
+        prep_list = []
+        for zone in soup.find_all(['div', 'section', 'ol', 'ul']):
+            cl_id = (str(zone.get('class', '')) + str(zone.get('id', ''))).lower()
+            
+            if any(x in cl_id for x in ["instruction", "preparation", "etape", "step", "method"]):
+                pas = zone.find_all(['li', 'p', 'div'])
+                for p in pas:
+                    t = p.text.strip()
+                    if len(t) > 10: # Une étape de préparation fait généralement plus de 10 caractères
+                        if t not in prep_list: # Évite les doublons
+                            prep_list.append(t)
 
-        # --- 2. EXTRACTION DES INGRÉDIENTS ---
-        ingredients = []
-        # On cherche les listes (ul, ol) qui ont souvent des classes liées aux ingrédients
-        for ul in soup.find_all(['ul', 'div']):
-            cl = str(ul.get('class', '')).lower()
-            if 'ingredient' in cl or 'recipe-ing' in cl:
-                for li in ul.find_all('li'):
-                    txt = li.get_text().strip()
-                    if txt: ingredients.append(f"• {txt}")
-        
-        # Si rien trouvé, on cherche les balises <li> qui contiennent des mots clés
-        if not ingredients:
-            for li in soup.find_all('li'):
-                cl = str(li.get('class', '')).lower()
-                if 'ingredient' in cl:
-                    ingredients.append(f"• {li.get_text().strip()}")
+        # Nettoyage final des doublons pour les ingrédients
+        ing_final = "\n".join(list(dict.fromkeys(ing_list)))
+        prep_final = "\n\n".join(list(dict.fromkeys(prep_list)))
 
-        # --- 3. EXTRACTION DE LA PRÉPARATION ---
-        steps = []
-        for tag in soup.find_all(['div', 'section', 'ol']):
-            cl = str(tag.get('class', '')).lower()
-            if 'instruction' in cl or 'preparation' in cl or 'methode' in cl or 'step' in cl:
-                for step in tag.find_all(['li', 'p']):
-                    txt = step.get_text().strip()
-                    if len(txt) > 5: # Éviter les lignes vides ou trop courtes
-                        steps.append(txt)
-
-        ing_final = "\n".join(ingredients) if ingredients else ""
-        prep_final = "\n\n".join(steps) if steps else ""
-        
-        return title, ing_final, prep_final
-
+        return titre, ing_final, prep_final
     except Exception as e:
-        print(f"Erreur Scrape: {e}")
-        return None, None, None
+        return f"Erreur : {str(e)}", "", ""
         
 import streamlit as st
 import hashlib
@@ -1365,6 +1359,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
