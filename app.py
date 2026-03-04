@@ -1,5 +1,4 @@
 import streamlit as st
-st.title(f"DEBUG: La page actuelle est {st.session_state.get('page', 'VIDE')}")
 import pandas as pd
 import requests
 import time
@@ -8,10 +7,6 @@ import urllib.parse
 import textwrap
 from datetime import datetime
 from bs4 import BeautifulSoup
-
-# INITIALISATION (À mettre tout en haut)
-if 'page' not in st.session_state or st.session_state.page is None:
-    st.session_state.page = 'home'
 
 # ======================
 # CONFIGURATION & LIAISON GOOGLE
@@ -633,15 +628,13 @@ elif st.session_state.page == "details":
     else:
         st.write("*Aucune note pour cette recette.*")
 
+
 elif st.session_state.page == "add":
-    st.title("🚩 TEST : La page ADD est active")
+    st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
-    if st.button("⬅ RETOUR AU MENU"):
+    if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page = "home"
         st.rerun()
-    
-    st.success("Si vous voyez ce message, le problème ne vient pas de la navigation, mais du code à l'intérieur de la page d'ajout.")
-    st.info(f"Variable de page : {st.session_state.page}")
         
     st.markdown("""<div style="background-color: #1e1e1e; padding: 15px; border-radius: 10px; border-left: 5px solid #4285F4; margin-bottom: 20px;"><h4 style="margin:0; color:white;">🔍 Chercher une idée sur Google Canada</h4></div>""", unsafe_allow_html=True)
     
@@ -659,16 +652,14 @@ elif st.session_state.page == "add":
     
     if col_go.button("Extraire ✨", use_container_width=True):
         if url_input:
-            with st.spinner("Analyse en cours..."):
+            with st.spinner("Analyse..."):
                 t, ing, prep = scrape_url(url_input)
                 if t:
-                    st.session_state.scraped_title = t
-                    st.session_state.scraped_ingredients = ing
-                    st.session_state.scraped_content = prep
+                    st.session_state.scraped_title, st.session_state.scraped_ingredients, st.session_state.scraped_content = t, ing, prep
                     st.success("Extraction réussie ! ✨")
                     st.rerun()
                 else:
-                    st.error("⚠️ Site bloqué ou contenu introuvable.")
+                    st.warning("⚠️ Site bloqué ou erreur.")
 
     st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
@@ -677,7 +668,19 @@ elif st.session_state.page == "add":
         col_t, col_c = st.columns([2, 1])
         titre = col_t.text_input("🏷️ Nom", value=st.session_state.get('scraped_title', ''), placeholder="Nom de la recette")
         
-        mes_options = ["Accompagnement", "Bœuf", "Dessert", "Entrée", "Gâteau", "Pâtes", "Poulet", "Salade", "Végétarien", "Autre"]
+        # --- LISTE MISE À JOUR ET TRIÉE (48 OPTIONS) ---
+        mes_options = [
+            "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
+            "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
+            "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
+            "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
+            "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
+            "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
+            "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", 
+            "Poulet", "Poutine", "Riz", "Salade", "Sauce", "Slow Cooker", 
+            "Soupe", "Sushi", "Tartare", "Temps des fêtes", "Végétarien", 
+            "Vinaigrette", "Autre"
+        ]
         cat_choisies = col_c.multiselect("📁 Catégories", mes_options)
         
         col_link1, col_link2 = st.columns(2)
@@ -693,9 +696,8 @@ elif st.session_state.page == "add":
         st.divider()
         
         ci, ce = st.columns(2)
-        # On utilise .get pour éviter que le champ soit vide au rafraîchissement
-        ingredients_txt = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
-        instructions_txt = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
+        ingredients = ci.text_area("🍎 Ingrédients", value=st.session_state.get('scraped_ingredients', ''), height=350, key="ing_area")
+        instructions = ce.text_area("👨‍🍳 Étapes", value=st.session_state.get('scraped_content', ''), height=350, key="prep_area")
         
         img_url = st.text_input("🖼️ Lien de l'image", placeholder="https://...", key="img_url")
         commentaires = st.text_area("📝 Mes Notes", height=100, key="notes_area")
@@ -704,17 +706,15 @@ elif st.session_state.page == "add":
         
         c_save, c_cancel = st.columns(2)
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
-            if titre and ingredients_txt:
-                # FIX des lignes collées : on force le double espace Markdown
-                ing_propre = "\n".join([line.strip() + "  " for line in ingredients_txt.split('\n') if line.strip()])
-                
+            if titre and ingredients:
+                import datetime
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre,
-                    "Préparation": instructions_txt.strip(),
+                    "Ingrédients": ingredients.strip().replace('\n', '  \n'),
+                    "Préparation": instructions.strip(),
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
                     "Portions": port.strip(),
@@ -723,11 +723,8 @@ elif st.session_state.page == "add":
                     "Commentaires": commentaires.strip(),
                     "video": video_url_in.strip()
                 }
-                
                 if send_action(payload):
                     st.success("✅ Enregistré !")
-                    for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                        if k in st.session_state: del st.session_state[k]
                     st.cache_data.clear()
                     st.session_state.page = "home"
                     st.rerun()
@@ -735,8 +732,6 @@ elif st.session_state.page == "add":
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
         if c_cancel.button("❌ ANNULER L'AJOUT", use_container_width=True):
-            for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                if k in st.session_state: del st.session_state[k]
             st.session_state.page = "home"
             st.rerun()
             
@@ -1331,6 +1326,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
