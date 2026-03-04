@@ -27,12 +27,13 @@ mes_categories = [
     "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
     "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Bœuf", "Cabane à sucre", 
     "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", 
-    "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
-    "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", "Ninja Creami", 
-    "Ninja Slushie", "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
-    "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", 
-    "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", 
-    "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
+    "Fondue", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", "Goûter", 
+    "Indien", "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", 
+    "Ninja Creami", "Ninja Slushie", "Pains", "Pâtes", "Pâtisserie", 
+    "Petit-déjeuner", "Pizza", "Plancha", "Plat Principal", "Poisson", 
+    "Poke bowl", "Porc", "Poulet", "Poutine", "Riz", "Salade", "Sandwich", 
+    "Sauce", "Slow Cooker", "Soupe", "Sushi", "Tartare", "Temps des fêtes", 
+    "Végétarien", "Vinaigrette", "Autre"
 ]
 
 # ======================
@@ -348,13 +349,13 @@ if st.session_state.page == "home":
             mes_categories = [
                 "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
                 "BBQ", "Boisson", "Boulangerie", "Bœuf", "Cabane à sucre", "Condiment", 
-                "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", "Four à pizza",
-                "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", "Légumes", 
-                "Libanais", "Marinade", "Mexicain", "Muffins", "Ninja Creami", "Ninja Slushie",
-                "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", 
-                "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", "Poutine", 
-                "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", "Sushi", 
-                "Tartare", "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
+                "Confiserie", "Crème-glacée", "Dessert", "Entrée", "Épices", "Fondue", 
+                "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", "Goûter", "Indien", 
+                "Légumes", "Libanais", "Marinade", "Mexicain", "Muffins", "Ninja Creami", 
+                "Ninja Slushie", "Pains", "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", 
+                "Plancha", "Plat Principal", "Poisson", "Poke bowl", "Porc", "Poulet", 
+                "Poutine", "Riz", "Salade", "Sandwich", "Sauce", "Slow Cooker", "Soupe", 
+                "Sushi", "Tartare", "Temps des fêtes", "Végétarien", "Vinaigrette", "Autre"
             ]
             cat_choisie = st.selectbox("📁 Filtrer par catégorie", mes_categories)
 
@@ -382,63 +383,64 @@ if st.session_state.page == "home":
 
         # --- FONCTION COULEUR (MISE À JOUR AVEC 49 CATÉGORIES) ---
         def get_cat_color(cat):
-            colors = {
-                "Accompagnement": "#00A36C",
-                "Agneau": "#8B4513",
-                "Air Fryer": "#FF4500",
-                "Apéro": "#FF4500",
-                "Asiatique": "#FF1493",
-                "BBQ": "#900C3F",          # Rouge charbon / Grillade
-                "Boisson": "#7FFFD4",
-                "Boîte à lunch": "#008080", # Bleu canard / Frais
-                "Boulangerie": "#DEB887",
-                "Bœuf": "#C70039",
-                "Cabane à sucre": "#D2691E",
-                "Condiment": "#DAA520",
-                "Confiserie": "#FF69B4",
-                "Crème-glacée": "#AFEEEE",
-                "Dessert": "#FF33FF",
-                "Entrée": "#95A5A6",
-                "Épices": "#CD5C5C",
-                "Four à pizza": "#E74C3C",    # Rouge brique / Feu
-                "Fruits de mer": "#00CED1",
-                "Fumoir": "#333333",
-                "Gâteau": "#F08080",
-                "Goûter": "#D2691E",
-                "Indien": "#FF9933",
-                "Légumes": "#28B463",
-                "Libanais": "#EE2436",
-                "Marinade": "#A0522D",
-                "Mexicain": "#006341",
-                "Muffins": "#BC8F8F",
-                "Ninja Creami": "#E0FFFF",    # Blanc glacé / Crème
-                "Ninja Slushie": "#00BFFF",   # Bleu slush électrique
-                "Pains": "#F5DEB3",
-                "Pâtes": "#F1C40F",
-                "Pâtisserie": "#EDB9F1",
-                "Petit-déjeuner": "#FFD700",
-                "Pizza": "#FF6347",
-                "Plancha": "#708090",
-                "Plat Principal": "#E67E22",
-                "Poisson": "#3498DB",
-                "Poke bowl": "#20B2AA",
-                "Porc": "#FFC0CB",
-                "Poulet": "#FF5733",
-                "Poutine": "#6F4E37",
-                "Riz": "#F5F5DC",
-                "Salade": "#7CFC00",
-                "Sandwich": "#DAA520",
-                "Sauce": "#8B0000",
-                "Slow Cooker": "#4B0082",
-                "Soupe": "#4682B4",
-                "Sushi": "#FF1493",
-                "Tartare": "#B22222",
-                "Temps des fêtes": "#C41E3A",
-                "Temps des fetes": "#C41E3A",
-                "Végétarien": "#32CD32",
-                "Vinaigrette": "#9ACD32",
-                "Autre": "#BDC317"
-            }
+           colors = {
+               "Accompagnement": "#00A36C",
+               "Agneau": "#8B4513",
+               "Air Fryer": "#FF4500",
+               "Apéro": "#FF4500",
+               "Asiatique": "#FF1493",
+               "BBQ": "#900C3F",          # Rouge charbon / Grillade
+               "Boisson": "#7FFFD4",
+               "Boîte à lunch": "#008080", # Bleu canard / Frais
+               "Boulangerie": "#DEB887",
+               "Bœuf": "#C70039",
+               "Cabane à sucre": "#D2691E",
+               "Condiment": "#DAA520",
+               "Confiserie": "#FF69B4",
+               "Crème-glacée": "#AFEEEE",
+               "Dessert": "#FF33FF",
+               "Entrée": "#95A5A6",
+               "Épices": "#CD5C5C",
+               "Fondue": "#FFD700",       # Jaune doré / Fromage
+               "Four à pizza": "#E74C3C",    # Rouge brique / Feu
+               "Fruits de mer": "#00CED1",
+               "Fumoir": "#333333",
+               "Gâteau": "#F08080",
+               "Goûter": "#D2691E",
+               "Indien": "#FF9933",
+               "Légumes": "#28B463",
+               "Libanais": "#EE2436",
+               "Marinade": "#A0522D",
+               "Mexicain": "#006341",
+               "Muffins": "#BC8F8F",
+               "Ninja Creami": "#E0FFFF",    # Blanc glacé / Crème
+               "Ninja Slushie": "#00BFFF",   # Bleu slush électrique
+               "Pains": "#F5DEB3",
+               "Pâtes": "#F1C40F",
+               "Pâtisserie": "#EDB9F1",
+               "Petit-déjeuner": "#FFD700",
+               "Pizza": "#FF6347",
+               "Plancha": "#708090",
+               "Plat Principal": "#E67E22",
+               "Poisson": "#3498DB",
+               "Poke bowl": "#20B2AA",
+               "Porc": "#FFC0CB",
+               "Poulet": "#FF5733",
+               "Poutine": "#6F4E37",
+               "Riz": "#F5F5DC",
+               "Salade": "#7CFC00",
+               "Sandwich": "#DAA520",
+               "Sauce": "#8B0000",
+               "Slow Cooker": "#4B0082",
+               "Soupe": "#4682B4",
+               "Sushi": "#FF1493",
+               "Tartare": "#B22222",
+               "Temps des fêtes": "#C41E3A",
+               "Temps des fetes": "#C41E3A",
+               "Végétarien": "#32CD32",
+               "Vinaigrette": "#9ACD32",
+               "Autre": "#BDC317"
+        }
             # .strip() permet de gérer les espaces involontaires dans tes données
             return colors.get(cat.strip(), "#e67e22")
         # --- AFFICHAGE DES RÉSULTATS ---
@@ -708,7 +710,7 @@ elif st.session_state.page == "add":
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
             "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Bœuf", "Cabane à sucre", 
             "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", 
-            "Épices", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
+            "Épices", "Fondue", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
             "Goûter", "Indien", "Légumes", "Libanais", "Marinade", 
             "Mexicain", "Muffins", "Ninja Creami", "Ninja Slushie", "Pains", 
             "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", 
@@ -891,7 +893,7 @@ elif st.session_state.page == "edit":
             "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
             "BBQ", "Boisson", "Boîte à lunch", "Boulangerie", "Bœuf", "Cabane à sucre", 
             "Condiment", "Confiserie", "Crème-glacée", "Dessert", "Entrée", 
-            "Épices", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
+            "Épices", "Fondue", "Four à pizza", "Fruits de mer", "Fumoir", "Gâteau", 
             "Goûter", "Indien", "Légumes", "Libanais", "Marinade", 
             "Mexicain", "Muffins", "Ninja Creami", "Ninja Slushie", "Pains", 
             "Pâtes", "Pâtisserie", "Petit-déjeuner", "Pizza", "Plancha", 
@@ -1394,6 +1396,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
