@@ -516,7 +516,20 @@ elif st.session_state.page == "details":
     
     with col_g:
         img_url = r.get('Image', '')
-        st.image(img_url if "http" in str(img_url) else "https://via.placeholder.com/400?text=Pas+d'image", use_container_width=True)
+        # --- AFFICHAGE SÉCURISÉ DE L'IMAGE ---
+        img_url_str = str(img_url).strip() if img_url else ""
+        
+        # On vérifie si c'est vraiment un lien internet
+        if img_url_str.startswith("http"):
+            img_source = img_url_str
+        else:
+            img_source = "https://via.placeholder.com/400?text=Pas+d'image"
+
+        try:
+            st.image(img_source, use_container_width=True)
+        except Exception:
+            # Si le lien est mort ou l'image corrompue, on affiche le placeholder
+            st.image("https://via.placeholder.com/400?text=Erreur+Image", use_container_width=True)
             
         # --- LOGIQUE DE LA NOTE (CORRIGÉE POUR COLONNE B) ---
         try:
@@ -1382,6 +1395,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
