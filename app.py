@@ -735,28 +735,26 @@ elif st.session_state.page == "add":
                 import datetime
                 import re
 
-                # --- NOUVELLE LOGIQUE DE NETTOYAGE ---
-                # 1. On remplace les caractères spéciaux (carrés, ronds, puces) par un saut de ligne
-                # Cela traite le cas où tout est collé sur une seule ligne avec des symboles
-                nettoyage = re.sub(r'[▢❑○●•✅]', '\n', ingredients_txt)
+                # 1. On remplace TOUS les types de carrés/puces possibles par des sauts de ligne
+                # Cette regex cible les caractères de type "Box Drawing" et "Geometric Shapes"
+                text_split = re.sub(r'[^\x00-\x7F]+', '\n', ingredients_txt)
                 
-                # 2. On sépare le texte par ligne
-                lignes_brutes = nettoyage.split('\n')
+                # 2. On traite ligne par ligne
+                lignes = text_split.split('\n')
+                lignes_finales = []
                 
-                # 3. On nettoie chaque ligne et on ajoute un tiret au début pour le format liste
-                lignes_propres = []
-                for l in lignes_brutes:
-                    clean_l = l.strip()
-                    if clean_l:
-                        # On évite de doubler le tiret si l'utilisateur l'a déjà mis
-                        if not clean_l.startswith('-'):
-                            lignes_propres.append(f"- {clean_l}")
+                for l in lignes:
+                    item = l.strip()
+                    if item and len(item) > 1: # On ignore les résidus de caractères seuls
+                        # On force le format Markdown avec un tiret
+                        if not item.startswith('-'):
+                            lignes_finales.append(f"- {item}")
                         else:
-                            lignes_propres.append(clean_l)
+                            lignes_finales.append(item)
 
-                ing_propre = "\n".join(lignes_propres)
-                
-                # --- CONSTRUCTION DU PAYLOAD ---
+                ing_propre = "\n".join(lignes_finales)
+
+                # --- PAYLOAD ---
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
@@ -1384,6 +1382,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
