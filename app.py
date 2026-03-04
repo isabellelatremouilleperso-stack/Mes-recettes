@@ -441,8 +441,8 @@ if st.session_state.page == "home":
                "Vinaigrette": "#9ACD32",
                "Autre": "#BDC317"
         }
-            # .strip() permet de gérer les espaces involontaires dans tes données
-            return colors.get(cat.strip(), "#e67e22")
+        # .strip() permet de gérer les espaces involontaires dans tes données
+        return colors.get(cat.strip(), "#e67e22")
         # --- AFFICHAGE DES RÉSULTATS ---
         for i in range(0, len(rows), 2):
             grid_cols = st.columns(2) 
@@ -1396,6 +1396,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
