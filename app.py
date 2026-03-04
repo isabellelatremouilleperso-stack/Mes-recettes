@@ -88,62 +88,63 @@ def load_data(url, force_refresh=False):
         return pd.DataFrame()
 
 def scrape_url(url):
+    import requests
+    from bs4 import BeautifulSoup
+    
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
-        res = requests.get(url, headers=headers, timeout=12)
-        res.encoding = res.apparent_encoding
-        soup = BeautifulSoup(res.text, 'html.parser')
-
-        # 1. Extraction du Titre
-        title = "Recette Importée"
-        h1_tag = soup.find('h1')
-        if h1_tag:
-            title = h1_tag.get_text().strip()
-
-        # 2. Nettoyage agressif du bruit
-        for junk in soup(["script", "style", "nav", "footer", "header", "aside", "iframe", "ins"]):
-            junk.extract()
-
-        # 3. Ciblage intelligent (priorité aux classes culinaires communes)
-        # On cherche des conteneurs qui ont souvent les mots clés "ingredients" ou "recipe"
-        ing_container = soup.find(class_=re.compile(r'ingredient|ingredients|recipe-ing', re.I))
-        prep_container = soup.find(class_=re.compile(r'instruction|preparation|method|steps', re.I))
-
-        # --- LOGIQUE INGRÉDIENTS ---
-        if ing_container:
-            items = ing_container.find_all('li')
-        else:
-            items = soup.find_all('li')
+        # On simule un vrai navigateur pour éviter d'être bloqué
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code != 200:
+            return None, None, None
             
-        ing_list = []
-        for el in items:
-            txt = el.get_text().strip()
-            # On filtre pour garder les lignes qui ressemblent à des ingrédients (courtes mais informatives)
-            if 3 < len(txt) < 150 and not any(x in txt.lower() for x in ["partager", "imprimer", "connexion"]):
-                ing_list.append(f"❑ {txt}")
-
-        # --- LOGIQUE PRÉPARATION ---
-        if prep_container:
-            steps = prep_container.find_all(['p', 'li'])
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # --- 1. EXTRACTION DU TITRE ---
+        title = ""
+        title_tag = soup.find('h1')
+        if title_tag:
+            title = title_tag.get_text().strip()
         else:
-            steps = soup.find_all('p')
+            title = soup.title.string.split('-')[0].strip() if soup.title else "Recette"
 
-        prep_list = []
-        for el in steps:
-            txt = el.get_text().strip()
-            # On garde les paragraphes assez longs pour être des instructions
-            if len(txt) > 20 and not any(x in txt.lower() for x in ["cookies", "droits réservés", "abonnez-vous"]):
-                prep_list.append(txt)
+        # --- 2. EXTRACTION DES INGRÉDIENTS ---
+        ingredients = []
+        # On cherche les listes (ul, ol) qui ont souvent des classes liées aux ingrédients
+        for ul in soup.find_all(['ul', 'div']):
+            cl = str(ul.get('class', '')).lower()
+            if 'ingredient' in cl or 'recipe-ing' in cl:
+                for li in ul.find_all('li'):
+                    txt = li.get_text().strip()
+                    if txt: ingredients.append(f"• {txt}")
+        
+        # Si rien trouvé, on cherche les balises <li> qui contiennent des mots clés
+        if not ingredients:
+            for li in soup.find_all('li'):
+                cl = str(li.get('class', '')).lower()
+                if 'ingredient' in cl:
+                    ingredients.append(f"• {li.get_text().strip()}")
 
-        # Nettoyage des doublons et suppression des lignes vides
-        final_ing = "\n".join([i for i in list(dict.fromkeys(ing_list)) if i.strip()])
-        final_prep = "\n\n".join([p for p in list(dict.fromkeys(prep_list)) if p.strip()])
+        # --- 3. EXTRACTION DE LA PRÉPARATION ---
+        steps = []
+        for tag in soup.find_all(['div', 'section', 'ol']):
+            cl = str(tag.get('class', '')).lower()
+            if 'instruction' in cl or 'preparation' in cl or 'methode' in cl or 'step' in cl:
+                for step in tag.find_all(['li', 'p']):
+                    txt = step.get_text().strip()
+                    if len(txt) > 5: # Éviter les lignes vides ou trop courtes
+                        steps.append(txt)
 
-        return title, final_ing, final_prep
+        ing_final = "\n".join(ingredients) if ingredients else ""
+        prep_final = "\n\n".join(steps) if steps else ""
+        
+        return title, ing_final, prep_final
 
     except Exception as e:
-        # Retourne des chaînes vides au lieu de None pour éviter les erreurs de concaténation plus tard
-        return "Recette inconnue", "", f"Erreur lors de l'extraction : {e}"
+        print(f"Erreur Scrape: {e}")
+        return None, None, None
         
 import streamlit as st
 import hashlib
@@ -318,7 +319,7 @@ if st.session_state.page == "home":
         }
         .category-badge {
             display: inline-block;
-            padding: 4px 12px;
+            ping: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
             font-weight: bold;
@@ -440,7 +441,7 @@ if st.session_state.page == "home":
                         img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
                         
                         raw_cats = str(row['Catégorie']).split(',') if row['Catégorie'] else ["Recette"]
-                        badges_html = "".join([f'<span class="category-badge" style="background-color:{get_cat_color(c)}; color:white; padding:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c.strip()}</span>' for c in raw_cats if c.strip()])
+                        badges_html = "".join([f'<span class="category-badge" style="background-color:{get_cat_color(c)}; color:white; ping:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c.strip()}</span>' for c in raw_cats if c.strip()])
 
                         st.markdown(f"""
                             <div class="recipe-card">
@@ -1364,6 +1365,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
