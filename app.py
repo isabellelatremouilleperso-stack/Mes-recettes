@@ -672,55 +672,54 @@ elif st.session_state.page == "details":
 
     # --- FIN DE LA COLONNE DE DROITE ---
     # --- SECTION INGRÉDIENTS ---
-    st.divider()
-    st.subheader("🛒 Ingrédients")
-    ings_raw = r.get('Ingrédients', '')
-    
-    if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-        text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-        ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+        st.divider()
+        st.subheader("🛒 Ingrédients")
+        ings_raw = r.get('Ingrédients', '')
         
-        sel = []
-        col_ing1, col_ing2 = st.columns(2)
-        moitie = (len(ings) + 1) // 2
-        
-        with col_ing1:
-            for i in range(moitie):
-                if st.checkbox(ings[i], key=f"chk_L_{current_title}_{i}"):
-                    sel.append(ings[i])
-        with col_ing2:
-            for i in range(moitie, len(ings)):
-                if st.checkbox(ings[i], key=f"chk_R_{current_title}_{i}"):
-                    sel.append(ings[i])
-        
-        if sel:
-            if st.button(f"➕ Ajouter {len(sel)} articles à la liste de courses", use_container_width=True):
-                for item in sel:
-                    send_action({"action": "add_shop", "article": f"✨ Autre | {item}"})
-                st.toast("Ingrédients envoyés à l'épicerie ! 🛒")
+        if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
+            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+            
+            sel = []
+            col_ing1, col_ing2 = st.columns(2)
+            moitie = (len(ings) + 1) // 2
+            
+            with col_ing1:
+                for i in range(moitie):
+                    if st.checkbox(ings[i], key=f"chk_L_{current_title}_{i}"):
+                        sel.append(ings[i])
+            with col_ing2:
+                for i in range(moitie, len(ings)):
+                    if st.checkbox(ings[i], key=f"chk_R_{current_title}_{i}"):
+                        sel.append(ings[i])
+            
+            if sel:
+                if st.button(f"➕ Ajouter {len(sel)} articles à la liste de courses", use_container_width=True):
+                    for item in sel:
+                        send_action({"action": "add_shop", "article": f"✨ Autre | {item}"})
+                    st.toast("Ingrédients envoyés à l'épicerie ! 🛒")
 
-    # --- SECTION PRÉPARATION ---
-    st.divider()
-    st.subheader("👨‍🍳 Étapes de préparation")
-    prep = r.get('Préparation', '')
-    if prep and str(prep).strip() not in ["None", "nan", ""]:
-        st.write(prep)
-    else:
-        st.info("Aucune étape de préparation enregistrée.")
+        # --- SECTION PRÉPARATION ---
+        st.divider()
+        st.subheader("👨‍🍳 Étapes de préparation")
+        prep = r.get('Préparation', '')
+        if prep and str(prep).strip() not in ["None", "nan", ""]:
+            st.write(prep)
+        else:
+            st.info("Aucune étape de préparation enregistrée.")
 
-    # --- SECTION NOTES & COMMENTAIRES ---
-    st.divider()
-    st.markdown("### 📝 Mes Notes & Commentaires")
-    notes_texte = r.get('Commentaires', '')
-    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-        st.info(notes_texte)
-    else:
-        st.write("*Aucune note pour cette recette.*")
+        # --- SECTION NOTES & COMMENTAIRES ---
+        st.divider()
+        st.markdown("### 📝 Mes Notes & Commentaires")
+        notes_texte = r.get('Commentaires', '')
+        if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
+            st.info(notes_texte)
+        else:
+            st.write("*Aucune note pour cette recette.*")
 
-# --- LE BLOC DE FIN (BIEN ALIGNÉ TOUT À GAUCHE) ---
-except Exception as e:
-    st.error(f"Erreur d'affichage : {e}")
-
+    # --- LE BLOC DE FIN (ALIGNE AVEC LE 'TRY' DU DEBUT DE PAGE) ---
+    except Exception as e:
+        st.error(f"Erreur d'affichage : {e}")
 # --- PAGE SUIVANTE ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -1551,6 +1550,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
