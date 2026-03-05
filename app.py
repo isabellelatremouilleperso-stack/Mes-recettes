@@ -991,33 +991,37 @@ elif st.session_state.page == "shop":
     # --- SECTION : AJOUT MANUEL ---
     st.markdown("### ➕ Ajouter un article")
     
-    # On crée 3 colonnes : Texte (60%), Ajouter (20%), Annuler (20%)
+    # 1. On crée la fonction qui vide la case (le callback)
+    def vider_saisie():
+        st.session_state["add_manual_shop"] = ""
+
     c_input, c_add, c_cancel = st.columns([3, 1, 1])
 
-    # Le champ de texte
+    # 2. Le champ de texte (on ne change rien ici)
     new_article = c_input.text_input(
         "Ex: Lait, Pain...", 
         label_visibility="collapsed", 
         key="add_manual_shop"
     )
     
-    # BOUTON AJOUTER
+    # 3. BOUTON AJOUTER
     if c_add.button("Ajouter", use_container_width=True, type="primary"):
         if new_article:
             with st.spinner("Ajout..."):
                 if send_action({"action": "add_shop", "article": new_article.strip()}):
                     st.toast(f"✅ {new_article} ajouté !")
-                    st.session_state["add_manual_shop"] = "" # Vide la case
                     st.cache_data.clear()
+                    # On vide la case en utilisant notre fonction
+                    vider_saisie()
                     st.rerun()
                 else:
                     st.error("Erreur Sheets")
         else:
             st.warning("Écrivez quelque chose !")
 
-    # BOUTON ANNULER
-    if c_cancel.button("Annuler", use_container_width=True):
-        st.session_state["add_manual_shop"] = "" # Vide la case sans rien envoyer
+    # 4. BOUTON ANNULER (Modifié pour éviter l'erreur)
+    if c_cancel.button("Annuler", use_container_width=True, on_click=vider_saisie):
+        # Ici on utilise 'on_click', c'est la façon sécurisée de vider
         st.rerun()
 
     st.divider()
@@ -1439,6 +1443,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
