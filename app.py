@@ -168,37 +168,38 @@ if 'page' not in st.session_state:
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = False
 
-# 2. Style CSS (Version Spéciale Tablette - Visages et Clarté)
+# 2. Style CSS (Version Finale : Logo Fixe et Fond Propre)
 st.markdown("""
 <style>
-    /* 1. L'IMAGE DE FOND (Le filigrane) */
+    /* 1. L'IMAGE DE FOND (FILIGRANE) */
     [data-testid="stAppViewContainer"] {
-        /* On met ton image en fond */
         background-image: url("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png");
-        
-        /* FIX VISAGES : 'top' force l'affichage du haut de l'image (les yeux) */
         background-position: top center; 
-        
-        /* L'image prend tout l'espace sans se déformer */
         background-size: cover;
         background-repeat: no-repeat;
-        
-        /* Indispensable pour les tablettes pour éviter les bugs de clarté */
         background-attachment: scroll; 
     }
 
-    /* 2. RÉGLAGE DE LA CLARTÉ (Moins pâle) */
-    /* On crée une couche pour assombrir juste assez pour lire le texte */
+    /* 2. VOILE POUR LA LISIBILITÉ */
     [data-testid="stAppViewContainer"]::before {
         content: "";
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
-        /* 0.4 = Image très claire | 0.8 = Image sombre. J'ai mis 0.5 pour que ce soit vif */
-        background-color: rgba(14, 17, 23, 0.5); 
+        background-color: rgba(14, 17, 23, 0.7); 
         z-index: -1;
     }
 
-    /* 3. COULEURS GÉNÉRALES */
+    /* 3. FIX DU LOGO (Pour qu'il ne devienne pas énorme) */
+    .logo-container img { 
+        width: 120px !important;   /* Force la largeur à 120px */
+        height: 120px !important;  /* Force la hauteur à 120px */
+        max-width: 120px !important;
+        object-fit: cover !important;
+        border-radius: 50% !important;
+        border: 3px solid #e67e22 !important;
+    }
+
+    /* 4. COULEURS ET BOUTONS */
     .stApp { background: transparent !important; }
     [data-testid="stSidebar"] { background-color: #1e2129 !important; }
     h1, h2, h3 { color: #e67e22 !important; }
@@ -207,21 +208,16 @@ st.markdown("""
         background-color: #e67e22 !important; 
         color: white !important; 
         border-radius: 10px; 
-        border: none;
         font-weight: bold;
-        box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
     }
-    
-    .logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
-    .logo-container img { 
-        border-radius: 50%; 
-        width: 120px; 
-        height: 120px; 
-        object-fit: cover; 
-        border: 3px solid #e67e22; 
+
+    /* Empêcher les autres images de la page de prendre le style du fond */
+    [data-testid="stImage"] img {
+        border-radius: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
+
 # ======================
 # BARRE LATÉRALE (SIDEBAR)
 # ======================
@@ -1586,6 +1582,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
