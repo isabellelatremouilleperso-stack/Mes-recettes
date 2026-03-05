@@ -978,8 +978,9 @@ elif st.session_state.page == "edit":
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
 # --- PAGE ÉPICERIE (SÉCURISÉE) ---
+# --- PAGE ÉPICERIE (SÉCURISÉE) ---
 elif st.session_state.page == "shop":
-    st.header("🛒 Ma Liste d'épicerie")
+    st.markdown('<h1 style="color: #e67e22;">🛒 Ma Liste d\'épicerie</h1>', unsafe_allow_html=True)
     
     # On définit si l'utilisateur est admin
     is_admin = st.session_state.get('admin_mode', False)
@@ -988,8 +989,31 @@ elif st.session_state.page == "shop":
         st.session_state.page = "home"
         st.rerun()
 
+    # --- NOUVEAU : SECTION AJOUT MANUEL ---
+    st.markdown("### ➕ Ajouter un article")
+    c_input, c_add = st.columns([3, 1])
+    # Le texte saisi manuellement
+    new_article = c_input.text_input("Ex: Lait, Pain...", label_visibility="collapsed", key="add_manual_shop")
+    
+    if c_add.button("Ajouter", use_container_width=True):
+        if new_article:
+            with st.spinner("Ajout en cours..."):
+                # Envoi vers Google Sheets (Action "add_shop")
+                if send_action({"action": "add_shop", "article": new_article.strip()}):
+                    st.toast(f"✅ {new_article} ajouté !")
+                    st.cache_data.clear()
+                    st.rerun()
+                else:
+                    st.error("Erreur lors de l'ajout au Sheets.")
+        else:
+            st.warning("Écrivez quelque chose !")
+
+    st.divider()
+
+    # --- LOGIQUE DE LECTURE ET AFFICHAGE ---
     try:
-        # On force la lecture sans cache avec un timestamp
+        import time
+        # Force la lecture sans cache
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
@@ -1008,14 +1032,7 @@ elif st.session_state.page == "shop":
                     st.divider()
                     submit_del = st.form_submit_button("🗑 Retirer les articles sélectionnés", use_container_width=True)
                 
-                # Bouton "Vider tout" (Admin uniquement)
-                if st.button("🧨 Vider toute la liste", use_container_width=True):
-                    if send_action({"action": "clear_shop"}):
-                        st.cache_data.clear()
-                        st.success("Liste vidée !")
-                        st.rerun()
-
-                # Logique de suppression suite au clic sur le bouton du formulaire
+                # Exécution de la suppression individuelle
                 if submit_del:
                     if to_del:
                         with st.spinner("Mise à jour..."):
@@ -1025,10 +1042,17 @@ elif st.session_state.page == "shop":
                                 st.rerun()
                     else:
                         st.warning("Veuillez cocher au moins un article.")
+
+                # Bouton "Vider tout"
+                if st.button("🧨 Vider toute la liste", use_container_width=True):
+                    if send_action({"action": "clear_shop"}):
+                        st.cache_data.clear()
+                        st.success("Liste vidée !")
+                        st.rerun()
             
             else:
-                # --- MODE CONSULTATION : Affichage simple sans interaction ---
-                st.info("📖 Mode Consultation : Vous pouvez consulter la liste, mais seul le Chef peut retirer des articles.")
+                # --- MODE CONSULTATION ---
+                st.info("📖 Mode Consultation : Seul le Chef peut retirer des articles.")
                 for idx, row in df_s.iterrows():
                     article_nom = str(row.iloc[0]).strip()
                     if article_nom:
@@ -1403,6 +1427,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
