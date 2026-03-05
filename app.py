@@ -991,38 +991,36 @@ elif st.session_state.page == "shop":
     # --- SECTION : AJOUT MANUEL ---
     st.markdown("### ➕ Ajouter un article")
     
-    # On prépare les colonnes
+    # On initialise un petit compteur dans le state s'il n'existe pas
+    if "input_counter" not in st.session_state:
+        st.session_state.input_counter = 0
+
     c_input, c_add, c_cancel = st.columns([3, 1, 1])
 
-    # ÉTAPE A : Le champ de texte
-    # On utilise une clé dynamique pour forcer la remise à zéro si nécessaire
+    # Le secret : la key change à chaque ajout réussi (grâce au counter)
+    # Ce qui force le champ à redevenir vide
     new_article = c_input.text_input(
         "Ex: Lait, Pain...", 
         label_visibility="collapsed", 
-        key="add_manual_shop"
+        key=f"add_item_{st.session_state.input_counter}"
     )
     
-    # ÉTAPE B : Logique du bouton AJOUTER
     if c_add.button("Ajouter", use_container_width=True, type="primary"):
         if new_article:
             with st.spinner("Ajout..."):
                 if send_action({"action": "add_shop", "article": new_article.strip()}):
                     st.toast(f"✅ {new_article} ajouté !")
-                    
-                    # TECHNIQUE : On vide le texte indirectement
-                    st.session_state["add_manual_shop"] = ""
-                    
                     st.cache_data.clear()
-                    # On force le rafraîchissement total pour vider le widget
+                    # On change le compteur -> Streamlit recrée un champ tout neuf et VIDE
+                    st.session_state.input_counter += 1
                     st.rerun()
                 else:
                     st.error("Erreur Sheets")
         else:
             st.warning("Écrivez quelque chose !")
 
-    # ÉTAPE C : Logique du bouton ANNULER
     if c_cancel.button("Annuler", use_container_width=True):
-        st.session_state["add_manual_shop"] = ""
+        st.session_state.input_counter += 1 # On change la clé pour vider le champ
         st.rerun()
 
     st.divider()
@@ -1444,6 +1442,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
