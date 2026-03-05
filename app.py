@@ -1046,45 +1046,48 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (SMS / WhatsApp) ---
+    # --- OPTIONS DE PARTAGE (COPIER / SMS) ---
     try:
-        # On charge rapidement les données juste pour le texte du message
         import time
+        # On charge les données pour créer le texte
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # On prépare le texte (puces et sauts de ligne)
-            # %0A est le code pour un saut de ligne dans une URL
+            # 1. Préparation des textes
             items = [f"- {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
-            liste_texte = "%0A".join(items)
-            message = f"🛒 *MA LISTE D'ÉPICERIE* :%0A{liste_texte}"
             
+            # Texte propre pour le bouton "Copier"
+            texte_a_copier = "🛒 MA LISTE D'ÉPICERIE :\n" + "\n".join(items)
+            
+            # Texte encodé pour le lien SMS
+            liste_url = "%0A".join(items)
+            message_url = f"🛒 *MA LISTE D'ÉPICERIE* :%0A{liste_url}"
+
             st.write("📲 **Partager la liste :**")
-            col_share1, col_share2 = st.columns(2)
+            col_c1, col_c2 = st.columns(2)
+
+            # --- BOUTON COPIER (Le plus fiable) ---
+            with col_c1:
+                if st.button("📋 Copier la liste", use_container_width=True):
+                    # Cette fonction est native à Streamlit (très puissante)
+                    st.copy_to_clipboard(texte_a_copier)
+                    st.toast("✅ Liste copiée !")
+
+            # --- BOUTON SMS (Lien direct simplifié) ---
+            with col_c2:
+                # Format ultra-simplifié pour éviter l'erreur "Site inaccessible"
+                sms_link = f"sms:?body={message_url}"
+                st.markdown(f'''
+                    <a href="{sms_link}" style="text-decoration:none;">
+                        <div style="background-color:#007AFF; color:white; padding:8px; border-radius:10px; text-align:center; font-weight:bold; font-size:14px; line-height:1.6;">
+                            🔵 Ouvrir SMS
+                        </div>
+                    </a>
+                ''', unsafe_allow_html=True)
             
-            # Bouton WhatsApp (Vert)
-            wa_url = f"https://wa.me/?text={message}"
-            col_share1.markdown(f'''
-                <a href="{wa_url}" target="_blank" style="text-decoration:none;">
-                    <div style="background-color:#25D366; color:white; padding:10px; border-radius:15px; text-align:center; font-weight:bold; font-size:14px;">
-                        🟢 WhatsApp
-                    </div>
-                </a>
-            ''', unsafe_allow_html=True)
-            
-            # Bouton SMS (Bleu)
-            # Note: "sms:?&body=" fonctionne sur iOS et Android
-            sms_url = f"sms:?&body={message}"
-            col_share2.markdown(f'''
-                <a href="{sms_url}" style="text-decoration:none;">
-                    <div style="background-color:#007AFF; color:white; padding:10px; border-radius:15px; text-align:center; font-weight:bold; font-size:14px;">
-                        🔵 SMS
-                    </div>
-                </a>
-            ''', unsafe_allow_html=True)
             st.markdown("<br>", unsafe_allow_html=True)
     except:
-        pass # Si erreur de lecture, on n'affiche simplement pas les boutons
+        pass
 
     # --- AFFICHAGE DE LA LISTE ---
     try:
@@ -1497,6 +1500,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
