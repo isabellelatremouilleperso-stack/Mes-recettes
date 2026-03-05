@@ -533,114 +533,100 @@ elif st.session_state.page == "details":
         st.header(f"📖 {current_title}")
     
     # --- CORPS DE LA PAGE (IMAGE ET INFOS) ---
-    col_g, col_d = st.columns([1, 1.2])
-    
-    with col_g:
-        # 1. Gestion de l'image (Reste seule à gauche pour plus d'impact)
-        img_url = r.get('Image', '')
-        img_url_str = str(img_url).strip() if img_url else ""
-        img_source = img_url_str if img_url_str.startswith("http") else "https://via.placeholder.com/400?text=Pas+d'image"
-
-        try:
-            st.image(img_source, use_container_width=True)
-        except Exception:
-            st.image("https://via.placeholder.com/400?text=Erreur+Image", use_container_width=True)
-
-    # --- TOUT CE QUI SUIT EST DÉSORMAIS RANGÉ DANS LA COLONNE DE DROITE ---
-    with col_d:
-        # 1. BOUTONS D'INTERACTION RAPIDE (Cuisinée / Favoris)
-        c_feat1, c_feat2 = st.columns(2)
+        col_g, col_d = st.columns([1, 1.2])
         
-        with c_feat1:
-            import random
-            # Liste de messages pour les chefs
-            mots_bravo = [
-                "Et un michelin de plus ! ⭐", 
-                "Gordon Ramsay n'a qu'à bien se tenir ! 👨‍🍳", 
-                "C'est meilleur que chez maman ! 🤫", 
-                "Appelez les pompiers, c'est du FEU ! 🔥",
-                "Miam ! On arrive à quelle heure ? 🏃‍♂️"
-            ]
+        with col_g:
+            # 1. Gestion de l'image (Reste seule à gauche pour plus d'impact)
+            img_url = r.get('Image', '')
+            img_url_str = str(img_url).strip() if img_url else ""
+            img_source = img_url_str if img_url_str.startswith("http") else "https://via.placeholder.com/400?text=Pas+d'image"
 
-            if 'made_list' not in st.session_state:
-                st.session_state.made_list = set()
+            try:
+                st.image(img_source, use_container_width=True)
+            except Exception:
+                st.image("https://via.placeholder.com/400?text=Erreur+Image", use_container_width=True)
+
+        # --- TOUT CE QUI SUIT EST DÉSORMAIS RANGÉ DANS LA COLONNE DE DROITE ---
+        with col_d:
+            # 1. BOUTONS D'INTERACTION RAPIDE (Cuisinée / Favoris)
+            c_feat1, c_feat2 = st.columns(2)
             
-            is_made = current_title in st.session_state.made_list
-            label_made = "✅ Testé !" if is_made else "👨‍🍳 Cuisinée ?"
-            
-            # Action du bouton
-            if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
-                if is_made:
-                    st.session_state.made_list.remove(current_title)
-                    st.rerun() # On garde le rerun uniquement pour décocher (enlever le vert)
-                else:
-                    st.session_state.made_list.add(current_title)
-                    
-                    # 1. Barre de progression (Effet pro et visuel)
-                    barre_succes = st.progress(0)
-                    import time
-                    for pourcentage in range(100):
-                        time.sleep(0.005) 
-                        barre_succes.progress(pourcentage + 1)
-                    
-                    # 2. Message de réussite stylé (Le bandeau vert)
-                    st.success(f"Recette validée ! {random.choice(mots_bravo)}")
-                    
-                    # 3. Notification Toast (Messages variés et punchy)
-                    messages_succes = [
-                        "Mission accomplie, Chef ! 🎖️",
-                        "Miam ! Une pépite de plus au palmarès ! 😋",
-                        "Validé par le jury (et ton estomac) ! ✅",
-                        "Hop ! C'est dans la boîte ! 🚀",
-                        "Tes papilles te disent merci ! 🍴"
-                    ]
-                    
-                    # On choisit un message au hasard dans la liste
-                    msg_toast = random.choice(messages_succes)
-                    st.toast(msg_toast, icon="✨")
-                    
-                    # 4. Petite pause pour savourer le succès
-                    time.sleep(1.0)
-                    
-                    # 5. On rafraîchit pour afficher le bouton "Testé"
+            with c_feat1:
+                import random
+                # Liste de messages pour les chefs
+                mots_bravo = [
+                    "Et un michelin de plus ! ⭐", 
+                    "Gordon Ramsay n'a qu'à bien se tenir ! 👨‍🍳", 
+                    "C'est meilleur que chez maman ! 🤫", 
+                    "Appelez les pompiers, c'est du FEU ! 🔥",
+                    "Miam ! On arrive à quelle heure ? 🏃‍♂️"
+                ]
+
+                if 'made_list' not in st.session_state:
+                    st.session_state.made_list = set()
+                
+                is_made = current_title in st.session_state.made_list
+                label_made = "✅ Testé !" if is_made else "👨‍🍳 Cuisinée ?"
+                
+                # Action du bouton
+                if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
+                    if is_made:
+                        st.session_state.made_list.remove(current_title)
+                        st.rerun()
+                    else:
+                        st.session_state.made_list.add(current_title)
+                        barre_succes = st.progress(0)
+                        import time
+                        for pourcentage in range(100):
+                            time.sleep(0.005) 
+                            barre_succes.progress(pourcentage + 1)
+                        
+                        st.success(f"Recette validée ! {random.choice(mots_bravo)}")
+                        
+                        messages_succes = [
+                            "Mission accomplie, Chef ! 🎖️",
+                            "Miam ! Une pépite de plus au palmarès ! 😋",
+                            "Validé par le jury ! ✅",
+                            "Hop ! C'est dans la boîte ! 🚀"
+                        ]
+                        
+                        st.toast(random.choice(messages_succes), icon="✨")
+                        time.sleep(1.0)
+                        st.rerun()
+                        
+            with c_feat2:
+                if 'fav_list' not in st.session_state:
+                    st.session_state.fav_list = set()
+                
+                is_fav = current_title in st.session_state.fav_list
+                if st.button("⭐ Préférée" if is_fav else "☆ Favoris", use_container_width=True, key=f"det_fav_{current_title}", type="primary" if is_fav else "secondary"):
+                    if is_fav:
+                        st.session_state.fav_list.remove(current_title)
+                    else:
+                        st.session_state.fav_list.add(current_title)
+                        st.toast("Ajouté aux coups de cœur ! 💖")
                     st.rerun()
-                    
-        with c_feat2:
-            if 'fav_list' not in st.session_state:
-                st.session_state.fav_list = set()
+
+            st.divider()
+
+            # 2. SYSTÈME DE NOTATION
+            try:
+                val_note = r.get('Note', 0)
+                note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
+            except: 
+                note_actuelle = 0
+
+            st.write(f"**Évaluer cette recette ({note_actuelle} ⭐) :**")
+            nouvelle_note = st.select_slider(
+                "Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, 
+                key=f"sl_droit_{current_title}", label_visibility="collapsed"
+            )
             
-            is_fav = current_title in st.session_state.fav_list
-            if st.button("⭐ Préférée" if is_fav else "☆ Favoris", use_container_width=True, key=f"det_fav_{current_title}", type="primary" if is_fav else "secondary"):
-                if is_fav:
-                    st.session_state.fav_list.remove(current_title)
-                else:
-                    st.session_state.fav_list.add(current_title)
-                    st.toast("Ajouté aux coups de cœur ! 💖")
-                st.rerun()
-
-        st.divider()
-
-        # 2. SYSTÈME DE NOTATION (Déplacé ici sur le côté)
-        try:
-            val_note = r.get('Note', 0)
-            note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
-        except: 
-            note_actuelle = 0
-
-        st.write(f"**Évaluer cette recette ({note_actuelle} ⭐) :**")
-        nouvelle_note = st.select_slider(
-            "Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, 
-            key=f"sl_droit_{current_title}", label_visibility="collapsed"
-        )
-        
-        if nouvelle_note != note_actuelle:
-            with st.spinner("Mise à jour..."):
-                if send_action({"action": "edit", "old_titre": current_title.strip(), "Note": nouvelle_note}):
-                    st.toast("Note enregistrée ! ⭐")
-                    st.cache_data.clear(); st.rerun()
-
-        st.write("") 
-
+            if nouvelle_note != note_actuelle:
+                with st.spinner("Mise à jour..."):
+                    if send_action({"action": "edit", "old_titre": current_title.strip(), "Note": nouvelle_note}):
+                        st.toast("Note enregistrée ! ⭐")
+                        st.cache_data.clear(); st.rerun()
         # 3. INFORMATIONS GÉNÉRALES
         st.subheader("📋 Informations")
         c_i1, c_i2 = st.columns(2)
@@ -1565,6 +1551,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
