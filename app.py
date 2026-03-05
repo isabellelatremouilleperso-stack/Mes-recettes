@@ -1055,59 +1055,57 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # --- STYLE FILIGRANE & DESIGN ÉPURÉ ---
+    # --- STYLE FILIGRANE & CARTES SOMBRES ---
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
         <style>
-        /* 1. MISE EN FILIGRANE DE L'IMAGE */
-        .main {{
-            background-image: linear-gradient(rgba(14, 17, 23, 0.85), rgba(14, 17, 23, 0.85)), 
+        /* 1. FORCE L'IMAGE EN FOND SUR TOUTE L'APPLI */
+        [data-testid="stAppViewContainer"] {{
+            background-image: linear-gradient(rgba(14, 17, 23, 0.7), rgba(14, 17, 23, 0.7)), 
                               url("{url_header}");
             background-repeat: no-repeat;
             background-attachment: fixed;
-            background-position: top center;
-            background-size: 400px; /* Taille du filigrane */
+            background-position: center 15%; /* Positionne l'image en haut */
+            background-size: 250px; /* Taille discrète */
         }}
 
-        /* 2. NETTOYAGE DES BANDES ET BLOCS */
-        .stApp {{
+        /* Rend le fond principal transparent pour voir l'image derrière */
+        [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{
             background: transparent;
         }}
-        
-        /* On supprime la bordure blanche inutile */
-        .keep-container {{
-            background-color: rgba(255, 255, 255, 0.05); /* Très légère teinte pour structurer */
-            padding: 15px;
-            border-radius: 15px;
-            color: white;
-        }}
 
+        /* 2. CARTES "GLASS MORPHISM" (Moins bright, plus chic) */
         .shop-card {{
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 12px;
-            border-radius: 10px;
-            border-left: 5px solid #e67e22;
+            background-color: rgba(255, 255, 255, 0.1); /* Fond sombre transparent */
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Bordure fine */
+            border-left: 5px solid #e67e22; /* Ton orange */
             margin-bottom: 10px;
-            color: #2c3e50;
+            color: white; /* Texte en blanc pour être lisible */
+            backdrop-filter: blur(5px); /* Effet flou derrière la carte */
             font-size: 17px;
         }}
-        
-        .stButton>button {{
-            border-radius: 20px;
-            font-weight: bold;
+
+        .keep-container {{
+            background: transparent;
+            padding: 10px;
+        }}
+
+        /* Ajustement des textes hors cartes */
+        h2, h3, h5, p {{
+            color: white !important;
         }}
         </style>
     """, unsafe_allow_html=True)
 
-    # Plus d'image <img> ici, elle est gérée par le CSS en fond !
-
-    # 2. CONTENEUR DE LA LISTE
+    # 2. CONTENEUR
     st.markdown('<div class="keep-container">', unsafe_allow_html=True)
     
     # Navigation & Titre
     c_titre, c_back = st.columns([0.8, 0.2])
-    c_titre.markdown("<h2 style='margin:0; color:#e67e22;'>🛒 Liste d'Épicerie</h2>", unsafe_allow_html=True)
+    c_titre.markdown("<h2 style='margin:0; color: #e67e22;'>🛒 Liste d'Épicerie</h2>", unsafe_allow_html=True)
     if c_back.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
@@ -1578,6 +1576,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
