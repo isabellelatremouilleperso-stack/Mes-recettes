@@ -709,36 +709,36 @@ elif st.session_state.page == "details":
         st.write("") 
         
        # --- BLOC ADMIN : ÉDITION DES CATÉGORIES ---
-            if is_admin:
-                st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
+       if is_admin:
+            st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
                 
-                with st.form("shop_management_form", border=False):
-                    to_del = []
-                    updates = [] # Pour stocker les changements de catégories
+            with st.form("shop_management_form", border=False):
+                to_del = []
+                updates = [] # Pour stocker les changements de catégories
                     
-                    rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
+                rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
 
-                    for cat in sorted(liste_groupee.keys()):
-                        st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+                for cat in sorted(liste_groupee.keys()):
+                    st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
                         
-                        for item in liste_groupee[cat]:
-                            col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
+                    for item in liste_groupee[cat]:
+                        col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
                             
-                            # 1. Case pour supprimer
-                            if col_check.checkbox("", key=f"del_{item['idx']}"):
-                                to_del.append(item['brut'])
+                        # 1. Case pour supprimer
+                        if col_check.checkbox("", key=f"del_{item['idx']}"):
+                            to_del.append(item['brut'])
                             
-                            # 2. Nom de l'article
-                            col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
+                        # 2. Nom de l'article
+                        col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
                             
-                            # 3. Menu pour changer de catégorie en direct !
-                            # On définit l'index actuel pour que le menu affiche la bonne catégorie
-                            current_idx = rayons_full.index(cat) if cat in rayons_full else 0
-                            new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
+                        # 3. Menu pour changer de catégorie en direct !
+                        # On définit l'index actuel pour que le menu affiche la bonne catégorie
+                        current_idx = rayons_full.index(cat) if cat in rayons_full else 0
+                        new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
                             
-                            # Si l'utilisateur change la catégorie, on prépare la mise à jour
-                            if new_cat != cat:
-                                updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
+                        # Si l'utilisateur change la catégorie, on prépare la mise à jour
+                        if new_cat != cat:
+                            updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
 
                     st.write("")
                     c1, c2 = st.columns(2)
@@ -1601,6 +1601,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
