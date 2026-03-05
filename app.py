@@ -754,30 +754,17 @@ elif st.session_state.page == "add":
                 import datetime
                 import re
 
-                # 1. NETTOYAGE INTELLIGENT :
-                # On remplace les symboles bizarres (carreaux, puces spéciales) par un saut de ligne.
-                # La regex [^\w\s.,\-()%/°àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ] 
-                # signifie : "Tout ce qui n'est pas une lettre, un chiffre, un espace, une ponctuation de base OU un accent français"
+                # 1. NETTOYAGE DES SYMBOLES MAIS GARDE LES ACCENTS
+                # On remplace les caractères spéciaux/graphiques par un saut de ligne, 
+                # mais on exclut de la suppression les lettres accentuées françaises.
+                # Cela permet de garder "Épaule", "Cuillère", etc.
                 text_split = re.sub(r'[^\w\s.,\-()%/°àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+', '\n', ingredients_txt)
                 
-                # 2. On traite ligne par ligne pour créer une liste propre
+                # 2. NETTOYAGE DES LIGNES VIDES
+                # On sépare le texte par ligne, on enlève les espaces inutiles, 
+                # et on ne garde que les lignes qui contiennent vraiment du texte.
                 lignes = text_split.split('\n')
-                lignes_finales = []
-                
-                for l in lignes:
-                    item = l.strip()
-                    # On garde les lignes qui ont du contenu (plus d'un caractère)
-                    if item and len(item) > 1:
-                        # On force le format Markdown avec un tiret propre
-                        # On vérifie si la ligne commence déjà par un tiret ou une puce standard
-                        if not re.match(r'^[\-\*•]', item):
-                            lignes_finales.append(f"- {item}")
-                        else:
-                            # Si elle commence par un symbole, on le normalise en "-"
-                            item_clean = re.sub(r'^[\*•]', '-', item)
-                            lignes_finales.append(item_clean)
-
-                ing_propre = "\n".join(lignes_finales)
+                ing_propre = "\n".join([l.strip() for l in lignes if l.strip()])
 
                 # --- PAYLOAD ---
                 payload = {
@@ -785,7 +772,7 @@ elif st.session_state.page == "add":
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre,
+                    "Ingrédients": ing_propre,  # Texte propre ligne par ligne, sans tirets ajoutés
                     "Préparation": instructions_txt.strip(),
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
@@ -795,6 +782,8 @@ elif st.session_state.page == "add":
                     "Commentaires": commentaires.strip(),
                     "video": video_url_in.strip()
                 }
+                
+                # ... (suite du code d'envoi send_action)
                 
                 # ... (reste du code d'envoi send_action)
                 
@@ -1410,6 +1399,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
