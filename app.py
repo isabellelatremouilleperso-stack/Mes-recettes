@@ -719,7 +719,7 @@ elif st.session_state.page == "details":
             st.write(prep)
         else:
             st.info("Aucune étape de préparation enregistrée.")
-
+    
         # --- SECTION NOTES & COMMENTAIRES ---
         st.divider()
         st.markdown("### 📝 Mes Notes & Commentaires")
@@ -729,10 +729,11 @@ elif st.session_state.page == "details":
         else:
             st.write("*Aucune note pour cette recette.*")
 
-    # --- LE BLOC DE FIN (ALIGNE LE 'EXCEPT' AVEC LE 'TRY' DU DEBUT DE PAGE) ---
-    except Exception as e:
-        st.error(f"Erreur d'affichage : {e}")
-        
+# --- LE BLOC DE FIN (BIEN ALIGNÉ TOUT À GAUCHE) ---
+except Exception as e:
+    st.error(f"Erreur d'affichage : {e}")
+
+# --- PAGE SUIVANTE ---
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
     
@@ -1562,6 +1563,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
