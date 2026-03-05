@@ -1122,66 +1122,60 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (FORMATAGE STRICT LIGNE PAR LIGNE) ---
+    # --- OPTION DE PARTAGE (VERSION FORCEUR DE LIGNES) ---
     try:
         import time
-        import json
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # On récupère les articles sans symboles
+            # Extraction propre des noms d'articles
             items = [str(row.iloc[0]).strip() for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
             
-            # On force le texte avec des sauts de ligne clairs (\n)
-            texte_final = "\n".join(items)
-            
-            # On encode en JSON pour protéger les sauts de ligne dans le HTML
-            json_text = json.dumps(texte_final)
+            # Utilisation de \r\n qui est le standard "Windows/Email" souvent mieux reconnu pour le collage
+            texte_final = "\\r\\n".join(items)
 
-            st.markdown("### 📋 Préparer pour Google Keep")
+            st.markdown("### 📋 Copier pour Keep")
             
+            # Code HTML/JS ultra-robuste pour le collage ligne par ligne
             copy_html = f"""
                 <div style="text-align:center;">
-                    <button id="btn-copy" onclick="doCopy()" 
+                    <button id="btn-copy" onclick="copyStrict()" 
                     style="width: 100%; background-color: #f1c40f; color: #2c3e50; border: none; 
-                    padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 16px;">
-                        🟡 COPIER MA LISTE (LIGNE PAR LIGNE)
+                    padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer;">
+                        🟡 COPIER LA LISTE (LIGNES SÉPARÉES)
                     </button>
                 </div>
 
                 <script>
-                function doCopy() {{
-                    const textToCopy = {json_text};
+                function copyStrict() {{
+                    const rawText = "{texte_final}";
+                    // On recrée les vrais sauts de ligne en JS
+                    const formattedText = rawText.replace(/\\\\r\\\\n/g, '\\r\\n');
                     
-                    // Utilisation de l'API Clipboard moderne avec un fallback textarea
-                    if (navigator.clipboard && window.isSecureContext) {{
-                        navigator.clipboard.writeText(textToCopy).then(() => {{
-                            alert("Copié ! Allez dans Keep et collez.");
-                        }});
-                    }} else {{
-                        // Méthode de secours pour les navigateurs mobiles
-                        const textArea = document.createElement("textarea");
-                        textArea.value = textToCopy;
-                        textArea.style.position = "fixed"; 
-                        textArea.style.left = "-999999px";
-                        textArea.style.top = "-999999px";
-                        document.body.appendChild(textArea);
-                        textArea.focus();
-                        textArea.select();
+                    const textArea = document.createElement("textarea");
+                    textArea.value = formattedText;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    textArea.setSelectionRange(0, 99999); // Pour mobile
+                    
+                    try {{
                         document.execCommand('copy');
-                        textArea.remove();
-                        alert("Copié (méthode alternative) ! Allez dans Keep.");
+                        alert("Liste prête ! Collez dans Keep.");
+                    }} catch (err) {{
+                        alert("Erreur lors de la copie");
                     }}
+                    
+                    document.body.removeChild(textArea);
                 }}
                 </script>
             """
             st.components.v1.html(copy_html, height=80)
             
-            st.info("💡 **Dans Google Keep :** Collez votre texte, puis cliquez sur le **(+)** ou les **(⋮)** et choisissez **'Afficher les cases à cocher'**.")
+            st.info("💡 **Important :** Une fois collé dans Keep, si c'est encore en bloc, cliquez sur **(⋮)** -> **'Afficher les cases à cocher'**. C'est cette action qui force Keep à découper le bloc.")
             st.divider()
 
     except Exception as e:
-        st.error(f"Erreur de chargement : {e}")
+        pass
    
     # --- LOGIQUE DE LECTURE ET AFFICHAGE (Le bloc qui suit dans ton app) ---
     
@@ -1595,6 +1589,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
