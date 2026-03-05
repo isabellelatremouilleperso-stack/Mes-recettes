@@ -977,108 +977,123 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (SÉCURISÉE) ---
+# --- PAGE ÉPICERIE (STYLE MODERNE & FONCTIONNEL) ---
 elif st.session_state.page == "shop":
-    st.markdown('<h1 style="color: #e67e22;">🛒 Ma Liste d\'épicerie</h1>', unsafe_allow_html=True)
+    # 1. Injection CSS pour le look "Wow"
+    st.markdown("""
+        <style>
+        .stButton>button {
+            border-radius: 20px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .stButton>button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        /* Style des cartes en mode consultation */
+        .shop-card {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 5px solid #e67e22;
+            margin-bottom: 10px;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+            color: #2c3e50;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<h1 style="color: #e67e22; text-align: center;">🛒 Ma Liste d\'Épicerie</h1>', unsafe_allow_html=True)
     
-    # On définit si l'utilisateur est admin
     is_admin = st.session_state.get('admin_mode', False)
     
-    if st.button("⬅ Retour"):
+    # Navigation
+    if st.button("⬅ Retour au menu"):
         st.session_state.page = "home"
-        st.rerun()
-
-    # --- SECTION : AJOUT MANUEL ---
-    st.markdown("### ➕ Ajouter un article")
-    
-    # On initialise un petit compteur dans le state s'il n'existe pas
-    if "input_counter" not in st.session_state:
-        st.session_state.input_counter = 0
-
-    c_input, c_add, c_cancel = st.columns([3, 1, 1])
-
-    # Le secret : la key change à chaque ajout réussi (grâce au counter)
-    # Ce qui force le champ à redevenir vide
-    new_article = c_input.text_input(
-        "Ex: Lait, Pain...", 
-        label_visibility="collapsed", 
-        key=f"add_item_{st.session_state.input_counter}"
-    )
-    
-    if c_add.button("Ajouter", use_container_width=True, type="primary"):
-        if new_article:
-            with st.spinner("Ajout..."):
-                if send_action({"action": "add_shop", "article": new_article.strip()}):
-                    st.toast(f"✅ {new_article} ajouté !")
-                    st.cache_data.clear()
-                    # On change le compteur -> Streamlit recrée un champ tout neuf et VIDE
-                    st.session_state.input_counter += 1
-                    st.rerun()
-                else:
-                    st.error("Erreur Sheets")
-        else:
-            st.warning("Écrivez quelque chose !")
-
-    if c_cancel.button("Annuler", use_container_width=True):
-        st.session_state.input_counter += 1 # On change la clé pour vider le champ
         st.rerun()
 
     st.divider()
 
-    # --- LOGIQUE DE LECTURE ET AFFICHAGE ---
+    # --- SECTION : AJOUT RAPIDE (Optimisée) ---
+    st.markdown("### ➕ Ajout rapide")
+    if "input_counter" not in st.session_state:
+        st.session_state.input_counter = 0
+
+    c_input, c_add, c_cancel = st.columns([3, 0.8, 0.8])
+    
+    new_article = c_input.text_input(
+        "Que manque-t-il ?", 
+        placeholder="Ex: Lait, Œufs...",
+        label_visibility="collapsed", 
+        key=f"add_item_{st.session_state.input_counter}"
+    )
+    
+    if c_add.button("➕", use_container_width=True, type="primary"):
+        if new_article:
+            with st.spinner(""):
+                if send_action({"action": "add_shop", "article": new_article.strip()}):
+                    st.toast(f"✅ {new_article} ajouté !")
+                    st.cache_data.clear()
+                    st.session_state.input_counter += 1
+                    st.rerun()
+        else:
+            st.warning("Écrivez un article !")
+
+    if c_cancel.button("✖️", use_container_width=True):
+        st.session_state.input_counter += 1
+        st.rerun()
+
+    st.divider()
+
+    # --- AFFICHAGE DE LA LISTE ---
     try:
         import time
-        # Force la lecture sans cache
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
             if is_admin:
-                # --- MODE ADMIN : Formulaire de suppression ---
-                with st.form("shop_form"):
+                # --- MODE ADMIN : Suppression facile ---
+                with st.form("shop_form", border=False):
                     to_del = []
-                    st.write("Cochez les articles à retirer de la liste :")
+                    st.write("🛠 **Gestion de la liste :**")
                     
                     for idx, row in df_s.iterrows():
-                        article_nom = str(row.iloc[0]).strip()
-                        if article_nom:
-                            if st.checkbox(article_nom, key=f"sh_{idx}"):
-                                to_del.append(article_nom)
+                        art = str(row.iloc[0]).strip()
+                        if art:
+                            col_c, col_t = st.columns([0.15, 0.85])
+                            if col_c.checkbox("", key=f"sh_{idx}"):
+                                to_del.append(art)
+                            col_t.write(f"**{art}**")
                     
-                    st.divider()
-                    submit_del = st.form_submit_button("🗑 Retirer les articles sélectionnés", use_container_width=True)
+                    st.markdown("---")
+                    submit_del = st.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
                 
-                # Exécution de la suppression individuelle
                 if submit_del:
                     if to_del:
-                        with st.spinner("Mise à jour..."):
-                            if send_action({"action": "remove_shop", "articles": to_del}):
-                                st.cache_data.clear()
-                                st.toast(f"Retiré : {len(to_del)} article(s)")
-                                st.rerun()
+                        if send_action({"action": "remove_shop", "articles": to_del}):
+                            st.cache_data.clear()
+                            st.rerun()
                     else:
-                        st.warning("Veuillez cocher au moins un article.")
+                        st.warning("Cochez des articles.")
 
-                # Bouton "Vider tout"
                 if st.button("🧨 Vider toute la liste", use_container_width=True):
                     if send_action({"action": "clear_shop"}):
                         st.cache_data.clear()
-                        st.success("Liste vidée !")
                         st.rerun()
             
             else:
-                # --- MODE CONSULTATION ---
-                st.info("📖 Mode Consultation : Seul le Chef peut retirer des articles.")
+                # --- MODE CONSULTATION (Look "Carte") ---
+                st.info("📖 Mode Consultation : Prêt pour le magasin !")
                 for idx, row in df_s.iterrows():
-                    article_nom = str(row.iloc[0]).strip()
-                    if article_nom:
-                        st.markdown(f"**❑** {article_nom}")
-                        
+                    art = str(row.iloc[0]).strip()
+                    if art:
+                        st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
         else:
-            st.info("Votre liste est vide pour le moment.")
+            st.info("La liste est vide. Tout est sous contrôle ! ✨")
             
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
-
 
 # ======================
 # PAGE PLANNING
@@ -1442,6 +1457,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
