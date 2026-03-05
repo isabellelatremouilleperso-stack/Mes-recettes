@@ -1042,20 +1042,19 @@ elif st.session_state.page == "shop":
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
-            /* 1. On garde les mêmes couleurs de voile (moins pâle) */
+            /* 1. Voile de clarté */
             background: linear-gradient(rgba(14,17,23,0.4), rgba(14,17,23,0.6)), url("{url_header}");
             
-            /* === MODIFICATION ICI POUR RAPETISSER === */
-            /* 50% de la largeur de l'écran. Tu peux mettre 40% ou 60% selon tes goûts. */
-            background-size: 50% !important; 
+            /* 2. TAILLE : 80% pour que ce soit moins petit que 50% */
+            background-size: 80% !important; 
             
-            /* === MODIFICATION ICI POUR LE PLACEMENT === */
-            /* 'center top' pour que l'image rapetissée soit centrée en haut */
-            background-position: center top !important; 
+            /* 3. POSITION : 'center' horizontal et '80px' du haut pour le descendre */
+            background-position: center 80px !important; 
             
             background-repeat: no-repeat; 
             background-attachment: fixed;
         }}
+        
         [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{ background: transparent; }}
         .shop-card {{
             background-color: rgba(30, 34, 45, 0.7); /* Entre-deux parfait pour la clarté */
@@ -1567,6 +1566,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
