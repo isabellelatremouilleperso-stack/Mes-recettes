@@ -1049,30 +1049,24 @@ elif st.session_state.page == "shop":
     # --- OPTION DE PARTAGE (COPIE SEULEMENT) ---
     try:
         import time
-        # On lit la liste pour préparer le texte
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # On prépare le texte avec des petits carrés pour simuler des cases Keep
             items = [f"☐ {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
             texte_final = "🛒 MA LISTE D'ÉPICERIE :\n\n" + "\n".join(items)
 
             st.write("📋 **Actions :**")
-            
-            # Un seul gros bouton large, coloré et fiable
             if st.button("📋 Copier pour Google Keep", use_container_width=True, type="primary"):
                 st.copy_to_clipboard(texte_final)
-                st.toast("✅ Liste copiée ! Prête à être collée.", icon="📝")
+                st.toast("✅ Liste copiée !", icon="📝")
             
-            st.caption("💡 *Cliquez puis allez 'Coller' dans une note Google Keep.*")
+            st.caption("💡 *Cliquez puis allez 'Coller' dans Keep.*")
             st.markdown("<br>", unsafe_allow_html=True)
-    except:
-        # Si le fichier est inaccessible temporairement, on ne bloque pas l'app
-        pass
-    except:
+    except Exception as e: # On utilise une exception nommée, c'est plus propre
         pass
 
-    # --- AFFICHAGE DE LA LISTE ---
+    # --- LOGIQUE DE LECTURE ET AFFICHAGE (Le bloc qui suit dans ton app) ---
+    
     try:
         import time
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
@@ -1483,6 +1477,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
