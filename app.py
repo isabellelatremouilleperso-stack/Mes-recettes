@@ -1055,63 +1055,51 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # --- DESIGN IMMERSIF : FILIGRANE PLEIN ÉCRAN ---
+    # --- DESIGN FINAL : FILIGRANE AJUSTÉ (PLUS PETIT) ---
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
         <style>
-        /* 1. L'IMAGE FAIT TOUT LE FOND (FULL SCREEN) */
+        /* 1. FILIGRANE RECENTRÉ ET RAPETISSÉ */
         [data-testid="stAppViewContainer"] {{
             background: 
-                linear-gradient(rgba(14, 17, 23, 0.85), rgba(14, 17, 23, 0.95)), 
+                linear-gradient(rgba(14, 17, 23, 0.8), rgba(14, 17, 23, 0.9)), 
                 url("{url_header}");
-            background-size: cover; /* L'image couvre tout le fond */
-            background-position: center; /* Centrée */
+            background-size: 50%; /* On réduit l'image à 50% de la largeur au lieu de cover */
+            background-position: center 20%; /* Centrée horizontalement, un peu vers le haut */
             background-repeat: no-repeat;
-            background-attachment: fixed; /* Reste fixe quand on scrolle */
+            background-attachment: fixed;
         }}
 
-        /* Nettoyage des couches Streamlit pour la transparence */
+        /* Transparence des couches Streamlit */
         [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{
             background: transparent;
         }}
 
-        /* 2. CARTES STYLE "VERRE FUMÉ" (SOMBRE ET PROPRE) */
+        /* 2. CARTES SOMBRES TRANSLUCIDES (Look Pro) */
         .shop-card {{
-            background-color: rgba(30, 34, 45, 0.7); /* Translucide */
+            background-color: rgba(30, 34, 45, 0.6); 
             padding: 16px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-left: 5px solid #e67e22;
             margin-bottom: 12px;
             color: #ffffff;
-            backdrop-filter: blur(10px); /* Flou artistique derrière la carte */
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px); /* Effet verre dépoli */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }}
 
-        /* Titre Néon */
         .neon-title {{
             color: #e67e22;
             font-size: 2.2rem;
             font-weight: bold;
-            text-shadow: 0 0 15px rgba(230, 126, 34, 0.4);
-            margin-bottom: 5px;
-        }}
-
-        /* Suppression des conteneurs blancs résiduels */
-        .keep-container {{ background: transparent; }}
-        
-        /* Ajustement des inputs pour le mode sombre */
-        input {{
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: white !important;
-            border-radius: 10px !important;
+            text-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
         }}
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. STRUCTURE DE LA PAGE
-    st.markdown('<div class="keep-container">', unsafe_allow_html=True)
+    # 2. CONTENEUR
+    st.markdown('<div class="keep-container" style="background:transparent;">', unsafe_allow_html=True)
     
     c_titre, c_back = st.columns([0.85, 0.15])
     with c_titre:
@@ -1590,6 +1578,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
