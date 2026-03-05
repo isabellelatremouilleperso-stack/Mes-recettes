@@ -1122,56 +1122,47 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (VERSION FORCEUR DE LIGNES) ---
+    # --- OPTION DE PARTAGE (VERSION AUTO-DÉTECTION KEEP) ---
     try:
         import time
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # Extraction propre des noms d'articles
             items = [str(row.iloc[0]).strip() for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
             
-            # Utilisation de \r\n qui est le standard "Windows/Email" souvent mieux reconnu pour le collage
-            texte_final = "\\r\\n".join(items)
+            # On utilise un saut de ligne très marqué
+            # Le triple slash est pour s'assurer que le \n passe bien à travers Streamlit
+            texte_final = "\\n".join(items)
 
             st.markdown("### 📋 Copier pour Keep")
             
-            # Code HTML/JS ultra-robuste pour le collage ligne par ligne
             copy_html = f"""
                 <div style="text-align:center;">
-                    <button id="btn-copy" onclick="copyStrict()" 
+                    <button onclick="copyToKeep()" 
                     style="width: 100%; background-color: #f1c40f; color: #2c3e50; border: none; 
                     padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer;">
-                        🟡 COPIER LA LISTE (LIGNES SÉPARÉES)
+                        🟡 COPIER MA LISTE
                     </button>
                 </div>
 
                 <script>
-                function copyStrict() {{
-                    const rawText = "{texte_final}";
-                    // On recrée les vrais sauts de ligne en JS
-                    const formattedText = rawText.replace(/\\\\r\\\\n/g, '\\r\\n');
+                function copyToKeep() {{
+                    const text = {repr(texte_final)};
+                    // On force un formatage que Keep préfère pour les listes
+                    const cleanText = text.replace(/\\\\n/g, '\\n');
                     
                     const textArea = document.createElement("textarea");
-                    textArea.value = formattedText;
+                    textArea.value = cleanText;
                     document.body.appendChild(textArea);
                     textArea.select();
-                    textArea.setSelectionRange(0, 99999); // Pour mobile
-                    
-                    try {{
-                        document.execCommand('copy');
-                        alert("Liste prête ! Collez dans Keep.");
-                    }} catch (err) {{
-                        alert("Erreur lors de la copie");
-                    }}
-                    
+                    document.execCommand('copy');
                     document.body.removeChild(textArea);
+                    
+                    alert("Copié ! Si Keep affiche un bloc, activez simplement les 'Cases à cocher' dans le menu de la note.");
                 }}
                 </script>
             """
             st.components.v1.html(copy_html, height=80)
-            
-            st.info("💡 **Important :** Une fois collé dans Keep, si c'est encore en bloc, cliquez sur **(⋮)** -> **'Afficher les cases à cocher'**. C'est cette action qui force Keep à découper le bloc.")
             st.divider()
 
     except Exception as e:
@@ -1589,6 +1580,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
