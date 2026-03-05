@@ -684,28 +684,32 @@ elif st.session_state.page == "add":
     c_btn.markdown(f"""<a href="{target_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #4285F4; color: white; padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; cursor: pointer;">🌐 Google.ca</div></a>""", unsafe_allow_html=True)
     
     # --- SECTION IMPORTATION ---
-    st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
-    
-    col_url, col_go = st.columns([4, 1])
-    url_input = col_url.text_input("Collez l'URL ici", placeholder="https://www.ricardocuisine.com/...", key="url_main")
-    
-    if col_go.button("Extraire ✨", use_container_width=True):
-        if url_input:
-            with st.spinner("Analyse en cours..."):
-                t, ing, prep = scrape_url(url_input)
-                # Correction du bug "Titre = URL" :
-                if t and t.strip() != url_input.strip() and "importée" not in t.lower():
-                    st.session_state.scraped_title = t
-                    st.session_state.scraped_ingredients = ing
-                    st.session_state.scraped_content = prep
-                    st.success("Extraction réussie ! ✨")
-                    st.rerun()
-                else:
-                    # Message d'erreur explicite si le site bloque l'extraction
-                    st.error("⚠️ Le site bloque l'accès automatique ou le contenu est introuvable. Veuillez copier-coller manuellement.")
+st.markdown("""<div style="background-color: #1e2129; padding: 20px; border-radius: 15px; border: 1px solid #3d4455; margin-top: 10px;"><h3 style="margin-top:0; color:#e67e22;">🌐 Importer depuis le Web</h3>""", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
-    st.divider()
+col_url, col_go = st.columns([4, 1])
+
+# On ajoute disabled=True ici pour griser la case de texte
+url_input = col_url.text_input(
+    "Collez l'URL ici", 
+    placeholder="Désactivé temporairement...", 
+    key="url_main", 
+    disabled=True
+)
+
+# On ajoute disabled=True ici pour que le bouton ne réagisse plus du tout
+if col_go.button("Bientôt ⏳", use_container_width=True, disabled=True):
+    # Ce code est maintenant inaccessible, il ne s'exécutera jamais
+    if url_input:
+        with st.spinner("Analyse en cours..."):
+            t, ing, prep = scrape_url(url_input)
+            if t and t.strip() != url_input.strip():
+                st.session_state.scraped_title = t
+                st.session_state.scraped_ingredients = ing
+                st.session_state.scraped_content = prep
+                st.rerun()
+
+st.markdown("</div>", unsafe_allow_html=True)
+st.divider()
     
     # --- FORMULAIRE DE SAISIE ---
     with st.container():
@@ -1399,6 +1403,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
