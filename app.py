@@ -529,10 +529,37 @@ elif st.session_state.page == "details":
 
     st.divider()
     st.header(f"📖 {current_title}")
-
+    
     # --- CORPS DE LA PAGE (IMAGE ET INFOS) ---
     col_g, col_d = st.columns([1, 1.2])
+    # --- AJOUT : FAVORIS ET ACCOMPLISSEMENT ---
+    col_feat1, col_feat2 = st.columns([1, 1])
     
+    with col_feat1:
+        # 1. BOUTON "JE L'AI FAITE"
+        if st.button("🍳 Je l'ai cuisinée !", use_container_width=True, key=f"made_{current_title}"):
+            st.balloons() # Pluie de ballons pour fêter ça !
+            st.toast("Félicitations ! Un vrai chef ! 👨‍🍳", icon="🔥")
+            # Note: Si tu veux sauvegarder cette info dans Sheets, on pourra le faire plus tard
+
+    with col_feat2:
+        # 2. SYSTÈME DE FAVORIS (ÉTOILE DANS LE COIN)
+        # On initialise l'ensemble des favoris s'il n'existe pas
+        if 'fav_list' not in st.session_state:
+            st.session_state.fav_list = set()
+        
+        is_fav = current_title in st.session_state.fav_list
+        
+        if is_fav:
+            if st.button("⭐ Recette préférée", type="primary", use_container_width=True, key=f"fav_on_{current_title}"):
+                st.session_state.fav_list.remove(current_title)
+                st.rerun()
+        else:
+            if st.button("☆ Marquer en préférée", use_container_width=True, key=f"fav_off_{current_title}"):
+                st.session_state.fav_list.add(current_title)
+                st.toast("Ajouté à vos coups de cœur !", icon="💖")
+                st.rerun()
+    st.write("") # Petit espace
     with col_g:
         # 1. Gestion de l'image (Inchangée, mais sécurisée)
         img_url = r.get('Image', '')
@@ -1477,6 +1504,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
