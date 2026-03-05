@@ -168,53 +168,24 @@ if 'page' not in st.session_state:
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = False
 
-# 2. Style CSS (Version "Fond Unique" - Évite la répétition du logo)
+# 2. Style CSS (Ta mise en forme)
 st.markdown("""
 <style>
-    /* 1. L'IMAGE DE FOND (S'applique uniquement au conteneur global) */
-    .stMainView {
-        background-image: url("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png");
-        background-position: top center !important; 
-        background-size: cover !important;
-        background-repeat: no-repeat !important;
-        background-attachment: scroll !important; 
-    }
-
-    /* 2. VOILE DE LISIBILITÉ (Appliqué au même endroit) */
-    .stMainView::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background-color: rgba(14, 17, 23, 0.7); 
-        z-index: -1;
-    }
-
-    /* 3. FIX DU LOGO DANS LA SIDEBAR (Taille fixe) */
-    .logo-container img { 
-        width: 120px !important;
-        height: 120px !important;
-        object-fit: cover !important;
-        border-radius: 50% !important;
-        border: 3px solid #e67e22 !important;
-    }
-
-    /* 4. NETTOYAGE DES AUTRES PAGES */
-    /* On force les autres conteneurs à être transparents pour voir le fond unique */
-    [data-testid="stAppViewContainer"], .stApp {
-        background: transparent !important;
-    }
-
-    /* COULEURS ET BOUTONS */
+    .stApp { background-color: #0e1117 !important; }
     [data-testid="stSidebar"] { background-color: #1e2129 !important; }
     h1, h2, h3 { color: #e67e22 !important; }
     .stButton button { 
         background-color: #e67e22 !important; 
         color: white !important; 
         border-radius: 10px; 
+        border: none;
         font-weight: bold;
     }
+    .logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
+    .logo-container img { border-radius: 50%; width: 120px; height: 120px; object-fit: cover; border: 3px solid #e67e22; }
 </style>
 """, unsafe_allow_html=True)
+
 
 # ======================
 # BARRE LATÉRALE (SIDEBAR)
@@ -1580,6 +1551,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
