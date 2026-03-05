@@ -1042,14 +1042,19 @@ elif st.session_state.page == "shop":
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
-            background: linear-gradient(rgba(14,17,23,0.75), rgba(14,17,23,0.9)), url("{url_header}");
+            background: linear-gradient(rgba(14,17,23,0.4), rgba(14,17,23,0.6)), url("{url_header}");
             background-size: 45%; background-position: center 60%; background-repeat: no-repeat; background-attachment: fixed;
         }}
         [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{ background: transparent; }}
         .shop-card {{
-            background-color: rgba(30, 34, 45, 0.6); padding: 16px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1); border-left: 5px solid #e67e22;
-            margin-bottom: 12px; color: #ffffff; backdrop-filter: blur(8px);
+            background-color: rgba(30, 34, 45, 0.7); /* Entre-deux parfait pour la clarté */
+            padding: 16px; 
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-left: 5px solid #e67e22;
+            margin-bottom: 12px; 
+            color: #ffffff; 
+            backdrop-filter: blur(10px); /* Un peu plus de flou pour le confort visuel */
         }}
         .category-header {{
             color: #f1c40f; font-size: 1.1rem; font-weight: bold; margin-top: 15px; margin-bottom: 8px;
@@ -1551,6 +1556,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
