@@ -1053,20 +1053,16 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (RETOUR DU MODE ADMIN COMPLET) ---
+# --- PAGE ÉPICERIE (INTÉGRALE AVEC CATÉGORIES & DESIGN FILIGRANE) ---
 elif st.session_state.page == "shop":
-    # 1. DESIGN : Filigrane repositionné verticalement
+    # 1. DESIGN : Filigrane 45% positionné pour voir les yeux
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
             background: linear-gradient(rgba(14,17,23,0.75), rgba(14,17,23,0.9)), url("{url_header}");
             background-size: 45%; 
-            
-            /* --- AJUSTEMENT ICI --- */
-            /* center = horizontal | 60% = vertical (augmente à 70% pour descendre encore plus) */
             background-position: center 60%; 
-            
             background-repeat: no-repeat; 
             background-attachment: fixed;
         }}
@@ -1074,22 +1070,20 @@ elif st.session_state.page == "shop":
         
         .shop-card {{
             background-color: rgba(30, 34, 45, 0.6); 
-            padding: 16px; 
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-            border-left: 5px solid #e67e22;
-            margin-bottom: 12px; 
-            color: #ffffff; 
-            backdrop-filter: blur(8px);
+            padding: 16px; border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-left: 5px solid #e67e22;
+            margin-bottom: 12px; color: #ffffff; backdrop-filter: blur(8px);
+        }}
+        .category-header {{
+            color: #f1c40f; font-size: 1.1rem; font-weight: bold; margin-top: 15px; margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(241, 196, 15, 0.3);
         }}
         .neon-title {{ 
-            color: #e67e22; 
-            font-size: 2.2rem; 
-            font-weight: bold; 
-            text-shadow: 0 0 10px rgba(230, 126, 34, 0.4); 
+            color: #e67e22; font-size: 2.2rem; font-weight: bold; text-shadow: 0 0 10px rgba(230, 126, 34, 0.4); 
         }}
         </style>
     """, unsafe_allow_html=True)
+
     # 2. NAVIGATION ET TITRE
     c_titre, c_back = st.columns([0.85, 0.15])
     with c_titre:
@@ -1101,20 +1095,27 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- SECTION : AJOUT RAPIDE ---
+    # --- SECTION : AJOUT AVEC RAYONS ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
 
-    c_in, c_add, c_reset = st.columns([3, 0.8, 0.8])
-    new_art = c_in.text_input("Ajouter un article", placeholder="Ex: Lait...", label_visibility="collapsed", key=f"add_{st.session_state.input_counter}")
+    rayons = ["🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux", "✨ Autre"]
     
-    if c_add.button("➕", use_container_width=True, type="primary"):
+    col_input, col_cat = st.columns([2, 1.5])
+    new_art = col_input.text_input("Article", placeholder="Ex: Lait...", label_visibility="collapsed", key=f"add_{st.session_state.input_counter}")
+    cat_choisie = col_cat.selectbox("Rayon", rayons, label_visibility="collapsed", key=f"cat_{st.session_state.input_counter}")
+    
+    c_add, c_reset = st.columns([1, 1])
+    if c_add.button("➕ Ajouter", use_container_width=True, type="primary"):
         if new_art:
-            if send_action({"action": "add_shop", "article": new_art.strip()}):
+            # On stocke "Rayon | Article"
+            entree = f"{cat_choisie} | {new_art.strip()}"
+            if send_action({"action": "add_shop", "article": entree}):
                 st.cache_data.clear()
                 st.session_state.input_counter += 1
                 st.rerun()
-    if c_reset.button("✖️", use_container_width=True):
+    
+    if c_reset.button("✖️ Annuler", use_container_width=True):
         st.session_state.input_counter += 1
         st.rerun()
 
@@ -1123,28 +1124,38 @@ elif st.session_state.page == "shop":
     # --- LOGIQUE DE LECTURE ET AFFICHAGE ---
     try:
         import time, json
-        # On vérifie si on est en mode admin
         is_admin = st.session_state.get('admin_mode', False)
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
-            # --- BLOC ADMIN : C'EST ICI QUE TES BOUTONS ÉTAIENT PERDUS ---
+            # Organiser les données par catégories
+            liste_groupee = {}
+            for idx, row in df_s.iterrows():
+                brut = str(row.iloc[0]).strip()
+                if " | " in brut:
+                    cat, article = brut.split(" | ", 1)
+                else:
+                    cat, article = "✨ Autre", brut
+                
+                if cat not in liste_groupee:
+                    liste_groupee[cat] = []
+                liste_groupee[cat].append({"art": article, "idx": idx, "brut": brut})
+
+            # --- AFFICHAGE ---
             if is_admin:
                 st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion de la liste :</p>", unsafe_allow_html=True)
-                
-                # Formulaire pour les cases à cocher
                 with st.form("shop_management_form", border=False):
                     to_del = []
-                    for idx, row in df_s.iterrows():
-                        art = str(row.iloc[0]).strip()
-                        if art:
+                    # On affiche par catégorie même en admin
+                    for cat in sorted(liste_groupee.keys()):
+                        st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+                        for item in liste_groupee[cat]:
                             col_check, col_text = st.columns([0.1, 0.9])
-                            if col_check.checkbox("", key=f"del_check_{idx}"):
-                                to_del.append(art)
-                            col_text.markdown(f"<span style='color:white; font-size:17px;'>{art}</span>", unsafe_allow_html=True)
+                            if col_check.checkbox("", key=f"del_check_{item['idx']}"):
+                                to_del.append(item['brut']) # On supprime le texte brut exact
+                            col_text.markdown(f"<span style='color:white; font-size:17px;'>{item['art']}</span>", unsafe_allow_html=True)
                     
-                    st.write("") # Petit espace
-                    # BOUTON 1 : RETIRER LA SÉLECTION
+                    st.write("")
                     submit_del = st.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
                 
                 if submit_del:
@@ -1155,28 +1166,32 @@ elif st.session_state.page == "shop":
                     else:
                         st.warning("Veuillez cocher au moins un article.")
 
-                # BOUTON 2 : VIDER TOUT (En dehors du form pour être direct)
                 if st.button("🧨 Vider toute la liste", use_container_width=True):
                     if send_action({"action": "clear_shop"}):
                         st.cache_data.clear()
                         st.rerun()
             
-            # --- BLOC CONSULTATION : LES CARTES MODERNES ---
             else:
-                st.info("📖 Mode Consultation - Prêt pour le magasin !")
-                for idx, row in df_s.iterrows():
-                    art = str(row.iloc[0]).strip()
-                    if art:
-                        st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
+                # MODE CONSULTATION
+                st.info("📖 Prêt pour le magasin !")
+                for cat in sorted(liste_groupee.keys()):
+                    st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+                    for item in liste_groupee[cat]:
+                        st.markdown(f'<div class="shop-card"><b>❑ {item["art"]}</b></div>', unsafe_allow_html=True)
 
             # --- BOUTON COPIER POUR KEEP ---
             st.divider()
-            items_list = [str(row.iloc[0]).strip() for idx, row in df_s.iterrows() if str(row.iloc[0]).strip()]
-            txt_keep = "\\n".join(items_list)
+            # Nettoyage pour Keep : On ne garde que l'article sans la catégorie
+            items_clean = []
+            for idx, row in df_s.iterrows():
+                b = str(row.iloc[0]).strip()
+                items_clean.append(b.split(" | ")[1] if " | " in b else b)
+            
+            txt_keep = "\\n".join(items_clean)
             js_txt = json.dumps(txt_keep)
             st.components.v1.html(f"""
                 <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50; font-family:sans-serif;">🟡 COPIER TOUT POUR GOOGLE KEEP</button>
-                <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée avec succès !"); }}</script>
+                <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée !"); }}</script>
             """, height=60)
             
         else:
@@ -1546,6 +1561,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
