@@ -1045,11 +1045,11 @@ elif st.session_state.page == "shop":
             /* 1. Voile de clarté */
             background: linear-gradient(rgba(14,17,23,0.4), rgba(14,17,23,0.6)), url("{url_header}");
             
-            /* 2. TAILLE : On reste sur 80% */
+            /* 2. TAILLE : On garde 80% */
             background-size: 80% !important; 
             
-            /* 3. POSITION : 65% (vers la droite) et 80px (du haut) */
-            background-position: 65% 80px !important; 
+            /* 3. POSITION : 65% (vers la droite) et 200px (du haut pour les 5 cm) */
+            background-position: 65% 200px !important; 
             
             background-repeat: no-repeat; 
             background-attachment: fixed;
@@ -1566,6 +1566,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
