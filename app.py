@@ -708,60 +708,61 @@ elif st.session_state.page == "details":
         
         st.write("") 
         
-       # --- BLOC ADMIN : ÉDITION DES CATÉGORIES ---
-       if is_admin:
-            st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
+    # --- BLOC ADMIN : ÉDITION DES CATÉGORIES ---
+    if is_admin:
+        st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
+        
+        with st.form("shop_management_form", border=False):
+            to_del = []
+            updates = [] # Pour stocker les changements de catégories
+            
+            rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
+
+            for cat in sorted(liste_groupee.keys()):
+                st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
                 
-            with st.form("shop_management_form", border=False):
-                to_del = []
-                updates = [] # Pour stocker les changements de catégories
+                for item in liste_groupee[cat]:
+                    col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
                     
-                rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
+                    # 1. Case pour supprimer
+                    if col_check.checkbox("", key=f"del_{item['idx']}"):
+                        to_del.append(item['brut'])
+                    
+                    # 2. Nom de l'article
+                    col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
+                    
+                    # 3. Menu pour changer de catégorie en direct !
+                    # On définit l'index actuel pour que le menu affiche la bonne catégorie
+                    current_idx = rayons_full.index(cat) if cat in rayons_full else 0
+                    new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
+                    
+                    # Si l'utilisateur change la catégorie, on prépare la mise à jour
+                    if new_cat != cat:
+                        updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
 
-                for cat in sorted(liste_groupee.keys()):
-                    st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+            st.write("")
+            c1, c2 = st.columns(2)
+            submit_del = c1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
+            submit_upd = c2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
+        
+        # Logique pour supprimer
+        if submit_del and to_del:
+            if send_action({"action": "remove_shop", "articles": to_del}):
+                st.cache_data.clear(); st.rerun()
+        
+        # Logique pour mettre à jour les catégories
+        if submit_upd and updates:
+            with st.spinner("Mise à jour..."):
+                for up in updates:
+                    # On supprime l'ancien format et on ajoute le nouveau
+                    send_action({"action": "remove_shop", "articles": [up['old']]})
+                    send_action({"action": "add_shop", "article": up['new']})
+                st.cache_data.clear(); st.rerun()
+
+        if st.button("🧨 Vider toute la liste", use_container_width=True):
+            if send_action({"action": "clear_shop"}):
+                st.cache_data.clear(); st.rerun()
                         
-                    for item in liste_groupee[cat]:
-                        col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
-                            
-                        # 1. Case pour supprimer
-                        if col_check.checkbox("", key=f"del_{item['idx']}"):
-                            to_del.append(item['brut'])
-                            
-                        # 2. Nom de l'article
-                        col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
-                            
-                        # 3. Menu pour changer de catégorie en direct !
-                        # On définit l'index actuel pour que le menu affiche la bonne catégorie
-                        current_idx = rayons_full.index(cat) if cat in rayons_full else 0
-                        new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
-                            
-                        # Si l'utilisateur change la catégorie, on prépare la mise à jour
-                        if new_cat != cat:
-                            updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
-
-                    st.write("")
-                    c1, c2 = st.columns(2)
-                    submit_del = c1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
-                    submit_upd = c2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
-                
-                # Logique pour supprimer
-                if submit_del and to_del:
-                    if send_action({"action": "remove_shop", "articles": to_del}):
-                        st.cache_data.clear(); st.rerun()
-                
-                # Logique pour mettre à jour les catégories
-                if submit_upd and updates:
-                    with st.spinner("Mise à jour..."):
-                        for up in updates:
-                            # On supprime l'ancien format et on ajoute le nouveau
-                            send_action({"action": "remove_shop", "articles": [up['old']]})
-                            send_action({"action": "add_shop", "article": up['new']})
-                        st.cache_data.clear(); st.rerun()
-
-                if st.button("🧨 Vider toute la liste", use_container_width=True):
-                    if send_action({"action": "clear_shop"}):
-                        st.cache_data.clear(); st.rerun()
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
@@ -1601,6 +1602,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
