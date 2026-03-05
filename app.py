@@ -1055,62 +1055,81 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # --- STYLE FILIGRANE & CARTES SOMBRES ---
+    # --- DESIGN MIDNIGHT CINEMA (FILIGRANE & CARTES SOMBRES) ---
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
         <style>
-        /* 1. FORCE L'IMAGE EN FOND SUR TOUTE L'APPLI */
+        /* 1. FOND D'ÉCRAN GLOBAL AVEC IMAGE EN FILIGRANE DISCRET */
         [data-testid="stAppViewContainer"] {{
-            background-image: linear-gradient(rgba(14, 17, 23, 0.7), rgba(14, 17, 23, 0.7)), 
+            background-color: #0e1117;
+            background-image: linear-gradient(rgba(14, 17, 23, 0.92), rgba(14, 17, 23, 0.92)), 
                               url("{url_header}");
             background-repeat: no-repeat;
             background-attachment: fixed;
-            background-position: center 15%; /* Positionne l'image en haut */
-            background-size: 250px; /* Taille discrète */
+            background-position: center 10%; 
+            background-size: 200px;
         }}
 
-        /* Rend le fond principal transparent pour voir l'image derrière */
         [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{
             background: transparent;
         }}
 
-        /* 2. CARTES "GLASS MORPHISM" (Moins bright, plus chic) */
+        /* 2. STYLE DES CARTES (SOMBRE ET CHIC) */
         .shop-card {{
-            background-color: rgba(255, 255, 255, 0.1); /* Fond sombre transparent */
-            padding: 15px;
+            background-color: #1e222d; /* Gris anthracite profond */
+            padding: 18px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Bordure fine */
-            border-left: 5px solid #e67e22; /* Ton orange */
-            margin-bottom: 10px;
-            color: white; /* Texte en blanc pour être lisible */
-            backdrop-filter: blur(5px); /* Effet flou derrière la carte */
-            font-size: 17px;
+            border: 1px solid #2d323e; 
+            border-left: 5px solid #e67e22; /* Ton orange signature */
+            margin-bottom: 12px;
+            color: #e0e0e0; /* Texte gris clair doux */
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }}
+        .shop-card:hover {{
+            transform: scale(1.01);
+            border-color: #e67e22;
         }}
 
-        .keep-container {{
-            background: transparent;
-            padding: 10px;
+        /* 3. TITRE AVEC EFFET NÉON SUBTIL */
+        .neon-title {{
+            color: #e67e22;
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(230, 126, 34, 0.3);
+            margin-bottom: 20px;
         }}
 
-        /* Ajustement des textes hors cartes */
-        h2, h3, h5, p {{
+        /* Harmonisation des inputs et boutons */
+        .stTextInput>div>div>input {{
+            background-color: #1e222d !important;
             color: white !important;
+            border: 1px solid #2d323e !important;
         }}
+        
+        .keep-container {{ background: transparent; padding: 5px; }}
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. CONTENEUR
+    # 2. CONTENEUR PRINCIPAL
     st.markdown('<div class="keep-container">', unsafe_allow_html=True)
     
-    # Navigation & Titre
-    c_titre, c_back = st.columns([0.8, 0.2])
-    c_titre.markdown("<h2 style='margin:0; color: #e67e22;'>🛒 Liste d'Épicerie</h2>", unsafe_allow_html=True)
-    if c_back.button("⬅️"):
-        st.session_state.page = "home"
-        st.rerun()
+    # Header & Retour
+    c_titre, c_back = st.columns([0.85, 0.15])
+    with c_titre:
+        st.markdown('<div class="neon-title">🛒 Liste d\'Épicerie</div>', unsafe_allow_html=True)
+    with c_back:
+        if st.button("⬅️", help="Retour au menu"):
+            st.session_state.page = "home"
+            st.rerun()
 
     st.divider()
+
+    # --- RESTE DU CODE (AJOUT & AFFICHAGE) ---
+    # Ici tu gardes ta logique d'affichage, mais remplace l'HTML des cartes par :
+    # st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
     # --- SECTION : AJOUT RAPIDE (Vérifié : tout y est) ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
@@ -1576,6 +1595,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
