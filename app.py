@@ -1122,23 +1122,26 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (COPIE SEULEMENT) ---
+    # --- OPTION DE PARTAGE (COPIE DIRECTE) ---
     try:
         import time
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
+            # On génère la liste simplement
             items = [f"☐ {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
             texte_final = "🛒 MA LISTE D'ÉPICERIE :\n\n" + "\n".join(items)
 
             st.write("📋 **Actions :**")
-            if st.button("📋 Copier", use_container_width=True, type="primary"):
-                st.copy_to_clipboard(texte_final)
-                st.toast("✅ Liste copiée !", icon="📝")
             
-            st.caption("💡 *Cliquez puis allez 'Coller' dans Keep.*")
+            # On utilise st.code car il possède un bouton "Copier" natif 
+            # qui contourne les blocages de sécurité des navigateurs.
+            st.code(texte_final, language=None)
+            
+            st.caption("💡 Cliquez sur l'icône de copie en haut à droite du cadre noir.")
             st.markdown("<br>", unsafe_allow_html=True)
-    except Exception as e: # On utilise une exception nommée, c'est plus propre
+            
+    except Exception as e:
         pass
 
     # --- LOGIQUE DE LECTURE ET AFFICHAGE (Le bloc qui suit dans ton app) ---
@@ -1553,6 +1556,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
