@@ -1046,46 +1046,29 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTIONS DE PARTAGE (COPIER / SMS) ---
+    # --- OPTION DE PARTAGE (COPIE SEULEMENT) ---
     try:
         import time
-        # On charge les données pour créer le texte
+        # On lit la liste pour préparer le texte
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # 1. Préparation des textes
-            items = [f"- {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
-            
-            # Texte propre pour le bouton "Copier"
-            texte_a_copier = "🛒 MA LISTE D'ÉPICERIE :\n" + "\n".join(items)
-            
-            # Texte encodé pour le lien SMS
-            liste_url = "%0A".join(items)
-            message_url = f"🛒 *MA LISTE D'ÉPICERIE* :%0A{liste_url}"
+            # On prépare le texte avec des petits carrés pour simuler des cases Keep
+            items = [f"☐ {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
+            texte_final = "🛒 MA LISTE D'ÉPICERIE :\n\n" + "\n".join(items)
 
-            st.write("📲 **Partager la liste :**")
-            col_c1, col_c2 = st.columns(2)
-
-            # --- BOUTON COPIER (Le plus fiable) ---
-            with col_c1:
-                if st.button("📋 Copier la liste", use_container_width=True):
-                    # Cette fonction est native à Streamlit (très puissante)
-                    st.copy_to_clipboard(texte_a_copier)
-                    st.toast("✅ Liste copiée !")
-
-            # --- BOUTON SMS (Lien direct simplifié) ---
-            with col_c2:
-                # Format ultra-simplifié pour éviter l'erreur "Site inaccessible"
-                sms_link = f"sms:?body={message_url}"
-                st.markdown(f'''
-                    <a href="{sms_link}" style="text-decoration:none;">
-                        <div style="background-color:#007AFF; color:white; padding:8px; border-radius:10px; text-align:center; font-weight:bold; font-size:14px; line-height:1.6;">
-                            🔵 Ouvrir SMS
-                        </div>
-                    </a>
-                ''', unsafe_allow_html=True)
+            st.write("📋 **Actions :**")
             
+            # Un seul gros bouton large, coloré et fiable
+            if st.button("📋 Copier pour Google Keep", use_container_width=True, type="primary"):
+                st.copy_to_clipboard(texte_final)
+                st.toast("✅ Liste copiée ! Prête à être collée.", icon="📝")
+            
+            st.caption("💡 *Cliquez puis allez 'Coller' dans une note Google Keep.*")
             st.markdown("<br>", unsafe_allow_html=True)
+    except:
+        # Si le fichier est inaccessible temporairement, on ne bloque pas l'app
+        pass
     except:
         pass
 
@@ -1500,6 +1483,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
