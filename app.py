@@ -1122,28 +1122,35 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (COPIE DIRECTE) ---
+    # --- OPTION DE PARTAGE (NETTOYAGE ET COPIE) ---
     try:
         import time
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # On génère la liste simplement
             items = [f"☐ {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
-            texte_final = "🛒 MA LISTE D'ÉPICERIE :\n\n" + "\n".join(items)
+            texte_final = "🛒 MA LISTE D'ÉPICERIE :\\n\\n" + "\\n".join(items)
 
-            st.write("📋 **Actions :**")
+            st.markdown("### 📋 Actions")
             
-            # On utilise st.code car il possède un bouton "Copier" natif 
-            # qui contourne les blocages de sécurité des navigateurs.
-            st.code(texte_final, language=None)
+            # --- LE BOUTON COPIER MAGIQUE ---
+            # Ce code crée un bouton qui communique DIRECTEMENT avec le presse-papier
+            copy_button_html = f"""
+                <button onclick="navigator.clipboard.writeText(`{texte_final}`)" 
+                style="width: 100%; background-color: #e67e22; color: white; border: none; 
+                padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                    📋 CLIQUER ICI POUR COPIER LA LISTE
+                </button>
+            """
+            st.components.v1.html(copy_button_html, height=50)
             
-            st.caption("💡 Cliquez sur l'icône de copie en haut à droite du cadre noir.")
-            st.markdown("<br>", unsafe_allow_html=True)
-            
+            st.caption("💡 Une fois cliqué, allez simplement 'Coller' dans Keep.")
+            st.divider() # Sépare bien la copie de la gestion
+
     except Exception as e:
         pass
 
+   
     # --- LOGIQUE DE LECTURE ET AFFICHAGE (Le bloc qui suit dans ton app) ---
     
     try:
@@ -1556,6 +1563,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
