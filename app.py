@@ -1056,7 +1056,7 @@ elif st.session_state.page == "shop":
             texte_final = "🛒 MA LISTE D'ÉPICERIE :\n\n" + "\n".join(items)
 
             st.write("📋 **Actions :**")
-            if st.button("📋 Copier pour Google Keep", use_container_width=True, type="primary"):
+            if st.button("📋 Copier", use_container_width=True, type="primary"):
                 st.copy_to_clipboard(texte_final)
                 st.toast("✅ Liste copiée !", icon="📝")
             
@@ -1477,6 +1477,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
