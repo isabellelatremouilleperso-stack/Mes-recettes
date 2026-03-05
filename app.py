@@ -978,7 +978,6 @@ elif st.session_state.page == "edit":
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
 # --- PAGE ÉPICERIE (SÉCURISÉE) ---
-# --- PAGE ÉPICERIE (SÉCURISÉE) ---
 elif st.session_state.page == "shop":
     st.markdown('<h1 style="color: #e67e22;">🛒 Ma Liste d\'épicerie</h1>', unsafe_allow_html=True)
     
@@ -992,17 +991,22 @@ elif st.session_state.page == "shop":
     # --- NOUVEAU : SECTION AJOUT MANUEL ---
     st.markdown("### ➕ Ajouter un article")
     c_input, c_add = st.columns([3, 1])
-    # Le texte saisi manuellement
+
+    # On lie le champ de texte à une clé spécifique
     new_article = c_input.text_input("Ex: Lait, Pain...", label_visibility="collapsed", key="add_manual_shop")
     
     if c_add.button("Ajouter", use_container_width=True):
         if new_article:
             with st.spinner("Ajout en cours..."):
-                # Envoi vers Google Sheets (Action "add_shop")
+                # Envoi vers Google Sheets
                 if send_action({"action": "add_shop", "article": new_article.strip()}):
                     st.toast(f"✅ {new_article} ajouté !")
+                    
+                    # ASTUCE : On vide le texte dans le session_state AVANT le rerun
+                    st.session_state["add_manual_shop"] = ""
+                    
                     st.cache_data.clear()
-                    st.rerun()
+                    st.rerun() # Le rerun va maintenant afficher la case vide
                 else:
                     st.error("Erreur lors de l'ajout au Sheets.")
         else:
@@ -1427,6 +1431,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
