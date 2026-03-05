@@ -532,33 +532,31 @@ elif st.session_state.page == "details":
     
     # --- CORPS DE LA PAGE (IMAGE ET INFOS) ---
     col_g, col_d = st.columns([1, 1.2])
-    # --- SECTION BOUTONS D'INTERACTION (CORRIGÉE) ---
-    c_feat1, c_feat2 = st.columns(2)
+    # --- SECTION BOUTONS D'INTERACTION ---
+    c_feat1, c_feat2 = st.columns(2) # On définit c_feat1 et c_feat2
     
     with c_feat1:
-        # On utilise une clé unique avec préfixe "det_" pour éviter les doublons
         if st.button("👨‍🍳 Cuisinée !", use_container_width=True, key=f"det_made_{current_title}"):
             st.balloons()
             st.toast("Félicitations ! Un vrai chef ! 👨‍🍳", icon="🔥")
 
-    with col_feat2:
-        # Initialisation de la liste des favoris dans la session si absente
+    with c_feat2: # On utilise bien c_feat2 ici aussi
         if 'fav_list' not in st.session_state:
             st.session_state.fav_list = set()
         
         is_fav = current_title in st.session_state.fav_list
         
-        # Le bouton change de style et de couleur si la recette est préférée
         if is_fav:
-            if st.button("⭐ Recette préférée", type="primary", use_container_width=True, key=f"det_fav_on_{current_title}"):
+            if st.button("⭐ Préférée", type="primary", use_container_width=True, key=f"det_fav_on_{current_title}"):
                 st.session_state.fav_list.remove(current_title)
                 st.rerun()
         else:
-            if st.button("☆ Marquer en préférée", use_container_width=True, key=f"det_fav_off_{current_title}"):
+            if st.button("☆ Favoris", use_container_width=True, key=f"det_fav_off_{current_title}"):
                 st.session_state.fav_list.add(current_title)
-                st.toast("Ajouté à vos coups de cœur !", icon="💖")
+                st.toast("Ajouté aux coups de cœur ! 💖")
                 st.rerun()
-    st.write("") # Espace de respiration sous les boutons
+    st.write("")
+    
     with col_g:
         # 1. Gestion de l'image (Inchangée, mais sécurisée)
         img_url = r.get('Image', '')
@@ -1537,6 +1535,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
