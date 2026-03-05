@@ -482,25 +482,25 @@ if st.session_state.page == "home":
 # --- PAGE DÉTAILS ---
 elif st.session_state.page == "details":
     
-    # 1. RÉCUPÉRATION ET NETTOYAGE
-    r_raw = st.session_state.get('recipe_data', {})
-    
-    if not r_raw:
-        st.error("Aucune donnée trouvée.")
-        if st.button("⬅ Retour"):
-            st.session_state.page = "home"; st.rerun()
-        st.stop()
+    try: # <--- INDISPENSABLE pour que le "except" à la fin fonctionne
+        # 1. RÉCUPÉRATION ET NETTOYAGE
+        r_raw = st.session_state.get('recipe_data', {})
+        
+        if not r_raw:
+            st.error("Aucune donnée trouvée.")
+            if st.button("⬅ Retour"):
+                st.session_state.page = "home"; st.rerun()
+            st.stop()
 
-    if isinstance(r_raw, pd.DataFrame):
-        r = r_raw.iloc[0].to_dict()
-    elif isinstance(r_raw, list) and len(r_raw) > 0:
-        r = r_raw[0]
-    else:
-        r = r_raw
+        if isinstance(r_raw, pd.DataFrame):
+            r = r_raw.iloc[0].to_dict()
+        elif isinstance(r_raw, list) and len(r_raw) > 0:
+            r = r_raw[0]
+        else:
+            r = r_raw
 
-    current_title = r.get('Titre', 'Recette sans titre')
-    is_admin = st.session_state.get('admin_mode', False)
-
+        current_title = r.get('Titre', 'Recette sans titre')
+        is_admin = st.session_state.get('admin_mode', False)
     # --- BARRE DE NAVIGATION ---
     if is_admin:
         c_nav1, c_nav2, c_nav3, c_nav4 = st.columns([1, 1, 1, 1])
@@ -1563,6 +1563,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
