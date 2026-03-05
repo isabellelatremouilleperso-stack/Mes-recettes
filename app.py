@@ -574,17 +574,19 @@ elif st.session_state.page == "details":
                 else:
                     st.session_state.made_list.add(current_title)
                     
-                    # --- OPTION 1 : LES BALLONS (Classique et festif) ---
-                    st.balloons() 
+                    # --- EFFET PROFESSIONNEL : Barre de validation ---
+                    barre_succes = st.progress(0)
+                    for pourcentage in range(100):
+                        import time
+                        time.sleep(0.005) # Animation très rapide
+                        barre_succes.progress(pourcentage + 1)
                     
-                    # --- OPTION 2 : MULTIPLES TOASTS (Effet pluie de messages) ---
-                    msg_aleatoire = random.choice(mots_bravo)
-                    st.toast(msg_aleatoire, icon="🎉")
+                    # Message élégant sans emojis partout
+                    st.success(f"Recette marquée comme faite ! {random.choice(mots_bravo)}")
                     
-                    # Petit bonus : un deuxième toast avec des emojis gourmands
-                    st.toast("🍕 👨‍🍳 🥘 🍰 ✨", icon="😋")
-                    
-                    # Rappel : Pas de st.rerun() ici sinon l'animation se coupe !
+                    # On nettoie la barre après 2 secondes
+                    time.sleep(1)
+                    barre_succes.empty()
                     
         with c_feat2:
             if 'fav_list' not in st.session_state:
@@ -1536,6 +1538,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
