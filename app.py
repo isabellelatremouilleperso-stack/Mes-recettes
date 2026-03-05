@@ -1053,9 +1053,9 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (VERSION INTÉGRALE RÉPARÉE) ---
+# --- PAGE ÉPICERIE (RETOUR DU MODE ADMIN COMPLET) ---
 elif st.session_state.page == "shop":
-    # 1. STYLE CSS : Filigrane 50% & Cartes Sombre
+    # 1. DESIGN : Filigrane 50% & Cartes Sombre
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
     st.markdown(f"""
         <style>
@@ -1078,7 +1078,7 @@ elif st.session_state.page == "shop":
     with c_titre:
         st.markdown('<div class="neon-title">🛒 Liste d\'Épicerie</div>', unsafe_allow_html=True)
     with c_back:
-        if st.button("⬅️"):
+        if st.button("⬅️", key="back_btn"):
             st.session_state.page = "home"
             st.rerun()
 
@@ -1089,7 +1089,7 @@ elif st.session_state.page == "shop":
         st.session_state.input_counter = 0
 
     c_in, c_add, c_reset = st.columns([3, 0.8, 0.8])
-    new_art = c_in.text_input("Article", placeholder="Ex: Lait...", label_visibility="collapsed", key=f"add_{st.session_state.input_counter}")
+    new_art = c_in.text_input("Ajouter un article", placeholder="Ex: Lait...", label_visibility="collapsed", key=f"add_{st.session_state.input_counter}")
     
     if c_add.button("➕", use_container_width=True, type="primary"):
         if new_art:
@@ -1103,27 +1103,31 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- LOGIQUE D'AFFICHAGE (RÉCUPÉRÉE DE TON ANCIEN CODE) ---
+    # --- LOGIQUE DE LECTURE ET AFFICHAGE ---
     try:
         import time, json
+        # On vérifie si on est en mode admin
         is_admin = st.session_state.get('admin_mode', False)
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
-            # --- CAS 1 : MODE ADMIN (SUPPRESSION) ---
+            # --- BLOC ADMIN : C'EST ICI QUE TES BOUTONS ÉTAIENT PERDUS ---
             if is_admin:
-                st.markdown("<p style='color:#e67e22; font-weight:bold;'>🛠 Gestion de la liste :</p>", unsafe_allow_html=True)
-                with st.form("shop_form", border=False):
+                st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion de la liste :</p>", unsafe_allow_html=True)
+                
+                # Formulaire pour les cases à cocher
+                with st.form("shop_management_form", border=False):
                     to_del = []
                     for idx, row in df_s.iterrows():
                         art = str(row.iloc[0]).strip()
                         if art:
-                            col_c, col_t = st.columns([0.1, 0.9])
-                            if col_c.checkbox("", key=f"sh_{idx}"):
+                            col_check, col_text = st.columns([0.1, 0.9])
+                            if col_check.checkbox("", key=f"del_check_{idx}"):
                                 to_del.append(art)
-                            col_t.markdown(f"<span style='color:white;'>{art}</span>", unsafe_allow_html=True)
+                            col_text.markdown(f"<span style='color:white; font-size:17px;'>{art}</span>", unsafe_allow_html=True)
                     
-                    st.write("") # Espace
+                    st.write("") # Petit espace
+                    # BOUTON 1 : RETIRER LA SÉLECTION
                     submit_del = st.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
                 
                 if submit_del:
@@ -1132,15 +1136,15 @@ elif st.session_state.page == "shop":
                             st.cache_data.clear()
                             st.rerun()
                     else:
-                        st.warning("Cochez des articles !")
+                        st.warning("Veuillez cocher au moins un article.")
 
-                # LE BOUTON VIDER TOUT (Comme dans ton ancien code)
+                # BOUTON 2 : VIDER TOUT (En dehors du form pour être direct)
                 if st.button("🧨 Vider toute la liste", use_container_width=True):
                     if send_action({"action": "clear_shop"}):
                         st.cache_data.clear()
                         st.rerun()
             
-            # --- CAS 2 : MODE CONSULTATION (CARTES) ---
+            # --- BLOC CONSULTATION : LES CARTES MODERNES ---
             else:
                 st.info("📖 Mode Consultation - Prêt pour le magasin !")
                 for idx, row in df_s.iterrows():
@@ -1150,18 +1154,19 @@ elif st.session_state.page == "shop":
 
             # --- BOUTON COPIER POUR KEEP ---
             st.divider()
-            items_keep = [str(row.iloc[0]).strip() for idx, row in df_s.iterrows() if str(row.iloc[0]).strip()]
-            txt_k = "\\n".join(items_keep)
-            js_txt = json.dumps(txt_k)
+            items_list = [str(row.iloc[0]).strip() for idx, row in df_s.iterrows() if str(row.iloc[0]).strip()]
+            txt_keep = "\\n".join(items_list)
+            js_txt = json.dumps(txt_keep)
             st.components.v1.html(f"""
-                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">🟡 COPIER POUR GOOGLE KEEP</button>
-                <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Copié !"); }}</script>
+                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50; font-family:sans-serif;">🟡 COPIER TOUT POUR GOOGLE KEEP</button>
+                <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée avec succès !"); }}</script>
             """, height=60)
+            
         else:
             st.info("La liste est vide. ✨")
 
     except Exception as e:
-        st.error(f"Erreur : {e}")
+        st.error(f"Oups ! Erreur de chargement : {e}")
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1524,6 +1529,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
