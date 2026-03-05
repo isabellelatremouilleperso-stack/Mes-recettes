@@ -1168,84 +1168,83 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- 4. LOGIQUE D'AFFICHAGE, SUPPRESSION ET ÉDITION (VERSION COMPLÈTE) ---
+    # --- 4. LOGIQUE D'AFFICHAGE ---
     try:
         import time, json
-        # On lit le CSV avec un "nocache" pour forcer la mise à jour
+        # On s'assure que df_s est bien chargé juste avant
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
-        if not df_s.empty:
-            # Groupement par catégorie pour l'affichage
-            liste_groupee = {}
-            for idx, row in df_s.iterrows():
-                brut = str(row.iloc[0]).strip()
-                cat, art = brut.split(" | ", 1) if " | " in brut else ("✨ Autre", brut)
-                if cat not in liste_groupee: liste_groupee[cat] = []
-                liste_groupee[cat].append({"art": art, "idx": idx, "brut": brut})
+        # 1. PRÉPARATION DES DONNÉES
+        liste_groupee = {} 
+        for idx, row in df_s.iterrows():
+            brut = str(row.iloc[0]).strip()
+            cat, art = brut.split(" | ", 1) if " | " in brut else ("✨ Autre", brut)
+            if cat not in liste_groupee: 
+                liste_groupee[cat] = []
+            liste_groupee[cat].append({"art": art, "idx": idx, "brut": brut})
 
-            # FORMULAIRE POUR LES CASES & L'ÉDITION
+        # 2. AFFICHAGE SELON LE MODE
+        is_admin = st.session_state.get('admin_mode', False)
+
+        if is_admin:
             st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
             
-            with st.form("gestion_shop_editor", border=False):
+            with st.form("shop_management_form", border=False):
                 to_del = []
-                updates = [] # Pour stocker les changements de rayons
-                
+                updates = [] 
+                rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
+
                 for cat in sorted(liste_groupee.keys()):
                     st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
                     for item in liste_groupee[cat]:
-                        # ON CRÉE 3 COLONNES : [Supprimer | Nom Article | Changer Rayon]
-                        c1, c2, c3 = st.columns([0.1, 0.5, 0.4])
+                        col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
                         
-                        # 1. Case à cocher pour supprimer
-                        if c1.checkbox("", key=f"del_{item['idx']}"):
+                        if col_check.checkbox("", key=f"del_{item['idx']}"):
                             to_del.append(item['brut'])
                         
-                        # 2. Nom de l'article
-                        c2.markdown(f"<span style='color:white; font-size:16px;'>{item['art']}</span>", unsafe_allow_html=True)
+                        col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
                         
-                        # 3. Menu pour CHANGER la catégorie
-                        idx_cat = rayons.index(cat) if cat in rayons else 0
-                        nouvelle_cat = c3.selectbox(
-                            "Modifier", rayons, index=idx_cat, 
-                            key=f"edit_{item['idx']}", label_visibility="collapsed"
-                        )
+                        current_idx = rayons_full.index(cat) if cat in rayons_full else 0
+                        new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
                         
-                        if nouvelle_cat != cat:
-                            updates.append({"ancien": item['brut'], "nouveau": f"{nouvelle_cat} | {item['art']}"})
-                
+                        if new_cat != cat:
+                            updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
+
                 st.write("")
-                col_b1, col_b2 = st.columns(2)
-                submit_del = col_b1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
-                submit_upd = col_b2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
+                c1, c2 = st.columns(2)
+                submit_del = c1.form_submit_button("🗑 Retirer", use_container_width=True)
+                submit_upd = c2.form_submit_button("💾 Sauvegarder", use_container_width=True, type="primary")
             
-            # --- ACTIONS DU FORMULAIRE ---
+            # ACTIONS ADMIN
             if submit_del and to_del:
                 if send_action({"action": "remove_shop", "articles": to_del}):
                     st.cache_data.clear(); st.rerun()
             
             if submit_upd and updates:
-                with st.spinner("Mise à jour..."):
-                    for up in updates:
-                        send_action({"action": "remove_shop", "articles": [up['ancien']]})
-                        send_action({"action": "add_shop", "article": up['nouveau']})
-                    st.cache_data.clear(); st.rerun()
+                for up in updates:
+                    send_action({"action": "remove_shop", "articles": [up['old']]})
+                    send_action({"action": "add_shop", "article": up['new']})
+                st.cache_data.clear(); st.rerun()
 
-            # BOUTON VIDER TOUT (🧨)
             if st.button("🧨 Vider toute la liste", use_container_width=True):
                 if send_action({"action": "clear_shop"}):
                     st.cache_data.clear(); st.rerun()
-
-            # --- BOUTON COPIER POUR KEEP ---
-            st.divider()
-            items_k = [str(r.iloc[0]).split(" | ")[-1] for i, r in df_s.iterrows() if str(r.iloc[0]).strip()]
-            js_txt = json.dumps("\\n".join(items_k))
-            st.components.v1.html(f"""
-                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50; font-family:sans-serif;">🟡 COPIER POUR GOOGLE KEEP</button>
-                <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée !"); }}</script>
-            """, height=60)
-            
+        
         else:
-            st.info("La liste est vide. ✨")
+            # MODE CONSULTATION
+            for cat in sorted(liste_groupee.keys()):
+                st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+                for item in liste_groupee[cat]:
+                    st.markdown(f'<div class="shop-card"><b>❑ {item["art"]}</b></div>', unsafe_allow_html=True)
+
+        # 3. BOUTON COPIER POUR KEEP
+        st.divider()
+        items_k = [str(r.iloc[0]).split(" | ")[-1] for i, r in df_s.iterrows() if str(r.iloc[0]).strip()]
+        js_txt = json.dumps("\\n".join(items_k))
+        st.components.v1.html(f"""
+            <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50; font-family:sans-serif;">🟡 COPIER POUR GOOGLE KEEP</button>
+            <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée !"); }}</script>
+        """, height=60)
 
     except Exception as e:
         st.error(f"Erreur d'affichage : {e}")
@@ -1611,6 +1610,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
