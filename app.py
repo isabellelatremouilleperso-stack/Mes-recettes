@@ -988,29 +988,37 @@ elif st.session_state.page == "shop":
         st.session_state.page = "home"
         st.rerun()
 
-    # --- NOUVEAU : SECTION AJOUT MANUEL ---
+    # --- SECTION : AJOUT MANUEL ---
     st.markdown("### ➕ Ajouter un article")
-    c_input, c_add = st.columns([3, 1])
-
-    # On lie le champ de texte à une clé spécifique
-    new_article = c_input.text_input("Ex: Lait, Pain...", label_visibility="collapsed", key="add_manual_shop")
     
-    if c_add.button("Ajouter", use_container_width=True):
+    # On crée 3 colonnes : Texte (60%), Ajouter (20%), Annuler (20%)
+    c_input, c_add, c_cancel = st.columns([3, 1, 1])
+
+    # Le champ de texte
+    new_article = c_input.text_input(
+        "Ex: Lait, Pain...", 
+        label_visibility="collapsed", 
+        key="add_manual_shop"
+    )
+    
+    # BOUTON AJOUTER
+    if c_add.button("Ajouter", use_container_width=True, type="primary"):
         if new_article:
-            with st.spinner("Ajout en cours..."):
-                # Envoi vers Google Sheets
+            with st.spinner("Ajout..."):
                 if send_action({"action": "add_shop", "article": new_article.strip()}):
                     st.toast(f"✅ {new_article} ajouté !")
-                    
-                    # ASTUCE : On vide le texte dans le session_state AVANT le rerun
-                    st.session_state["add_manual_shop"] = ""
-                    
+                    st.session_state["add_manual_shop"] = "" # Vide la case
                     st.cache_data.clear()
-                    st.rerun() # Le rerun va maintenant afficher la case vide
+                    st.rerun()
                 else:
-                    st.error("Erreur lors de l'ajout au Sheets.")
+                    st.error("Erreur Sheets")
         else:
             st.warning("Écrivez quelque chose !")
+
+    # BOUTON ANNULER
+    if c_cancel.button("Annuler", use_container_width=True):
+        st.session_state["add_manual_shop"] = "" # Vide la case sans rien envoyer
+        st.rerun()
 
     st.divider()
 
@@ -1431,6 +1439,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
