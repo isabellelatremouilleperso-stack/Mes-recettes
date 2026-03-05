@@ -591,7 +591,34 @@ elif st.session_state.page == "details":
                     st.cache_data.clear(); st.rerun()
 
     with col_d:
-        # 3. Informations & Planning (Regroupés pour plus de clarté)
+        # --- 1. BOUTONS D'INTERACTION RAPIDE ---
+        c_feat1, c_feat2 = st.columns(2)
+        
+        with c_feat1:
+            # Bouton "Je l'ai faite"
+            if st.button("👨‍🍳 Cuisinée !", use_container_width=True, key=f"made_{current_title}"):
+                st.balloons()
+                st.toast("Félicitations Chef ! 🥘", icon="🔥")
+        
+        with c_feat2:
+            # Système de favoris (Étoile)
+            if 'fav_list' not in st.session_state:
+                st.session_state.fav_list = set()
+            
+            is_fav = current_title in st.session_state.fav_list
+            label_fav = "⭐ Préférée" if is_fav else "☆ Favoris"
+            # Le bouton devient rouge/orange (primary) s'il est coché
+            if st.button(label_fav, use_container_width=True, key=f"fav_{current_title}", type="primary" if is_fav else "secondary"):
+                if is_fav:
+                    st.session_state.fav_list.remove(current_title)
+                else:
+                    st.session_state.fav_list.add(current_title)
+                    st.toast("Ajouté aux coups de cœur ! 💖")
+                st.rerun()
+
+        st.write("") # Petit espacement visuel
+
+        # --- 2. INFORMATIONS GÉNÉRALES ---
         st.subheader("📋 Informations")
         c_i1, c_i2 = st.columns(2)
         with c_i1:
@@ -603,6 +630,7 @@ elif st.session_state.page == "details":
             else: 
                 st.markdown("**🌐 Source :**\n*Non spécifiée*")
         
+        # Planning mis dans un petit menu déroulant pour sauver de l'espace
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=False):
             u_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             date_p = st.date_input("Choisir une date", key=f"dt_{u_key}")
@@ -612,27 +640,33 @@ elif st.session_state.page == "details":
 
         st.divider()
         
-        # 4. Métriques (Ton code de nettoyage métrique est ici)
-        def clean_metrique(valeur):
-            v_str = str(valeur).strip().lower()
-            if v_str in ["nan", "none", "", "0", "0.0", "null", "-"]: return "-"
-            return str(valeur).split('.')[0]
+        # --- 3. MÉTRIQUES LARGES (Ne coupe plus le texte) ---
+        # On utilise du Markdown plutôt que st.metric pour laisser la place au texte long
+        m1, m2, m3 = st.columns([1.2, 1.2, 1]) # On donne plus de largeur aux colonnes de temps
+        
+        with m1:
+            val_prepa = r.get('Temps de préparation', '-')
+            st.markdown(f"**🕒 Préparation**\n\n{val_prepa}")
+            
+        with m2:
+            val_cuisson = r.get('Temps de cuisson', '-')
+            st.markdown(f"**🔥 Cuisson**\n\n{val_cuisson}")
+            
+        with m3:
+            val_port = r.get('Portions', '-')
+            st.markdown(f"**🍽️ Portions**\n\n{val_port}")
 
-        m1, m2, m3 = st.columns(3)
-        m1.metric("🕒 Prépa", f"{clean_metrique(r.get('Temps de préparation'))} min")
-        m2.metric("🔥 Cuisson", f"{clean_metrique(r.get('Temps de cuisson'))} min")
-        m3.metric("🍽️ Portions", clean_metrique(r.get('Portions')))
+        st.divider()
 
-        # 5. Vidéo (La partie ajoutée qui gère ton "Lien vidéo")
+        # --- 4. VIDÉO TUTORIEL ---
         v_link = r.get('Lien vidéo') or r.get('video') or r.get('Vidéo') or ""
         v_link_str = str(v_link).strip()
         if v_link_str.lower().startswith("http"):
-            st.write("") 
             if any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"]):
                 with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=False):
                     st.video(v_link_str)
             else:
-                st.link_button("▶️ Regarder la vidéo de la recette", v_link_str, use_container_width=True, type="primary")
+                st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
     # --- SECTION INGRÉDIENTS (DEUX COLONNES SOUS LA PHOTO) ---
     st.divider()
@@ -1504,6 +1538,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
