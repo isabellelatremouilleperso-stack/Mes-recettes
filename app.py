@@ -708,92 +708,78 @@ elif st.session_state.page == "details":
         
         st.write("")
     
-    # --- PRÉPARATION DES DONNÉES (À mettre AVANT le if is_admin) ---
+    # --- 1. PRÉPARATION DES DONNÉES ---
         liste_groupee = {} 
         for idx, row in df_s.iterrows():
             brut = str(row.iloc[0]).strip()
-            if " | " in brut:
-                cat, art = brut.split(" | ", 1)
-            else:
-                cat, art = "✨ Autre", brut
-            
+            cat, art = brut.split(" | ", 1) if " | " in brut else ("✨ Autre", brut)
             if cat not in liste_groupee: 
                 liste_groupee[cat] = []
             liste_groupee[cat].append({"art": art, "idx": idx, "brut": brut})
 
-        # --- MAINTENANT TON BLOC ADMIN PEUT COMMENCER ---
+        # --- 2. BLOC ADMIN : ÉDITION DES CATÉGORIES ---
         if is_admin:
             st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
-            # ... la suite de ton code avec le formulaire ...   
             
-        with st.form("shop_management_form", border=False):
-            to_del = []
-            updates = [] # Pour stocker les changements de catégories
+            with st.form("shop_management_form", border=False):
+                to_del = []
+                updates = [] 
+                rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
+
+                for cat in sorted(liste_groupee.keys()):
+                    st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+                    for item in liste_groupee[cat]:
+                        col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
+                        
+                        if col_check.checkbox("", key=f"del_{item['idx']}"):
+                            to_del.append(item['brut'])
+                        
+                        col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
+                        
+                        current_idx = rayons_full.index(cat) if cat in rayons_full else 0
+                        new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
+                        
+                        if new_cat != cat:
+                            updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
+
+                st.write("")
+                c1, c2 = st.columns(2)
+                submit_del = c1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
+                submit_upd = c2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
             
-            rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
-
-            for cat in sorted(liste_groupee.keys()):
-                st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
-                
-                for item in liste_groupee[cat]:
-                    col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
-                    
-                    # 1. Case pour supprimer
-                    if col_check.checkbox("", key=f"del_{item['idx']}"):
-                        to_del.append(item['brut'])
-                    
-                    # 2. Nom de l'article
-                    col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
-                    
-                    # 3. Menu pour changer de catégorie en direct !
-                    # On définit l'index actuel pour que le menu affiche la bonne catégorie
-                    current_idx = rayons_full.index(cat) if cat in rayons_full else 0
-                    new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
-                    
-                    # Si l'utilisateur change la catégorie, on prépare la mise à jour
-                    if new_cat != cat:
-                        updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
-
-            st.write("")
-            c1, c2 = st.columns(2)
-            submit_del = c1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
-            submit_upd = c2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
-        
-        # Logique pour supprimer
-        if submit_del and to_del:
-            if send_action({"action": "remove_shop", "articles": to_del}):
-                st.cache_data.clear(); st.rerun()
-        
-        # Logique pour mettre à jour les catégories
-        if submit_upd and updates:
-            with st.spinner("Mise à jour..."):
+            # --- LOGIQUE ACTIONS ---
+            if submit_del and to_del:
+                if send_action({"action": "remove_shop", "articles": to_del}):
+                    st.cache_data.clear(); st.rerun()
+            
+            if submit_upd and updates:
                 for up in updates:
-                    # On supprime l'ancien format et on ajoute le nouveau
                     send_action({"action": "remove_shop", "articles": [up['old']]})
                     send_action({"action": "add_shop", "article": up['new']})
                 st.cache_data.clear(); st.rerun()
 
-        if st.button("🧨 Vider toute la liste", use_container_width=True):
-            if send_action({"action": "clear_shop"}):
-                st.cache_data.clear(); st.rerun()
-                        
-    # --- PRÉPARATION (BAS DE PAGE) ---
-    st.divider()
-    st.subheader("👨‍🍳 Étapes de préparation")
-    prep = r.get('Préparation', '')
-    if prep:
-        st.write(prep)
-    else:
-        st.warning("Aucune étape enregistrée.")
+            if st.button("🧨 Vider toute la liste", use_container_width=True):
+                if send_action({"action": "clear_shop"}):
+                    st.cache_data.clear(); st.rerun()
+        
+        else:
+            # --- MODE CONSULTATION (HORS ADMIN) ---
+            for cat in sorted(liste_groupee.keys()):
+                st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
+                for item in liste_groupee[cat]:
+                    st.markdown(f'<div class="shop-card"><b>❑ {item["art"]}</b></div>', unsafe_allow_html=True)
 
-    # --- NOTES & COMMENTAIRES ---
-    st.divider()
-    st.markdown("### 📝 Mes Notes & Commentaires")
-    notes_texte = r.get('Commentaires', '')
-    if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
-        st.info(notes_texte)
-    else:
-        st.write("*Aucune note pour cette recette.*")
+        # --- 3. BOUTON COPIER POUR KEEP (FIN DE PAGE ÉPICERIE) ---
+        st.divider()
+        items_k = [str(r.iloc[0]).split(" | ")[-1] for i, r in df_s.iterrows() if str(r.iloc[0]).strip()]
+        js_txt = json.dumps("\\n".join(items_k))
+        st.components.v1.html(f"""
+            <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">🟡 COPIER POUR GOOGLE KEEP</button>
+            <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée !"); }}</script>
+        """, height=60)
+
+    except Exception as e:
+        st.error(f"Erreur d'affichage : {e}")
         
 elif st.session_state.page == "add":
     st.markdown('<h1 style="color: #e67e22;">📥 Ajouter une Nouvelle Recette</h1>', unsafe_allow_html=True)
@@ -1625,6 +1611,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
