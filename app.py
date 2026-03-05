@@ -574,42 +574,33 @@ elif st.session_state.page == "details":
                 else:
                     st.session_state.made_list.add(current_title)
                     
-                    # --- SCRIPT DE PLUIE D'ÉTOILES ---
-                    st.components.v1.html(
-                        """
-                        <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;">
-                            <script>
-                            function createStar() {
-                                const star = document.createElement('div');
-                                star.innerHTML = '⭐';
-                                star.style.position = 'fixed';
-                                star.style.left = Math.random() * 100 + 'vw';
-                                star.style.top = '-20px';
-                                star.style.fontSize = (Math.random() * 20 + 10) + 'px';
-                                star.style.transition = 'transform ' + (Math.random() * 3 + 2) + 's linear';
-                                document.body.appendChild(star);
-                                setTimeout(() => {
-                                    star.style.transform = 'translateY(110vh) rotate(360deg)';
-                                }, 10);
-                                setTimeout(() => { star.remove(); }, 5000);
-                            }
-                            for(let i=0; i<50; i++) { setTimeout(createStar, i * 100); }
-                            </script>
-                        </div>
-                        """,
-                        height=0,
-                    )
-
-                    # --- BARRE DE VALIDATION ---
+                    # 1. Barre de progression (Effet pro et visuel)
                     barre_succes = st.progress(0)
                     import time
                     for pourcentage in range(100):
                         time.sleep(0.005) 
                         barre_succes.progress(pourcentage + 1)
                     
-                    st.success(f"Bravo Chef ! {random.choice(mots_bravo)}")
+                    # 2. Message de réussite stylé (Le bandeau vert)
+                    st.success(f"Recette validée ! {random.choice(mots_bravo)}")
                     
-                    time.sleep(1.2) # On laisse le temps aux étoiles de tomber
+                    # 3. Notification Toast (Messages variés et punchy)
+                    messages_succes = [
+                        "Mission accomplie, Chef ! 🎖️",
+                        "Miam ! Une pépite de plus au palmarès ! 😋",
+                        "Validé par le jury (et ton estomac) ! ✅",
+                        "Hop ! C'est dans la boîte ! 🚀",
+                        "Tes papilles te disent merci ! 🍴"
+                    ]
+                    
+                    # On choisit un message au hasard dans la liste
+                    msg_toast = random.choice(messages_succes)
+                    st.toast(msg_toast, icon="✨")
+                    
+                    # 4. Petite pause pour savourer le succès
+                    time.sleep(1.0)
+                    
+                    # 5. On rafraîchit pour afficher le bouton "Testé"
                     st.rerun()
                     
         with c_feat2:
@@ -1562,6 +1553,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
