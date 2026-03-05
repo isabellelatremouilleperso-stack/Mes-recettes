@@ -1053,9 +1053,9 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
+# --- PAGE ÉPICERIE (INTÉGRALE AVEC DESIGN FILIGRANE & GESTION ADMIN) ---
 elif st.session_state.page == "shop":
-    # --- DESIGN FINAL : FILIGRANE AJUSTÉ (PLUS PETIT) ---
+    # 1. DESIGN FINAL : FILIGRANE AJUSTÉ (PLUS PETIT)
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
@@ -1065,8 +1065,8 @@ elif st.session_state.page == "shop":
             background: 
                 linear-gradient(rgba(14, 17, 23, 0.8), rgba(14, 17, 23, 0.9)), 
                 url("{url_header}");
-            background-size: 50%; /* On réduit l'image à 50% de la largeur au lieu de cover */
-            background-position: center 20%; /* Centrée horizontalement, un peu vers le haut */
+            background-size: 50%; 
+            background-position: center 20%; 
             background-repeat: no-repeat;
             background-attachment: fixed;
         }}
@@ -1085,7 +1085,7 @@ elif st.session_state.page == "shop":
             border-left: 5px solid #e67e22;
             margin-bottom: 12px;
             color: #ffffff;
-            backdrop-filter: blur(8px); /* Effet verre dépoli */
+            backdrop-filter: blur(8px); 
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }}
 
@@ -1095,10 +1095,16 @@ elif st.session_state.page == "shop":
             font-weight: bold;
             text-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
         }}
+        
+        /* Harmonisation du texte Admin sur fond sombre */
+        .admin-text {{
+            color: #ffffff;
+            font-weight: bold;
+        }}
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. CONTENEUR
+    # 2. CONTENEUR ET NAVIGATION
     st.markdown('<div class="keep-container" style="background:transparent;">', unsafe_allow_html=True)
     
     c_titre, c_back = st.columns([0.85, 0.15])
@@ -1110,14 +1116,12 @@ elif st.session_state.page == "shop":
             st.rerun()
 
     st.divider()
-    # --- RESTE DU CODE (AJOUT & AFFICHAGE) ---
-    # Ici tu gardes ta logique d'affichage, mais remplace l'HTML des cartes par :
-    # st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
+
     # --- SECTION : AJOUT RAPIDE (Vérifié : tout y est) ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
 
-    st.markdown("##### ➕ Ajouter un article")
+    st.markdown("<h5 style='color:white;'>➕ Ajouter un article</h5>", unsafe_allow_html=True)
     c_input, c_add, c_cancel = st.columns([3, 0.8, 0.8])
     
     new_article = c_input.text_input(
@@ -1156,14 +1160,15 @@ elif st.session_state.page == "shop":
                 # MODE ADMIN : Suppression avec cases à cocher
                 with st.form("shop_form", border=False):
                     to_del = []
-                    st.write("🛠 **Gestion (Cochez pour retirer) :**")
+                    st.markdown("<p style='color:white;'>🛠 <b>Gestion (Cochez pour retirer) :</b></p>", unsafe_allow_html=True)
                     for idx, row in df_s.iterrows():
                         art = str(row.iloc[0]).strip()
                         if art:
                             col_c, col_t = st.columns([0.15, 0.85])
+                            # Utilisation de la checkbox Streamlit standard
                             if col_c.checkbox("", key=f"sh_{idx}"):
                                 to_del.append(art)
-                            col_t.write(f"**{art}**")
+                            col_t.markdown(f"<span style='color:white;'>**{art}**</span>", unsafe_allow_html=True)
                     
                     st.markdown("---")
                     submit_del = st.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
@@ -1196,7 +1201,7 @@ elif st.session_state.page == "shop":
             js_txt = json.dumps(txt_final)
 
             st.components.v1.html(f"""
-                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">
+                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50; font-family:sans-serif;">
                     🟡 COPIER TOUT POUR GOOGLE KEEP
                 </button>
                 <script>
@@ -1204,7 +1209,7 @@ elif st.session_state.page == "shop":
                     const t = {js_txt}.replace(/\\\\n/g, '\\n');
                     const ta = document.createElement("textarea"); ta.value = t;
                     document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-                    document.body.removeChild(ta); alert("Liste copiée !");
+                    document.body.removeChild(ta); alert("Liste copiée ! Chaque article sera sur une ligne.");
                 }}
                 </script>
             """, height=60)
@@ -1215,7 +1220,7 @@ elif st.session_state.page == "shop":
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
 
-    st.markdown('</div>', unsafe_allow_html=True) # Fermeture de la carte Keep
+    st.markdown('</div>', unsafe_allow_html=True) # Fermeture du conteneur
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1578,6 +1583,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
