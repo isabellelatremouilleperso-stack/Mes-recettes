@@ -574,19 +574,25 @@ elif st.session_state.page == "details":
                 else:
                     st.session_state.made_list.add(current_title)
                     
-                    # --- EFFET PROFESSIONNEL : Barre de validation ---
+                    # --- L'ASTUCE POUR FAIRE TOMBER DES ÉTOILES ---
+                    # On utilise st.snow() mais on "triche" en changeant l'icône via un message toast
+                    # Pour un vrai effet de chute, on peut utiliser ce composant :
+                    st.snow() # Ceci fait tomber les flocons
+                    
+                    # On ajoute les étoiles dorées en superposition
+                    st.toast("✨ ⭐ ÉTOILES OBTENUES ! ⭐ ✨", icon="🌟")
+                    
+                    # --- BARRE DE VALIDATION ---
                     barre_succes = st.progress(0)
+                    import time
                     for pourcentage in range(100):
-                        import time
-                        time.sleep(0.005) # Animation très rapide
+                        time.sleep(0.005) 
                         barre_succes.progress(pourcentage + 1)
                     
-                    # Message élégant sans emojis partout
-                    st.success(f"Recette marquée comme faite ! {random.choice(mots_bravo)}")
+                    st.success(f"Bravo Chef ! {random.choice(mots_bravo)}")
                     
-                    # On nettoie la barre après 2 secondes
-                    time.sleep(1)
-                    barre_succes.empty()
+                    time.sleep(0.8)
+                    st.rerun()
                     
         with c_feat2:
             if 'fav_list' not in st.session_state:
@@ -1538,6 +1544,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
