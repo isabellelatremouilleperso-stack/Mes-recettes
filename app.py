@@ -1122,41 +1122,51 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (OPTIMISÉ POUR GOOGLE KEEP) ---
+    # --- OPTION DE PARTAGE (FORMATAGE LIGNE PAR LIGNE) ---
     try:
         import time
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            # On ne met PAS de symboles ☐ ici, pour que Keep puisse créer ses propres cases
+            # On récupère les articles et on s'assure qu'il n'y a aucun symbole devant
             items = [str(row.iloc[0]).strip() for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
             
-            # On sépare juste par des retours à la ligne
-            texte_pour_keep = "\\n".join(items)
+            # On crée une chaîne avec des retours à la ligne très clairs
+            # On utilise join avec \n (un seul slash ici pour le script JS plus bas)
+            texte_final = "\n".join(items)
 
             st.markdown("### 📋 Préparer pour Google Keep")
             
-            # Ce bouton copie la liste "propre"
+            # Le bouton utilise un template de texte (backticks) pour respecter les retours à la ligne
             copy_html = f"""
-                <div id="copy-area" style="text-align:center;">
+                <div id="copy-area">
                     <button onclick="copyToClipboard()" 
                     style="width: 100%; background-color: #f1c40f; color: #2c3e50; border: none; 
-                    padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        🟡 COPIER POUR GOOGLE KEEP
+                    padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer;">
+                        🟡 COPIER LA LISTE (LIGNE PAR LIGNE)
                     </button>
                 </div>
                 <script>
                 function copyToClipboard() {{
-                    const text = `{texte_pour_keep}`;
-                    navigator.clipboard.writeText(text).then(() => {{
-                        alert("Liste copiée ! Allez dans Keep, créez une note et faites 'Coller'.");
-                    }});
+                    // On utilise JSON.stringify pour injecter le texte avec ses sauts de ligne proprement
+                    const text = {repr(texte_final)}; 
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {{
+                        document.execCommand('copy');
+                        alert("Copié ! Dans Keep, créez une note et faites 'Coller'.");
+                    }} catch (err) {{
+                        console.error('Erreur de copie', err);
+                    }}
+                    document.body.removeChild(textArea);
                 }}
                 </script>
             """
             st.components.v1.html(copy_html, height=70)
             
-            st.info("💡 **Astuce Keep :** Une fois collé, cliquez sur le '+' en bas à gauche de votre note Keep et choisissez 'Cases à cocher'.")
+            st.info("💡 **Dans Keep :** Une fois collé, cliquez sur le '+' puis 'Cases à cocher'.")
             st.divider()
 
     except Exception as e:
@@ -1574,6 +1584,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
