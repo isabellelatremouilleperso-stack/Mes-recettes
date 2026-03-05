@@ -708,22 +708,42 @@ elif st.session_state.page == "details":
         
         st.write("") 
         
-        # --- RÉTABLISSEMENT DU BOUTON ÉPICERIE ---
+       # --- RÉTABLISSEMENT DU BOUTON ÉPICERIE AVEC AUTO-DÉTECTION ---
         if sel:
             if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel", type="primary"):
                 with st.spinner("Envoi à l'épicerie..."):
+                    
+                    # 1. LE PETIT CERVEAU (Dictionnaire de détection)
+                    dictionnaire_rayons = {
+                        "🍎 Fruits & Légumes": ["pomme", "banane", "salade", "tomate", "oignon", "carotte", "poivron", "pomme de terre", "raisin", "échalote", "ail", "citron"],
+                        "🥛 Produits laitiers": ["lait", "fromage", "beurre", "yaourt", "crème", "creme", "oeuf", "œuf", "parmesan"],
+                        "🥩 Viandes & Poissons": ["poulet", "boeuf", "bœuf", "porc", "saumon", "jambon", "steak", "poisson", "pétoncle", "crevette"],
+                        "🍞 Boulangerie": ["pain", "baguette", "croissant", "brioche"],
+                        "🧊 Surgelés": ["pizza", "glace", "frites"],
+                        "🥫 Épicerie": ["pâte", "pate", "riz", "sel", "poivre", "sucre", "café", "cafe", "thé", "conserve", "huile", "vin", "sauce"],
+                        "🧼 Entretien": ["savon", "papier", "toilette", "lessive"],
+                        "🐾 Animaux": ["croquette", "pâtée", "patee"]
+                    }
+        
                     for it in sel:
-                        # --- MODIFICATION ICI : On ajoute le préfixe "✨ Autre | " ---
-                        # Cela permet à ta page Épicerie de reconnaître la catégorie
-                        article_formate = f"✨ Autre | {it.strip()}"
+                        # 2. ON CHERCHE LA BONNE CATÉGORIE
+                        nom_article = it.strip()
+                        art_lower = nom_article.lower()
+                        cat_detectee = "✨ Autre" # Par défaut si on ne trouve rien
+                        
+                        for rayon, mots_cles in dictionnaire_rayons.items():
+                            if any(mot in art_lower for mot in mots_cles):
+                                cat_detectee = rayon
+                                break
+                        
+                        # 3. ON ENVOIE AVEC LA CATÉGORIE TROUVÉE
+                        article_formate = f"{cat_detectee} | {nom_article}"
                         send_action({"action": "add_shop", "article": article_formate})
                         
                 st.toast(f"✅ {len(sel)} articles ajoutés !", icon="🛒")
-                # On vide le cache pour forcer l'épicerie à se mettre à jour
                 st.cache_data.clear() 
                 time.sleep(1); st.rerun()
         else:
-            # Message d'info quand rien n'est coché
             st.info("Cochez les ingrédients à acheter pour activer l'ajout au panier.")
 
     # --- PRÉPARATION (BAS DE PAGE) ---
@@ -1565,6 +1585,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
