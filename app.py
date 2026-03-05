@@ -1046,6 +1046,46 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
+    # --- OPTION DE PARTAGE (SMS / WhatsApp) ---
+    try:
+        # On charge rapidement les données juste pour le texte du message
+        import time
+        df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
+        
+        if not df_share.empty:
+            # On prépare le texte (puces et sauts de ligne)
+            # %0A est le code pour un saut de ligne dans une URL
+            items = [f"- {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
+            liste_texte = "%0A".join(items)
+            message = f"🛒 *MA LISTE D'ÉPICERIE* :%0A{liste_texte}"
+            
+            st.write("📲 **Partager la liste :**")
+            col_share1, col_share2 = st.columns(2)
+            
+            # Bouton WhatsApp (Vert)
+            wa_url = f"https://wa.me/?text={message}"
+            col_share1.markdown(f'''
+                <a href="{wa_url}" target="_blank" style="text-decoration:none;">
+                    <div style="background-color:#25D366; color:white; padding:10px; border-radius:15px; text-align:center; font-weight:bold; font-size:14px;">
+                        🟢 WhatsApp
+                    </div>
+                </a>
+            ''', unsafe_allow_html=True)
+            
+            # Bouton SMS (Bleu)
+            # Note: "sms:?&body=" fonctionne sur iOS et Android
+            sms_url = f"sms:?&body={message}"
+            col_share2.markdown(f'''
+                <a href="{sms_url}" style="text-decoration:none;">
+                    <div style="background-color:#007AFF; color:white; padding:10px; border-radius:15px; text-align:center; font-weight:bold; font-size:14px;">
+                        🔵 SMS
+                    </div>
+                </a>
+            ''', unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+    except:
+        pass # Si erreur de lecture, on n'affiche simplement pas les boutons
+
     # --- AFFICHAGE DE LA LISTE ---
     try:
         import time
@@ -1457,6 +1497,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
