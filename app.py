@@ -708,44 +708,39 @@ elif st.session_state.page == "details":
         
         st.write("") 
         
-       # --- RÉTABLISSEMENT DU BOUTON ÉPICERIE AVEC AUTO-DÉTECTION ---
+       # --- BLOC DE REMPLACEMENT : AJOUT ÉPICERIE BILINGUE ---
         if sel:
             if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel", type="primary"):
                 with st.spinner("Envoi à l'épicerie..."):
                     
-                    # 1. LE PETIT CERVEAU (Dictionnaire de détection)
-                    dictionnaire_rayons = {
-                        "🍎 Fruits & Légumes": ["pomme", "banane", "salade", "tomate", "oignon", "carotte", "poivron", "pomme de terre", "raisin", "échalote", "ail", "citron"],
-                        "🥛 Produits laitiers": ["lait", "fromage", "beurre", "yaourt", "crème", "creme", "oeuf", "œuf", "parmesan"],
-                        "🥩 Viandes & Poissons": ["poulet", "boeuf", "bœuf", "porc", "saumon", "jambon", "steak", "poisson", "pétoncle", "crevette"],
-                        "🍞 Boulangerie": ["pain", "baguette", "croissant", "brioche"],
-                        "🧊 Surgelés": ["pizza", "glace", "frites"],
-                        "🥫 Épicerie": ["pâte", "pate", "riz", "sel", "poivre", "sucre", "café", "cafe", "thé", "conserve", "huile", "vin", "sauce"],
-                        "🧼 Entretien": ["savon", "papier", "toilette", "lessive"],
-                        "🐾 Animaux": ["croquette", "pâtée", "patee"]
+                    # Petit cerveau bilingue pour les rayons principaux
+                    cerveau_leger = {
+                        "🍎 Fruits & Légumes": ["apple", "pomme", "banana", "salade", "tomato", "onion", "garlic", "ail", "potato", "fruit", "veg", "onion", "échalote", "shallot"],
+                        "🥛 Produits laitiers": ["milk", "lait", "cheese", "fromage", "butter", "beurre", "yogurt", "cream", "egg", "oeuf", "parmesan"],
+                        "🥩 Viandes & Poissons": ["meat", "chicken", "beef", "fish", "poisson", "pork", "shrimp", "seafood", "steak", "salmon", "pétoncle", "scallop", "crevette"],
+                        "🥫 Épicerie": ["oil", "huile", "salt", "sel", "pepper", "poivre", "sugar", "sucre", "pasta", "pate", "rice", "riz", "wine", "vin", "sauce", "broth", "bouillon"]
                     }
-        
+
                     for it in sel:
-                        # 2. ON CHERCHE LA BONNE CATÉGORIE
                         nom_article = it.strip()
-                        art_lower = nom_article.lower()
-                        cat_detectee = "✨ Autre" # Par défaut si on ne trouve rien
+                        n_low = nom_article.lower()
+                        cat_detectee = "✨ Autre" # Par défaut
                         
-                        for rayon, mots_cles in dictionnaire_rayons.items():
-                            if any(mot in art_lower for mot in mots_cles):
-                                cat_detectee = rayon
+                        # On cherche si un mot-clé correspond
+                        for cat, mots in cerveau_leger.items():
+                            if any(m in n_low for m in mots):
+                                cat_detectee = cat
                                 break
                         
-                        # 3. ON ENVOIE AVEC LA CATÉGORIE TROUVÉE
+                        # Envoi formaté pour la page Shop
                         article_formate = f"{cat_detectee} | {nom_article}"
                         send_action({"action": "add_shop", "article": article_formate})
                         
                 st.toast(f"✅ {len(sel)} articles ajoutés !", icon="🛒")
                 st.cache_data.clear() 
-                time.sleep(1); st.rerun()
+                time.sleep(0.5); st.rerun()
         else:
             st.info("Cochez les ingrédients à acheter pour activer l'ajout au panier.")
-
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
@@ -1585,6 +1580,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
