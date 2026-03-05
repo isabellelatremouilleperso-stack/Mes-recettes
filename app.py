@@ -713,14 +713,18 @@ elif st.session_state.page == "details":
             if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel", type="primary"):
                 with st.spinner("Envoi à l'épicerie..."):
                     for it in sel:
-                        send_action({"action": "add_shop", "article": it})
+                        # --- MODIFICATION ICI : On ajoute le préfixe "✨ Autre | " ---
+                        # Cela permet à ta page Épicerie de reconnaître la catégorie
+                        article_formate = f"✨ Autre | {it.strip()}"
+                        send_action({"action": "add_shop", "article": article_formate})
+                        
                 st.toast(f"✅ {len(sel)} articles ajoutés !", icon="🛒")
+                # On vide le cache pour forcer l'épicerie à se mettre à jour
+                st.cache_data.clear() 
                 time.sleep(1); st.rerun()
         else:
-            # Message d'info quand rien n'est coché (comme dans ton ancien code)
+            # Message d'info quand rien n'est coché
             st.info("Cochez les ingrédients à acheter pour activer l'ajout au panier.")
-    else:
-        st.info("Aucun ingrédient pour cette recette.")
 
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
@@ -1561,6 +1565,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
