@@ -574,14 +574,32 @@ elif st.session_state.page == "details":
                 else:
                     st.session_state.made_list.add(current_title)
                     
-                    # --- L'ASTUCE POUR FAIRE TOMBER DES ÉTOILES ---
-                    # On utilise st.snow() mais on "triche" en changeant l'icône via un message toast
-                    # Pour un vrai effet de chute, on peut utiliser ce composant :
-                    st.snow() # Ceci fait tomber les flocons
-                    
-                    # On ajoute les étoiles dorées en superposition
-                    st.toast("✨ ⭐ ÉTOILES OBTENUES ! ⭐ ✨", icon="🌟")
-                    
+                    # --- SCRIPT DE PLUIE D'ÉTOILES ---
+                    st.components.v1.html(
+                        """
+                        <div style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999;">
+                            <script>
+                            function createStar() {
+                                const star = document.createElement('div');
+                                star.innerHTML = '⭐';
+                                star.style.position = 'fixed';
+                                star.style.left = Math.random() * 100 + 'vw';
+                                star.style.top = '-20px';
+                                star.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                                star.style.transition = 'transform ' + (Math.random() * 3 + 2) + 's linear';
+                                document.body.appendChild(star);
+                                setTimeout(() => {
+                                    star.style.transform = 'translateY(110vh) rotate(360deg)';
+                                }, 10);
+                                setTimeout(() => { star.remove(); }, 5000);
+                            }
+                            for(let i=0; i<50; i++) { setTimeout(createStar, i * 100); }
+                            </script>
+                        </div>
+                        """,
+                        height=0,
+                    )
+
                     # --- BARRE DE VALIDATION ---
                     barre_succes = st.progress(0)
                     import time
@@ -591,7 +609,7 @@ elif st.session_state.page == "details":
                     
                     st.success(f"Bravo Chef ! {random.choice(mots_bravo)}")
                     
-                    time.sleep(0.8)
+                    time.sleep(1.2) # On laisse le temps aux étoiles de tomber
                     st.rerun()
                     
         with c_feat2:
@@ -1544,6 +1562,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
