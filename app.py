@@ -527,8 +527,10 @@ elif st.session_state.page == "details":
             with c_nav_pub2:
                 if st.button("🖨️ Imprimer la recette", use_container_width=True, key="btn_print_pub"):
                     st.session_state.recipe_data = r; st.session_state.page = "print"; st.rerun()
-    st.divider()
-    st.header(f"📖 {current_title}")
+
+        # --- CORRECTION ICI (BIEN ALIGNÉ SOUS LE 'IF/ELSE' CI-DESSUS) ---
+        st.divider()
+        st.header(f"📖 {current_title}")
     
     # --- CORPS DE LA PAGE (IMAGE ET INFOS) ---
     col_g, col_d = st.columns([1, 1.2])
@@ -1563,6 +1565,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
