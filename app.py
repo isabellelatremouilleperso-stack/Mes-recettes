@@ -754,22 +754,28 @@ elif st.session_state.page == "add":
                 import datetime
                 import re
 
-                # 1. On remplace TOUS les types de carrés/puces possibles par des sauts de ligne
-                # Cette regex cible les caractères de type "Box Drawing" et "Geometric Shapes"
-                text_split = re.sub(r'[^\x00-\x7F]+', '\n', ingredients_txt)
+                # 1. NETTOYAGE INTELLIGENT :
+                # On remplace les symboles bizarres (carreaux, puces spéciales) par un saut de ligne.
+                # La regex [^\w\s.,\-()%/°àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ] 
+                # signifie : "Tout ce qui n'est pas une lettre, un chiffre, un espace, une ponctuation de base OU un accent français"
+                text_split = re.sub(r'[^\w\s.,\-()%/°àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+', '\n', ingredients_txt)
                 
-                # 2. On traite ligne par ligne
+                # 2. On traite ligne par ligne pour créer une liste propre
                 lignes = text_split.split('\n')
                 lignes_finales = []
                 
                 for l in lignes:
                     item = l.strip()
-                    if item and len(item) > 1: # On ignore les résidus de caractères seuls
-                        # On force le format Markdown avec un tiret
-                        if not item.startswith('-'):
+                    # On garde les lignes qui ont du contenu (plus d'un caractère)
+                    if item and len(item) > 1:
+                        # On force le format Markdown avec un tiret propre
+                        # On vérifie si la ligne commence déjà par un tiret ou une puce standard
+                        if not re.match(r'^[\-\*•]', item):
                             lignes_finales.append(f"- {item}")
                         else:
-                            lignes_finales.append(item)
+                            # Si elle commence par un symbole, on le normalise en "-"
+                            item_clean = re.sub(r'^[\*•]', '-', item)
+                            lignes_finales.append(item_clean)
 
                 ing_propre = "\n".join(lignes_finales)
 
@@ -789,6 +795,8 @@ elif st.session_state.page == "add":
                     "Commentaires": commentaires.strip(),
                     "video": video_url_in.strip()
                 }
+                
+                # ... (reste du code d'envoi send_action)
                 
                 if send_action(payload):
                     st.success("✅ Enregistré !")
@@ -1402,6 +1410,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
