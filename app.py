@@ -1053,60 +1053,27 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (INTÉGRALE AVEC DESIGN FILIGRANE & GESTION ADMIN) ---
+# --- PAGE ÉPICERIE (VERSION INTÉGRALE RÉPARÉE) ---
 elif st.session_state.page == "shop":
-    # 1. DESIGN FINAL : FILIGRANE AJUSTÉ (PLUS PETIT)
+    # 1. STYLE CSS : Filigrane 50% & Cartes Sombre
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
-
     st.markdown(f"""
         <style>
-        /* 1. FILIGRANE RECENTRÉ ET RAPETISSÉ */
         [data-testid="stAppViewContainer"] {{
-            background: 
-                linear-gradient(rgba(14, 17, 23, 0.8), rgba(14, 17, 23, 0.9)), 
-                url("{url_header}");
-            background-size: 50%; 
-            background-position: center 20%; 
-            background-repeat: no-repeat;
-            background-attachment: fixed;
+            background: linear-gradient(rgba(14,17,23,0.8), rgba(14,17,23,0.9)), url("{url_header}");
+            background-size: 50%; background-position: center 20%; background-repeat: no-repeat; background-attachment: fixed;
         }}
-
-        /* Transparence des couches Streamlit */
-        [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{
-            background: transparent;
-        }}
-
-        /* 2. CARTES SOMBRES TRANSLUCIDES (Look Pro) */
+        [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{ background: transparent; }}
         .shop-card {{
-            background-color: rgba(30, 34, 45, 0.6); 
-            padding: 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-left: 5px solid #e67e22;
-            margin-bottom: 12px;
-            color: #ffffff;
-            backdrop-filter: blur(8px); 
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background-color: rgba(30, 34, 45, 0.6); padding: 16px; border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); border-left: 5px solid #e67e22;
+            margin-bottom: 12px; color: #ffffff; backdrop-filter: blur(8px);
         }}
-
-        .neon-title {{
-            color: #e67e22;
-            font-size: 2.2rem;
-            font-weight: bold;
-            text-shadow: 0 0 10px rgba(230, 126, 34, 0.4);
-        }}
-        
-        /* Harmonisation du texte Admin sur fond sombre */
-        .admin-text {{
-            color: #ffffff;
-            font-weight: bold;
-        }}
+        .neon-title {{ color: #e67e22; font-size: 2.2rem; font-weight: bold; text-shadow: 0 0 10px rgba(230, 126, 34, 0.4); }}
         </style>
     """, unsafe_allow_html=True)
 
-    # 2. CONTENEUR ET NAVIGATION
-    st.markdown('<div class="keep-container" style="background:transparent;">', unsafe_allow_html=True)
-    
+    # 2. NAVIGATION ET TITRE
     c_titre, c_back = st.columns([0.85, 0.15])
     with c_titre:
         st.markdown('<div class="neon-title">🛒 Liste d\'Épicerie</div>', unsafe_allow_html=True)
@@ -1117,60 +1084,46 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- SECTION : AJOUT RAPIDE (Vérifié : tout y est) ---
+    # --- SECTION : AJOUT RAPIDE ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
 
-    st.markdown("<h5 style='color:white;'>➕ Ajouter un article</h5>", unsafe_allow_html=True)
-    c_input, c_add, c_cancel = st.columns([3, 0.8, 0.8])
-    
-    new_article = c_input.text_input(
-        "Que manque-t-il ?", 
-        placeholder="Ex: Lait, Œufs...",
-        label_visibility="collapsed", 
-        key=f"add_item_{st.session_state.input_counter}"
-    )
+    c_in, c_add, c_reset = st.columns([3, 0.8, 0.8])
+    new_art = c_in.text_input("Article", placeholder="Ex: Lait...", label_visibility="collapsed", key=f"add_{st.session_state.input_counter}")
     
     if c_add.button("➕", use_container_width=True, type="primary"):
-        if new_article:
-            with st.spinner(""):
-                if send_action({"action": "add_shop", "article": new_article.strip()}):
-                    st.toast(f"✅ {new_article} ajouté !")
-                    st.cache_data.clear()
-                    st.session_state.input_counter += 1
-                    st.rerun()
-        else:
-            st.warning("Écrivez un article !")
-
-    if c_cancel.button("✖️", use_container_width=True):
+        if new_art:
+            if send_action({"action": "add_shop", "article": new_art.strip()}):
+                st.cache_data.clear()
+                st.session_state.input_counter += 1
+                st.rerun()
+    if c_reset.button("✖️", use_container_width=True):
         st.session_state.input_counter += 1
         st.rerun()
 
     st.divider()
 
-    # --- LOGIQUE D'AFFICHAGE ET GESTION (Vérifié : Admin + Consultation) ---
+    # --- LOGIQUE D'AFFICHAGE (RÉCUPÉRÉE DE TON ANCIEN CODE) ---
     try:
-        import time
-        import json
+        import time, json
         is_admin = st.session_state.get('admin_mode', False)
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
+            # --- CAS 1 : MODE ADMIN (SUPPRESSION) ---
             if is_admin:
-                # MODE ADMIN : Suppression avec cases à cocher
+                st.markdown("<p style='color:#e67e22; font-weight:bold;'>🛠 Gestion de la liste :</p>", unsafe_allow_html=True)
                 with st.form("shop_form", border=False):
                     to_del = []
-                    st.markdown("<p style='color:white;'>🛠 <b>Gestion (Cochez pour retirer) :</b></p>", unsafe_allow_html=True)
                     for idx, row in df_s.iterrows():
                         art = str(row.iloc[0]).strip()
                         if art:
-                            col_c, col_t = st.columns([0.15, 0.85])
-                            # Utilisation de la checkbox Streamlit standard
+                            col_c, col_t = st.columns([0.1, 0.9])
                             if col_c.checkbox("", key=f"sh_{idx}"):
                                 to_del.append(art)
-                            col_t.markdown(f"<span style='color:white;'>**{art}**</span>", unsafe_allow_html=True)
+                            col_t.markdown(f"<span style='color:white;'>{art}</span>", unsafe_allow_html=True)
                     
-                    st.markdown("---")
+                    st.write("") # Espace
                     submit_del = st.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
                 
                 if submit_del:
@@ -1179,48 +1132,36 @@ elif st.session_state.page == "shop":
                             st.cache_data.clear()
                             st.rerun()
                     else:
-                        st.warning("Cochez des articles.")
+                        st.warning("Cochez des articles !")
 
+                # LE BOUTON VIDER TOUT (Comme dans ton ancien code)
                 if st.button("🧨 Vider toute la liste", use_container_width=True):
                     if send_action({"action": "clear_shop"}):
                         st.cache_data.clear()
                         st.rerun()
             
+            # --- CAS 2 : MODE CONSULTATION (CARTES) ---
             else:
-                # MODE CONSULTATION : Look "Carte" moderne
-                st.info("📖 Prêt pour le magasin !")
+                st.info("📖 Mode Consultation - Prêt pour le magasin !")
                 for idx, row in df_s.iterrows():
                     art = str(row.iloc[0]).strip()
                     if art:
                         st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
 
-            # --- BOUTON COPIER POUR KEEP (Vérifié : Format ligne par ligne) ---
+            # --- BOUTON COPIER POUR KEEP ---
             st.divider()
             items_keep = [str(row.iloc[0]).strip() for idx, row in df_s.iterrows() if str(row.iloc[0]).strip()]
-            txt_final = "\\n".join(items_keep)
-            js_txt = json.dumps(txt_final)
-
+            txt_k = "\\n".join(items_keep)
+            js_txt = json.dumps(txt_k)
             st.components.v1.html(f"""
-                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50; font-family:sans-serif;">
-                    🟡 COPIER TOUT POUR GOOGLE KEEP
-                </button>
-                <script>
-                function copyK() {{
-                    const t = {js_txt}.replace(/\\\\n/g, '\\n');
-                    const ta = document.createElement("textarea"); ta.value = t;
-                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-                    document.body.removeChild(ta); alert("Liste copiée ! Chaque article sera sur une ligne.");
-                }}
-                </script>
+                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">🟡 COPIER POUR GOOGLE KEEP</button>
+                <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Copié !"); }}</script>
             """, height=60)
-
         else:
-            st.info("La liste est vide. Tout est sous contrôle ! ✨")
+            st.info("La liste est vide. ✨")
 
     except Exception as e:
-        st.error(f"Erreur de chargement : {e}")
-
-    st.markdown('</div>', unsafe_allow_html=True) # Fermeture du conteneur
+        st.error(f"Erreur : {e}")
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1583,6 +1524,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
