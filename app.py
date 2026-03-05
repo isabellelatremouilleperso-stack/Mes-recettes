@@ -1055,7 +1055,7 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # 1. IMAGE D'EN-TÊTE RAPETISSÉE ET STYLE CSS
+    # 1. IMAGE D'EN-TÊTE AJUSTÉE (SANS BANDE BLANCHE)
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
@@ -1065,26 +1065,18 @@ elif st.session_state.page == "shop":
             font-weight: bold;
             transition: all 0.2s;
         }}
-        .stButton>button:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }}
-        /* IMAGE RAPETISSÉE EN HAUTEUR */
+        /* IMAGE : On la réduit et on enlève le fond */
         .keep-header {{
             width: 100%;
-            height: 120px; /* Taille réduite pour ne pas encombrer */
-            object-fit: cover; /* Garde les bonnes proportions */
-            border-radius: 15px 15px 0 0;
-            margin-bottom: -5px;
+            height: 100px; /* Plus petit pour ne pas prendre toute la place */
+            object-fit: contain; /* L'image garde sa forme sans être coupée */
+            margin-bottom: 0px;
             display: block;
         }}
+        /* CONTENEUR : On enlève le fond blanc (background-color) pour supprimer la bande */
         .keep-container {{
-            background-color: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 0 0 15px 15px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            color: #2c3e50;
+            padding: 10px;
+            color: white; /* On remet le texte en blanc pour ton fond sombre */
         }}
         .shop-card {{
             background-color: #ffffff;
@@ -1092,14 +1084,17 @@ elif st.session_state.page == "shop":
             border-radius: 10px;
             border-left: 5px solid #e67e22;
             margin-bottom: 10px;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+            color: #2c3e50; /* Le texte à l'intérieur des petites cartes reste foncé */
             font-size: 17px;
         }}
         </style>
-        <img src="{url_header}" class="keep-header">
+        <div style="text-align: center;">
+            <img src="{url_header}" class="keep-header">
+        </div>
     """, unsafe_allow_html=True)
 
-    # 2. CONTENEUR BLANC (La Note Keep)
+    # 2. CONTENEUR (Maintenant transparent)
     st.markdown('<div class="keep-container">', unsafe_allow_html=True)
     
     # Navigation & Titre
@@ -1110,7 +1105,6 @@ elif st.session_state.page == "shop":
         st.rerun()
 
     st.divider()
-
     # --- SECTION : AJOUT RAPIDE (Vérifié : tout y est) ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
@@ -1576,6 +1570,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
