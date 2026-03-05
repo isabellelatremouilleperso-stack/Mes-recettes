@@ -536,10 +536,32 @@ elif st.session_state.page == "details":
     c_feat1, c_feat2 = st.columns(2) # On définit c_feat1 et c_feat2
     
     with c_feat1:
-        if st.button("👨‍🍳 Cuisinée !", use_container_width=True, key=f"det_made_{current_title}"):
-            st.balloons()
-            st.toast("Félicitations ! Un vrai chef ! 👨‍🍳", icon="🔥")
+        import random
+        # Liste de petits messages drôles
+        blagues_chef = [
+            "Et un michelin de plus ! ⭐", 
+            "Gordon Ramsay n'a qu'à bien se tenir ! 👨‍🍳", 
+            "C'est meilleur que chez maman ! (Chut...) 🤫", 
+            "Appelez les pompiers, c'est du FEU ! 🔥",
+            "Miam ! On arrive à quelle heure ? 🏃‍♂️"
+        ]
 
+        if 'made_list' not in st.session_state:
+            st.session_state.made_list = set()
+            
+        is_made = current_title in st.session_state.made_list
+        label_made = "✅ Déjà goûté !" if is_made else "👨‍🍳 Cuisinée ?"
+        
+        if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
+            if is_made:
+                st.session_state.made_list.remove(current_title)
+            else:
+                st.session_state.made_list.add(current_title)
+                # --- L'EFFET DRÔLE ---
+                st.snow() # Fait tomber de la neige/étoiles sur l'écran
+                msg = random.choice(blagues_chef) # Choisit une phrase au hasard
+                st.toast(msg, icon="🎉")
+            st.rerun()
     with c_feat2: # On utilise bien c_feat2 ici aussi
         if 'fav_list' not in st.session_state:
             st.session_state.fav_list = set()
@@ -1535,6 +1557,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
