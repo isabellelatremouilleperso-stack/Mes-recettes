@@ -573,11 +573,18 @@ elif st.session_state.page == "details":
                     st.rerun() # On garde le rerun uniquement pour décocher (enlever le vert)
                 else:
                     st.session_state.made_list.add(current_title)
-                    # --- L'ANIMATION VA ENFIN S'AFFICHER ---
-                    st.snow() 
+                    
+                    # --- OPTION 1 : LES BALLONS (Classique et festif) ---
+                    st.balloons() 
+                    
+                    # --- OPTION 2 : MULTIPLES TOASTS (Effet pluie de messages) ---
                     msg_aleatoire = random.choice(mots_bravo)
                     st.toast(msg_aleatoire, icon="🎉")
-                    # NOTE : Pas de rerun ici pour laisser l'animation jouer !
+                    
+                    # Petit bonus : un deuxième toast avec des emojis gourmands
+                    st.toast("🍕 👨‍🍳 🥘 🍰 ✨", icon="😋")
+                    
+                    # Rappel : Pas de st.rerun() ici sinon l'animation se coupe !
                     
         with c_feat2:
             if 'fav_list' not in st.session_state:
@@ -1529,6 +1536,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
