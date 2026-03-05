@@ -1055,52 +1055,60 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # 1. IMAGE D'EN-TÊTE AJUSTÉE (SANS BANDE BLANCHE)
+    # --- STYLE FILIGRANE & DESIGN ÉPURÉ ---
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
         <style>
-        .stButton>button {{
-            border-radius: 20px;
-            font-weight: bold;
-            transition: all 0.2s;
+        /* 1. MISE EN FILIGRANE DE L'IMAGE */
+        .main {{
+            background-image: linear-gradient(rgba(14, 17, 23, 0.85), rgba(14, 17, 23, 0.85)), 
+                              url("{url_header}");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: top center;
+            background-size: 400px; /* Taille du filigrane */
         }}
-        /* IMAGE : On la réduit et on enlève le fond */
-        .keep-header {{
-            width: 100%;
-            height: 100px; /* Plus petit pour ne pas prendre toute la place */
-            object-fit: contain; /* L'image garde sa forme sans être coupée */
-            margin-bottom: 0px;
-            display: block;
+
+        /* 2. NETTOYAGE DES BANDES ET BLOCS */
+        .stApp {{
+            background: transparent;
         }}
-        /* CONTENEUR : On enlève le fond blanc (background-color) pour supprimer la bande */
+        
+        /* On supprime la bordure blanche inutile */
         .keep-container {{
-            padding: 10px;
-            color: white; /* On remet le texte en blanc pour ton fond sombre */
+            background-color: rgba(255, 255, 255, 0.05); /* Très légère teinte pour structurer */
+            padding: 15px;
+            border-radius: 15px;
+            color: white;
         }}
+
         .shop-card {{
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 12px;
             border-radius: 10px;
             border-left: 5px solid #e67e22;
             margin-bottom: 10px;
-            box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
-            color: #2c3e50; /* Le texte à l'intérieur des petites cartes reste foncé */
+            color: #2c3e50;
             font-size: 17px;
         }}
+        
+        .stButton>button {{
+            border-radius: 20px;
+            font-weight: bold;
+        }}
         </style>
-        <div style="text-align: center;">
-            <img src="{url_header}" class="keep-header">
-        </div>
     """, unsafe_allow_html=True)
 
-    # 2. CONTENEUR (Maintenant transparent)
+    # Plus d'image <img> ici, elle est gérée par le CSS en fond !
+
+    # 2. CONTENEUR DE LA LISTE
     st.markdown('<div class="keep-container">', unsafe_allow_html=True)
     
     # Navigation & Titre
     c_titre, c_back = st.columns([0.8, 0.2])
     c_titre.markdown("<h2 style='margin:0; color:#e67e22;'>🛒 Liste d'Épicerie</h2>", unsafe_allow_html=True)
-    if c_back.button("⬅️", help="Retour au menu"):
+    if c_back.button("⬅️"):
         st.session_state.page = "home"
         st.rerun()
 
@@ -1570,6 +1578,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
