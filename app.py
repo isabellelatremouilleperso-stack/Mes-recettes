@@ -1055,15 +1055,18 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (RETOUR DU MODE ADMIN COMPLET) ---
 elif st.session_state.page == "shop":
-    # 1. DESIGN : Filigrane avec yeux visibles & Cartes Sombres
+    # 1. DESIGN : Filigrane repositionné verticalement
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
             background: linear-gradient(rgba(14,17,23,0.75), rgba(14,17,23,0.9)), url("{url_header}");
-            /* On rapetisse un poil (45%) et on centre verticalement (center center) */
             background-size: 45%; 
-            background-position: center center; 
+            
+            /* --- AJUSTEMENT ICI --- */
+            /* center = horizontal | 60% = vertical (augmente à 70% pour descendre encore plus) */
+            background-position: center 60%; 
+            
             background-repeat: no-repeat; 
             background-attachment: fixed;
         }}
@@ -1543,6 +1546,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
