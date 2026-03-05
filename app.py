@@ -683,101 +683,53 @@ elif st.session_state.page == "details":
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
     # --- FIN DE LA COLONNE DE DROITE ---
-    # --- SECTION INGRÉDIENTS (DEUX COLONNES SOUS LA PHOTO) ---
-    st.divider()
-    st.subheader("🛒 Ingrédients")
-    ings_raw = r.get('Ingrédients', '')
-    
-    if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-        text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-        ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
-        
-        sel = []
-        col_ing1, col_ing2 = st.columns(2)
-        moitie = (len(ings) + 1) // 2
-        
-        with col_ing1:
-            for i in range(moitie):
-                # On utilise une clé unique pour chaque checkbox
-                if st.checkbox(ings[i], key=f"chk_L_{current_title}_{i}"):
-                    sel.append(ings[i])
-        with col_ing2:
-            for i in range(moitie, len(ings)):
-                if st.checkbox(ings[i], key=f"chk_R_{current_title}_{i}"):
-                    sel.append(ings[i])
-        
-        st.write("")
-    
-    # --- 1. PRÉPARATION DES DONNÉES ---
-        liste_groupee = {} 
-        for idx, row in df_s.iterrows():
-            brut = str(row.iloc[0]).strip()
-            cat, art = brut.split(" | ", 1) if " | " in brut else ("✨ Autre", brut)
-            if cat not in liste_groupee: 
-                liste_groupee[cat] = []
-            liste_groupee[cat].append({"art": art, "idx": idx, "brut": brut})
-
-        # --- 2. BLOC ADMIN : ÉDITION DES CATÉGORIES ---
-        if is_admin:
-            st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
-            
-            with st.form("shop_management_form", border=False):
-                to_del = []
-                updates = [] 
-                rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
-
-                for cat in sorted(liste_groupee.keys()):
-                    st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
-                    for item in liste_groupee[cat]:
-                        col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
-                        
-                        if col_check.checkbox("", key=f"del_{item['idx']}"):
-                            to_del.append(item['brut'])
-                        
-                        col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
-                        
-                        current_idx = rayons_full.index(cat) if cat in rayons_full else 0
-                        new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
-                        
-                        if new_cat != cat:
-                            updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
-
-                st.write("")
-                c1, c2 = st.columns(2)
-                submit_del = c1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
-                submit_upd = c2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
-            
-            # --- LOGIQUE ACTIONS ---
-            if submit_del and to_del:
-                if send_action({"action": "remove_shop", "articles": to_del}):
-                    st.cache_data.clear(); st.rerun()
-            
-            if submit_upd and updates:
-                for up in updates:
-                    send_action({"action": "remove_shop", "articles": [up['old']]})
-                    send_action({"action": "add_shop", "article": up['new']})
-                st.cache_data.clear(); st.rerun()
-
-            if st.button("🧨 Vider toute la liste", use_container_width=True):
-                if send_action({"action": "clear_shop"}):
-                    st.cache_data.clear(); st.rerun()
-        
-        else:
-            # --- MODE CONSULTATION (HORS ADMIN) ---
-            for cat in sorted(liste_groupee.keys()):
-                st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
-                for item in liste_groupee[cat]:
-                    st.markdown(f'<div class="shop-card"><b>❑ {item["art"]}</b></div>', unsafe_allow_html=True)
-
-        # --- 3. BOUTON COPIER POUR KEEP (FIN DE PAGE ÉPICERIE) ---
+    # --- SECTION INGRÉDIENTS ---
         st.divider()
-        items_k = [str(r.iloc[0]).split(" | ")[-1] for i, r in df_s.iterrows() if str(r.iloc[0]).strip()]
-        js_txt = json.dumps("\\n".join(items_k))
-        st.components.v1.html(f"""
-            <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">🟡 COPIER POUR GOOGLE KEEP</button>
-            <script>function copyK() {{ const t = {js_txt}.replace(/\\\\n/g, '\\n'); const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert("Liste copiée !"); }}</script>
-        """, height=60)
+        st.subheader("🛒 Ingrédients")
+        ings_raw = r.get('Ingrédients', '')
+        
+        if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
+            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+            
+            sel = []
+            col_ing1, col_ing2 = st.columns(2)
+            moitie = (len(ings) + 1) // 2
+            
+            with col_ing1:
+                for i in range(moitie):
+                    if st.checkbox(ings[i], key=f"chk_L_{current_title}_{i}"):
+                        sel.append(ings[i])
+            with col_ing2:
+                for i in range(moitie, len(ings)):
+                    if st.checkbox(ings[i], key=f"chk_R_{current_title}_{i}"):
+                        sel.append(ings[i])
+            
+            if sel:
+                if st.button(f"➕ Ajouter {len(sel)} articles à la liste de courses", use_container_width=True):
+                    for item in sel:
+                        send_action({"action": "add_shop", "article": f"✨ Autre | {item}"})
+                    st.toast("Ingrédients envoyés à l'épicerie ! 🛒")
 
+        # --- SECTION PRÉPARATION ---
+        st.divider()
+        st.subheader("👨‍🍳 Étapes de préparation")
+        prep = r.get('Préparation', '')
+        if prep and str(prep).strip() not in ["None", "nan", ""]:
+            st.write(prep)
+        else:
+            st.info("Aucune étape de préparation enregistrée.")
+
+        # --- SECTION NOTES & COMMENTAIRES ---
+        st.divider()
+        st.markdown("### 📝 Mes Notes & Commentaires")
+        notes_texte = r.get('Commentaires', '')
+        if notes_texte and str(notes_texte).strip() not in ["None", "nan", ""]:
+            st.info(notes_texte)
+        else:
+            st.write("*Aucune note pour cette recette.*")
+
+    # --- LE BLOC DE FIN (ALIGNE LE 'EXCEPT' AVEC LE 'TRY' DU DEBUT DE PAGE) ---
     except Exception as e:
         st.error(f"Erreur d'affichage : {e}")
         
@@ -1610,6 +1562,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
