@@ -708,39 +708,60 @@ elif st.session_state.page == "details":
         
         st.write("") 
         
-       # --- BLOC DE REMPLACEMENT : AJOUT ÉPICERIE BILINGUE ---
-        if sel:
-            if st.button(f"📥 Ajouter ({len(sel)}) au Panier", use_container_width=True, key="btn_add_sel", type="primary"):
-                with st.spinner("Envoi à l'épicerie..."):
+       # --- BLOC ADMIN : ÉDITION DES CATÉGORIES ---
+            if is_admin:
+                st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
+                
+                with st.form("shop_management_form", border=False):
+                    to_del = []
+                    updates = [] # Pour stocker les changements de catégories
                     
-                    # Petit cerveau bilingue pour les rayons principaux
-                    cerveau_leger = {
-                        "🍎 Fruits & Légumes": ["apple", "pomme", "banana", "salade", "tomato", "onion", "garlic", "ail", "potato", "fruit", "veg", "onion", "échalote", "shallot"],
-                        "🥛 Produits laitiers": ["milk", "lait", "cheese", "fromage", "butter", "beurre", "yogurt", "cream", "egg", "oeuf", "parmesan"],
-                        "🥩 Viandes & Poissons": ["meat", "chicken", "beef", "fish", "poisson", "pork", "shrimp", "seafood", "steak", "salmon", "pétoncle", "scallop", "crevette"],
-                        "🥫 Épicerie": ["oil", "huile", "salt", "sel", "pepper", "poivre", "sugar", "sucre", "pasta", "pate", "rice", "riz", "wine", "vin", "sauce", "broth", "bouillon"]
-                    }
+                    rayons_full = ["✨ Autre", "🍎 Fruits & Légumes", "🥛 Produits laitiers", "🥩 Viandes & Poissons", "🍞 Boulangerie", "🧊 Surgelés", "🥫 Épicerie", "🧼 Entretien", "🐾 Animaux"]
 
-                    for it in sel:
-                        nom_article = it.strip()
-                        n_low = nom_article.lower()
-                        cat_detectee = "✨ Autre" # Par défaut
+                    for cat in sorted(liste_groupee.keys()):
+                        st.markdown(f'<div class="category-header">{cat}</div>', unsafe_allow_html=True)
                         
-                        # On cherche si un mot-clé correspond
-                        for cat, mots in cerveau_leger.items():
-                            if any(m in n_low for m in mots):
-                                cat_detectee = cat
-                                break
-                        
-                        # Envoi formaté pour la page Shop
-                        article_formate = f"{cat_detectee} | {nom_article}"
-                        send_action({"action": "add_shop", "article": article_formate})
-                        
-                st.toast(f"✅ {len(sel)} articles ajoutés !", icon="🛒")
-                st.cache_data.clear() 
-                time.sleep(0.5); st.rerun()
-        else:
-            st.info("Cochez les ingrédients à acheter pour activer l'ajout au panier.")
+                        for item in liste_groupee[cat]:
+                            col_check, col_txt, col_sel = st.columns([0.1, 0.5, 0.4])
+                            
+                            # 1. Case pour supprimer
+                            if col_check.checkbox("", key=f"del_{item['idx']}"):
+                                to_del.append(item['brut'])
+                            
+                            # 2. Nom de l'article
+                            col_txt.markdown(f"<span style='color:white;'>{item['art']}</span>", unsafe_allow_html=True)
+                            
+                            # 3. Menu pour changer de catégorie en direct !
+                            # On définit l'index actuel pour que le menu affiche la bonne catégorie
+                            current_idx = rayons_full.index(cat) if cat in rayons_full else 0
+                            new_cat = col_sel.selectbox("", rayons_full, index=current_idx, key=f"edit_cat_{item['idx']}", label_visibility="collapsed")
+                            
+                            # Si l'utilisateur change la catégorie, on prépare la mise à jour
+                            if new_cat != cat:
+                                updates.append({"old": item['brut'], "new": f"{new_cat} | {item['art']}"})
+
+                    st.write("")
+                    c1, c2 = st.columns(2)
+                    submit_del = c1.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
+                    submit_upd = c2.form_submit_button("💾 Sauvegarder changements", use_container_width=True, type="primary")
+                
+                # Logique pour supprimer
+                if submit_del and to_del:
+                    if send_action({"action": "remove_shop", "articles": to_del}):
+                        st.cache_data.clear(); st.rerun()
+                
+                # Logique pour mettre à jour les catégories
+                if submit_upd and updates:
+                    with st.spinner("Mise à jour..."):
+                        for up in updates:
+                            # On supprime l'ancien format et on ajoute le nouveau
+                            send_action({"action": "remove_shop", "articles": [up['old']]})
+                            send_action({"action": "add_shop", "article": up['new']})
+                        st.cache_data.clear(); st.rerun()
+
+                if st.button("🧨 Vider toute la liste", use_container_width=True):
+                    if send_action({"action": "clear_shop"}):
+                        st.cache_data.clear(); st.rerun()
     # --- PRÉPARATION (BAS DE PAGE) ---
     st.divider()
     st.subheader("👨‍🍳 Étapes de préparation")
@@ -1580,6 +1601,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
