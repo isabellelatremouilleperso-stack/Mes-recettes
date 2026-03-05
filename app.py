@@ -1042,13 +1042,15 @@ elif st.session_state.page == "shop":
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
-            /* 1. On réduit le noir (0.4 au lieu de 0.75) pour que l'image soit moins pâle */
+            /* 1. On garde les mêmes couleurs de voile (moins pâle) */
             background: linear-gradient(rgba(14,17,23,0.4), rgba(14,17,23,0.6)), url("{url_header}");
             
-            /* 2. 'cover' force l'image à remplir tout l'écran au lieu de rester à 45% */
-            background-size: cover !important; 
+            /* === MODIFICATION ICI POUR RAPETISSER === */
+            /* 50% de la largeur de l'écran. Tu peux mettre 40% ou 60% selon tes goûts. */
+            background-size: 50% !important; 
             
-            /* 3. 'top' remonte les personnages pour qu'on voie leurs yeux au-dessus des boutons */
+            /* === MODIFICATION ICI POUR LE PLACEMENT === */
+            /* 'center top' pour que l'image rapetissée soit centrée en haut */
             background-position: center top !important; 
             
             background-repeat: no-repeat; 
@@ -1565,6 +1567,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
