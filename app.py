@@ -168,24 +168,60 @@ if 'page' not in st.session_state:
 if 'admin_mode' not in st.session_state:
     st.session_state.admin_mode = False
 
-# 2. Style CSS (Ta mise en forme)
+# 2. Style CSS (Version Spéciale Tablette - Visages et Clarté)
 st.markdown("""
 <style>
-    .stApp { background-color: #0e1117 !important; }
+    /* 1. L'IMAGE DE FOND (Le filigrane) */
+    [data-testid="stAppViewContainer"] {
+        /* On met ton image en fond */
+        background-image: url("https://i.postimg.cc/RCX2pdr7/300DPI-Zv2c98W9GYO7.png");
+        
+        /* FIX VISAGES : 'top' force l'affichage du haut de l'image (les yeux) */
+        background-position: top center; 
+        
+        /* L'image prend tout l'espace sans se déformer */
+        background-size: cover;
+        background-repeat: no-repeat;
+        
+        /* Indispensable pour les tablettes pour éviter les bugs de clarté */
+        background-attachment: scroll; 
+    }
+
+    /* 2. RÉGLAGE DE LA CLARTÉ (Moins pâle) */
+    /* On crée une couche pour assombrir juste assez pour lire le texte */
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        /* 0.4 = Image très claire | 0.8 = Image sombre. J'ai mis 0.5 pour que ce soit vif */
+        background-color: rgba(14, 17, 23, 0.5); 
+        z-index: -1;
+    }
+
+    /* 3. COULEURS GÉNÉRALES */
+    .stApp { background: transparent !important; }
     [data-testid="stSidebar"] { background-color: #1e2129 !important; }
     h1, h2, h3 { color: #e67e22 !important; }
+    
     .stButton button { 
         background-color: #e67e22 !important; 
         color: white !important; 
         border-radius: 10px; 
         border: none;
         font-weight: bold;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
     }
+    
     .logo-container { display: flex; justify-content: center; margin-bottom: 20px; }
-    .logo-container img { border-radius: 50%; width: 120px; height: 120px; object-fit: cover; border: 3px solid #e67e22; }
+    .logo-container img { 
+        border-radius: 50%; 
+        width: 120px; 
+        height: 120px; 
+        object-fit: cover; 
+        border: 3px solid #e67e22; 
+    }
 </style>
 """, unsafe_allow_html=True)
-
 # ======================
 # BARRE LATÉRALE (SIDEBAR)
 # ======================
@@ -1550,6 +1586,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
