@@ -1042,8 +1042,17 @@ elif st.session_state.page == "shop":
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
+            /* 1. On réduit le noir (0.4 au lieu de 0.75) pour que l'image soit moins pâle */
             background: linear-gradient(rgba(14,17,23,0.4), rgba(14,17,23,0.6)), url("{url_header}");
-            background-size: 45%; background-position: center 60%; background-repeat: no-repeat; background-attachment: fixed;
+            
+            /* 2. 'cover' force l'image à remplir tout l'écran au lieu de rester à 45% */
+            background-size: cover !important; 
+            
+            /* 3. 'top' remonte les personnages pour qu'on voie leurs yeux au-dessus des boutons */
+            background-position: center top !important; 
+            
+            background-repeat: no-repeat; 
+            background-attachment: fixed;
         }}
         [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{ background: transparent; }}
         .shop-card {{
@@ -1556,6 +1565,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
