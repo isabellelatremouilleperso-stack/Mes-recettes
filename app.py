@@ -1055,24 +1055,38 @@ elif st.session_state.page == "edit":
 
 # --- PAGE ÉPICERIE (RETOUR DU MODE ADMIN COMPLET) ---
 elif st.session_state.page == "shop":
-    # 1. DESIGN : Filigrane 50% & Cartes Sombre
+    # 1. DESIGN : Filigrane avec yeux visibles & Cartes Sombres
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
     st.markdown(f"""
         <style>
         [data-testid="stAppViewContainer"] {{
-            background: linear-gradient(rgba(14,17,23,0.8), rgba(14,17,23,0.9)), url("{url_header}");
-            background-size: 50%; background-position: center 20%; background-repeat: no-repeat; background-attachment: fixed;
+            background: linear-gradient(rgba(14,17,23,0.75), rgba(14,17,23,0.9)), url("{url_header}");
+            /* On rapetisse un poil (45%) et on centre verticalement (center center) */
+            background-size: 45%; 
+            background-position: center center; 
+            background-repeat: no-repeat; 
+            background-attachment: fixed;
         }}
         [data-testid="stHeader"], [data-testid="stMainViewContainer"] {{ background: transparent; }}
+        
         .shop-card {{
-            background-color: rgba(30, 34, 45, 0.6); padding: 16px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1); border-left: 5px solid #e67e22;
-            margin-bottom: 12px; color: #ffffff; backdrop-filter: blur(8px);
+            background-color: rgba(30, 34, 45, 0.6); 
+            padding: 16px; 
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            border-left: 5px solid #e67e22;
+            margin-bottom: 12px; 
+            color: #ffffff; 
+            backdrop-filter: blur(8px);
         }}
-        .neon-title {{ color: #e67e22; font-size: 2.2rem; font-weight: bold; text-shadow: 0 0 10px rgba(230, 126, 34, 0.4); }}
+        .neon-title {{ 
+            color: #e67e22; 
+            font-size: 2.2rem; 
+            font-weight: bold; 
+            text-shadow: 0 0 10px rgba(230, 126, 34, 0.4); 
+        }}
         </style>
     """, unsafe_allow_html=True)
-
     # 2. NAVIGATION ET TITRE
     c_titre, c_back = st.columns([0.85, 0.15])
     with c_titre:
@@ -1529,6 +1543,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
