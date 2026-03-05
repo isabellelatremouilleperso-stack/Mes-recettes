@@ -706,12 +706,26 @@ elif st.session_state.page == "details":
                 if st.checkbox(ings[i], key=f"chk_R_{current_title}_{i}"):
                     sel.append(ings[i])
         
-        st.write("") 
-        
-    # --- BLOC ADMIN : ÉDITION DES CATÉGORIES ---
-    if is_admin:
-        st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
-        
+        st.write("")
+    
+    # --- PRÉPARATION DES DONNÉES (À mettre AVANT le if is_admin) ---
+        liste_groupee = {} 
+        for idx, row in df_s.iterrows():
+            brut = str(row.iloc[0]).strip()
+            if " | " in brut:
+                cat, art = brut.split(" | ", 1)
+            else:
+                cat, art = "✨ Autre", brut
+            
+            if cat not in liste_groupee: 
+                liste_groupee[cat] = []
+            liste_groupee[cat].append({"art": art, "idx": idx, "brut": brut})
+
+        # --- MAINTENANT TON BLOC ADMIN PEUT COMMENCER ---
+        if is_admin:
+            st.markdown("<p style='color:#e67e22; font-weight:bold; font-size:18px;'>🛠 Gestion & Édition :</p>", unsafe_allow_html=True)
+            # ... la suite de ton code avec le formulaire ...   
+            
         with st.form("shop_management_form", border=False):
             to_del = []
             updates = [] # Pour stocker les changements de catégories
@@ -1611,6 +1625,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
