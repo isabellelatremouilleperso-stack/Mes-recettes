@@ -1053,49 +1053,66 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (STYLE MODERNE & FONCTIONNEL) ---
+# --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE ET DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # 1. Injection CSS pour le look "Wow"
-    st.markdown("""
+    # 1. IMAGE D'EN-TÊTE ET STYLE CSS (Look "Wow")
+    url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
+
+    st.markdown(f"""
         <style>
-        .stButton>button {
+        .stButton>button {{
             border-radius: 20px;
             font-weight: bold;
             transition: all 0.2s;
-        }
-        .stButton>button:hover {
+        }}
+        .stButton>button:hover {{
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        /* Style des cartes en mode consultation */
-        .shop-card {
+        }}
+        .keep-header {{
+            width: 100%;
+            border-radius: 15px 15px 0 0;
+            margin-bottom: -5px;
+            display: block;
+        }}
+        .keep-container {{
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 0 0 15px 15px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #2c3e50;
+        }}
+        .shop-card {{
             background-color: #ffffff;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 10px;
             border-left: 5px solid #e67e22;
             margin-bottom: 10px;
             box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
-            color: #2c3e50;
-        }
+            font-size: 17px;
+        }}
         </style>
+        <img src="{url_header}" class="keep-header">
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 style="color: #e67e22; text-align: center;">🛒 Ma Liste d\'Épicerie</h1>', unsafe_allow_html=True)
+    # 2. CONTENEUR BLANC (La Note Keep)
+    st.markdown('<div class="keep-container">', unsafe_allow_html=True)
     
-    is_admin = st.session_state.get('admin_mode', False)
-    
-    # Navigation
-    if st.button("⬅ Retour au menu"):
+    # Navigation & Titre
+    c_titre, c_back = st.columns([0.8, 0.2])
+    c_titre.markdown("<h2 style='margin:0; color:#e67e22;'>🛒 Liste d'Épicerie</h2>", unsafe_allow_html=True)
+    if c_back.button("⬅️", help="Retour au menu"):
         st.session_state.page = "home"
         st.rerun()
 
     st.divider()
 
-    # --- SECTION : AJOUT RAPIDE (Optimisée) ---
-    st.markdown("### ➕ Ajout rapide")
+    # --- SECTION : AJOUT RAPIDE (Ton système d'origine) ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
 
+    st.markdown("##### ➕ Ajouter un article")
     c_input, c_add, c_cancel = st.columns([3, 0.8, 0.8])
     
     new_article = c_input.text_input(
@@ -1122,65 +1139,19 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (VERSION AUTO-DÉTECTION KEEP) ---
+    # --- LOGIQUE D'AFFICHAGE ET GESTION ---
     try:
         import time
-        df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
-        
-        if not df_share.empty:
-            items = [str(row.iloc[0]).strip() for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
-            
-            # On utilise un saut de ligne très marqué
-            # Le triple slash est pour s'assurer que le \n passe bien à travers Streamlit
-            texte_final = "\\n".join(items)
-
-            st.markdown("### 📋 Copier pour Keep")
-            
-            copy_html = f"""
-                <div style="text-align:center;">
-                    <button onclick="copyToKeep()" 
-                    style="width: 100%; background-color: #f1c40f; color: #2c3e50; border: none; 
-                    padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer;">
-                        🟡 COPIER MA LISTE
-                    </button>
-                </div>
-
-                <script>
-                function copyToKeep() {{
-                    const text = {repr(texte_final)};
-                    // On force un formatage que Keep préfère pour les listes
-                    const cleanText = text.replace(/\\\\n/g, '\\n');
-                    
-                    const textArea = document.createElement("textarea");
-                    textArea.value = cleanText;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    
-                    alert("Copié ! Si Keep affiche un bloc, activez simplement les 'Cases à cocher' dans le menu de la note.");
-                }}
-                </script>
-            """
-            st.components.v1.html(copy_html, height=80)
-            st.divider()
-
-    except Exception as e:
-        pass
-   
-    # --- LOGIQUE DE LECTURE ET AFFICHAGE (Le bloc qui suit dans ton app) ---
-    
-    try:
-        import time
+        import json
+        is_admin = st.session_state.get('admin_mode', False)
         df_s = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_s.empty:
             if is_admin:
-                # --- MODE ADMIN : Suppression facile ---
+                # MODE ADMIN : Suppression avec cases à cocher
                 with st.form("shop_form", border=False):
                     to_del = []
-                    st.write("🛠 **Gestion de la liste :**")
-                    
+                    st.write("🛠 **Gestion (Cochez pour retirer) :**")
                     for idx, row in df_s.iterrows():
                         art = str(row.iloc[0]).strip()
                         if art:
@@ -1206,18 +1177,40 @@ elif st.session_state.page == "shop":
                         st.rerun()
             
             else:
-                # --- MODE CONSULTATION (Look "Carte") ---
-                st.info("📖 Mode Consultation : Prêt pour le magasin !")
+                # MODE CONSULTATION : Look "Carte" moderne
+                st.info("📖 Prêt pour le magasin !")
                 for idx, row in df_s.iterrows():
                     art = str(row.iloc[0]).strip()
                     if art:
                         st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
+
+            # --- BOUTON COPIER POUR KEEP (Toujours présent si liste non vide) ---
+            st.divider()
+            items_keep = [str(row.iloc[0]).strip() for idx, row in df_s.iterrows() if str(row.iloc[0]).strip()]
+            txt_final = "\\n".join(items_keep)
+            js_txt = json.dumps(txt_final)
+
+            st.components.v1.html(f"""
+                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">
+                    🟡 COPIER TOUT POUR GOOGLE KEEP
+                </button>
+                <script>
+                function copyK() {{
+                    const t = {js_txt}.replace(/\\\\n/g, '\\n');
+                    const ta = document.createElement("textarea"); ta.value = t;
+                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+                    document.body.removeChild(ta); alert("Liste copiée ! Chaque article sera sur une ligne.");
+                }}
+                </script>
+            """, height=60)
+
         else:
             st.info("La liste est vide. Tout est sous contrôle ! ✨")
-            
+
     except Exception as e:
         st.error(f"Erreur de chargement : {e}")
 
+    st.markdown('</div>', unsafe_allow_html=True) # Fermeture de la carte Keep
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1580,6 +1573,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
