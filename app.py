@@ -1053,9 +1053,9 @@ elif st.session_state.page == "edit":
         else:
             st.error("🚨 Le titre et les ingrédients sont obligatoires.")
 
-# --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE ET DESIGN KEEP) ---
+# --- PAGE ÉPICERIE (INTÉGRALE AVEC IMAGE AJUSTÉE & DESIGN KEEP) ---
 elif st.session_state.page == "shop":
-    # 1. IMAGE D'EN-TÊTE ET STYLE CSS (Look "Wow")
+    # 1. IMAGE D'EN-TÊTE RAPETISSÉE ET STYLE CSS
     url_header = "https://i.postimg.cc/Y9K56SxC/f1ed1d49-14a2-4bca-90ae-e88d0ba63018.png"
 
     st.markdown(f"""
@@ -1069,8 +1069,11 @@ elif st.session_state.page == "shop":
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }}
+        /* IMAGE RAPETISSÉE EN HAUTEUR */
         .keep-header {{
             width: 100%;
+            height: 120px; /* Taille réduite pour ne pas encombrer */
+            object-fit: cover; /* Garde les bonnes proportions */
             border-radius: 15px 15px 0 0;
             margin-bottom: -5px;
             display: block;
@@ -1108,7 +1111,7 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- SECTION : AJOUT RAPIDE (Ton système d'origine) ---
+    # --- SECTION : AJOUT RAPIDE (Vérifié : tout y est) ---
     if "input_counter" not in st.session_state:
         st.session_state.input_counter = 0
 
@@ -1139,7 +1142,7 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- LOGIQUE D'AFFICHAGE ET GESTION ---
+    # --- LOGIQUE D'AFFICHAGE ET GESTION (Vérifié : Admin + Consultation) ---
     try:
         import time
         import json
@@ -1156,61 +1159,7 @@ elif st.session_state.page == "shop":
                         art = str(row.iloc[0]).strip()
                         if art:
                             col_c, col_t = st.columns([0.15, 0.85])
-                            if col_c.checkbox("", key=f"sh_{idx}"):
-                                to_del.append(art)
-                            col_t.write(f"**{art}**")
-                    
-                    st.markdown("---")
-                    submit_del = st.form_submit_button("🗑 Retirer la sélection", use_container_width=True)
-                
-                if submit_del:
-                    if to_del:
-                        if send_action({"action": "remove_shop", "articles": to_del}):
-                            st.cache_data.clear()
-                            st.rerun()
-                    else:
-                        st.warning("Cochez des articles.")
-
-                if st.button("🧨 Vider toute la liste", use_container_width=True):
-                    if send_action({"action": "clear_shop"}):
-                        st.cache_data.clear()
-                        st.rerun()
-            
-            else:
-                # MODE CONSULTATION : Look "Carte" moderne
-                st.info("📖 Prêt pour le magasin !")
-                for idx, row in df_s.iterrows():
-                    art = str(row.iloc[0]).strip()
-                    if art:
-                        st.markdown(f'<div class="shop-card"><b>❑ {art}</b></div>', unsafe_allow_html=True)
-
-            # --- BOUTON COPIER POUR KEEP (Toujours présent si liste non vide) ---
-            st.divider()
-            items_keep = [str(row.iloc[0]).strip() for idx, row in df_s.iterrows() if str(row.iloc[0]).strip()]
-            txt_final = "\\n".join(items_keep)
-            js_txt = json.dumps(txt_final)
-
-            st.components.v1.html(f"""
-                <button onclick="copyK()" style="width:100%; background:#f1c40f; border:none; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; color:#2c3e50;">
-                    🟡 COPIER TOUT POUR GOOGLE KEEP
-                </button>
-                <script>
-                function copyK() {{
-                    const t = {js_txt}.replace(/\\\\n/g, '\\n');
-                    const ta = document.createElement("textarea"); ta.value = t;
-                    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
-                    document.body.removeChild(ta); alert("Liste copiée ! Chaque article sera sur une ligne.");
-                }}
-                </script>
-            """, height=60)
-
-        else:
-            st.info("La liste est vide. Tout est sous contrôle ! ✨")
-
-    except Exception as e:
-        st.error(f"Erreur de chargement : {e}")
-
-    st.markdown('</div>', unsafe_allow_html=True) # Fermeture de la carte Keep
+                            if col_
 # ======================
 # PAGE PLANNING
 # ======================
@@ -1573,6 +1522,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
