@@ -532,55 +532,9 @@ elif st.session_state.page == "details":
     
     # --- CORPS DE LA PAGE (IMAGE ET INFOS) ---
     col_g, col_d = st.columns([1, 1.2])
-    # --- SECTION BOUTONS D'INTERACTION ---
-    c_feat1, c_feat2 = st.columns(2) # On définit c_feat1 et c_feat2
-    
-    with c_feat1:
-        import random
-        # Liste de petits messages drôles
-        blagues_chef = [
-            "Et un michelin de plus ! ⭐", 
-            "Gordon Ramsay n'a qu'à bien se tenir ! 👨‍🍳", 
-            "C'est meilleur que chez maman ! (Chut...) 🤫", 
-            "Appelez les pompiers, c'est du FEU ! 🔥",
-            "Miam ! On arrive à quelle heure ? 🏃‍♂️"
-        ]
-
-        if 'made_list' not in st.session_state:
-            st.session_state.made_list = set()
-            
-        is_made = current_title in st.session_state.made_list
-        label_made = "✅ Déjà goûté !" if is_made else "👨‍🍳 Cuisinée ?"
-        
-        if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
-            if is_made:
-                st.session_state.made_list.remove(current_title)
-            else:
-                st.session_state.made_list.add(current_title)
-                # --- L'EFFET DRÔLE ---
-                st.snow() # Fait tomber de la neige/étoiles sur l'écran
-                msg = random.choice(blagues_chef) # Choisit une phrase au hasard
-                st.toast(msg, icon="🎉")
-            st.rerun()
-    with c_feat2: # On utilise bien c_feat2 ici aussi
-        if 'fav_list' not in st.session_state:
-            st.session_state.fav_list = set()
-        
-        is_fav = current_title in st.session_state.fav_list
-        
-        if is_fav:
-            if st.button("⭐ Préférée", type="primary", use_container_width=True, key=f"det_fav_on_{current_title}"):
-                st.session_state.fav_list.remove(current_title)
-                st.rerun()
-        else:
-            if st.button("☆ Favoris", use_container_width=True, key=f"det_fav_off_{current_title}"):
-                st.session_state.fav_list.add(current_title)
-                st.toast("Ajouté aux coups de cœur ! 💖")
-                st.rerun()
-    st.write("")
     
     with col_g:
-        # 1. Gestion de l'image (Inchangée, mais sécurisée)
+        # 1. Gestion de l'image
         img_url = r.get('Image', '')
         img_url_str = str(img_url).strip() if img_url else ""
         img_source = img_url_str if img_url_str.startswith("http") else "https://via.placeholder.com/400?text=Pas+d'image"
@@ -590,7 +544,7 @@ elif st.session_state.page == "details":
         except Exception:
             st.image("https://via.placeholder.com/400?text=Erreur+Image", use_container_width=True)
             
-        # 2. Système de Notation (Exactement ton code d'origine)
+        # 2. Système de Notation
         try:
             val_note = r.get('Note', 0)
             note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
@@ -609,9 +563,50 @@ elif st.session_state.page == "details":
                     st.toast("Note enregistrée ! ⭐")
                     st.cache_data.clear(); st.rerun()
 
-        st.write("") # Petit espacement visuel
+    # --- TOUT CE QUI SUIT EST DÉSORMAIS RANGÉ DANS LA COLONNE DE DROITE ---
+    with col_d:
+        # 1. BOUTONS D'INTERACTION RAPIDE
+        c_feat1, c_feat2 = st.columns(2)
+        
+        with c_feat1:
+            import random
+            blagues_chef = [
+                "Et un michelin de plus ! ⭐", 
+                "Gordon Ramsay n'a qu'à bien se tenir ! 👨‍🍳", 
+                "C'est meilleur que chez maman ! 🤫", 
+                "Appelez les pompiers, c'est du FEU ! 🔥"
+            ]
+            if 'made_list' not in st.session_state:
+                st.session_state.made_list = set()
+            
+            is_made = current_title in st.session_state.made_list
+            label_made = "✅ Déjà goûté !" if is_made else "👨‍🍳 Cuisinée ?"
+            
+            if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
+                if is_made:
+                    st.session_state.made_list.remove(current_title)
+                else:
+                    st.session_state.made_list.add(current_title)
+                    st.snow()
+                    st.toast(random.choice(blagues_chef), icon="🎉")
+                st.rerun()
 
-        # --- 2. INFORMATIONS GÉNÉRALES ---
+        with c_feat2:
+            if 'fav_list' not in st.session_state:
+                st.session_state.fav_list = set()
+            
+            is_fav = current_title in st.session_state.fav_list
+            if st.button("⭐ Préférée" if is_fav else "☆ Favoris", use_container_width=True, key=f"det_fav_{current_title}", type="primary" if is_fav else "secondary"):
+                if is_fav:
+                    st.session_state.fav_list.remove(current_title)
+                else:
+                    st.session_state.fav_list.add(current_title)
+                    st.toast("Ajouté aux coups de cœur ! 💖")
+                st.rerun()
+
+        st.divider()
+
+        # 2. INFORMATIONS GÉNÉRALES
         st.subheader("📋 Informations")
         c_i1, c_i2 = st.columns(2)
         with c_i1:
@@ -623,7 +618,6 @@ elif st.session_state.page == "details":
             else: 
                 st.markdown("**🌐 Source :**\n*Non spécifiée*")
         
-        # Planning mis dans un petit menu déroulant pour sauver de l'espace
         with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=False):
             u_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             date_p = st.date_input("Choisir une date", key=f"dt_{u_key}")
@@ -633,34 +627,28 @@ elif st.session_state.page == "details":
 
         st.divider()
         
-        # --- 3. MÉTRIQUES LARGES (Ne coupe plus le texte) ---
-        # On utilise du Markdown plutôt que st.metric pour laisser la place au texte long
-        m1, m2, m3 = st.columns([1.2, 1.2, 1]) # On donne plus de largeur aux colonnes de temps
-        
+        # 3. MÉTRIQUES LARGES
+        m1, m2, m3 = st.columns([1.2, 1.2, 1])
         with m1:
-            val_prepa = r.get('Temps de préparation', '-')
-            st.markdown(f"**🕒 Préparation**\n\n{val_prepa}")
-            
+            st.markdown(f"**🕒 Préparation**\n\n{r.get('Temps de préparation', '-')}")
         with m2:
-            val_cuisson = r.get('Temps de cuisson', '-')
-            st.markdown(f"**🔥 Cuisson**\n\n{val_cuisson}")
-            
+            st.markdown(f"**🔥 Cuisson**\n\n{r.get('Temps de cuisson', '-')}")
         with m3:
-            val_port = r.get('Portions', '-')
-            st.markdown(f"**🍽️ Portions**\n\n{val_port}")
+            st.markdown(f"**🍽️ Portions**\n\n{r.get('Portions', '-')}")
 
         st.divider()
 
-        # --- 4. VIDÉO TUTORIEL ---
+        # 4. VIDÉO
         v_link = r.get('Lien vidéo') or r.get('video') or r.get('Vidéo') or ""
         v_link_str = str(v_link).strip()
         if v_link_str.lower().startswith("http"):
             if any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"]):
-                with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=False):
+                with st.expander("🎬 VOIR LE TUTORIEL VIDÉO"):
                     st.video(v_link_str)
             else:
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
+    # --- FIN DE LA COLONNE DE DROITE ---
     # --- SECTION INGRÉDIENTS (DEUX COLONNES SOUS LA PHOTO) ---
     st.divider()
     st.subheader("🛒 Ingrédients")
@@ -1531,6 +1519,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
