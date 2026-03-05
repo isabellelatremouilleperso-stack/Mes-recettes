@@ -534,7 +534,7 @@ elif st.session_state.page == "details":
     col_g, col_d = st.columns([1, 1.2])
     
     with col_g:
-        # 1. Gestion de l'image
+        # 1. Gestion de l'image (Reste seule à gauche pour plus d'impact)
         img_url = r.get('Image', '')
         img_url_str = str(img_url).strip() if img_url else ""
         img_source = img_url_str if img_url_str.startswith("http") else "https://via.placeholder.com/400?text=Pas+d'image"
@@ -543,29 +543,10 @@ elif st.session_state.page == "details":
             st.image(img_source, use_container_width=True)
         except Exception:
             st.image("https://via.placeholder.com/400?text=Erreur+Image", use_container_width=True)
-            
-        # 2. Système de Notation
-        try:
-            val_note = r.get('Note', 0)
-            note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
-        except: 
-            note_actuelle = 0
-
-        st.write(f"**Évaluer cette recette ({note_actuelle} ⭐) :**")
-        nouvelle_note = st.select_slider(
-            "Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, 
-            key=f"sl_{current_title}", label_visibility="collapsed"
-        )
-        
-        if nouvelle_note != note_actuelle:
-            with st.spinner("Mise à jour..."):
-                if send_action({"action": "edit", "old_titre": current_title.strip(), "Note": nouvelle_note}):
-                    st.toast("Note enregistrée ! ⭐")
-                    st.cache_data.clear(); st.rerun()
 
     # --- TOUT CE QUI SUIT EST DÉSORMAIS RANGÉ DANS LA COLONNE DE DROITE ---
     with col_d:
-        # 1. BOUTONS D'INTERACTION RAPIDE
+        # 1. BOUTONS D'INTERACTION RAPIDE (Cuisinée / Favoris)
         c_feat1, c_feat2 = st.columns(2)
         
         with c_feat1:
@@ -606,7 +587,28 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # 2. INFORMATIONS GÉNÉRALES
+        # 2. SYSTÈME DE NOTATION (Déplacé ici sur le côté)
+        try:
+            val_note = r.get('Note', 0)
+            note_actuelle = int(float(val_note)) if str(val_note).strip() not in ["", "None", "nan", "-", "0"] else 0
+        except: 
+            note_actuelle = 0
+
+        st.write(f"**Évaluer cette recette ({note_actuelle} ⭐) :**")
+        nouvelle_note = st.select_slider(
+            "Note", options=[0, 1, 2, 3, 4, 5], value=note_actuelle, 
+            key=f"sl_droit_{current_title}", label_visibility="collapsed"
+        )
+        
+        if nouvelle_note != note_actuelle:
+            with st.spinner("Mise à jour..."):
+                if send_action({"action": "edit", "old_titre": current_title.strip(), "Note": nouvelle_note}):
+                    st.toast("Note enregistrée ! ⭐")
+                    st.cache_data.clear(); st.rerun()
+
+        st.write("") 
+
+        # 3. INFORMATIONS GÉNÉRALES
         st.subheader("📋 Informations")
         c_i1, c_i2 = st.columns(2)
         with c_i1:
@@ -616,9 +618,10 @@ elif st.session_state.page == "details":
             if src_val and "http" in str(src_val): 
                 st.link_button("🌐 Voir la Source", str(src_val), use_container_width=True)
             else: 
-                st.markdown("**🌐 Source :**\n*Non spécifiée*")
+                st.markdown("**🌐 Source :**\n*Web*")
         
-        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=False):
+        # PLANNING OUVERT PAR DÉFAUT (expanded=True)
+        with st.expander("📅 **PLANIFIER CETTE RECETTE**", expanded=True):
             u_key = f"plan_{hashlib.md5(current_title.encode()).hexdigest()[:6]}"
             date_p = st.date_input("Choisir une date", key=f"dt_{u_key}")
             if st.button("🗓️ Ajouter au planning", use_container_width=True, key=f"btn_{u_key}"):
@@ -627,7 +630,7 @@ elif st.session_state.page == "details":
 
         st.divider()
         
-        # 3. MÉTRIQUES LARGES
+        # 4. MÉTRIQUES LARGES
         m1, m2, m3 = st.columns([1.2, 1.2, 1])
         with m1:
             st.markdown(f"**🕒 Préparation**\n\n{r.get('Temps de préparation', '-')}")
@@ -1519,6 +1522,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
