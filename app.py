@@ -609,32 +609,6 @@ elif st.session_state.page == "details":
                     st.toast("Note enregistrée ! ⭐")
                     st.cache_data.clear(); st.rerun()
 
-    with col_d:
-        # --- 1. BOUTONS D'INTERACTION RAPIDE ---
-        c_feat1, c_feat2 = st.columns(2)
-        
-        with c_feat1:
-            # Bouton "Je l'ai faite"
-            if st.button("👨‍🍳 Cuisinée !", use_container_width=True, key=f"made_{current_title}"):
-                st.balloons()
-                st.toast("Félicitations Chef ! 🥘", icon="🔥")
-        
-        with c_feat2:
-            # Système de favoris (Étoile)
-            if 'fav_list' not in st.session_state:
-                st.session_state.fav_list = set()
-            
-            is_fav = current_title in st.session_state.fav_list
-            label_fav = "⭐ Préférée" if is_fav else "☆ Favoris"
-            # Le bouton devient rouge/orange (primary) s'il est coché
-            if st.button(label_fav, use_container_width=True, key=f"fav_{current_title}", type="primary" if is_fav else "secondary"):
-                if is_fav:
-                    st.session_state.fav_list.remove(current_title)
-                else:
-                    st.session_state.fav_list.add(current_title)
-                    st.toast("Ajouté aux coups de cœur ! 💖")
-                st.rerun()
-
         st.write("") # Petit espacement visuel
 
         # --- 2. INFORMATIONS GÉNÉRALES ---
@@ -1557,6 +1531,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
