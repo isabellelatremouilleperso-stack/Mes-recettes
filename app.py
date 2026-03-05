@@ -551,27 +551,36 @@ elif st.session_state.page == "details":
         
         with c_feat1:
             import random
-            blagues_chef = [
+            # Liste de messages pour les chefs
+            mots_bravo = [
                 "Et un michelin de plus ! ⭐", 
                 "Gordon Ramsay n'a qu'à bien se tenir ! 👨‍🍳", 
                 "C'est meilleur que chez maman ! 🤫", 
-                "Appelez les pompiers, c'est du FEU ! 🔥"
+                "Appelez les pompiers, c'est du FEU ! 🔥",
+                "Miam ! On arrive à quelle heure ? 🏃‍♂️"
             ]
+
             if 'made_list' not in st.session_state:
                 st.session_state.made_list = set()
             
             is_made = current_title in st.session_state.made_list
-            label_made = "✅ Déjà goûté !" if is_made else "👨‍🍳 Cuisinée ?"
+            # CHANGEMENT ICI : "Testé" au lieu de "Déjà goûté"
+            label_made = "✅ Testé !" if is_made else "👨‍🍳 Cuisinée ?"
             
             if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
                 if is_made:
                     st.session_state.made_list.remove(current_title)
+                    st.rerun()
                 else:
                     st.session_state.made_list.add(current_title)
-                    st.snow()
-                    st.toast(random.choice(blagues_chef), icon="🎉")
-                st.rerun()
-
+                    # --- ON LANCE L'ANIMATION D'ABORD ---
+                    st.snow() 
+                    msg_aleatoire = random.choice(mots_bravo)
+                    st.toast(msg_aleatoire, icon="🎉")
+                    # On attend un tout petit peu pour que l'animation commence avant le rerun
+                    import time
+                    time.sleep(0.5) 
+                    st.rerun()
         with c_feat2:
             if 'fav_list' not in st.session_state:
                 st.session_state.fav_list = set()
@@ -1522,6 +1531,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
