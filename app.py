@@ -1122,34 +1122,45 @@ elif st.session_state.page == "shop":
 
     st.divider()
 
-    # --- OPTION DE PARTAGE (NETTOYAGE ET COPIE) ---
+    # --- OPTION DE PARTAGE (OPTIMISÉ POUR GOOGLE KEEP) ---
     try:
         import time
         df_share = pd.read_csv(f"{URL_CSV_SHOP}&nocache={time.time()}").fillna('')
         
         if not df_share.empty:
-            items = [f"☐ {str(row.iloc[0]).strip()}" for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
-            texte_final = "🛒 MA LISTE D'ÉPICERIE :\\n\\n" + "\\n".join(items)
+            # On ne met PAS de symboles ☐ ici, pour que Keep puisse créer ses propres cases
+            items = [str(row.iloc[0]).strip() for idx, row in df_share.iterrows() if str(row.iloc[0]).strip()]
+            
+            # On sépare juste par des retours à la ligne
+            texte_pour_keep = "\\n".join(items)
 
-            st.markdown("### 📋 Actions")
+            st.markdown("### 📋 Préparer pour Google Keep")
             
-            # --- LE BOUTON COPIER MAGIQUE ---
-            # Ce code crée un bouton qui communique DIRECTEMENT avec le presse-papier
-            copy_button_html = f"""
-                <button onclick="navigator.clipboard.writeText(`{texte_final}`)" 
-                style="width: 100%; background-color: #e67e22; color: white; border: none; 
-                padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer;">
-                    📋 CLIQUER ICI POUR COPIER LA LISTE
-                </button>
+            # Ce bouton copie la liste "propre"
+            copy_html = f"""
+                <div id="copy-area" style="text-align:center;">
+                    <button onclick="copyToClipboard()" 
+                    style="width: 100%; background-color: #f1c40f; color: #2c3e50; border: none; 
+                    padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        🟡 COPIER POUR GOOGLE KEEP
+                    </button>
+                </div>
+                <script>
+                function copyToClipboard() {{
+                    const text = `{texte_pour_keep}`;
+                    navigator.clipboard.writeText(text).then(() => {{
+                        alert("Liste copiée ! Allez dans Keep, créez une note et faites 'Coller'.");
+                    }});
+                }}
+                </script>
             """
-            st.components.v1.html(copy_button_html, height=50)
+            st.components.v1.html(copy_html, height=70)
             
-            st.caption("💡 Une fois cliqué, allez simplement 'Coller' dans Keep.")
-            st.divider() # Sépare bien la copie de la gestion
+            st.info("💡 **Astuce Keep :** Une fois collé, cliquez sur le '+' en bas à gauche de votre note Keep et choisissez 'Cases à cocher'.")
+            st.divider()
 
     except Exception as e:
         pass
-
    
     # --- LOGIQUE DE LECTURE ET AFFICHAGE (Le bloc qui suit dans ton app) ---
     
@@ -1563,6 +1574,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
