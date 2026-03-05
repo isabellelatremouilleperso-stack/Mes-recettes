@@ -564,23 +564,21 @@ elif st.session_state.page == "details":
                 st.session_state.made_list = set()
             
             is_made = current_title in st.session_state.made_list
-            # CHANGEMENT ICI : "Testé" au lieu de "Déjà goûté"
             label_made = "✅ Testé !" if is_made else "👨‍🍳 Cuisinée ?"
             
+            # Action du bouton
             if st.button(label_made, use_container_width=True, key=f"det_made_{current_title}", type="primary" if is_made else "secondary"):
                 if is_made:
                     st.session_state.made_list.remove(current_title)
-                    st.rerun()
+                    st.rerun() # On garde le rerun uniquement pour décocher (enlever le vert)
                 else:
                     st.session_state.made_list.add(current_title)
-                    # --- ON LANCE L'ANIMATION D'ABORD ---
+                    # --- L'ANIMATION VA ENFIN S'AFFICHER ---
                     st.snow() 
                     msg_aleatoire = random.choice(mots_bravo)
                     st.toast(msg_aleatoire, icon="🎉")
-                    # On attend un tout petit peu pour que l'animation commence avant le rerun
-                    import time
-                    time.sleep(0.5) 
-                    st.rerun()
+                    # NOTE : Pas de rerun ici pour laisser l'animation jouer !
+                    
         with c_feat2:
             if 'fav_list' not in st.session_state:
                 st.session_state.fav_list = set()
@@ -1531,6 +1529,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
