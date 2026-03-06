@@ -791,7 +791,13 @@ elif st.session_state.page == "add":
         
         col_link1, col_link2 = st.columns(2)
         source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
-        video_url_in = col_link2.text_input("🎬 Lien Vidéo", placeholder="URL vidéo...")
+        # On va chercher l'URL existante dans l'objet 'recette' (ou ton session_state)
+        # Si 'video_url' n'existe pas, on met une chaîne vide ""
+        video_url_in = col_link2.text_input(
+            "🎬 Lien Vidéo", 
+            value=recette.get('video_url', ""),  # <--- AJOUTE CECI
+            placeholder="URL vidéo..."
+        )
         
         st.markdown("#### ⏱️ Paramètres")
         cp1, cp2, cp3 = st.columns(3)
@@ -994,8 +1000,19 @@ elif st.session_state.page == "edit":
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''))
         
         col_v, col_s = st.columns(2)
-        video_url = col_v.text_input("📺 Lien Vidéo (TikTok, Instagram, FB)", value=r_edit.get('video', ''))
-        source_url = col_s.text_input("🌐 Lien Source (Site web)", value=r_edit.get('Source', ''))
+
+        # On cherche 'video', et si on ne trouve pas, on cherche 'video_url'
+        valeur_video = r_edit.get('video') or r_edit.get('video_url') or ""
+        
+        video_url = col_v.text_input(
+            "📺 Lien Vidéo (TikTok, Instagram, FB)", 
+            value=valeur_video
+        )
+        
+        source_url = col_s.text_input(
+            "🌐 Lien Source (Site web)", 
+            value=r_edit.get('source', '') # Assure-toi que c'est bien 'source' partout
+        )
         
         # Champ commentaires
         commentaires = st.text_area("📝 Mes Notes & Astuces", value=r_edit.get('Commentaires', ''), height=100)
@@ -1566,6 +1583,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
