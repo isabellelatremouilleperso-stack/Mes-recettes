@@ -799,10 +799,16 @@ elif st.session_state.page == "add":
         
         col_link1, col_link2 = st.columns(2)
         source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
-        # On va chercher l'URL existante dans l'objet 'recette' (ou ton session_state)
+        # 1. On définit le lien par défaut (vide si c'est une nouvelle recette)
+        # On essaie de récupérer une valeur existante dans r_edit ou r
+        default_video = ""
+        if 'r_edit' in locals(): default_video = r_edit.get('video', "")
+        elif 'r' in locals(): default_video = r.get('video', "")
+
+        # 2. Le champ de saisie corrigé
         video_url_in = col_link2.text_input(
             "🎬 Lien Vidéo", 
-            value=r_edit.get('video', ""),  # On remplace 'recette' par 'r_edit'
+            value=default_video,
             placeholder="URL vidéo..."
         )
         
@@ -1588,6 +1594,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
