@@ -661,14 +661,22 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # 4. VIDÉO
-        v_link = r.get('Lien vidéo') or r.get('video') or r.get('Vidéo') or ""
+        # 4. VIDÉO (Version optimisée pour YouTube Shorts et réseaux sociaux)
+        v_link = r.get('video') or r.get('Lien vidéo') or r.get('Vidéo') or ""
         v_link_str = str(v_link).strip()
+        
         if v_link_str.lower().startswith("http"):
+            # --- TRANSFORMATION DES SHORTS ---
+            # On change /shorts/ en /watch?v= pour que le lecteur Streamlit l'accepte
+            if "/shorts/" in v_link_str:
+                v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
+        
+            # Affichage selon la source
             if any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"]):
                 with st.expander("🎬 VOIR LE TUTORIEL VIDÉO"):
                     st.video(v_link_str)
             else:
+                # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
     # --- FIN DE LA COLONNE DE DROITE ---
@@ -850,9 +858,7 @@ elif st.session_state.page == "add":
                     "Commentaires": commentaires.strip(),
                     "video": video_url_in.strip()
                 }
-                
-                # ... (suite du code d'envoi send_action)
-                
+                                
                 # ... (reste du code d'envoi send_action)
                 
                 if send_action(payload):
@@ -1583,6 +1589,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
