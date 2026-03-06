@@ -800,10 +800,9 @@ elif st.session_state.page == "add":
         col_link1, col_link2 = st.columns(2)
         source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
         # On va chercher l'URL existante dans l'objet 'recette' (ou ton session_state)
-        # Si 'video_url' n'existe pas, on met une chaîne vide ""
         video_url_in = col_link2.text_input(
             "🎬 Lien Vidéo", 
-            value=recette.get('video_url', ""),  # <--- AJOUTE CECI
+            value=r_edit.get('video', ""),  # On remplace 'recette' par 'r_edit'
             placeholder="URL vidéo..."
         )
         
@@ -1589,6 +1588,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
