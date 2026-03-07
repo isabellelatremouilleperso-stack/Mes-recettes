@@ -357,8 +357,8 @@ if st.session_state.page == "home":
                 </script>
             """, unsafe_allow_html=True)
     
-    # On vide la mémoire
-    st.session_state.last_index = None
+            # On vide la mémoire
+            st.session_state.last_index = None
             
         with col_search:
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
@@ -1619,6 +1619,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
