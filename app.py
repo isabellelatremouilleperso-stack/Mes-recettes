@@ -342,24 +342,26 @@ if st.session_state.page == "home":
         # --- BARRE DE FILTRES ET TRI ---
         col_search, col_cat, col_tri = st.columns([2, 1, 1])
 
-        # --- LOGIQUE DE RETOUR AU SCROLL ---
+        # --- LOGIQUE DE RETOUR AU SCROLL (VERSION ROBUSTE) ---
         if "last_index" in st.session_state and st.session_state.last_index is not None:
-            index_a_viser = st.session_state.last_index
+            idx = st.session_state.last_index
             st.markdown(f"""
                 <script>
-                    // On attend 500ms (0.5 seconde) pour laisser le temps aux cartes de charger
-                    setTimeout(function() {{
-                        var element = window.parent.document.getElementById("recette_{index_a_viser}");
-                        if (element) {{
-                            element.scrollIntoView({{behavior: "smooth", block: "center"}});
+                    function tryScroll() {{
+                        var el = window.parent.document.getElementById("recette_{idx}");
+                        if (el) {{
+                            el.scrollIntoView({{behavior: "smooth", block: "center"}});
+                        }} else {{
+                            // Si pas trouvé, on réessaie dans 200ms
+                            setTimeout(tryScroll, 200);
                         }}
-                    }}, 500); 
+                    }}
+                    // Premier essai après 500ms
+                    setTimeout(tryScroll, 500);
                 </script>
             """, unsafe_allow_html=True)
-    
-            # On vide la mémoire
-            st.session_state.last_index = None
-            
+            st.session_state.last_index = None 
+
         with col_search:
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
             
@@ -1619,6 +1621,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
