@@ -345,17 +345,20 @@ if st.session_state.page == "home":
         # --- LOGIQUE DE RETOUR AU SCROLL ---
         if "last_index" in st.session_state and st.session_state.last_index is not None:
             index_a_viser = st.session_state.last_index
-            # On injecte un petit script qui "scrolle" vers l'ID qu'on a créé
             st.markdown(f"""
                 <script>
-                    var element = window.parent.document.getElementById("recette_{index_a_viser}");
-                    if (element) {{
-                        element.scrollIntoView({{behavior: "smooth", block: "center"}});
-                    }}
+                    // On attend 500ms (0.5 seconde) pour laisser le temps aux cartes de charger
+                    setTimeout(function() {{
+                        var element = window.parent.document.getElementById("recette_{index_a_viser}");
+                        if (element) {{
+                            element.scrollIntoView({{behavior: "smooth", block: "center"}});
+                        }}
+                    }}, 500); 
                 </script>
             """, unsafe_allow_html=True)
-            # On vide la mémoire pour ne pas rescroller à chaque fois
-            st.session_state.last_index = None
+    
+    # On vide la mémoire
+    st.session_state.last_index = None
             
         with col_search:
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
@@ -1616,6 +1619,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
