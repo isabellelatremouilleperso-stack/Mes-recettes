@@ -342,24 +342,26 @@ if st.session_state.page == "home":
         # --- BARRE DE FILTRES ET TRI ---
         col_search, col_cat, col_tri = st.columns([2, 1, 1])
 
-        # --- LOGIQUE DE RETOUR AU SCROLL (VERSION ROBUSTE) ---
+        # --- LOGIQUE DE RETOUR AU SCROLL (Haut de page HOME) ---
         if "last_index" in st.session_state and st.session_state.last_index is not None:
-            idx = st.session_state.last_index
+            idx_cible = st.session_state.last_index
             st.markdown(f"""
                 <script>
-                    function tryScroll() {{
-                        var el = window.parent.document.getElementById("recette_{idx}");
-                        if (el) {{
-                            el.scrollIntoView({{behavior: "smooth", block: "center"}});
+                    // Fonction qui cherche la recette et descend
+                    function scrollVersRecette() {{
+                        const element = window.parent.document.getElementById("recette_{idx_cible}");
+                        if (element) {{
+                            element.scrollIntoView({{behavior: "smooth", block: "center"}});
                         }} else {{
-                            // Si pas trouvé, on réessaie dans 200ms
-                            setTimeout(tryScroll, 200);
+                            // Si pas encore chargé, on réessaie dans 100ms
+                            setTimeout(scrollVersRecette, 100);
                         }}
                     }}
-                    // Premier essai après 500ms
-                    setTimeout(tryScroll, 500);
+                    // On lance le premier essai
+                    scrollVersRecette();
                 </script>
             """, unsafe_allow_html=True)
+            # On ne vide la mémoire QUE si on a fini l'affichage
             st.session_state.last_index = None 
 
         with col_search:
@@ -1621,6 +1623,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
