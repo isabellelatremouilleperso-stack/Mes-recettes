@@ -364,10 +364,10 @@ if st.session_state.page == "home":
        # On ne vide la mémoire QUE si on a fini l'affichage
        st.session_state.last_index = None 
 
-        with col_search:
-            search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
-            
-        with col_cat:
+    with col_search:
+        search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
+        
+    with col_cat:
     # LISTE MISE À JOUR : + Sandwich
             mes_categories = [
                 "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
@@ -1623,6 +1623,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
