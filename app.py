@@ -343,32 +343,28 @@ if st.session_state.page == "home":
         col_search, col_cat, col_tri = st.columns([2, 1, 1])
 
     # --- LOGIQUE DE RETOUR AU SCROLL (Haut de page HOME) ---
-    if "last_index" in st.session_state and st.session_state.last_index is not None:
-       idx_cible = st.session_state.last_index
-       st.markdown(f"""
-           <script>
-               // Fonction qui cherche la recette et descend
-              function scrollVersRecette() {{
-                  const element = window.parent.document.getElementById("recette_{idx_cible}");
-                  if (element) {{
-                      element.scrollIntoView({{behavior: "smooth", block: "center"}});
-                  }} else {{
-                      // Si pas encore chargé, on réessaie dans 100ms
-                      setTimeout(scrollVersRecette, 100);
-                  }}
-              }}
-              // On lance le premier essai
-              scrollVersRecette();
-          </script>
-       """, unsafe_allow_html=True)
-       # On ne vide la mémoire QUE si on a fini l'affichage
-       st.session_state.last_index = None 
+        if "last_index" in st.session_state and st.session_state.last_index is not None:
+            idx_cible = st.session_state.last_index
+            st.markdown(f"""
+                <script>
+                    function scrollVersRecette() {{
+                        const element = window.parent.document.getElementById("recette_{idx_cible}");
+                        if (element) {{
+                            element.scrollIntoView({{behavior: "smooth", block: "center"}});
+                        }} else {{
+                            setTimeout(scrollVersRecette, 100);
+                        }}
+                    }}
+                    scrollVersRecette();
+                </script>
+            """, unsafe_allow_html=True)
+            st.session_state.last_index = None 
 
-    with col_search:
-        search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
-        
-    with col_cat:
-    # LISTE MISE À JOUR : + Sandwich
+        # --- BARRE DE FILTRES ---
+        with col_search:
+            search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
+            
+        with col_cat:
             mes_categories = [
                 "Toutes", "Accompagnement", "Agneau", "Air Fryer", "Apéro", "Asiatique", 
                 "BBQ", "Biscuits", "Boisson", "Boulangerie", "Buffet", "Buffet chinois", "Bœuf", "Cabane à sucre", "Condiment", 
@@ -1623,6 +1619,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
