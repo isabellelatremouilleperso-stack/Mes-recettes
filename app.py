@@ -341,7 +341,22 @@ if st.session_state.page == "home":
     if not df.empty:
         # --- BARRE DE FILTRES ET TRI ---
         col_search, col_cat, col_tri = st.columns([2, 1, 1])
-        
+
+        # --- LOGIQUE DE RETOUR AU SCROLL ---
+        if "last_index" in st.session_state and st.session_state.last_index is not None:
+            index_a_viser = st.session_state.last_index
+            # On injecte un petit script qui "scrolle" vers l'ID qu'on a créé
+            st.markdown(f"""
+                <script>
+                    var element = window.parent.document.getElementById("recette_{index_a_viser}");
+                    if (element) {{
+                        element.scrollIntoView({{behavior: "smooth", block: "center"}});
+                    }}
+                </script>
+            """, unsafe_allow_html=True)
+            # On vide la mémoire pour ne pas rescroller à chaque fois
+            st.session_state.last_index = None
+            
         with col_search:
             search = st.text_input("🔍 Rechercher (titre ou ingrédient)...", placeholder="Ex: Poulet, Sauce...")
             
@@ -457,8 +472,13 @@ if st.session_state.page == "home":
                 if i+j < len(rows):
                     row = rows.iloc[i+j]
                     with grid_cols[j]:
+                        # --- AJOUT DU MARQUEUR ICI ---
+                        # Cela crée un point de repère invisible nommé 'recette_0', 'recette_1', etc.
+                        st.markdown(f'<div id="recette_{i+j}"></div>', unsafe_allow_html=True)
+                        
                         img_url = row['Image'] if "http" in str(row['Image']) else "https://via.placeholder.com/500x350"
                         
+                        # (Le reste de ton code HTML de la carte reste identique...)
                         raw_cats = str(row['Catégorie']).split(',') if row['Catégorie'] else ["Recette"]
                         badges_html = "".join([f'<span class="category-badge" style="background-color:{get_cat_color(c)}; color:white; padding:2px 8px; border-radius:10px; margin-right:5px; font-size:10px; display:inline-block; margin-bottom:4px;">{c.strip()}</span>' for c in raw_cats if c.strip()])
 
@@ -474,6 +494,8 @@ if st.session_state.page == "home":
                         
                         if st.button("📖 Ouvrir la recette", key=f"v_{i+j}", use_container_width=True):
                             st.session_state.recipe_data = row.to_dict()
+                            # --- ON MÉMORISE L'INDEX ICI ---
+                            st.session_state.last_index = i+j 
                             st.session_state.page = "details"
                             st.rerun()
     else:
@@ -1594,6 +1616,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
