@@ -955,14 +955,22 @@ elif st.session_state.page == "add":
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
-        # --- LE BOUTON ANNULER ---
+        # Les deux boutons doivent être alignés verticalement
+        if c_save.button("💾 ENREGISTRER MA RECETTE", ...):
+            # ... tout le code d'enregistrement ...
+
         if c_cancel.button("❌ ANNULER", use_container_width=True):
-            # Nettoyage avant de partir
+            # 1. Nettoyage
             for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                if k in st.session_state: del st.session_state[k]
+                if k in st.session_state: 
+                    del st.session_state[k]
             
-            # On retourne aussi sur la fiche plutôt que l'accueil
-            st.session_state.page = "details" # <-- Changé aussi ici pour éviter de retourner à l'accueil
+            # 2. Redirection
+            if 'recette_selectionnee' in st.session_state and st.session_state.recette_selectionnee:
+                st.session_state.page = "details"
+            else:
+                st.session_state.page = "home"
+                
             st.rerun()
             
 elif st.session_state.page == "print":
@@ -1674,6 +1682,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
