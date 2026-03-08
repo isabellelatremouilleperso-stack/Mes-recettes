@@ -907,23 +907,25 @@ elif st.session_state.page == "add":
         st.divider()
         
         c_save, c_cancel = st.columns(2)
+        # 1. On crée les colonnes
+        c_save, c_cancel = st.columns(2)
+
+        # --- BLOC ENREGISTRER ---
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
             if titre and ingredients_txt:
                 import datetime
 
-                # --- NETTOYAGE SANS PERTE ---
-                # On prend chaque ligne, on enlève les espaces inutiles autour,
-                # et on garde TOUT ce que tu as écrit.
+                # Nettoyage des ingrédients
                 lignes = ingredients_txt.split('\n')
                 ing_propre = "\n".join([l.strip() for l in lignes if l.strip()])
 
-                # --- PAYLOAD COMPLET ---
+                # Préparation du payload
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre,          # <--- Ici, tout le texte est conservé
+                    "Ingrédients": ing_propre,
                     "Préparation": instructions_txt.strip() if instructions_txt else "",
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
@@ -935,37 +937,32 @@ elif st.session_state.page == "add":
                     "Lien vidéo": video_url_in.strip()
                 }
                                 
-                # ... (reste du code d'envoi send_action)
-                
                 if send_action(payload):
                     st.success("✅ Enregistré !")
                     
-                    # 1. Nettoyage des données temporaires
+                    # Nettoyage des données temporaires
                     for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                         if k in st.session_state: del st.session_state[k]
                     
                     st.cache_data.clear()
                     
-                    # 2. ON RESTE SUR LA RECETTE (Update de la mémoire)
+                    # Retour à la fiche recette
                     st.session_state.recette_selectionnee = payload
-                    st.session_state.page = "details"  # <-- Changé de "home" à "details"
+                    st.session_state.page = "details"
                     st.rerun()
                 else:
                     st.error("❌ Erreur de communication avec Google Sheets.")
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
-        # Les deux boutons doivent être alignés verticalement
-        if c_save.button("💾 ENREGISTRER MA RECETTE", ...):
-            # ... tout le code d'enregistrement ...
-
+        # --- BLOC ANNULER ---
         if c_cancel.button("❌ ANNULER", use_container_width=True):
-            # 1. Nettoyage
+            # Nettoyage
             for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                 if k in st.session_state: 
                     del st.session_state[k]
             
-            # 2. Redirection
+            # Redirection intelligente
             if 'recette_selectionnee' in st.session_state and st.session_state.recette_selectionnee:
                 st.session_state.page = "details"
             else:
@@ -1682,6 +1679,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
