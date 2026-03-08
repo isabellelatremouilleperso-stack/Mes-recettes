@@ -755,7 +755,10 @@ elif st.session_state.page == "details":
                     current_groupe = {"titre": titre_propre, "items": []}
                 else:
                     current_groupe["items"].append(line)
-
+            # --- LA LIGNE MAGIQUE À AJOUTER ICI : ---
+            if current_groupe["items"] or current_groupe["titre"] != "INGRÉDIENTS":
+                groupes.append(current_groupe)
+                
             # --- ÉTAPE 2 : AFFICHAGE DES ACCORDÉONS ---
             for g_idx, groupe in enumerate(groupes):
                 # On n'affiche l'accordéon que s'il y a des ingrédients dedans
@@ -1663,6 +1666,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
