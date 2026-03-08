@@ -704,24 +704,25 @@ elif st.session_state.page == "details":
                 # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
-    # --- SECTION INGRÉDIENTS ---
+    # --- SECTION INGRÉDIENTS (STABLE & ESTHÉTIQUE) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            # On harmonise les séparateurs (❑, ; ou \n)
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             lines = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
             sel = []
             recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
             
-            # 1. On découpe la liste en blocs (Titre + sa liste d'ingrédients)
+            # --- ÉTAPE 1 : Groupement par sections ---
             groupes = []
             current_groupe = {"titre": None, "items": []}
             
             for line in lines:
-                # DÉTECTION STRICTE : Un titre DOIT avoir ► au début ou : à la fin
+                # Un titre doit commencer par ► ou finir par :
                 if line.startswith("►") or line.endswith(":"):
                     if current_groupe["items"] or current_groupe["titre"]:
                         groupes.append(current_groupe)
@@ -730,15 +731,15 @@ elif st.session_state.page == "details":
                     current_groupe["items"].append(line)
             groupes.append(current_groupe)
 
-            # 2. Affichage intelligent
+            # --- ÉTAPE 2 : Affichage intelligent ---
             for g_idx, groupe in enumerate(groupes):
-                # Affiche le titre sur TOUTE la largeur
+                # 1. On affiche le TITRE sur toute la largeur
                 if groupe["titre"]:
-                    st.write("")
+                    st.write("") # Espace
                     st.markdown(f"#### 🔸 <span style='color:#FF4B4B'>{groupe['titre'].upper()}</span>", unsafe_allow_html=True)
                     st.divider()
                 
-                # Affiche les ingrédients de ce groupe en DEUX colonnes
+                # 2. On affiche les INGRÉDIENTS de cette section en 2 colonnes
                 if groupe["items"]:
                     it = groupe["items"]
                     col1, col2 = st.columns(2)
@@ -747,14 +748,14 @@ elif st.session_state.page == "details":
                     for i, ing in enumerate(it):
                         cible = col1 if i < mid else col2
                         with cible:
-                            # Ici "Small piece of nutmeg" sera bien une checkbox
+                            # Clé unique pour éviter les conflits Streamlit
                             if st.checkbox(ing, key=f"chk_{recette_id}_{g_idx}_{i}"):
                                 sel.append(ing)
 
-            # Bouton d'action
+            # --- BOUTON D'ACTION ---
             if sel:
                 st.write("")
-                if st.button(f"➕ Ajouter {len(sel)} articles", use_container_width=True):
+                if st.button(f"➕ Ajouter {len(sel)} articles à l'épicerie", use_container_width=True):
                     for art in sel:
                         send_action({"action": "add_shop", "article": f"✨ {art}"})
                     st.toast("🛒 Liste mise à jour !")
@@ -1645,6 +1646,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
