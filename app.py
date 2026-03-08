@@ -686,28 +686,30 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # --- 4. AFFICHAGE VIDÉO (Version robuste & persistante) ---
-        # On récupère le lien avec toutes les variantes de clés possibles
+        # --- 4. AFFICHAGE VIDÉO (AVEC SECOURS YOUTUBE) ---
         v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or ""
         v_link_str = str(v_link).strip()
-        
+
         if v_link_str.lower().startswith("http"):
-            # Transformation indispensable pour que Streamlit accepte les YouTube Shorts
+            # Transformation indispensable pour les YouTube Shorts
             if "/shorts/" in v_link_str:
                 v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
-        
-            # Détection du type de lecteur
-            is_embeddable = any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"])
-        
-            if is_embeddable:
-                # expanded=True empêche l'accordéon de se refermer tout seul
-                with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=True):
-                    st.video(v_link_str)
-            else:
-                # Pour les liens non intégrables (TikTok, Instagram, Facebook)
-                st.write("") # Un peu d'espace
-                st.link_button("▶️ Regarder la vidéo originale", v_link_str, use_container_width=True, type="primary")
 
+            # On vérifie si c'est une source YouTube
+            is_youtube = any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be"])
+
+            with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=True):
+                # 1. On tente d'afficher le lecteur vidéo
+                st.video(v_link_str)
+                
+                # 2. Si c'est du YouTube, on ajoute un bouton de secours direct
+                if is_youtube:
+                    st.caption("💡 _Si la vidéo affiche 'Non disponible', cliquez sur le bouton ci-dessous :_")
+                    st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True)
+                else:
+                    # Pour TikTok, Instagram, Facebook (Liens externes)
+                    st.link_button("▶️ Regarder la vidéo originale", v_link_str, use_container_width=True, type="primary")
+    
     # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
@@ -1656,6 +1658,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
