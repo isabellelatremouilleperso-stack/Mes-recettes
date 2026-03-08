@@ -704,45 +704,50 @@ elif st.session_state.page == "details":
                 # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
-    # --- SECTION INGRÉDIENTS (STYLE YOUTUBE) ---
+    # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES TITRES) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            # On sépare les lignes proprement
+            # On nettoie et on sépare les lignes
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
             sel = []
-            # On crée une clé simplifiée pour éviter les bugs Streamlit
             recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
 
             for i, item in enumerate(ings):
-                # --- DÉTECTION STRICTE DU TITRE (► ou :) ---
-                if item.startswith("►") or item.endswith(":"):
+                # --- LOGIQUE DE DÉTECTION DE TITRE ---
+                # On considère que c'est un titre si :
+                # 1. Ça commence par ►
+                # 2. OU ça finit par :
+                # 3. OU c'est un mot court sans aucun chiffre (ex: Spices, Marinade)
+                is_title = (
+                    item.startswith("►") or 
+                    item.endswith(":") or 
+                    (not any(char.isdigit() for char in item) and len(item) < 25)
+                )
+
+                if is_title:
+                    # Affichage du titre en Orange avec une ligne
                     clean_title = item.lstrip("► ").rstrip(":")
-                    st.write("") # Un peu d'air avant le titre
-                    st.markdown(f"#### 🔸 **{clean_title.upper()}**")
-                    st.divider()
+                    st.write("") # Espace au dessus
+                    st.markdown(f"#### 🔸 <span style='color:#FF4B4B'>{clean_title.upper()}</span>", unsafe_allow_html=True)
+                    st.divider() # La ligne de séparation
                 
-                # --- DÉTECTION DES NOTES (Entre parenthèses) ---
-                elif item.startswith("(") and item.endswith(")"):
-                    st.caption(f"_{item}_")
-                
-                # --- TOUT LE RESTE = INGRÉDIENT ---
                 else:
+                    # Ingrédient normal (avec checkbox)
                     if st.checkbox(item, key=f"chk_{recette_id}_{i}"):
                         sel.append(item)
             
-            # --- BOUTON D'ACTION ---
+            # Bouton d'ajout
             if sel:
                 st.write("")
-                if st.button(f"➕ Ajouter {len(sel)} articles à l'épicerie", use_container_width=True):
+                if st.button(f"➕ Ajouter {len(sel)} articles", use_container_width=True):
                     for art in sel:
                         send_action({"action": "add_shop", "article": f"✨ {art}"})
-                    st.toast("🛒 Liste mise à jour !")
-
+                    st.toast("🛒 C'est dans la liste !")
         # --- SECTION PRÉPARATION ---
         st.divider()
         st.subheader("👨‍🍳 Étapes de préparation")
@@ -1629,6 +1634,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
