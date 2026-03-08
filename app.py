@@ -112,7 +112,7 @@ def scrape_url(url):
         # On cherche les zones qui contiennent "instruction" ou "step"
         prep_container = soup.find(class_=re.compile(r'instruction|preparation|method|steps|direction', re.I))
 
-        # --- LOGIQUE INGRÉDIENTS ---
+        # --- LOGIQUE  ---
         ing_list = []
         # Si on a trouvé un conteneur spécifique, on ne cherche que dedans
         source_ingredients = ing_container if ing_container else soup
@@ -704,50 +704,44 @@ elif st.session_state.page == "details":
                 # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
-    # --- FIN DE LA COLONNE DE DROITE ---
-    # --- SECTION INGRÉDIENTS (VERSION FINALE STABLE) ---
+    # --- SECTION INGRÉDIENTS (STYLE YOUTUBE) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            # On harmonise les séparateurs
+            # On sépare les lignes proprement
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
             sel = []
-            current_title = r.get('Titre', 'Recette') # Pour garantir des clés uniques
+            # On crée une clé simplifiée pour éviter les bugs Streamlit
+            recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
 
             for i, item in enumerate(ings):
-                # 1. Détection du TITRE (Seulement si ► au début ou : à la fin)
-                is_title = item.startswith("►") or item.endswith(":")
-                
-                # 2. Détection d'une NOTE (Commence par * ou entre parenthèses)
-                is_note = item.startswith(("*", "("))
-                
-                if is_title:
-                    # On affiche le titre bien visible avec un séparateur
+                # --- DÉTECTION STRICTE DU TITRE (► ou :) ---
+                if item.startswith("►") or item.endswith(":"):
                     clean_title = item.lstrip("► ").rstrip(":")
-                    st.write("") # Espace avant le titre
+                    st.write("") # Un peu d'air avant le titre
                     st.markdown(f"#### 🔸 **{clean_title.upper()}**")
                     st.divider()
                 
-                elif is_note:
-                    # Affichage discret pour les conseils
-                    st.caption(f"💡 {item}")
+                # --- DÉTECTION DES NOTES (Entre parenthèses) ---
+                elif item.startswith("(") and item.endswith(")"):
+                    st.caption(f"_{item}_")
                 
+                # --- TOUT LE RESTE = INGRÉDIENT ---
                 else:
-                    # Ingrédient normal avec checkbox (Nutmeg passera ici !)
-                    if st.checkbox(item, key=f"chk_{current_title}_{i}"):
+                    if st.checkbox(item, key=f"chk_{recette_id}_{i}"):
                         sel.append(item)
             
-            # Bouton d'action
+            # --- BOUTON D'ACTION ---
             if sel:
-                st.write("") 
+                st.write("")
                 if st.button(f"➕ Ajouter {len(sel)} articles à l'épicerie", use_container_width=True):
-                    for article in sel:
-                        send_action({"action": "add_shop", "article": f"✨ {article}"})
-                    st.toast("🛒 Envoyé à la liste de courses !")
+                    for art in sel:
+                        send_action({"action": "add_shop", "article": f"✨ {art}"})
+                    st.toast("🛒 Liste mise à jour !")
 
         # --- SECTION PRÉPARATION ---
         st.divider()
@@ -1635,6 +1629,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
