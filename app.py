@@ -686,7 +686,10 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # --- 4. AFFICHAGE VIDÉO (VERSION NETTE) ---
+        # --- 0. DÉFINITION DE L'ID (À mettre au tout début pour éviter l'erreur) ---
+        recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
+
+        # --- 4. AFFICHAGE VIDÉO (VERSION NETTE AVEC FIX ERREUR) ---
         v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or ""
         v_link_str = str(v_link).strip()
 
@@ -698,15 +701,15 @@ elif st.session_state.page == "details":
 
             with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
                 if is_youtube:
-                    # On propose de voir le lecteur, mais le bouton est prioritaire
+                    # Bouton prioritaire
                     st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
                     
+                    # Case à cocher pour masquer le lecteur s'il est bloqué
                     show_player = st.checkbox("Afficher le lecteur intégré", value=True, key=f"vid_show_{recette_id}")
                     if show_player:
                         st.video(v_link_str)
-                        st.caption("_Note: Si l'écran reste noir, décochez la case ci-dessus._")
+                        st.caption("_Note: Si l'écran affiche 'Vidéo non disponible', décochez la case ci-dessus._")
                 else:
-                    # Pour les autres réseaux (TikTok, Insta)
                     st.link_button("▶️ Regarder la vidéo originale", v_link_str, use_container_width=True, type="primary")
     
     # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
@@ -1657,6 +1660,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
