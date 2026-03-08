@@ -733,20 +733,22 @@ elif st.session_state.page == "details":
                 # 1. C'est tout en MAJUSCULES (ex: MARINADE)
                 # 2. OU ça finit par ":" (ex: Sauce:)
                 # 3. OU c'est un mot court (< 15 car.) sans chiffres (ex: Spices)
+                # Détection stricte : Un titre est soit en MAJUSCULES, 
+                # soit il finit par ":", soit il commence par "►"
                 is_title = (
                     line.isupper() or 
                     line.endswith(":") or 
-                    (not any(char.isdigit() for char in line) and len(line) < 15)
+                    line.startswith("►")
                 )
 
                 if is_title:
                     if current_groupe["items"]:
                         groupes.append(current_groupe)
-                    current_groupe = {"titre": line.rstrip(":"), "items": []}
+                    # On nettoie le titre des symboles inutiles
+                    titre_propre = line.lstrip("► ").rstrip(":")
+                    current_groupe = {"titre": titre_propre, "items": []}
                 else:
                     current_groupe["items"].append(line)
-            
-            groupes.append(current_groupe)
 
             # --- ÉTAPE 2 : AFFICHAGE DES ACCORDÉONS ---
             for g_idx, groupe in enumerate(groupes):
@@ -1660,6 +1662,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
