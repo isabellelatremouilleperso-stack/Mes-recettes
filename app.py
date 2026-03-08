@@ -686,23 +686,27 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # 4. VIDÉO (Version optimisée pour YouTube Shorts et réseaux sociaux)
-        v_link = r.get('video') or r.get('Lien vidéo') or r.get('Vidéo') or ""
+        # --- 4. AFFICHAGE VIDÉO (Version robuste & persistante) ---
+        # On récupère le lien avec toutes les variantes de clés possibles
+        v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or ""
         v_link_str = str(v_link).strip()
         
         if v_link_str.lower().startswith("http"):
-            # --- TRANSFORMATION DES SHORTS ---
-            # On change /shorts/ en /watch?v= pour que le lecteur Streamlit l'accepte
+            # Transformation indispensable pour que Streamlit accepte les YouTube Shorts
             if "/shorts/" in v_link_str:
                 v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
         
-            # Affichage selon la source
-            if any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"]):
-                with st.expander("🎬 VOIR LE TUTORIEL VIDÉO"):
+            # Détection du type de lecteur
+            is_embeddable = any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be", "vimeo.com"])
+        
+            if is_embeddable:
+                # expanded=True empêche l'accordéon de se refermer tout seul
+                with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=True):
                     st.video(v_link_str)
             else:
-                # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
-                st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
+                # Pour les liens non intégrables (TikTok, Instagram, Facebook)
+                st.write("") # Un peu d'espace
+                st.link_button("▶️ Regarder la vidéo originale", v_link_str, use_container_width=True, type="primary")
 
     # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
         st.divider()
@@ -853,17 +857,21 @@ elif st.session_state.page == "add":
         
         col_link1, col_link2 = st.columns(2)
         source_url_in = col_link1.text_input("🔗 Lien source", value=url_input if url_input else "", placeholder="https://...")
-        # 1. On définit le lien par défaut (vide si c'est une nouvelle recette)
-        # On essaie de récupérer une valeur existante dans r_edit ou r
+        
+        # --- RÉCUPÉRATION DU LIEN (Multi-clés) ---
         default_video = ""
-        if 'r_edit' in locals(): default_video = r_edit.get('video', "")
-        elif 'r' in locals(): default_video = r.get('video', "")
-
-        # 2. Le champ de saisie corrigé
+        # On définit l'objet source (r_edit en priorité, sinon r)
+        source_data = r_edit if 'r_edit' in locals() else (r if 'r' in locals() else {})
+        
+        if source_data:
+            # On cherche le lien peu importe comment il est écrit dans ta base
+            default_video = source_data.get('Vidéo') or source_data.get('video') or source_data.get('Lien vidéo') or ""
+        
+        # 2. Le champ de saisie harmonisé
         video_url_in = col_link2.text_input(
             "🎬 Lien Vidéo", 
-            value=default_video,
-            placeholder="URL vidéo..."
+            value=str(default_video),
+            placeholder="URL YouTube, Shorts, TikTok..."
         )
         
         st.markdown("#### ⏱️ Paramètres")
@@ -1648,6 +1656,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
