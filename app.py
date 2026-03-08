@@ -704,50 +704,56 @@ elif st.session_state.page == "details":
                 # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
-    # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES TITRES) ---
+    # --- SECTION INGRÉDIENTS (2 COLONNES + DÉTECTION PRÉCISE) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            # On nettoie et on sépare les lignes
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
-            ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
+            lines = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
             sel = []
             recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
-
-            for i, item in enumerate(ings):
-                # --- LOGIQUE DE DÉTECTION DE TITRE ---
-                # On considère que c'est un titre si :
-                # 1. Ça commence par ►
-                # 2. OU ça finit par :
-                # 3. OU c'est un mot court sans aucun chiffre (ex: Spices, Marinade)
-                is_title = (
-                    item.startswith("►") or 
-                    item.endswith(":") or 
-                    (not any(char.isdigit() for char in item) and len(item) < 25)
-                )
-
-                if is_title:
-                    # Affichage du titre en Orange avec une ligne
-                    clean_title = item.lstrip("► ").rstrip(":")
-                    st.write("") # Espace au dessus
-                    st.markdown(f"#### 🔸 <span style='color:#FF4B4B'>{clean_title.upper()}</span>", unsafe_allow_html=True)
-                    st.divider() # La ligne de séparation
-                
-                else:
-                    # Ingrédient normal (avec checkbox)
-                    if st.checkbox(item, key=f"chk_{recette_id}_{i}"):
-                        sel.append(item)
             
-            # Bouton d'ajout
+            # On groupe les ingrédients par section
+            sections = []
+            current_section = {"title": None, "items": []}
+            
+            for line in lines:
+                # Un titre DOIT commencer par ► ou finir par : pour être orange
+                if line.startswith("►") or line.endswith(":"):
+                    if current_section["items"] or current_section["title"]:
+                        sections.append(current_section)
+                    current_section = {"title": line.lstrip("► ").rstrip(":"), "items": []}
+                else:
+                    current_section["items"].append(line)
+            sections.append(current_section) # Ajouter la dernière section
+
+            # Affichage des sections
+            for s_idx, sec in enumerate(sections):
+                if sec["title"]:
+                    st.write("")
+                    st.markdown(f"#### 🔸 <span style='color:#FF4B4B'>{sec['title'].upper()}</span>", unsafe_allow_html=True)
+                    st.divider()
+                
+                # Affichage des ingrédients de la section sur 2 colonnes
+                if sec["items"]:
+                    col1, col2 = st.columns(2)
+                    mid = (len(sec["items"]) + 1) // 2
+                    
+                    for i, item in enumerate(sec["items"]):
+                        target_col = col1 if i < mid else col2
+                        with target_col:
+                            if st.checkbox(item, key=f"chk_{recette_id}_{s_idx}_{i}"):
+                                sel.append(item)
+
             if sel:
                 st.write("")
                 if st.button(f"➕ Ajouter {len(sel)} articles", use_container_width=True):
                     for art in sel:
                         send_action({"action": "add_shop", "article": f"✨ {art}"})
-                    st.toast("🛒 C'est dans la liste !")
+                    st.toast("🛒 Liste mise à jour !")
         # --- SECTION PRÉPARATION ---
         st.divider()
         st.subheader("👨‍🍳 Étapes de préparation")
@@ -1634,6 +1640,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
