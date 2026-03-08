@@ -689,11 +689,11 @@ elif st.session_state.page == "details":
         # --- 0. DÉFINITION DE L'ID (À mettre au tout début pour éviter l'erreur) ---
         recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
 
-       # --- 4. AFFICHAGE VIDÉO (VERSION FINALE ULTRA-ROBUSTE) ---
-       v_link = r.get('Lien vidéo') or r.get('Vidéo') or r.get('video') or ""
-       v_link_str = str(v_link).strip()
+        # --- 4. AFFICHAGE VIDÉO (VERSION FINALE ULTRA-ROBUSTE) ---
+        v_link = r.get('Lien vidéo') or r.get('Vidéo') or r.get('video') or ""
+        v_link_str = str(v_link).strip()
         
-       if v_link_str.lower().startswith("http"):
+        if v_link_str.lower().startswith("http"):
            # 1. Correction pour les YouTube Shorts
            if "/shorts/" in v_link_str:
                v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
@@ -707,7 +707,7 @@ elif st.session_state.page == "details":
         
           # Création de l'ID unique pour Streamlit
           recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
-    
+        
           with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
                # Le bouton pointe vers l'URL propre
                st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
@@ -1669,6 +1669,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
