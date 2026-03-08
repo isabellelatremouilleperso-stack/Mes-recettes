@@ -694,21 +694,21 @@ elif st.session_state.page == "details":
         v_link_str = str(v_link).strip()
         
         if v_link_str.lower().startswith("http"):
-           # 1. Correction pour les YouTube Shorts
-           if "/shorts/" in v_link_str:
+            # 1. Correction pour les YouTube Shorts
+            if "/shorts/" in v_link_str:
                v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
         
-           # 2. Nettoyage et conversion des liens mobiles youtu.be
-           if "youtu.be/" in v_link_str:
+            # 2. Nettoyage et conversion des liens mobiles youtu.be
+            if "youtu.be/" in v_link_str:
                # On extrait l'ID de la vidéo (ce qui est après le slash et avant le ?)
                video_id = v_link_str.split("youtu.be/")[1].split("?")[0]
                # On reconstruit une URL standard plus stable pour le lecteur st.video
                v_link_str = f"https://www.youtube.com/watch?v={video_id}"
-        
-          # Création de l'ID unique pour Streamlit
-          recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
-        
-          with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
+            
+            # Création de l'ID unique pour Streamlit
+            recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
+            
+            with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
                # Le bouton pointe vers l'URL propre
                st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
             
@@ -1669,6 +1669,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
