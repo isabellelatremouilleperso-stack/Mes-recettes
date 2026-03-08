@@ -955,15 +955,15 @@ elif st.session_state.page == "add":
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
-# --- LE BOUTON ANNULER ---
-if c_cancel.button("❌ ANNULER", use_container_width=True):
-    # Nettoyage avant de partir
-    for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-        if k in st.session_state: del st.session_state[k]
-    
-    # On retourne aussi sur la fiche plutôt que l'accueil
-    st.session_state.page = "details" # <-- Changé aussi ici pour éviter de retourner à l'accueil
-    st.rerun()
+        # --- LE BOUTON ANNULER ---
+        if c_cancel.button("❌ ANNULER", use_container_width=True):
+            # Nettoyage avant de partir
+            for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
+                if k in st.session_state: del st.session_state[k]
+            
+            # On retourne aussi sur la fiche plutôt que l'accueil
+            st.session_state.page = "details" # <-- Changé aussi ici pour éviter de retourner à l'accueil
+            st.rerun()
             
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
@@ -1674,6 +1674,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
