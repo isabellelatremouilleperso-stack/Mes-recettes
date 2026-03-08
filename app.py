@@ -939,14 +939,24 @@ elif st.session_state.page == "add":
                 
                 if send_action(payload):
                     st.success("✅ Enregistré !")
-                    # Nettoyage des données temporaires
+                    
+                    # 1. Nettoyage des données temporaires (ton code existant)
                     for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                         if k in st.session_state: del st.session_state[k]
+                    
+                    # 2. On vide le cache pour que les modifs apparaissent de suite
                     st.cache_data.clear()
-                    st.session_state.page = "home"
+                    
+                    # 3. ON DIT À L'APP DE RESTER SUR CETTE RECETTE
+                    # On met à jour la mémoire locale avec les nouvelles infos du payload
+                    st.session_state.recette_selectionnee = payload
+                    
+                    # 4. ON RETOURNE SUR LA FICHE (au lieu de l'accueil)
+                    st.session_state.page = "details"
                     st.rerun()
                 else:
                     st.error("❌ Erreur de communication avec Google Sheets.")
+            
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
@@ -1666,6 +1676,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
