@@ -689,29 +689,34 @@ elif st.session_state.page == "details":
         # --- 0. DÉFINITION DE L'ID (À mettre au tout début pour éviter l'erreur) ---
         recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
 
-       # --- 4. AFFICHAGE VIDÉO (ULTRA-ROBUSTE) ---
-        # On cherche le lien sous toutes ses formes pour ne jamais le perdre
-        v_link = r.get('Lien vidéo') or r.get('Vidéo') or r.get('video') or ""
-        v_link_str = str(v_link).strip()
-
-        if v_link_str.lower().startswith("http"):
-            # Correction automatique pour les YouTube Shorts
-            if "/shorts/" in v_link_str:
-                v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
-
-            # Création de l'ID unique (essentiel pour la case à cocher)
-            recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
-
-            with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
-                # 1. Le bouton prioritaire (toujours fonctionnel)
-                st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
-                
-                # 2. Le lecteur avec option pour le masquer si "Vidéo non disponible"
-                show_player = st.checkbox("Afficher le lecteur intégré", value=True, key=f"vid_show_{recette_id}")
-                
-                if show_player:
-                    st.video(v_link_str)
-                    st.caption("_Note: Si l'écran reste noir, décochez la case ci-dessus._")
+       # --- 4. AFFICHAGE VIDÉO (VERSION FINALE ULTRA-ROBUSTE) ---
+       v_link = r.get('Lien vidéo') or r.get('Vidéo') or r.get('video') or ""
+       v_link_str = str(v_link).strip()
+        
+       if v_link_str.lower().startswith("http"):
+           # 1. Correction pour les YouTube Shorts
+           if "/shorts/" in v_link_str:
+               v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
+        
+           # 2. Nettoyage et conversion des liens mobiles youtu.be
+           if "youtu.be/" in v_link_str:
+               # On extrait l'ID de la vidéo (ce qui est après le slash et avant le ?)
+               video_id = v_link_str.split("youtu.be/")[1].split("?")[0]
+               # On reconstruit une URL standard plus stable pour le lecteur st.video
+               v_link_str = f"https://www.youtube.com/watch?v={video_id}"
+        
+          # Création de l'ID unique pour Streamlit
+          recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
+    
+          with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
+               # Le bouton pointe vers l'URL propre
+               st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
+            
+               show_player = st.checkbox("Afficher le lecteur intégré", value=True, key=f"vid_show_{recette_id}")
+            
+               if show_player:
+                   st.video(v_link_str)
+                   st.caption("_Note: Si l'écran reste noir, décochez la case ci-dessus._")
     
     # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
         st.divider()
@@ -1664,6 +1669,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
