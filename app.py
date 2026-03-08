@@ -704,7 +704,7 @@ elif st.session_state.page == "details":
                 # Pour TikTok, Instagram, FB (Bouton d'ouverture externe)
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
-    # --- SECTION INGRÉDIENTS (PLIABLE & 2 COLONNES) ---
+    # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
@@ -716,41 +716,45 @@ elif st.session_state.page == "details":
             sel = []
             recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
             
-            # --- ÉTAPE 1 : Groupement par sections ---
+            # --- ÉTAPE 1 : ON DÉCOUPE EN GROUPES ---
             groupes = []
-            current_groupe = {"titre": None, "items": []}
+            current_groupe = {"titre": "INGRÉDIENTS", "items": []}
             
             for line in lines:
-                if line.startswith("►") or line.endswith(":"):
-                    if current_groupe["items"] or current_groupe["titre"]:
+                # NOUVELLE LOGIQUE : C'est un titre si :
+                # 1. C'est tout en MAJUSCULES (ex: MARINADE)
+                # 2. OU ça finit par ":" (ex: Sauce:)
+                # 3. OU c'est un mot court (< 15 car.) sans chiffres (ex: Spices)
+                is_title = (
+                    line.isupper() or 
+                    line.endswith(":") or 
+                    (not any(char.isdigit() for char in line) and len(line) < 15)
+                )
+
+                if is_title:
+                    if current_groupe["items"]:
                         groupes.append(current_groupe)
-                    current_groupe = {"titre": line.lstrip("► ").rstrip(":"), "items": []}
+                    current_groupe = {"titre": line.rstrip(":"), "items": []}
                 else:
                     current_groupe["items"].append(line)
+            
             groupes.append(current_groupe)
 
-            # --- ÉTAPE 2 : Affichage avec Accordéons ---
+            # --- ÉTAPE 2 : AFFICHAGE DES ACCORDÉONS ---
             for g_idx, groupe in enumerate(groupes):
-                # On définit le nom de la section (Majuscules pour le style)
-                nom_section = groupe["titre"].upper() if groupe["titre"] else "INGRÉDIENTS"
-                
-                # Création de l'accordéon
-                # expanded=(g_idx == 0) ouvre la première section automatiquement
-                with st.expander(f"🔸 {nom_section}", expanded=(g_idx == 0)):
-                    if groupe["items"]:
-                        it = groupe["items"]
+                # On n'affiche l'accordéon que s'il y a des ingrédients dedans
+                if groupe["items"]:
+                    with st.expander(f"🔸 {groupe['titre'].upper()}", expanded=(g_idx == 0)):
                         col1, col2 = st.columns(2)
-                        mid = (len(it) + 1) // 2
+                        mid = (len(groupe["items"]) + 1) // 2
                         
-                        for i, ing in enumerate(it):
+                        for i, ing in enumerate(groupe["items"]):
                             cible = col1 if i < mid else col2
                             with cible:
                                 if st.checkbox(ing, key=f"chk_{recette_id}_{g_idx}_{i}"):
                                     sel.append(ing)
-                    else:
-                        st.write("*Aucun ingrédient détecté ici.*")
 
-            # --- BOUTON D'ACTION (Toujours en dehors des accordéons) ---
+            # --- BOUTON D'ACTION ---
             if sel:
                 st.write("")
                 if st.button(f"➕ Ajouter {len(sel)} articles à l'épicerie", use_container_width=True):
@@ -1644,6 +1648,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
