@@ -907,35 +907,29 @@ elif st.session_state.page == "add":
         if c_save.button("💾 ENREGISTRER MA RECETTE", use_container_width=True):
             if titre and ingredients_txt:
                 import datetime
-                import re
 
-                # 1. NETTOYAGE DES SYMBOLES MAIS GARDE LES ACCENTS
-                # On remplace les caractères spéciaux/graphiques par un saut de ligne, 
-                # mais on exclut de la suppression les lettres accentuées françaises.
-                # Cela permet de garder "Épaule", "Cuillère", etc.
-                text_split = re.sub(r'[^\w\s.,\-()%/°àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]+', '\n', ingredients_txt)
-                
-                # 2. NETTOYAGE DES LIGNES VIDES
-                # On sépare le texte par ligne, on enlève les espaces inutiles, 
-                # et on ne garde que les lignes qui contiennent vraiment du texte.
-                lignes = text_split.split('\n')
+                # 1. NETTOYAGE ULTRA-SIMPLE (On garde tout, on enlève juste les lignes vides)
+                # On ne touche plus aux symboles avec re.sub, car c'est ça qui effaçait tes titres.
+                lignes = ingredients_txt.split('\n')
                 ing_propre = "\n".join([l.strip() for l in lignes if l.strip()])
 
-                # --- PAYLOAD HARMONISÉ ---
+                # --- PAYLOAD CORRIGÉ POUR GOOGLE SHEETS ---
+                # Note : On utilise les clés attendues par ton Apps Script (data.titre, etc.)
                 payload = {
                     "action": "add",
-                    "Date": datetime.date.today().strftime("%d/%m/%Y"), # 'D' majuscule
-                    "Titre": titre.strip(),                            # 'T' majuscule
-                    "Source": source_url_in.strip(),                   # 'S' majuscule
-                    "Ingrédients": ing_propre,                         # 'I' majuscule + accent
-                    "Préparation": instructions_txt.strip(),           # 'P' majuscule
-                    "Image": img_url.strip(),                          # 'I' majuscule
-                    "Catégorie": ", ".join(cat_choisies),              # 'C' majuscule
+                    "date": datetime.date.today().strftime("%d/%m/%Y"),
+                    "titre": titre.strip(),
+                    "source": source_url_in.strip(),
+                    "Ingrédients": ing_propre,         # Tes titres de sections resteront intacts ici
+                    "Préparation": instructions_txt.strip(),
+                    "Image": img_url.strip(),
+                    "Catégorie": ", ".join(cat_choisies),
                     "Portions": port.strip(),
-                    "Temps de préparation": t_prep.strip(),            # Nom complet comme dans r.get()
-                    "Temps de cuisson": t_cuis.strip(),                # Nom complet comme dans r.get()
+                    "Temps_Prepa": t_prep.strip(),     # Doit correspondre à data.Temps_Prepa dans Apps Script
+                    "Temps_Cuisson": t_cuis.strip(),   # Doit correspondre à data.Temps_Cuisson dans Apps Script
                     "Commentaires": commentaires.strip(),
-                    "Lien vidéo": video_url_in.strip()                 # Exactement le nom de ta colonne
+                    "Note": 0,
+                    "Lien vidéo": video_url_in.strip()
                 }
                                 
                 # ... (reste du code d'envoi send_action)
@@ -1669,6 +1663,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
