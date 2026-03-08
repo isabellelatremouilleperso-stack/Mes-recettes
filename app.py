@@ -908,19 +908,20 @@ elif st.session_state.page == "add":
             if titre and ingredients_txt:
                 import datetime
 
-                # 1. NETTOYAGE SIMPLE ET RESPECTUEUX
-                # On ne supprime rien ! On enlève juste les lignes vides et les espaces inutiles.
+                # --- NETTOYAGE SANS PERTE ---
+                # On prend chaque ligne, on enlève les espaces inutiles autour,
+                # et on garde TOUT ce que tu as écrit.
                 lignes = ingredients_txt.split('\n')
                 ing_propre = "\n".join([l.strip() for l in lignes if l.strip()])
 
-                # 2. PAYLOAD CORRIGÉ (Noms de clés alignés sur ton Google Sheets)
+                # --- PAYLOAD COMPLET ---
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre,          # Conserve "CHICKEN SHAWARMA PREP" intact
-                    "Préparation": instructions_txt.strip(),
+                    "Ingrédients": ing_propre,          # <--- Ici, tout le texte est conservé
+                    "Préparation": instructions_txt.strip() if instructions_txt else "",
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
                     "Portions": port.strip(),
@@ -1662,6 +1663,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
