@@ -908,25 +908,24 @@ elif st.session_state.page == "add":
             if titre and ingredients_txt:
                 import datetime
 
-                # 1. NETTOYAGE ULTRA-SIMPLE (On garde tout, on enlève juste les lignes vides)
-                # On ne touche plus aux symboles avec re.sub, car c'est ça qui effaçait tes titres.
+                # 1. NETTOYAGE SIMPLE ET RESPECTUEUX
+                # On ne supprime rien ! On enlève juste les lignes vides et les espaces inutiles.
                 lignes = ingredients_txt.split('\n')
                 ing_propre = "\n".join([l.strip() for l in lignes if l.strip()])
 
-                # --- PAYLOAD CORRIGÉ POUR GOOGLE SHEETS ---
-                # Note : On utilise les clés attendues par ton Apps Script (data.titre, etc.)
+                # 2. PAYLOAD CORRIGÉ (Noms de clés alignés sur ton Google Sheets)
                 payload = {
                     "action": "add",
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre,         # Tes titres de sections resteront intacts ici
+                    "Ingrédients": ing_propre,          # Conserve "CHICKEN SHAWARMA PREP" intact
                     "Préparation": instructions_txt.strip(),
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
                     "Portions": port.strip(),
-                    "Temps_Prepa": t_prep.strip(),     # Doit correspondre à data.Temps_Prepa dans Apps Script
-                    "Temps_Cuisson": t_cuis.strip(),   # Doit correspondre à data.Temps_Cuisson dans Apps Script
+                    "Temps_Prepa": t_prep.strip(),
+                    "Temps_Cuisson": t_cuis.strip(),
                     "Commentaires": commentaires.strip(),
                     "Note": 0,
                     "Lien vidéo": video_url_in.strip()
@@ -1663,6 +1662,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
