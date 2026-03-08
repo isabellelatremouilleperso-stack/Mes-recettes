@@ -705,39 +705,39 @@ elif st.session_state.page == "details":
                 st.link_button("▶️ Regarder la vidéo", v_link_str, use_container_width=True, type="primary")
 
     # --- FIN DE LA COLONNE DE DROITE ---
-    # --- SECTION INGRÉDIENTS (VERSION AMÉLIORÉE) ---
+    # --- SECTION INGRÉDIENTS (VERSION FINALE STABLE) ---
         st.divider()
         st.subheader("🛒 Ingrédients")
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
-            # On harmonise les séparateurs (❑, ; ou retour à la ligne)
+            # On harmonise les séparateurs
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
             sel = []
-            
+            current_title = r.get('Titre', 'Recette') # Pour garantir des clés uniques
+
             for i, item in enumerate(ings):
-                # --- DÉTECTION INTELLIGENTE ---
-                # 1. C'est un TITRE si : commence par ► ou finit par ":"
+                # 1. Détection du TITRE (Seulement si ► au début ou : à la fin)
                 is_title = item.startswith("►") or item.endswith(":")
                 
-                # 2. C'est une NOTE/INSTRUCTION si : commence par "(" ou "*"
-                is_note = item.startswith(("(", "*"))
+                # 2. Détection d'une NOTE (Commence par * ou entre parenthèses)
+                is_note = item.startswith(("*", "("))
                 
                 if is_title:
-                    # Titre élégant (on enlève le ► ou le :)
+                    # On affiche le titre bien visible avec un séparateur
                     clean_title = item.lstrip("► ").rstrip(":")
-                    st.markdown(f"### 🔸 {clean_title}")
+                    st.write("") # Espace avant le titre
+                    st.markdown(f"#### 🔸 **{clean_title.upper()}**")
                     st.divider()
                 
                 elif is_note:
-                    # Texte informatif en gris/italique (sans case à cocher)
-                    st.caption(f"_{item}_")
+                    # Affichage discret pour les conseils
+                    st.caption(f"💡 {item}")
                 
                 else:
-                    # Ingrédient normal avec case à cocher
-                    # (Même sans chiffre comme "Nutmeg", il reste ici)
+                    # Ingrédient normal avec checkbox (Nutmeg passera ici !)
                     if st.checkbox(item, key=f"chk_{current_title}_{i}"):
                         sel.append(item)
             
@@ -1635,6 +1635,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
