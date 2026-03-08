@@ -691,7 +691,7 @@ elif st.session_state.page == "details":
 
        # --- 4. AFFICHAGE VIDÉO (ULTRA-ROBUSTE) ---
         # On cherche le lien sous toutes ses formes pour ne jamais le perdre
-        v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or r.get('vidéo') or ""
+        v_link = r.get('Lien vidéo') or r.get('Vidéo') or r.get('video') or ""
         v_link_str = str(v_link).strip()
 
         if v_link_str.lower().startswith("http"):
@@ -922,7 +922,7 @@ elif st.session_state.page == "add":
                     "date": datetime.date.today().strftime("%d/%m/%Y"),
                     "titre": titre.strip(),
                     "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre,  # Texte propre ligne par ligne, sans tirets ajoutés
+                    "Ingrédients": ing_propre, 
                     "Préparation": instructions_txt.strip(),
                     "Image": img_url.strip(),
                     "Catégorie": ", ".join(cat_choisies),
@@ -930,7 +930,7 @@ elif st.session_state.page == "add":
                     "Temps_Prepa": t_prep.strip(),
                     "Temps_Cuisson": t_cuis.strip(),
                     "Commentaires": commentaires.strip(),
-                    "video": video_url_in.strip()
+                    "Lien vidéo": video_url_in.strip()  # <--- CHANGEMENT ICI : 'Lien vidéo' au lieu de 'video'
                 }
                                 
                 # ... (reste du code d'envoi send_action)
@@ -1664,6 +1664,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
