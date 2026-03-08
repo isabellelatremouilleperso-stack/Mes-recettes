@@ -711,26 +711,33 @@ elif st.session_state.page == "details":
         ings_raw = r.get('Ingrédients', '')
         
         if ings_raw and str(ings_raw).strip() not in ["None", "nan", ""]:
+            # On prépare la liste propre
             text_ing = str(ings_raw).replace("❑", "\n").replace(";", "\n")
             ings = [l.strip() for l in text_ing.split("\n") if l.strip()]
             
             sel = []
-            col_ing1, col_ing2 = st.columns(2)
-            moitie = (len(ings) + 1) // 2
             
-            with col_ing1:
-                for i in range(moitie):
-                    if st.checkbox(ings[i], key=f"chk_L_{current_title}_{i}"):
-                        sel.append(ings[i])
-            with col_ing2:
-                for i in range(moitie, len(ings)):
-                    if st.checkbox(ings[i], key=f"chk_R_{current_title}_{i}"):
-                        sel.append(ings[i])
+            # On parcourt chaque ligne pour l'afficher joliment
+            for i, item in enumerate(ings):
+                # --- DÉTECTION DES TITRES (ex: "Marinade", "Sauce :", "ÉTAPE 1") ---
+                # On considère que c'est un titre si : finit par ":" OU est tout en MAJUSCULES OU pas de chiffres
+                is_title = item.endswith(":") or item.isupper() or (not any(char.isdigit() for char in item) and len(item) > 3)
+                
+                if is_title:
+                    # Affichage d'un titre stylisé
+                    st.markdown(f"#### 🔸 {item.replace(':', '')}")
+                    st.divider()
+                else:
+                    # Affichage d'un ingrédient normal avec checkbox
+                    if st.checkbox(item, key=f"chk_{current_title}_{i}"):
+                        sel.append(item)
             
+            # Bouton d'action si des éléments sont cochés
             if sel:
+                st.write("") # Petit espace
                 if st.button(f"➕ Ajouter {len(sel)} articles à la liste de courses", use_container_width=True):
                     for item in sel:
-                        send_action({"action": "add_shop", "article": f"✨ Autre | {item}"})
+                        send_action({"action": "add_shop", "article": f"✨ {item}"})
                     st.toast("Ingrédients envoyés à l'épicerie ! 🛒")
 
         # --- SECTION PRÉPARATION ---
@@ -1619,6 +1626,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
