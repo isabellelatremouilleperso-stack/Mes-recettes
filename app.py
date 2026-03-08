@@ -940,34 +940,37 @@ elif st.session_state.page == "add":
                 if send_action(payload):
                     st.success("✅ Enregistré !")
                     
-                    # Nettoyage des données temporaires
+                    # 1. Nettoyage des données temporaires
                     for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                         if k in st.session_state: del st.session_state[k]
                     
+                    # 2. On vide le cache pour que la nouvelle recette apparaisse dans la liste
                     st.cache_data.clear()
                     
-                    # Retour à la fiche recette
-                    st.session_state.recette_selectionnee = payload
-                    st.session_state.page = "details"
+                    # 3. RETOUR À L'ACCUEIL (HOME)
+                    # On ne va pas sur "details" car la recette n'est pas encore indexée
+                    st.session_state.page = "home"
+                    
+                    # On s'assure qu'aucune recette n'est considérée comme "sélectionnée"
+                    if 'recette_selectionnee' in st.session_state:
+                        del st.session_state.recette_selectionnee
+                    
                     st.rerun()
                 else:
                     st.error("❌ Erreur de communication avec Google Sheets.")
-            else:
-                st.error("🚨 Titre et Ingrédients obligatoires !")
-
         # --- BLOC ANNULER ---
         if c_cancel.button("❌ ANNULER", use_container_width=True):
-            # Nettoyage
+            # 1. Nettoyage des données temporaires
             for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                 if k in st.session_state: 
                     del st.session_state[k]
             
-            # Redirection intelligente
-            if 'recette_selectionnee' in st.session_state and st.session_state.recette_selectionnee:
-                st.session_state.page = "details"
-            else:
-                st.session_state.page = "home"
-                
+            # 2. On s'assure de nettoyer la sélection en cours
+            if 'recette_selectionnee' in st.session_state:
+                del st.session_state.recette_selectionnee
+            
+            # 3. Retour direct à l'accueil
+            st.session_state.page = "home"
             st.rerun()
             
 elif st.session_state.page == "print":
@@ -1679,6 +1682,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
