@@ -916,21 +916,21 @@ elif st.session_state.page == "add":
                 lignes = text_split.split('\n')
                 ing_propre = "\n".join([l.strip() for l in lignes if l.strip()])
 
-                # --- PAYLOAD ---
+                # --- PAYLOAD HARMONISÉ ---
                 payload = {
                     "action": "add",
-                    "date": datetime.date.today().strftime("%d/%m/%Y"),
-                    "titre": titre.strip(),
-                    "source": source_url_in.strip(),
-                    "Ingrédients": ing_propre, 
-                    "Préparation": instructions_txt.strip(),
-                    "Image": img_url.strip(),
-                    "Catégorie": ", ".join(cat_choisies),
+                    "Date": datetime.date.today().strftime("%d/%m/%Y"), # 'D' majuscule
+                    "Titre": titre.strip(),                            # 'T' majuscule
+                    "Source": source_url_in.strip(),                   # 'S' majuscule
+                    "Ingrédients": ing_propre,                         # 'I' majuscule + accent
+                    "Préparation": instructions_txt.strip(),           # 'P' majuscule
+                    "Image": img_url.strip(),                          # 'I' majuscule
+                    "Catégorie": ", ".join(cat_choisies),              # 'C' majuscule
                     "Portions": port.strip(),
-                    "Temps_Prepa": t_prep.strip(),
-                    "Temps_Cuisson": t_cuis.strip(),
+                    "Temps de préparation": t_prep.strip(),            # Nom complet comme dans r.get()
+                    "Temps de cuisson": t_cuis.strip(),                # Nom complet comme dans r.get()
                     "Commentaires": commentaires.strip(),
-                    "Lien vidéo": video_url_in.strip()  # <--- CHANGEMENT ICI : 'Lien vidéo' au lieu de 'video'
+                    "Lien vidéo": video_url_in.strip()                 # Exactement le nom de ta colonne
                 }
                                 
                 # ... (reste du code d'envoi send_action)
@@ -1109,18 +1109,18 @@ elif st.session_state.page == "edit":
             with st.spinner("Mise à jour de la recette..."):
                 payload = {
                     "action": "edit", 
-                    "old_titre": r_edit.get('Titre'),
-                    "titre": titre_edit.strip(), 
-                    "Catégorie": ", ".join(cat_choisies),
+                    "old_titre": r_edit.get('Titre'),      # Correct : utilisé dans targetTitre
+                    "titre": titre_edit.strip(),           # Correct : utilisé dans data.titre
+                    "Source": source_url.strip(),          # MAJUSCULE : ton script cherche data.Source
                     "Ingrédients": ingredients.strip().replace('\n', '  \n'),
                     "Préparation": instructions.strip(),
-                    "Image": img_url.strip(),
-                    "Temps_Prepa": t_prep.strip(),
-                    "Temps_Cuisson": t_cuis.strip(),
-                    "Portions": port.strip(),
-                    "Commentaires": commentaires.strip(),
-                    "Lien vidéo": video_url.strip(),
-                    "Source": source_url.strip()
+                    "Image": img_url.strip(),              # MAJUSCULE : ton script cherche data.Image
+                    "Catégorie": ", ".join(cat_choisies),  # MAJUSCULE : ton script cherche data.Catégorie
+                    "Portions": port.strip(),              # MAJUSCULE : ton script cherche data.Portions
+                    "Temps_Prepa": t_prep.strip(),         # MAJUSCULE : ton script cherche data.Temps_Prepa
+                    "Temps_Cuisson": t_cuis.strip(),       # MAJUSCULE : ton script cherche data.Temps_Cuisson
+                    "Commentaires": commentaires.strip(),  # MAJUSCULE : ton script cherche data.Commentaires
+                    "Lien vidéo": video_url.strip()        # ESPACE + ACCENT : ton script cherche data["Lien vidéo"]
                 }
                 
                 if send_action(payload):
@@ -1664,6 +1664,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
