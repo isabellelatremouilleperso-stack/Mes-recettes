@@ -689,28 +689,29 @@ elif st.session_state.page == "details":
         # --- 0. DÉFINITION DE L'ID (À mettre au tout début pour éviter l'erreur) ---
         recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
 
-        # --- 4. AFFICHAGE VIDÉO (VERSION NETTE AVEC FIX ERREUR) ---
-        v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or ""
+       # --- 4. AFFICHAGE VIDÉO (ULTRA-ROBUSTE) ---
+        # On cherche le lien sous toutes ses formes pour ne jamais le perdre
+        v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or r.get('vidéo') or ""
         v_link_str = str(v_link).strip()
 
         if v_link_str.lower().startswith("http"):
+            # Correction automatique pour les YouTube Shorts
             if "/shorts/" in v_link_str:
                 v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
 
-            is_youtube = any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be"])
+            # Création de l'ID unique (essentiel pour la case à cocher)
+            recette_id = "".join(filter(str.isalnum, r.get('Titre', 'recette')))
 
             with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
-                if is_youtube:
-                    # Bouton prioritaire
-                    st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
-                    
-                    # Case à cocher pour masquer le lecteur s'il est bloqué
-                    show_player = st.checkbox("Afficher le lecteur intégré", value=True, key=f"vid_show_{recette_id}")
-                    if show_player:
-                        st.video(v_link_str)
-                        st.caption("_Note: Si l'écran affiche 'Vidéo non disponible', décochez la case ci-dessus._")
-                else:
-                    st.link_button("▶️ Regarder la vidéo originale", v_link_str, use_container_width=True, type="primary")
+                # 1. Le bouton prioritaire (toujours fonctionnel)
+                st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
+                
+                # 2. Le lecteur avec option pour le masquer si "Vidéo non disponible"
+                show_player = st.checkbox("Afficher le lecteur intégré", value=True, key=f"vid_show_{recette_id}")
+                
+                if show_player:
+                    st.video(v_link_str)
+                    st.caption("_Note: Si l'écran reste noir, décochez la case ci-dessus._")
     
     # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
         st.divider()
@@ -1075,22 +1076,23 @@ elif st.session_state.page == "edit":
         ingredients = ci.text_area("🍎 Ingrédients (un par ligne)", value=r_edit.get('Ingrédients', ''), height=300)
         instructions = ce.text_area("👨‍🍳 Étapes de préparation", value=r_edit.get('Préparation', ''), height=300)
         
-        # --- SECTION LIENS ET MÉDIAS ---
+        # --- SECTION LIENS ET MÉDIAS (ÉDITION) ---
         img_url = st.text_input("🖼️ Lien de l'image (URL)", value=r_edit.get('Image', ''))
         
         col_v, col_s = st.columns(2)
-
-        # On cherche 'video', et si on ne trouve pas, on cherche 'video_url'
-        valeur_video = r_edit.get('video') or r_edit.get('video_url') or ""
+        
+        # --- RÉCUPÉRATION VIDÉO (On cherche partout pour ne rien rater) ---
+        # On ajoute 'Vidéo' et 'vidéo' à ta liste de recherche
+        valeur_video = r_edit.get('Vidéo') or r_edit.get('video') or r_edit.get('vidéo') or r_edit.get('video_url') or r_edit.get('Lien vidéo') or ""
         
         video_url = col_v.text_input(
-            "📺 Lien Vidéo (TikTok, Instagram, FB)", 
-            value=valeur_video
+            "📺 Lien Vidéo (YouTube, TikTok, Insta, FB)", 
+            value=str(valeur_video)
         )
         
         source_url = col_s.text_input(
             "🌐 Lien Source (Site web)", 
-            value=r_edit.get('source', '') # Assure-toi que c'est bien 'source' partout
+            value=r_edit.get('source') or r_edit.get('Source') or ""
         )
         
         # Champ commentaires
@@ -1117,7 +1119,7 @@ elif st.session_state.page == "edit":
                     "Temps_Cuisson": t_cuis.strip(),
                     "Portions": port.strip(),
                     "Commentaires": commentaires.strip(),
-                    "video": video_url.strip(),
+                    "Lien vidéo": video_url.strip(),
                     "Source": source_url.strip()
                 }
                 
@@ -1662,6 +1664,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
