@@ -940,32 +940,30 @@ elif st.session_state.page == "add":
                 if send_action(payload):
                     st.success("✅ Enregistré !")
                     
-                    # 1. Nettoyage des données temporaires (ton code existant)
+                    # 1. Nettoyage des données temporaires
                     for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
                         if k in st.session_state: del st.session_state[k]
                     
-                    # 2. On vide le cache pour que les modifs apparaissent de suite
                     st.cache_data.clear()
                     
-                    # 3. ON DIT À L'APP DE RESTER SUR CETTE RECETTE
-                    # On met à jour la mémoire locale avec les nouvelles infos du payload
+                    # 2. ON RESTE SUR LA RECETTE (Update de la mémoire)
                     st.session_state.recette_selectionnee = payload
-                    
-                    # 4. ON RETOURNE SUR LA FICHE (au lieu de l'accueil)
-                    st.session_state.page = "details"
+                    st.session_state.page = "details"  # <-- Changé de "home" à "details"
                     st.rerun()
                 else:
                     st.error("❌ Erreur de communication avec Google Sheets.")
-            
             else:
                 st.error("🚨 Titre et Ingrédients obligatoires !")
 
-        if c_cancel.button("❌ ANNULER L'AJOUT", use_container_width=True):
-            # Nettoyage avant de partir
-            for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
-                if k in st.session_state: del st.session_state[k]
-            st.session_state.page = "home"
-            st.rerun()
+# --- LE BOUTON ANNULER ---
+if c_cancel.button("❌ ANNULER", use_container_width=True):
+    # Nettoyage avant de partir
+    for k in ['scraped_title', 'scraped_ingredients', 'scraped_content']:
+        if k in st.session_state: del st.session_state[k]
+    
+    # On retourne aussi sur la fiche plutôt que l'accueil
+    st.session_state.page = "details" # <-- Changé aussi ici pour éviter de retourner à l'accueil
+    st.rerun()
             
 elif st.session_state.page == "print":
     if 'recipe_data' not in st.session_state:
@@ -1676,6 +1674,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
