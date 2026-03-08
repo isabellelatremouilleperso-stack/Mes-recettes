@@ -686,28 +686,27 @@ elif st.session_state.page == "details":
 
         st.divider()
 
-        # --- 4. AFFICHAGE VIDÉO (AVEC SECOURS YOUTUBE) ---
+        # --- 4. AFFICHAGE VIDÉO (VERSION NETTE) ---
         v_link = r.get('Vidéo') or r.get('video') or r.get('Lien vidéo') or ""
         v_link_str = str(v_link).strip()
 
         if v_link_str.lower().startswith("http"):
-            # Transformation indispensable pour les YouTube Shorts
             if "/shorts/" in v_link_str:
                 v_link_str = v_link_str.replace("/shorts/", "/watch?v=")
 
-            # On vérifie si c'est une source YouTube
             is_youtube = any(x in v_link_str.lower() for x in ["youtube.com", "youtu.be"])
 
-            with st.expander("🎬 VOIR LE TUTORIEL VIDÉO", expanded=True):
-                # 1. On tente d'afficher le lecteur vidéo
-                st.video(v_link_str)
-                
-                # 2. Si c'est du YouTube, on ajoute un bouton de secours direct
+            with st.expander("🎬 VIDÉO DU TUTORIEL", expanded=True):
                 if is_youtube:
-                    st.caption("💡 _Si la vidéo affiche 'Non disponible', cliquez sur le bouton ci-dessous :_")
-                    st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True)
+                    # On propose de voir le lecteur, mais le bouton est prioritaire
+                    st.link_button("📺 Ouvrir sur YouTube", v_link_str, use_container_width=True, type="primary")
+                    
+                    show_player = st.checkbox("Afficher le lecteur intégré", value=True, key=f"vid_show_{recette_id}")
+                    if show_player:
+                        st.video(v_link_str)
+                        st.caption("_Note: Si l'écran reste noir, décochez la case ci-dessus._")
                 else:
-                    # Pour TikTok, Instagram, Facebook (Liens externes)
+                    # Pour les autres réseaux (TikTok, Insta)
                     st.link_button("▶️ Regarder la vidéo originale", v_link_str, use_container_width=True, type="primary")
     
     # --- SECTION INGRÉDIENTS (DÉTECTION AUTOMATIQUE DES SECTIONS) ---
@@ -1658,6 +1657,7 @@ elif st.session_state.page=="help":
     if st.button("⬅ Retour à la Bibliothèque", use_container_width=True):
         st.session_state.page="home"
         st.rerun()
+
 
 
 
